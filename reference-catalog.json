@@ -14,7 +14,7 @@
       "maturity": "incubating",
       "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
       "purpose": "Configurable project scaffold, baseline scenes and prefabs, and validation tools.",
-      "evidence": ["tests", "samples", "docs/validation/2026-07-15-clean-foundation-unity-smoke.md"],
+      "evidence": ["tests", "samples", "docs/validation/2026-07-15-git-url-unity-smoke.md"],
       "non_claims": ["No consumer architecture is mandatory", "No runtime device behavior is claimed"]
     },
     {
@@ -26,7 +26,7 @@
       "maturity": "incubating",
       "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
       "purpose": "Vendor-neutral XR greybox initialization, rig helpers, configuration, and interaction validation.",
-      "evidence": ["tests", "samples", "docs/validation/2026-07-15-clean-foundation-unity-smoke.md"],
+      "evidence": ["tests", "samples", "docs/validation/2026-07-15-git-url-unity-smoke.md"],
       "non_claims": ["No vendor runtime is bundled", "No headset behavior is claimed without device evidence"]
     }
   ],

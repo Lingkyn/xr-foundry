@@ -44,7 +44,7 @@ a clean independent Unity consumer compile. XR behavior additionally needs real
 device evidence before a stable claim.
 
 Latest clean-foundation compile evidence:
-[`docs/validation/2026-07-15-clean-foundation-unity-smoke.md`](docs/validation/2026-07-15-clean-foundation-unity-smoke.md).
+[`docs/validation/2026-07-15-git-url-unity-smoke.md`](docs/validation/2026-07-15-git-url-unity-smoke.md).
 
 ## Install for evaluation
 

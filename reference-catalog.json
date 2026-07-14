@@ -1,0 +1,37 @@
+{
+  "schema": "xr-foundry.reference_catalog.v1",
+  "version": "0.1.0",
+  "repository": "https://github.com/Lingkyn/xr-foundry",
+  "selection_dispositions": ["install", "extend_public_seam", "reference_only", "raw_material", "reject"],
+  "evidence_order": ["manifest_and_license", "documentation_tests_samples", "repository_validation", "independent_consumer_compile", "runtime_device_evidence_when_claimed"],
+  "artifacts": [
+    {
+      "id": "unity-project-initializer",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "com.lingkyn.project-initializer",
+      "package_id": "com.lingkyn.project-initializer",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Configurable project scaffold, baseline scenes and prefabs, and validation tools.",
+      "evidence": ["tests", "samples", "docs/validation/2026-07-15-clean-foundation-unity-smoke.md"],
+      "non_claims": ["No consumer architecture is mandatory", "No runtime device behavior is claimed"]
+    },
+    {
+      "id": "unity-xr-baseline",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "com.lingkyn.xr-baseline",
+      "package_id": "com.lingkyn.xr-baseline",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Vendor-neutral XR greybox initialization, rig helpers, configuration, and interaction validation.",
+      "evidence": ["tests", "samples", "docs/validation/2026-07-15-clean-foundation-unity-smoke.md"],
+      "non_claims": ["No vendor runtime is bundled", "No headset behavior is claimed without device evidence"]
+    }
+  ],
+  "roadmap_only": [
+    {"engine": "Unreal Engine", "status": "not_implemented"},
+    {"engine": "Godot", "status": "not_implemented"}
+  ]
+}

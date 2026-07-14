@@ -1,0 +1,23 @@
+{
+  "schema": "xr-foundry.unity_package_catalog.v1",
+  "unity": "6000.3",
+  "maturity_states": ["incubating", "candidate", "stable", "deprecated"],
+  "packages": [
+    {
+      "id": "com.lingkyn.project-initializer",
+      "path": "com.lingkyn.project-initializer",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "passed_2026-07-15",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.xr-baseline",
+      "path": "com.lingkyn.xr-baseline",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "passed_2026-07-15",
+      "device_evidence": "pending_for_device_claims"
+    }
+  ]
+}

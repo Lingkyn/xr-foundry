@@ -1,0 +1,9 @@
+---
+description: Use XR Foundry packages and reference material with evidence and consumer boundaries.
+alwaysApply: true
+---
+
+Read `AGENTS.md` and `reference-catalog.json` before selecting or modifying a
+package. Keep this file as a thin adapter; shared package facts and quality gates
+belong in the public catalogs, manifests, tests, and documentation.
+

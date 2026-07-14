@@ -1,0 +1,32 @@
+{
+  "name": "com.lingkyn.project-initializer",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Project Initializer",
+  "description": "Consumer-neutral Unity project scaffolding: folder and scene contracts, baseline prefabs, validation, and editor tooling.",
+  "unity": "6000.3",
+  "documentationUrl": "https://github.com/Lingkyn/xr-foundry/tree/main/com.lingkyn.project-initializer/Documentation~",
+  "author": {
+    "name": "Lingkyn",
+    "url": "https://github.com/Lingkyn"
+  },
+  "keywords": [
+    "initialization",
+    "scaffold",
+    "validator",
+    "indie",
+    "baseline"
+  ],
+  "samples": [
+    {
+      "displayName": "Basic Project Scaffold",
+      "description": "Instructions for generating a consumer-owned project scaffold.",
+      "path": "Samples~/BasicProject"
+    }
+  ],
+  "dependencies": {
+    "com.unity.inputsystem": "1.11.0",
+    "com.unity.render-pipelines.universal": "17.0.0",
+    "com.unity.test-framework": "1.4.0",
+    "com.unity.ugui": "2.0.0"
+  }
+}

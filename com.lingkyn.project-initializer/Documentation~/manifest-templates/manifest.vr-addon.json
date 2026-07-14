@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.lingkyn.project-initializer": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.project-initializer#<commit-sha>",
+    "com.lingkyn.xr-baseline": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.xr-baseline#<commit-sha>",
+    "com.unity.xr.interaction.toolkit": "3.3.0",
+    "com.unity.xr.management": "4.5.0",
+    "com.unity.xr.openxr": "1.14.0"
+  }
+}

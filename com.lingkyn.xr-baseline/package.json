@@ -1,0 +1,32 @@
+{
+  "name": "com.lingkyn.xr-baseline",
+  "version": "0.1.0",
+  "displayName": "Lingkyn XR Baseline",
+  "description": "Consumer-neutral XR greybox runtime and editor helpers for Sandbox rigs, props, configuration, and interaction validation.",
+  "unity": "6000.3",
+  "documentationUrl": "https://github.com/Lingkyn/xr-foundry/tree/main/com.lingkyn.xr-baseline/Documentation~",
+  "author": {
+    "name": "Lingkyn",
+    "url": "https://github.com/Lingkyn"
+  },
+  "keywords": [
+    "xr",
+    "vr",
+    "greybox",
+    "initialization",
+    "scaff"
+  ],
+  "samples": [
+    {
+      "displayName": "XR Sandbox",
+      "description": "Instructions for creating a generic XR greybox Sandbox.",
+      "path": "Samples~/Sandbox"
+    }
+  ],
+  "dependencies": {
+    "com.unity.inputsystem": "1.11.0",
+    "com.unity.xr.interaction.toolkit": "3.3.0",
+    "com.unity.xr.management": "4.5.0",
+    "com.unity.xr.openxr": "1.14.0"
+  }
+}

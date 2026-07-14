@@ -1,0 +1,37 @@
+name: Reusable system proposal
+description: Propose an incubating package or reference entry
+title: "[System Proposal]: "
+labels: [package-proposal]
+body:
+  - type: textarea
+    id: common_problem
+    attributes:
+      label: Common problem and consumers
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Official, professional, and adopted source comparison
+      description: Include current maintenance, adoption/authority, license, and rejected alternatives.
+    validations:
+      required: true
+  - type: textarea
+    id: architecture
+    attributes:
+      label: API, data, prefab/component, UI, save/load, and extension boundaries
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Tests, samples, independent consumer compile, migration, and device evidence plan
+    validations:
+      required: true
+  - type: checkboxes
+    id: maturity
+    attributes:
+      label: Maturity acknowledgement
+      options:
+        - label: This proposal begins as incubating and is not a stable package or compatibility claim.
+          required: true

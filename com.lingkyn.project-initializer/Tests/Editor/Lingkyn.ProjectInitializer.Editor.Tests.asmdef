@@ -1,0 +1,8 @@
+{
+  "name": "Lingkyn.ProjectInitializer.Editor.Tests",
+  "rootNamespace": "Lingkyn.Unity.ProjectInitializer.Tests",
+  "references": ["Lingkyn.ProjectInitializer.Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}

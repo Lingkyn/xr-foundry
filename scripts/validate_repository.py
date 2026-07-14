@@ -57,8 +57,39 @@ def scan_text_safety(root: Path) -> list[str]:
     return errors
 
 
+def validate_ignore_scope(root: Path) -> list[str]:
+    errors: list[str] = []
+    ignore_path = root / ".gitignore"
+    if not ignore_path.exists():
+        return ["missing .gitignore"]
+    unity_root_directories = {"Library/", "Temp/", "Logs/", "obj/", "Build/", "Builds/"}
+    for raw_line in ignore_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if line in unity_root_directories:
+            errors.append(f"Unity generated-directory ignore must be root-anchored: {line}")
+    return errors
+
+
+def validate_internal_namespace_links(package_root: Path) -> list[str]:
+    declarations: set[str] = set()
+    imports: list[tuple[Path, str]] = []
+    for source in package_root.rglob("*.cs"):
+        text = source.read_text(encoding="utf-8")
+        declarations.update(re.findall(r"\bnamespace\s+(Lingkyn\.Unity\.[A-Za-z0-9_.]+)", text))
+        imports.extend(
+            (source, value)
+            for value in re.findall(r"\busing\s+(?:static\s+)?(Lingkyn\.Unity\.[A-Za-z0-9_.]+)\s*;", text)
+        )
+    errors: list[str] = []
+    for source, imported in imports:
+        if not any(namespace == imported or namespace.startswith(imported + ".") for namespace in declarations):
+            errors.append(f"{source.relative_to(package_root)}: internal namespace has no source declaration: {imported}")
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
+    errors.extend(validate_ignore_scope(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")
@@ -138,6 +169,7 @@ def validate_repository(root: Path) -> list[str]:
             continue
     for package_path in declared_paths:
         package_root = root / package_path
+        errors.extend(validate_internal_namespace_links(package_root))
         for source in package_root.rglob("*.cs"):
             text = source.read_text(encoding="utf-8")
             namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)

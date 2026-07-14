@@ -34,6 +34,23 @@ class RepositoryContractTests(unittest.TestCase):
             errors = MODULE.scan_text_safety(root)
             self.assertTrue(any("non-public marker" in error for error in errors))
 
+    def test_unanchored_unity_build_ignore_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".gitignore").write_text("Build/\n", encoding="utf-8")
+            errors = MODULE.validate_ignore_scope(root)
+            self.assertTrue(any("root-anchored" in error for error in errors))
+
+    def test_missing_internal_namespace_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            (package / "Consumer.cs").write_text(
+                "using Lingkyn.Unity.Missing; namespace Lingkyn.Unity.Consumer {}",
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_internal_namespace_links(package)
+            self.assertTrue(any("no source declaration" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

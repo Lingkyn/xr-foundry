@@ -4,11 +4,11 @@ Thumbs.db
 *.suo
 .idea/
 .vscode/
-Library/
-Temp/
-Logs/
-obj/
-Build/
-Builds/
+/Library/
+/Temp/
+/Logs/
+/obj/
+/Build/
+/Builds/
 __pycache__/
 *.py[cod]

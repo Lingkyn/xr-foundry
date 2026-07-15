@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task_registry.v1",
-  "revision": 3,
-  "generated_at": "2026-07-15T18:02:58Z",
+  "revision": 4,
+  "generated_at": "2026-07-15T18:05:12Z",
   "coverage": {
     "mode": "explicit_registration",
     "unregistered_issue_contract": "issue_declared_claim_key"

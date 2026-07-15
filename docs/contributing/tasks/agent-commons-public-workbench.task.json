@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 3,
+  "revision": 4,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -138,7 +138,7 @@
       "non_goals": [
         "No contract-document, package, Device Lab, workflow, permission, WB-02 recognition, or WB-04 remote-evidence change"
       ],
-      "status": "ready",
+      "status": "in_progress",
       "depends_on": ["WB-01"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -184,20 +184,28 @@
       "evidence": [],
       "waiting": null,
       "claim": {
-        "status": "unclaimed",
-        "adoptable": true,
-        "github_identity": null,
+        "status": "active",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
         "previous_github_identity": null,
-        "claimed_at": null,
-        "expires_at": null,
+        "claimed_at": "2026-07-15T18:05:12Z",
+        "expires_at": "2026-07-22T18:05:12Z",
         "ended_at": null,
-        "confirmed_by_maintainer": null,
-        "transition_reason": null
+        "confirmed_by_maintainer": "Lingkyn",
+        "transition_reason": "Lingkyn remains the accountable GitHub identity while Cursor executes the bounded validator change and Codex performs independent review."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
-      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "codex/cursor-wb01-validator",
+        "pull_request": null,
+        "base_commit": "6c15f232339115224037fb53596347d760d0dc15",
+        "head_commit": "6c15f232339115224037fb53596347d760d0dc15",
+        "published_at": "2026-07-15T18:05:12Z"
+      },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Claim WB-01V, publish an isolated Cursor branch from the exact WB-01 public boundary, and implement only the two allowed validator files.",
+      "exact_next_action": "Cursor implements only the two allowed validator files from the public branch; Codex then reproduces tests, audits the boundary, and reviews the diff independently.",
       "completed_at": null
     },
     {

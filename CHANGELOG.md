@@ -5,15 +5,19 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Established the canonical Agent Commons V1 package graph: renderer-neutral
+  `com.lingkyn.inventory.presentation`, peer UGUI and UI Toolkit renderers, and
+  renderer-explicit XR compositions without a speculative shared XR-core package.
+- Finalized the initialization layout under `packages/unity/foundations` and
+  `packages/unity/systems/inventory`. Catalogs, install URLs, reference paths, and
+  validation use that single layout; no old-path compatibility surface is kept.
+- Added current official Unity world-space UI Toolkit, XRI UI Toolkit, PICO
+  multimodal direction, and Apple spatial-design sources with bounded roles and
+  explicit non-claim limits.
 - Added a provider-neutral, machine-checkable Inventory XR device receipt with a
   PICO tracked-controller acceptance profile, official PICO evidence boundaries,
   and fail-closed promotion rules for install/open, world anchoring, targeting,
   interaction states, readability, reach, occlusion, and comfort.
-- Added the optional `com.lingkyn.inventory.xr` incubating package with a
-  provider-neutral world-space prefab, ScriptableObject profile, fail-closed scene
-  validation, tracked-ray and real XRI poke tests, and an imported setup sample;
-  immutable Git-consumer validation now passes, while Android and Pico evidence
-  remain promotion gates.
 - Reopened the UGUI candidate after a structure-only false positive; `0.1.1`
   now ships functional nested prefabs, stable-address intents, bounded scrolling,
   semantic state samples, prefab-backed raycast tests, and cross-layer projection gates.

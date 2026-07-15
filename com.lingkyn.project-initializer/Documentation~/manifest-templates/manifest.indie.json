@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "com.lingkyn.project-initializer": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.project-initializer#<commit-sha>"
-  }
-}

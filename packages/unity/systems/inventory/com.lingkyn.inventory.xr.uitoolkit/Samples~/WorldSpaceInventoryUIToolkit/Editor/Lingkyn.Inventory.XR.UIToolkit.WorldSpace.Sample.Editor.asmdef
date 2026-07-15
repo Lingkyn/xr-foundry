@@ -1,0 +1,12 @@
+{
+  "name": "Lingkyn.Inventory.XR.UIToolkit.WorldSpace.Sample.Editor",
+  "rootNamespace": "Lingkyn.Inventory.XR.UIToolkit.Samples.Editor",
+  "references": [
+    "Lingkyn.Inventory.UIToolkit",
+    "Lingkyn.Inventory.XR.UIToolkit",
+    "Lingkyn.Inventory.XR.UIToolkit.WorldSpace.Sample",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

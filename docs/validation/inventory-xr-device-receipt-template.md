@@ -4,10 +4,18 @@ Use this checklist only after an immutable package revision has produced an exac
 Android APK. It is a real-device acceptance gate, not an Editor, simulator, or
 PlayMode checklist.
 
-The package is provider-neutral. The first acceptance profile is deliberately
-device-specific: `pico_tracked_controller_v1`. A PICO pass proves only the named
-headset, firmware, runtime stack, APK, and package revision recorded in the receipt.
-It does not prove every OpenXR device or every input modality.
+The package family is provider-neutral and this receipt is renderer-neutral. Each
+completed receipt selects exactly one renderer-specific XR composition:
+
+- `com.lingkyn.inventory.xr.ugui` with `package.renderer` set to `ugui`; or
+- `com.lingkyn.inventory.xr.uitoolkit` with `package.renderer` set to
+  `uitoolkit`.
+
+The first acceptance profile is deliberately device-specific:
+`pico_tracked_controller_v1`. A PICO pass proves only the selected renderer, named
+headset, firmware, runtime stack, APK, package revision, and input modality recorded
+in that receipt. It does not prove the sibling renderer, every OpenXR device, or
+every input modality.
 
 PICO's official Unity documentation separates project configuration validation
 from runtime use, and PICO release notes record device-system-specific interaction
@@ -18,15 +26,25 @@ replaced by a visible Game view or automated test.
 
 ## Prepare the receipt
 
-1. Copy `inventory-xr-device-receipt.template.json` to a dated receipt file.
-2. Replace every placeholder and all-zero hash with the exact tested values.
-3. Use public repository-relative paths, immutable URLs, or artifact identifiers
+1. Read `inventory-xr-device-receipt.schema.json`, then copy
+   `inventory-xr-device-receipt.template.json` to a dated receipt file.
+2. Choose one supported XR package ID and set `package.renderer` to its matching
+   renderer. Never combine evidence for both renderers in one receipt.
+3. Replace every placeholder and all-zero hash with the exact tested values.
+4. Use public repository-relative paths, immutable URLs, or artifact identifiers
    for evidence references. Do not publish local machine paths, consumer names,
    private scenes, credentials, or internal issue links.
-4. Confirm that the APK SHA-256 and the 40-character package revision match the
+5. Confirm that the APK SHA-256 and the 40-character package revision match the
    artifact installed on the headset.
-5. Record both used and unused runtime components. For example, write `not_used`
+6. Record both used and unused runtime components. For example, write `not_used`
    instead of omitting OpenXR or a vendor integration version.
+
+Human device evidence may be deferred while repository infrastructure, automated
+tests, immutable installation, or another renderer route continues. Leave every
+check as `not_tested`, every claim boundary `false`, and `overall_result` as
+`not_run` until a person runs the profile. Deferral does not fail the repository
+contract, but it keeps the selected renderer/device claim and candidate promotion
+pending.
 
 ## Run the PICO tracked-controller profile
 
@@ -34,7 +52,8 @@ Perform the following on the named PICO headset with its normal tracked
 controllers. Record a concrete observation and at least one evidence reference for
 every required check.
 
-1. Install the exact APK, launch it, and open the Inventory XR sample.
+1. Install the exact APK, launch it, and open the sample belonging to the selected
+   Inventory XR renderer package.
 2. Read the surface through both eyes. Confirm text and state changes are legible,
    not doubled, clipped, or blurred beyond normal headset optics.
 3. Turn the head left/right and lean laterally. Confirm the Inventory remains at
@@ -60,11 +79,12 @@ named headset.
 ## Pass rule
 
 Every required check must be `pass`; `partial`, `fail`, and `not_tested` all block
-XR candidate promotion. `install_result`, `open_result`, and `overall_result` must
-also be `pass`, the session must last at least 120 seconds, and all required device
-claim flags must be true. A passing receipt establishes the device gate only;
-candidate promotion still requires every earlier package and consumer gate plus a
-reviewed maturity-ledger update.
+candidate promotion for the selected XR renderer/device tuple. `install_result`,
+`open_result`, and `overall_result` must also be `pass`, the session must last
+at least 120 seconds, and all required device claim flags must be true. A passing
+receipt establishes only that exact tuple's device gate; candidate promotion still
+requires every earlier package and consumer gate plus a reviewed maturity-ledger
+update. The sibling renderer requires its own receipt.
 
 Validate a completed receipt with:
 

@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.Inventory.Presentation.Editor.Tests",
+  "rootNamespace": "Lingkyn.Inventory.Presentation.Tests",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

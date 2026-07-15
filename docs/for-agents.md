@@ -34,6 +34,14 @@ Use one disposition:
   dependency review; or
 - `reject`: record the first failed gate and choose another source.
 
+For Inventory UI, select the renderer explicitly after reading the neutral
+presentation contract. `com.lingkyn.inventory.ugui` and
+`com.lingkyn.inventory.uitoolkit` are siblings. Their XR compositions are
+`com.lingkyn.inventory.xr.ugui` and
+`com.lingkyn.inventory.xr.uitoolkit`; neither renderer's automated or device
+receipt proves the other. Do not invent a shared XR package or copy a Canvas
+validator into the UI Toolkit route.
+
 Do not patch a shared package with product-specific types or scenes to make one
 consumer pass. Create a consumer adapter. If several consumers need the same seam,
 propose that seam upstream with generic tests and samples.
@@ -53,4 +61,3 @@ The adapters follow the public discovery mechanisms documented by their tools:
 - [Anthropic: Claude Code project memory](https://docs.anthropic.com/en/docs/claude-code/memory)
 - [Cursor: project rules](https://docs.cursor.com/context/rules)
 - [OpenClaw: skills](https://docs.openclaw.ai/skills)
-

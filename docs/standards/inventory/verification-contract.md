@@ -48,12 +48,16 @@ operation sequences.
 
 ## 5. Presentation gate
 
+- Renderer-neutral presentation state, view models, intents, and presenter ports
+  compile without UGUI, UI Toolkit, XRI, scene, or device dependencies.
 - Presenter tests prove that views cannot mutate storage directly.
-- Prefab tests verify independent panel, grid, slot, item, details, and action roles.
+- UGUI prefab tests verify independent panel, grid, slot, item, details, and action roles.
+- UI Toolkit tests verify equivalent semantic roles in the UXML/USS visual tree.
 - Nested-prefab links and variants survive import and package updates.
 - Empty, partial, full, rejected, selected, disabled, and loading/error states are
-  demonstrated in samples.
-- Keyboard/pointer presentation tests do not require XR packages.
+  demonstrated by both renderer samples.
+- Keyboard/pointer presentation tests do not require XR packages, and each renderer
+  emits the same semantic slot intents without mutating Core.
 
 ## 6. Package and consumer gate
 
@@ -65,16 +69,17 @@ operation sequences.
 
 ## 7. XR gate
 
-- The XR adapter uses a world-space Canvas and the supported tracked-device UI path.
-- Automated tests verify required raycaster/input-module configuration and prevent
-  incompatible duplicate input modules.
-- The sample can be placed independently of the camera rig and is not head-locked
-  by default.
+- XR UGUI uses a world-space Canvas and the supported tracked-device UI path;
+  automated tests verify its raycaster/input-module configuration.
+- XR UI Toolkit uses the supported world-space panel and XRI UI Toolkit path;
+  automated tests verify its panel/input configuration without Canvas assumptions.
+- Each sample can be placed independently of the camera rig and is not head-locked
+  by default; one renderer's automated or device evidence cannot promote the other.
 - A real headset test records readability, scale, angle, reach, occlusion, stable
   left/center/right targeting, interaction states, and comfort.
-- The receipt identifies the exact package revision, APK SHA-256, Unity/XRI/XR
-  provider versions, named device and firmware, controller/input mode, tester,
-  date, posture, sample, and duration.
+- The receipt identifies the exact package revision, APK SHA-256, renderer adapter,
+  XR adapter, Unity/XRI/XR provider versions, named device and firmware,
+  controller/input mode, tester, date, posture, sample, and duration.
 - The `pico_tracked_controller_v1` profile exercises both controllers against
   left/center/right targets, verifies target isolation and disabled-state
   immutability, checks world anchoring through head turns and lateral lean, and
@@ -95,10 +100,13 @@ be prepared, but they cannot promote a package around an earlier failure.
 
 | Layer | Satisfied evidence | Earliest unsatisfied gate | Claim allowed now |
 | --- | --- | --- | --- |
-| Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; immutable prerelease/candidate clean consumers; public API review; upgrade and rollback | None for Core candidate | Candidate Core only; not the complete Inventory family |
-| Unity authoring | ScriptableObject assets; stable IDs; deterministic conversion; actionable diagnostics; asset immutability; local and immutable Git URL clean-consumer EditMode tests | None for Unity authoring candidate | Candidate Unity authoring only; no presentation or XR claim |
-| UGUI | Presenter boundary; independent nested prefab roles/variant; slot replacement; wired neutral visuals; prefab-backed state, GraphicRaycaster, pointer, keyboard, and disabled-state tests; immutable Git functional consumer; Input System-only sample; `0.1.0 -> 0.1.1 -> 0.1.0 -> 0.1.1` consumer-variant exercise | None for UGUI candidate | Candidate UGUI only; no world-space or headset claim |
-| XR | Provider-neutral world-space/nested prefab; fail-closed scene validation; non-head-locked placement; tracked-ray left/center/right and real XRI poke PlayMode routes; local and immutable-Git independent-consumer EditMode/PlayMode; Package Manager sample import/compile/setup | Android build/install/open | Incubating XR adapter only; no headset usability claim |
+| Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; local consumer and public API review | Immutable Git consumer at the canonical nested path | Incubating Core only; not the complete Inventory family |
+| Unity authoring | ScriptableObject assets; stable IDs; deterministic conversion; actionable diagnostics; asset immutability; local clean-consumer EditMode tests | Immutable Git consumer at the canonical nested path | Incubating Unity authoring only; no presentation or XR claim |
+| Presentation | Renderer-neutral API extracted from the proven presenter seam; engine-light assembly contract and unit tests prepared | Fresh clean-consumer compile and immutable Git install | Incubating neutral presentation contract only |
+| UGUI | `0.2.0` consumes the neutral presentation assembly and retains nested renderer roles/tests | Fresh local and immutable Git consumer | Incubating UGUI renderer; no XR claim |
+| UI Toolkit | Working VisualElement/UXML/USS route, semantic state/input tests, and sample prepared | Fresh local and immutable Git consumer plus renderer acceptance | Incubating UI Toolkit adapter only |
+| XR UGUI | Renderer-explicit world-space Canvas, fail-closed validation, placement, and real-XRI route tests are authored | Fresh install/build and Unity Test Runner evidence, then named-device evidence | Incubating XR UGUI adapter only; no headset usability claim |
+| XR UI Toolkit | Renderer-specific world-space panel, XRI input route, fail-closed validation, placement, sample, and tests prepared | Fresh install/build, renderer tests, then independent named-device evidence | Incubating XR UI Toolkit adapter only; no headset usability claim |
 
 Candidate promotion updates this ledger, `inventory-standard.json`,
 `package-catalog.json`, `reference-catalog.json`, package documentation, and the

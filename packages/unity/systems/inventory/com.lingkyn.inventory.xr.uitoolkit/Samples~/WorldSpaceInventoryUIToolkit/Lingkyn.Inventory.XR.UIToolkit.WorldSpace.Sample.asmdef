@@ -1,0 +1,12 @@
+{
+  "name": "Lingkyn.Inventory.XR.UIToolkit.WorldSpace.Sample",
+  "rootNamespace": "Lingkyn.Inventory.XR.UIToolkit.Samples",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UIToolkit",
+    "Lingkyn.Inventory.XR.UIToolkit"
+  ],
+  "includePlatforms": [],
+  "autoReferenced": true
+}

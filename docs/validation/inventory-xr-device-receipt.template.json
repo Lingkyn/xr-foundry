@@ -1,9 +1,14 @@
 {
-  "schema": "xr-foundry.inventory_xr_device_receipt.v1",
+  "schema": "xr-foundry.inventory_xr_device_receipt.v2",
   "receipt_id": "replace-with-public-receipt-id",
   "validation_profile": "pico_tracked_controller_v1",
+  "supported_xr_package_ids": [
+    "com.lingkyn.inventory.xr.ugui",
+    "com.lingkyn.inventory.xr.uitoolkit"
+  ],
   "package": {
-    "id": "com.lingkyn.inventory.xr",
+    "id": "com.lingkyn.inventory.xr.ugui",
+    "renderer": "ugui",
     "version": "0.1.0",
     "revision": "0000000000000000000000000000000000000000"
   },
@@ -14,7 +19,7 @@
   },
   "software": {
     "unity_version": "replace-with-version",
-    "xri_version": "3.3.2",
+    "xri_version": "replace-with-version",
     "xr_management_version": "replace-with-version",
     "openxr_version": "replace-with-version-or-not_used",
     "pico_integration_version": "replace-with-version-or-not_used",

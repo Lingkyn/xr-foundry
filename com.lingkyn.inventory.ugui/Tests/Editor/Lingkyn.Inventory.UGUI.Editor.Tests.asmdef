@@ -1,8 +1,0 @@
-{
-  "name": "Lingkyn.Inventory.UGUI.Editor.Tests",
-  "rootNamespace": "Lingkyn.Inventory.UGUI.Tests",
-  "references": ["Lingkyn.Inventory.Core", "Lingkyn.Inventory.UGUI", "Lingkyn.Inventory.UGUI.Editor", "Unity.ugui"],
-  "optionalUnityReferences": ["TestAssemblies"],
-  "includePlatforms": ["Editor"],
-  "autoReferenced": false
-}

@@ -20,6 +20,11 @@ library. Do not treat it as a bag of code to copy wholesale.
    `docs/validation/inventory-xr-device-receipt-template.md` and validate the
    completed JSON receipt with `--device-receipt`.
 
+For Inventory presentation, select the renderer explicitly. The neutral contract
+lives in `com.lingkyn.inventory.presentation`; UGUI and UI Toolkit are sibling
+adapters, with renderer-named XR compositions. Never transfer automated or device
+evidence from one renderer composition to the other.
+
 ## Current implementation boundary
 
 Unity packages are currently implemented. Unreal Engine and Godot are roadmap

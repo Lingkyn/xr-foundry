@@ -1,0 +1,41 @@
+{
+  "schema": "xr-foundry.repository_layout.v1",
+  "status": "accepted_initialization_architecture",
+  "package_root": "packages",
+  "engine_roots": {
+    "unity": "packages/unity"
+  },
+  "collections": [
+    {
+      "id": "unity-foundations",
+      "path": "packages/unity/foundations",
+      "packages": [
+        "com.lingkyn.project-initializer",
+        "com.lingkyn.xr-baseline"
+      ]
+    },
+    {
+      "id": "unity-system-inventory",
+      "path": "packages/unity/systems/inventory",
+      "packages": [
+        "com.lingkyn.inventory.core",
+        "com.lingkyn.inventory.unity",
+        "com.lingkyn.inventory.presentation",
+        "com.lingkyn.inventory.ugui",
+        "com.lingkyn.inventory.uitoolkit",
+        "com.lingkyn.inventory.xr.ugui",
+        "com.lingkyn.inventory.xr.uitoolkit"
+      ]
+    }
+  ],
+  "invariants": {
+    "leaf_directory_equals_package_id": true,
+    "landing_page_groups_package_families": true,
+    "machine_catalog_keeps_package_entries": true,
+    "consumer_asset_path_uses_package_id": true,
+    "git_url_path_precedes_revision": true,
+    "full_commit_sha_required": true,
+    "old_path_compatibility_layers_allowed": false,
+    "empty_future_engine_roots_allowed": false
+  }
+}

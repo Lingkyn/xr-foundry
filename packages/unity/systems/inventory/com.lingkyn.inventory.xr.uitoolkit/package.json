@@ -1,0 +1,27 @@
+{
+  "name": "com.lingkyn.inventory.xr.uitoolkit",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Inventory XR UI Toolkit",
+  "description": "World-space XR Interaction Toolkit composition and fail-closed validation for Lingkyn Inventory UI Toolkit.",
+  "unity": "6000.3",
+  "unityRelease": "8f1",
+  "author": {
+    "name": "Lingkyn",
+    "url": "https://github.com/Lingkyn"
+  },
+  "license": "MIT",
+  "keywords": ["inventory", "xr", "vr", "ui-toolkit", "world-space", "xri"],
+  "samples": [
+    {
+      "displayName": "World-Space Inventory UI Toolkit",
+      "description": "Provider-neutral setup for a world-space Inventory UI Toolkit surface and replayable presentation states.",
+      "path": "Samples~/WorldSpaceInventoryUIToolkit"
+    }
+  ],
+  "dependencies": {
+    "com.lingkyn.inventory.core": "0.1.0",
+    "com.lingkyn.inventory.presentation": "0.1.0",
+    "com.lingkyn.inventory.uitoolkit": "0.1.0",
+    "com.unity.xr.interaction.toolkit": "3.5.1"
+  }
+}

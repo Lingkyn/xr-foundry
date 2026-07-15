@@ -1,0 +1,139 @@
+.inventory-root {
+    width: 640px;
+    height: 440px;
+    padding: 20px;
+    background-color: rgba(8, 24, 31, 0.96);
+    color: rgb(226, 252, 255);
+    border-left-width: 3px;
+    border-right-width: 3px;
+    border-top-width: 3px;
+    border-bottom-width: 3px;
+    border-left-color: rgb(55, 214, 222);
+    border-right-color: rgb(55, 214, 222);
+    border-top-color: rgb(55, 214, 222);
+    border-bottom-color: rgb(55, 214, 222);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    font-size: 20px;
+}
+
+.inventory-header,
+.inventory-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inventory-title {
+    font-size: 30px;
+    -unity-font-style: bold;
+}
+
+.inventory-state {
+    min-width: 132px;
+    padding: 7px 12px;
+    background-color: rgba(31, 105, 110, 0.7);
+    -unity-text-align: middle-center;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.inventory-message {
+    height: 34px;
+    margin-top: 10px;
+    color: rgb(153, 208, 214);
+}
+
+.inventory-scroll {
+    height: 278px;
+    margin-top: 4px;
+    margin-bottom: 12px;
+}
+
+.inventory-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+
+.inventory-slot {
+    width: 182px;
+    height: 70px;
+    margin: 5px;
+    padding: 8px;
+    background-color: rgb(18, 54, 65);
+    color: rgb(226, 252, 255);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgb(38, 119, 128);
+    border-right-color: rgb(38, 119, 128);
+    border-top-color: rgb(38, 119, 128);
+    border-bottom-color: rgb(38, 119, 128);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    -unity-text-align: middle-center;
+}
+
+.inventory-slot:hover,
+.inventory-slot:focus {
+    background-color: rgb(23, 88, 99);
+    border-left-color: rgb(93, 244, 250);
+    border-right-color: rgb(93, 244, 250);
+    border-top-color: rgb(93, 244, 250);
+    border-bottom-color: rgb(93, 244, 250);
+}
+
+.inventory-slot--selected {
+    background-color: rgb(24, 126, 134);
+    border-left-color: rgb(242, 252, 255);
+    border-right-color: rgb(242, 252, 255);
+    border-top-color: rgb(242, 252, 255);
+    border-bottom-color: rgb(242, 252, 255);
+}
+
+.inventory-slot--empty {
+    color: rgb(112, 157, 163);
+}
+
+.inventory-slot--disabled {
+    opacity: 0.46;
+}
+
+.inventory-details {
+    flex-grow: 1;
+    margin-right: 12px;
+    white-space: normal;
+}
+
+.inventory-primary-action {
+    min-width: 128px;
+    height: 52px;
+    background-color: rgb(31, 151, 159);
+    color: white;
+    font-size: 20px;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+}
+
+.inventory-state--rejected,
+.inventory-state--error {
+    border-left-color: rgb(255, 124, 92);
+    border-right-color: rgb(255, 124, 92);
+    border-top-color: rgb(255, 124, 92);
+    border-bottom-color: rgb(255, 124, 92);
+}
+
+.inventory-state--loading,
+.inventory-root--interaction-disabled {
+    opacity: 0.72;
+}

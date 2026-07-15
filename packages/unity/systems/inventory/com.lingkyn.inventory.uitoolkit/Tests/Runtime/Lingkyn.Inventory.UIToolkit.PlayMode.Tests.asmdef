@@ -1,0 +1,12 @@
+{
+  "name": "Lingkyn.Inventory.UIToolkit.PlayMode.Tests",
+  "rootNamespace": "Lingkyn.Inventory.UIToolkit.Tests",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UIToolkit"
+  ],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "includePlatforms": [],
+  "autoReferenced": false
+}

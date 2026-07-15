@@ -27,13 +27,31 @@ REQUIRED_INVENTORY_STANDARD_FILES = {
     "verification-contract.md",
     "core-api-contract.md",
     "core-api-baseline.json",
+    "renderer-neutral-architecture.md",
 }
-TEXT_SUFFIXES = {".cs", ".asmdef", ".json", ".md", ".yml", ".yaml", ".txt"}
+TEXT_SUFFIXES = {
+    ".asset",
+    ".asmdef",
+    ".cs",
+    ".json",
+    ".md",
+    ".meta",
+    ".prefab",
+    ".py",
+    ".txt",
+    ".uss",
+    ".uxml",
+    ".yaml",
+    ".yml",
+}
 INVENTORY_XR_DEVICE_RECEIPT_TEMPLATE = (
     Path("docs") / "validation" / "inventory-xr-device-receipt.template.json"
 )
 INVENTORY_XR_DEVICE_RECEIPT_GUIDE = (
     Path("docs") / "validation" / "inventory-xr-device-receipt-template.md"
+)
+INVENTORY_XR_DEVICE_RECEIPT_SCHEMA = (
+    Path("docs") / "validation" / "inventory-xr-device-receipt.schema.json"
 )
 REQUIRED_INVENTORY_XR_DEVICE_CHECKS = {
     "apk_install",
@@ -64,6 +82,10 @@ INVENTORY_XR_DEVICE_CLAIM_BOUNDARIES = {
     "controller_ray_claim_allowed",
     "direct_poke_device_claim_allowed",
 }
+INVENTORY_XR_RENDERERS = {
+    "com.lingkyn.inventory.xr.ugui": "ugui",
+    "com.lingkyn.inventory.xr.uitoolkit": "uitoolkit",
+}
 
 
 def forbidden_public_markers() -> list[str]:
@@ -84,13 +106,49 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def read_decodable_text(path: Path) -> str | None:
+    try:
+        return path.read_bytes().decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def is_dated_historical_validation_receipt(relative: Path) -> bool:
+    return (
+        relative.parts[:2] == ("docs", "validation")
+        and re.fullmatch(r"20\d{2}-\d{2}-\d{2}-.+\.md", relative.name) is not None
+    )
+
+
+def package_paths_by_id(catalog: dict[str, Any]) -> dict[str, str]:
+    return {
+        str(item.get("id", "")): str(item.get("path", ""))
+        for item in catalog.get("packages", [])
+        if isinstance(item, dict) and item.get("id") and item.get("path")
+    }
+
+
+def discover_lingkyn_package_paths(root: Path) -> set[str]:
+    paths: set[str] = set()
+    for manifest_path in root.rglob("package.json"):
+        if ".git" in manifest_path.parts:
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        if str(manifest.get("name", "")).startswith("com.lingkyn."):
+            paths.add(manifest_path.parent.relative_to(root).as_posix())
+    return paths
+
+
 def validate_inventory_xr_device_receipt(
     payload: Any, *, require_pass: bool
 ) -> list[str]:
     errors: list[str] = []
     if not isinstance(payload, dict):
         return ["Inventory XR device receipt must be a JSON object"]
-    if payload.get("schema") != "xr-foundry.inventory_xr_device_receipt.v1":
+    if payload.get("schema") != "xr-foundry.inventory_xr_device_receipt.v2":
         errors.append("Inventory XR device receipt schema is invalid")
     if payload.get("validation_profile") != "pico_tracked_controller_v1":
         errors.append("Inventory XR device receipt must use pico_tracked_controller_v1")
@@ -107,6 +165,15 @@ def validate_inventory_xr_device_receipt(
     required_text_fields = {
         "receipt_id": payload.get("receipt_id"),
     }
+    supported_package_ids = payload.get("supported_xr_package_ids")
+    if (
+        not isinstance(supported_package_ids, list)
+        or set(supported_package_ids) != set(INVENTORY_XR_RENDERERS)
+        or len(supported_package_ids) != len(INVENTORY_XR_RENDERERS)
+    ):
+        errors.append(
+            "Inventory XR device receipt must declare both renderer-specific supported package ids"
+        )
     package = payload.get("package")
     artifact = payload.get("artifact")
     software = payload.get("software")
@@ -125,10 +192,15 @@ def validate_inventory_xr_device_receipt(
             errors.append(f"Inventory XR device receipt {name} must be an object")
 
     if isinstance(package, dict):
-        if package.get("id") != "com.lingkyn.inventory.xr":
+        package_id = str(package.get("id", ""))
+        if package_id not in INVENTORY_XR_RENDERERS:
             errors.append("Inventory XR device receipt package id is invalid")
+        renderer = package.get("renderer")
+        if renderer != INVENTORY_XR_RENDERERS.get(package_id):
+            errors.append("Inventory XR device receipt renderer must match its XR package id")
         required_text_fields.update(
             {
+                "package.renderer": renderer,
                 "package.version": package.get("version"),
                 "package.revision": package.get("revision"),
             }
@@ -285,6 +357,37 @@ def validate_inventory_xr_device_receipt_contract(root: Path) -> list[str]:
     errors: list[str] = []
     template_path = root / INVENTORY_XR_DEVICE_RECEIPT_TEMPLATE
     guide_path = root / INVENTORY_XR_DEVICE_RECEIPT_GUIDE
+    schema_path = root / INVENTORY_XR_DEVICE_RECEIPT_SCHEMA
+    if not schema_path.exists():
+        errors.append("Inventory XR device receipt JSON Schema is missing")
+    else:
+        try:
+            schema = load_json(schema_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            errors.append(f"Inventory XR device receipt JSON Schema is invalid: {exc}")
+        else:
+            schema_properties = schema.get("properties", {})
+            if schema_properties.get("schema", {}).get("const") != (
+                "xr-foundry.inventory_xr_device_receipt.v2"
+            ):
+                errors.append("Inventory XR device receipt JSON Schema version has drifted")
+            schema_ids = set(
+                schema_properties.get("supported_xr_package_ids", {})
+                .get("items", {})
+                .get("enum", [])
+            )
+            if schema_ids != set(INVENTORY_XR_RENDERERS):
+                errors.append("Inventory XR device receipt JSON Schema renderer ids have drifted")
+            schema_pairs = {
+                (
+                    entry.get("properties", {}).get("id", {}).get("const"),
+                    entry.get("properties", {}).get("renderer", {}).get("const"),
+                )
+                for entry in schema_properties.get("package", {}).get("oneOf", [])
+                if isinstance(entry, dict)
+            }
+            if schema_pairs != set(INVENTORY_XR_RENDERERS.items()):
+                errors.append("Inventory XR device receipt JSON Schema renderer pairs have drifted")
     if not template_path.exists():
         errors.append("Inventory XR device receipt JSON template is missing")
     else:
@@ -312,12 +415,16 @@ def validate_inventory_xr_device_receipt_contract(root: Path) -> list[str]:
     else:
         guide = guide_path.read_text(encoding="utf-8")
         required_guide_tokens = {
+            "com.lingkyn.inventory.xr.ugui",
+            "com.lingkyn.inventory.xr.uitoolkit",
             "pico_tracked_controller_v1",
+            "inventory-xr-device-receipt.schema.json",
             "--device-receipt",
             "partial",
             "not_tested",
             "direct_poke_device_claim_allowed",
             "at least 120 seconds",
+            "may be deferred",
         }
         for token in required_guide_tokens:
             if token not in guide:
@@ -330,9 +437,11 @@ def scan_text_safety(root: Path) -> list[str]:
     absolute_windows_path = re.compile(r"\b[A-Za-z]:\\(?:Users|Program Files|rrjm)\\", re.IGNORECASE)
     secret_pattern = re.compile(r"(api[_-]?key|access[_-]?token|client[_-]?secret)\s*[:=]\s*['\"][^'\"]+", re.IGNORECASE)
     for path in root.rglob("*"):
-        if not path.is_file() or ".git" in path.parts or path.suffix.lower() not in TEXT_SUFFIXES:
+        if not path.is_file() or ".git" in path.parts:
             continue
-        text = path.read_text(encoding="utf-8", errors="replace")
+        text = read_decodable_text(path)
+        if text is None:
+            continue
         lowered = text.casefold()
         for marker in forbidden_public_markers():
             if marker in lowered:
@@ -357,7 +466,154 @@ def validate_ignore_scope(root: Path) -> list[str]:
     return errors
 
 
-def validate_internal_namespace_links(package_root: Path) -> list[str]:
+def validate_active_repository_path_references(root: Path) -> list[str]:
+    errors: list[str] = []
+    old_reference_patterns = {
+        "old root Git UPM path": re.compile(r"\?path=/?com\.lingkyn", re.IGNORECASE),
+        "old root GitHub source link": re.compile(
+            r"github\.com/Lingkyn/xr-foundry/(?:tree|blob)/main/com\.lingkyn",
+            re.IGNORECASE,
+        ),
+        "old root local file path": re.compile(
+            r"file:(?:\.\./)+xr-foundry/com\.lingkyn", re.IGNORECASE
+        ),
+        "old root relative package link": re.compile(r"\]\(com\.lingkyn[^)]*/\)"),
+        "old root catalog path": re.compile(r'''["']path["']\s*:\s*["']com\.lingkyn'''),
+    }
+    for path in root.rglob("*"):
+        if not path.is_file() or ".git" in path.parts:
+            continue
+        relative = path.relative_to(root)
+        if is_dated_historical_validation_receipt(relative):
+            continue
+        if path.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for label, pattern in old_reference_patterns.items():
+            if pattern.search(text):
+                errors.append(f"{label} in active repository surface: {relative.as_posix()}")
+    return errors
+
+
+def validate_active_git_upm_selectors(
+    root: Path, catalog: dict[str, Any]
+) -> list[str]:
+    errors: list[str] = []
+    catalog_paths = package_paths_by_id(catalog)
+    selector_pattern = re.compile(
+        r"(?<!\\)\?path=(/[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)"
+        r"(?=[#\s\"'`<>,)\]}]|$)"
+    )
+    for path in root.rglob("*"):
+        if not path.is_file() or ".git" in path.parts:
+            continue
+        relative = path.relative_to(root)
+        if is_dated_historical_validation_receipt(relative):
+            continue
+        text = read_decodable_text(path)
+        if text is None:
+            continue
+        for selected_path in selector_pattern.findall(text):
+            normalized = selected_path.rstrip("/")
+            package_id = Path(normalized).name
+            expected_path = catalog_paths.get(package_id)
+            if expected_path is None:
+                errors.append(
+                    f"Git UPM selector names an undeclared package in {relative.as_posix()}: "
+                    f"{selected_path}"
+                )
+                continue
+            canonical = f"/{expected_path}"
+            if normalized != canonical:
+                errors.append(
+                    f"Git UPM selector path drift for {package_id} in {relative.as_posix()}: "
+                    f"selector={normalized} catalog={canonical}"
+                )
+    return errors
+
+
+def validate_readme_git_install_matrix(
+    root: Path, catalog: dict[str, Any]
+) -> list[str]:
+    readme_path = root / "README.md"
+    if not readme_path.exists():
+        return ["README Git install matrix is missing"]
+
+    errors: list[str] = []
+    catalog_paths = package_paths_by_id(catalog)
+    entry_pattern = re.compile(
+        r'"(com\.lingkyn\.[A-Za-z0-9_.-]+)"\s*:\s*'
+        r'"(https://github\.com/Lingkyn/xr-foundry\.git\?path=[^"]+)"'
+    )
+    entries = entry_pattern.findall(readme_path.read_text(encoding="utf-8"))
+    entry_ids = [package_id for package_id, _ in entries]
+    if len(entry_ids) != len(set(entry_ids)):
+        errors.append("README Git install matrix contains duplicate package ids")
+    entry_urls = dict(entries)
+    if set(entry_urls) != set(catalog_paths):
+        errors.append(
+            "README Git install matrix must be derived from every package catalog entry: "
+            f"readme={sorted(entry_urls)} catalog={sorted(catalog_paths)}"
+        )
+
+    url_pattern = re.compile(
+        r"^https://github\.com/Lingkyn/xr-foundry\.git\?path="
+        r"(?P<path>/[A-Za-z0-9._/-]+)#(?P<revision>[^\s]+)$"
+    )
+    revisions: dict[str, str] = {}
+    for package_id, url in entries:
+        match = url_pattern.fullmatch(url)
+        if match is None:
+            errors.append(f"README Git install URL is malformed for {package_id}")
+            continue
+        expected_path = f"/{catalog_paths.get(package_id, '')}"
+        if match.group("path") != expected_path:
+            errors.append(
+                f"README Git install path drift for {package_id}: "
+                f"readme={match.group('path')} catalog={expected_path}"
+            )
+        revisions[package_id] = match.group("revision")
+
+    placeholder_anchor = "<full-40-character-commit-sha>"
+    placeholder_sibling = "<same-full-40-character-commit-sha>"
+    revision_values = list(revisions.values())
+    placeholder_values = {placeholder_anchor, placeholder_sibling}
+    if revision_values and set(revision_values) <= placeholder_values:
+        if revision_values.count(placeholder_anchor) != 1:
+            errors.append("README Git install matrix must contain one full-SHA placeholder anchor")
+        if len(revision_values) > 1 and revision_values.count(placeholder_sibling) != len(revision_values) - 1:
+            errors.append("README Git install siblings must use the same-full-SHA placeholder")
+    elif revision_values:
+        if any(re.fullmatch(r"[0-9a-fA-F]{40}", value) is None for value in revision_values):
+            errors.append("README Git install revisions must be full 40-character Git SHAs")
+        elif len(set(value.casefold() for value in revision_values)) != 1:
+            errors.append("README Git install siblings must pin the same full Git SHA")
+
+    for package_id, package_path in catalog_paths.items():
+        manifest_path = root / package_path / "package.json"
+        if not manifest_path.exists():
+            continue
+        dependencies = load_json(manifest_path).get("dependencies", {})
+        for dependency_id in dependencies:
+            dependency_id = str(dependency_id)
+            if not dependency_id.startswith("com.lingkyn."):
+                continue
+            if dependency_id not in catalog_paths:
+                errors.append(
+                    f"{package_id}: custom sibling dependency is absent from package catalog: "
+                    f"{dependency_id}"
+                )
+            if package_id in entry_urls and dependency_id not in entry_urls:
+                errors.append(
+                    f"README Git install matrix is not dependency-closed: "
+                    f"{package_id} requires {dependency_id}"
+                )
+    return errors
+
+
+def validate_internal_namespace_links(
+    package_root: Path, package_roots: dict[str, Path] | None = None
+) -> list[str]:
     declarations: set[str] = set()
     imports: list[tuple[Path, str]] = []
     for source in package_root.rglob("*.cs"):
@@ -373,7 +629,11 @@ def validate_internal_namespace_links(package_root: Path) -> list[str]:
         for package_id in dependencies:
             if not str(package_id).startswith("com.lingkyn."):
                 continue
-            dependency_root = package_root.parent / str(package_id)
+            dependency_root = (
+                package_roots.get(str(package_id), package_root.parent / str(package_id))
+                if package_roots is not None
+                else package_root.parent / str(package_id)
+            )
             for source in dependency_root.rglob("*.cs") if dependency_root.exists() else []:
                 declarations.update(re.findall(r"\bnamespace\s+(Lingkyn\.[A-Za-z0-9_.]+)", source.read_text(encoding="utf-8")))
     errors: list[str] = []
@@ -381,6 +641,177 @@ def validate_internal_namespace_links(package_root: Path) -> list[str]:
         if not any(namespace == imported or namespace.startswith(imported + ".") for namespace in declarations):
             errors.append(f"{source.relative_to(package_root)}: internal namespace has no source declaration: {imported}")
     return errors
+
+
+def validate_unity_asset_path_literals(
+    package_root: Path, known_package_ids: set[str]
+) -> list[str]:
+    errors: list[str] = []
+    quoted_path = re.compile(r'''["']([^"']*[Pp]ackages/[^"']*)["']''')
+    for source in package_root.rglob("*.cs"):
+        text = source.read_text(encoding="utf-8")
+        for value in quoted_path.findall(text):
+            normalized = value.replace("\\", "/")
+            lowered = normalized.casefold()
+            if "packages/unity/" in lowered:
+                errors.append(
+                    f"{source.relative_to(package_root)}: repository path used as a Unity asset path: {value}"
+                )
+                continue
+            marker = lowered.find("packages/")
+            if marker < 0:
+                continue
+            mounted = normalized[marker:]
+            if not mounted.startswith("Packages/"):
+                errors.append(
+                    f"{source.relative_to(package_root)}: Unity asset path must start with Packages/: {value}"
+                )
+                continue
+            segments = mounted.split("/")
+            if len(segments) < 2:
+                errors.append(f"{source.relative_to(package_root)}: incomplete Unity package asset path: {value}")
+                continue
+            mounted_package = segments[1]
+            if mounted_package.startswith("com.lingkyn.") and mounted_package not in known_package_ids:
+                errors.append(
+                    f"{source.relative_to(package_root)}: Unity asset path names an undeclared package: {mounted_package}"
+                )
+    return errors
+
+
+def validate_reference_evidence_paths(root: Path, reference_catalog: dict) -> list[str]:
+    errors: list[str] = []
+    for artifact in reference_catalog.get("artifacts", []):
+        if not isinstance(artifact, dict):
+            continue
+        artifact_id = str(artifact.get("id", ""))
+        for evidence_path in artifact.get("evidence", []):
+            if not isinstance(evidence_path, str) or not evidence_path.strip():
+                errors.append(f"{artifact_id}: reference evidence paths must be non-empty strings")
+                continue
+            if not (root / evidence_path).exists():
+                errors.append(f"{artifact_id}: reference evidence path does not exist: {evidence_path}")
+    return errors
+
+
+def validate_repository_layout(root: Path, catalog: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    layout_path = root / "docs" / "architecture" / "repository-layout.v1.json"
+    if not layout_path.exists():
+        return ["Repository layout contract is missing"]
+
+    layout = load_json(layout_path)
+    if layout.get("schema") != "xr-foundry.repository_layout.v1":
+        errors.append("Repository layout schema is invalid")
+    if layout.get("status") != "accepted_initialization_architecture":
+        errors.append("Repository layout must be the accepted initialization architecture")
+    if layout.get("package_root") != "packages":
+        errors.append("Repository package root must be packages")
+
+    catalog_paths = package_paths_by_id(catalog)
+    if len(catalog_paths) != len(catalog.get("packages", [])):
+        errors.append("Package catalog ids and paths must be unique and non-empty")
+
+    collection_ids: set[str] = set()
+    collection_paths: set[str] = set()
+    layout_packages: dict[str, str] = {}
+    for collection in layout.get("collections", []):
+        if not isinstance(collection, dict):
+            errors.append("Repository layout collections must be objects")
+            continue
+        collection_id = str(collection.get("id", ""))
+        collection_path = str(collection.get("path", ""))
+        if not collection_id or collection_id in collection_ids:
+            errors.append(f"Repository layout collection id is missing or duplicated: {collection_id}")
+        collection_ids.add(collection_id)
+        if not collection_path or collection_path in collection_paths:
+            errors.append(f"Repository layout collection path is missing or duplicated: {collection_path}")
+        collection_paths.add(collection_path)
+        if not collection_path.startswith("packages/") or ".." in Path(collection_path).parts:
+            errors.append(f"Repository layout collection path is unsafe: {collection_path}")
+        if not (root / collection_path).is_dir():
+            errors.append(f"Repository layout collection does not exist: {collection_path}")
+        for package_id in collection.get("packages", []):
+            package_id = str(package_id)
+            if not package_id or package_id in layout_packages:
+                errors.append(f"Repository layout package is missing or duplicated: {package_id}")
+                continue
+            layout_packages[package_id] = f"{collection_path}/{package_id}"
+
+    if set(layout_packages) != set(catalog_paths):
+        errors.append(
+            "Repository layout/catalog package ids differ: "
+            f"layout={sorted(layout_packages)} catalog={sorted(catalog_paths)}"
+        )
+    for package_id, expected_path in layout_packages.items():
+        actual_path = catalog_paths.get(package_id)
+        if actual_path != expected_path:
+            errors.append(
+                f"Repository layout path mismatch for {package_id}: "
+                f"layout={expected_path} catalog={actual_path}"
+            )
+        if Path(expected_path).name != package_id:
+            errors.append(f"Repository package leaf must equal package id: {expected_path}")
+
+    engine_roots = layout.get("engine_roots")
+    if not isinstance(engine_roots, dict) or engine_roots != {"unity": "packages/unity"}:
+        errors.append("Repository layout may advertise only the implemented Unity engine root")
+    declared_engines = set(engine_roots) if isinstance(engine_roots, dict) else set()
+    actual_engine_roots = {
+        path.name
+        for path in (root / "packages").iterdir()
+        if path.is_dir()
+    } if (root / "packages").is_dir() else set()
+    if actual_engine_roots != declared_engines:
+        errors.append(
+            "Repository engine roots differ from the layout contract: "
+            f"actual={sorted(actual_engine_roots)} declared={sorted(declared_engines)}"
+        )
+
+    live_paths = discover_lingkyn_package_paths(root)
+    if live_paths != set(catalog_paths.values()):
+        errors.append(
+            "Repository contains missing, duplicate, or undeclared Lingkyn package manifests: "
+            f"catalog={sorted(catalog_paths.values())} live={sorted(live_paths)}"
+        )
+    root_legacy_paths = sorted(path.name for path in root.glob("com.lingkyn.*") if path.is_dir())
+    if root_legacy_paths:
+        errors.append(f"Old root package paths are not allowed: {root_legacy_paths}")
+
+    invariants = layout.get("invariants", {})
+    required_invariants = {
+        "leaf_directory_equals_package_id": True,
+        "landing_page_groups_package_families": True,
+        "machine_catalog_keeps_package_entries": True,
+        "consumer_asset_path_uses_package_id": True,
+        "git_url_path_precedes_revision": True,
+        "full_commit_sha_required": True,
+        "old_path_compatibility_layers_allowed": False,
+        "empty_future_engine_roots_allowed": False,
+    }
+    if invariants != required_invariants:
+        errors.append("Repository layout invariants are incomplete or have drifted")
+    return errors
+
+
+def validate_bug_template_package_options(root: Path, catalog: dict[str, Any]) -> list[str]:
+    template_path = root / ".github" / "ISSUE_TEMPLATE" / "bug.yml"
+    if not template_path.exists():
+        return ["Bug report issue template is missing"]
+    package_options = set(
+        re.findall(
+            r"^\s*-\s+(com\.lingkyn\.[A-Za-z0-9_.-]+)\s*$",
+            template_path.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
+    )
+    catalog_ids = set(package_paths_by_id(catalog))
+    if package_options != catalog_ids:
+        return [
+            "Bug report package options differ from the package catalog: "
+            f"template={sorted(package_options)} catalog={sorted(catalog_ids)}"
+        ]
+    return []
 
 
 def validate_inventory_source_manifest(path: Path) -> list[str]:
@@ -505,8 +936,11 @@ def validate_inventory_standard(root: Path) -> list[str]:
         required_package_ids = {
             "com.lingkyn.inventory.core",
             "com.lingkyn.inventory.unity",
+            "com.lingkyn.inventory.presentation",
             "com.lingkyn.inventory.ugui",
-            "com.lingkyn.inventory.xr",
+            "com.lingkyn.inventory.uitoolkit",
+            "com.lingkyn.inventory.xr.ugui",
+            "com.lingkyn.inventory.xr.uitoolkit",
         }
         if set(package_ids) != required_package_ids:
             errors.append("Inventory package family boundaries are incomplete")
@@ -550,8 +984,11 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
     layer_references = {
         "com.lingkyn.inventory.core": "unity-inventory-core",
         "com.lingkyn.inventory.unity": "unity-inventory-authoring",
+        "com.lingkyn.inventory.presentation": "unity-inventory-presentation",
         "com.lingkyn.inventory.ugui": "unity-inventory-ugui",
-        "com.lingkyn.inventory.xr": "unity-inventory-xr",
+        "com.lingkyn.inventory.uitoolkit": "unity-inventory-uitoolkit",
+        "com.lingkyn.inventory.xr.ugui": "unity-inventory-xr-ugui",
+        "com.lingkyn.inventory.xr.uitoolkit": "unity-inventory-xr-uitoolkit",
     }
     roadmap_text = roadmap_path.read_text(encoding="utf-8")
     for package_id, reference_id in layer_references.items():
@@ -578,6 +1015,17 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
         if package_standard.get("earliest_failed_gate") != promotion.get("earliest_failed_gate"):
             errors.append(f"Inventory {label} earliest failed gate must agree across standard and package catalog")
 
+        package_path = package.get("path")
+        manifest_path = root / str(package_path) / "package.json"
+        if manifest_path.exists():
+            manifest_dependencies = set(load_json(manifest_path).get("dependencies", {}).keys())
+            standard_dependencies = set(package_standard.get("required_dependencies", []))
+            if manifest_dependencies != standard_dependencies:
+                errors.append(
+                    f"Inventory {label} dependency projection drift: "
+                    f"standard={sorted(standard_dependencies)} manifest={sorted(manifest_dependencies)}"
+                )
+
         projection_row = (
             f"| `{package_id}` | `{package.get('version')}` | `{package.get('maturity')}` | "
             f"`{promotion.get('earliest_failed_gate')}` |"
@@ -603,8 +1051,15 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
                 if marker in text:
                     errors.append(f"{surface}: stale Inventory implementation claim: {marker}")
 
-    xr_standard = package_family.get("com.lingkyn.inventory.xr", {})
-    if xr_standard.get("implementation_status") in {"implemented_incubating", "implemented_candidate"}:
+    xr_standards = [
+        entry
+        for package_id, entry in package_family.items()
+        if package_id.startswith("com.lingkyn.inventory.xr.")
+    ]
+    if any(
+        entry.get("implementation_status") in {"implemented_incubating", "implemented_candidate"}
+        for entry in xr_standards
+    ):
         xr_surfaces = {
             "README.md": (root / "README.md").read_text(encoding="utf-8"),
             "ROADMAP.md": roadmap_text,
@@ -626,8 +1081,14 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
 def validate_inventory_api_baseline(root: Path) -> list[str]:
     errors: list[str] = []
     baseline_path = root / "docs" / "standards" / "inventory" / "core-api-baseline.json"
-    manifest_path = root / "com.lingkyn.inventory.core" / "package.json"
-    runtime_root = root / "com.lingkyn.inventory.core" / "Runtime"
+    catalog_path = root / "package-catalog.json"
+    if not catalog_path.exists():
+        return errors
+    core_path = package_paths_by_id(load_json(catalog_path)).get("com.lingkyn.inventory.core")
+    if not core_path:
+        return errors
+    manifest_path = root / core_path / "package.json"
+    runtime_root = root / core_path / "Runtime"
     if not baseline_path.exists() or not manifest_path.exists() or not runtime_root.exists():
         return errors
 
@@ -698,6 +1159,7 @@ def validate_package_promotion(package_id: str, promotion: Any) -> list[str]:
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
+    errors.extend(validate_active_repository_path_references(root))
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_xr_device_receipt_contract(root))
     errors.extend(validate_inventory_projection_coherence(root))
@@ -712,6 +1174,10 @@ def validate_repository(root: Path) -> list[str]:
     catalog = load_json(catalog_path)
     if catalog.get("schema") != "xr-foundry.unity_package_catalog.v1":
         errors.append("package catalog schema is invalid")
+    errors.extend(validate_repository_layout(root, catalog))
+    errors.extend(validate_bug_template_package_options(root, catalog))
+    errors.extend(validate_active_git_upm_selectors(root, catalog))
+    errors.extend(validate_readme_git_install_matrix(root, catalog))
 
     reference_catalog_path = root / "reference-catalog.json"
     if not reference_catalog_path.exists():
@@ -732,9 +1198,11 @@ def validate_repository(root: Path) -> list[str]:
         }
         if package_artifact_paths != package_paths:
             errors.append("reference/package catalog paths must agree for all live packages")
+        errors.extend(validate_reference_evidence_paths(root, reference_catalog))
 
     catalog_packages = catalog.get("packages", [])
     declared_paths: set[str] = set()
+    declared_package_roots: dict[str, Path] = {}
     for item in catalog_packages:
         if not isinstance(item, dict):
             errors.append("package catalog entries must be objects")
@@ -743,10 +1211,13 @@ def validate_repository(root: Path) -> list[str]:
         relative = str(item.get("path", ""))
         declared_paths.add(relative)
         package_root = root / relative
+        declared_package_roots[package_id] = package_root
         if not package_id.startswith("com.lingkyn."):
             errors.append(f"package id must start with com.lingkyn.: {package_id}")
-        if relative != package_id:
-            errors.append(f"package path must match package id: {relative} != {package_id}")
+        if Path(relative).name != package_id:
+            errors.append(f"package path leaf must match package id: {relative} != {package_id}")
+        if not relative.startswith("packages/unity/") or ".." in Path(relative).parts:
+            errors.append(f"package path must stay under packages/unity: {relative}")
         if item.get("maturity") not in catalog.get("maturity_states", []):
             errors.append(f"unknown maturity for {package_id}: {item.get('maturity')}")
         errors.extend(validate_package_promotion(package_id, item.get("promotion")))
@@ -764,7 +1235,7 @@ def validate_repository(root: Path) -> list[str]:
         if not manifest.get("samples"):
             errors.append(f"{package_id}: package.json must declare Samples~")
 
-    live_package_paths = {path.parent.name for path in root.glob("com.*/package.json")}
+    live_package_paths = discover_lingkyn_package_paths(root)
     if live_package_paths != declared_paths:
         errors.append(
             f"catalog/live package mismatch: catalog={sorted(declared_paths)} live={sorted(live_package_paths)}"
@@ -782,7 +1253,8 @@ def validate_repository(root: Path) -> list[str]:
             continue
     for package_path in declared_paths:
         package_root = root / package_path
-        errors.extend(validate_internal_namespace_links(package_root))
+        errors.extend(validate_internal_namespace_links(package_root, declared_package_roots))
+        errors.extend(validate_unity_asset_path_literals(package_root, set(declared_package_roots)))
         for source in package_root.rglob("*.cs"):
             text = source.read_text(encoding="utf-8")
             namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)

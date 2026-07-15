@@ -2,8 +2,10 @@
 
 Status: **incubating standard**
 Standard version: **0.1.0**
-Implementation status: **Core, Unity authoring, and UGUI `0.1.1` are candidate;
-XR `0.1.0` is implemented and incubating**
+Implementation status: **Core, Unity authoring, renderer-neutral Presentation,
+UGUI, UI Toolkit, XR UGUI, and XR UI Toolkit are implemented as incubating work.
+All packages await proof at the canonical nested repository paths; XR routes also
+retain their independent device gates.**
 
 This standard defines the evidence and architecture required to implement and
 promote the Inventory package family in XR Foundry. It is intentionally independent
@@ -86,10 +88,13 @@ candidate, not a stable package.
 
 | Layer | Current state | Earliest unsatisfied gate |
 | --- | --- | --- |
-| `com.lingkyn.inventory.core` | Candidate `0.1.0`; persistence, typed state, immutable install, API review, upgrade, and rollback pass | None for Core candidate |
-| `com.lingkyn.inventory.unity` | Candidate `0.1.0`; authoring, conversion, diagnostics, immutability, and local/immutable consumers pass | None for Unity authoring candidate |
-| `com.lingkyn.inventory.ugui` | Candidate `0.1.1`; functional shipped prefabs, immutable consumer, Input System sample, tests, and consumer variant upgrade/rollback pass; the `0.1.0` verdict is withdrawn | None for UGUI candidate |
-| `com.lingkyn.inventory.xr` | Incubating `0.1.0`; provider-neutral world-space prefab, fail-closed validation, tracked ray, real XRI poke, imported sample, and immutable Git consumer pass | Android build/install/open and real Pico evidence |
+| `com.lingkyn.inventory.core` | Incubating `0.1.0`; source, domain, persistence, typed state, API review, and local-consumer gates pass | Fresh immutable consumer at the canonical nested repository path |
+| `com.lingkyn.inventory.unity` | Incubating `0.1.0`; authoring, conversion, diagnostics, immutability, and local-consumer gates pass | Fresh immutable consumer at the canonical nested repository path |
+| `com.lingkyn.inventory.presentation` | Incubating `0.1.0`; renderer-neutral view state, intents, view port, presenter, and engine-light tests | Fresh clean-consumer and immutable Git validation |
+| `com.lingkyn.inventory.ugui` | Incubating `0.2.0`; nested UGUI roles consume the neutral presentation contract | Fresh local and immutable Git consumer validation |
+| `com.lingkyn.inventory.uitoolkit` | Incubating `0.1.0`; peer VisualElement/UXML/USS route, state gallery, and renderer tests | Fresh clean-consumer and renderer acceptance |
+| `com.lingkyn.inventory.xr.ugui` | Incubating `0.1.0`; explicit UGUI/XRI composition | Fresh package-graph install/build, then named-device evidence |
+| `com.lingkyn.inventory.xr.uitoolkit` | Incubating `0.1.0`; explicit UI Toolkit/XRI world-space composition and validation | Fresh package-graph install/build, then independent named-device evidence |
 
 These rows are claim boundaries, not a percentage-complete estimate. A lower layer
 may reach candidate maturity without promoting a higher layer or the whole family.
@@ -103,3 +108,6 @@ may reach candidate maturity without promoting a higher layer or the whole famil
 - [`verification-contract.md`](verification-contract.md): implementation and promotion evidence.
 - [`core-api-contract.md`](core-api-contract.md): prerelease compatibility and deprecation policy.
 - [`core-api-baseline.json`](core-api-baseline.json): machine-checked public type baseline.
+- [`renderer-neutral-architecture.md`](renderer-neutral-architecture.md):
+  renderer-neutral presentation, renderer-explicit XR composition, Git pinning,
+  and evidence boundaries.

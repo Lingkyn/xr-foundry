@@ -5,124 +5,202 @@
   "packages": [
     {
       "id": "com.lingkyn.project-initializer",
-      "path": "com.lingkyn.project-initializer",
+      "path": "packages/unity/foundations/com.lingkyn.project-initializer",
       "maturity": "incubating",
       "version": "0.1.0",
-      "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_e0bfc8ab02d6a37af957336e87854da33a3cddad",
+      "independent_compile": "passed_content_compile_2026-07-15_canonical_path_install_pending",
+      "git_url_install": "pending_canonical_nested_path_revision",
       "device_evidence": "not_applicable"
     },
     {
       "id": "com.lingkyn.xr-baseline",
-      "path": "com.lingkyn.xr-baseline",
+      "path": "packages/unity/foundations/com.lingkyn.xr-baseline",
       "maturity": "incubating",
       "version": "0.1.0",
-      "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_e0bfc8ab02d6a37af957336e87854da33a3cddad",
+      "independent_compile": "passed_content_compile_2026-07-15_canonical_path_install_pending",
+      "git_url_install": "pending_canonical_nested_path_revision",
       "device_evidence": "pending_for_device_claims"
     },
     {
       "id": "com.lingkyn.inventory.core",
-      "path": "com.lingkyn.inventory.core",
-      "maturity": "candidate",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.core",
+      "maturity": "incubating",
       "version": "0.1.0",
-      "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_4810c07abde55848dbca7fa3eb128414a33d7977",
+      "independent_compile": "passed_content_compile_2026-07-15_canonical_path_install_pending",
+      "git_url_install": "pending_canonical_nested_path_revision",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "passed",
-        "earliest_failed_gate": "none",
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "immutable_nested_path_git_consumer",
         "satisfied": [
           "positive_source_gate",
           "architecture_gate",
           "core_atomic_mutation_tests",
           "local_clean_consumer",
-          "immutable_git_url_clean_consumer",
           "persistence_round_trip_and_migration",
           "typed_instance_state",
           "public_api_compatibility_review",
-          "immutable_candidate_clean_consumer",
           "upgrade_and_rollback_across_a_release"
         ],
-        "pending": []
+        "pending": [
+          "immutable_nested_path_git_consumer",
+          "candidate_release_review"
+        ]
       }
     },
     {
       "id": "com.lingkyn.inventory.unity",
-      "path": "com.lingkyn.inventory.unity",
-      "maturity": "candidate",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.unity",
+      "maturity": "incubating",
       "version": "0.1.0",
-      "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_b8b49235a66d8a388a123739d3fc7586bd7cf211",
+      "independent_compile": "passed_content_compile_2026-07-15_canonical_path_install_pending",
+      "git_url_install": "pending_canonical_nested_path_revision",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "passed",
-        "earliest_failed_gate": "none",
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "immutable_nested_path_git_consumer",
         "satisfied": [
           "scriptableobject_authoring",
           "stable_explicit_ids",
           "deterministic_domain_conversion",
           "actionable_validation",
           "asset_immutability",
-          "local_clean_consumer_editmode_tests",
-          "immutable_git_url_clean_consumer",
-          "candidate_release_review"
+          "local_clean_consumer_editmode_tests"
         ],
-        "pending": []
+        "pending": [
+          "immutable_nested_path_git_consumer",
+          "candidate_release_review"
+        ]
+      }
+    },
+    {
+      "id": "com.lingkyn.inventory.presentation",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.presentation",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "roslyn_runtime_passed_unity_consumer_pending_2026-07-15",
+      "git_url_install": "pending_renderer_neutral_graph_revision",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "local_clean_consumer",
+        "satisfied": [
+          "renderer_neutral_api_extracted",
+          "engine_light_runtime_assembly",
+          "presenter_unit_tests",
+          "runtime_roslyn_compile"
+        ],
+        "pending": [
+          "local_clean_consumer",
+          "immutable_git_url_clean_consumer",
+          "public_api_review"
+        ]
       }
     },
     {
       "id": "com.lingkyn.inventory.ugui",
-      "path": "com.lingkyn.inventory.ugui",
-      "maturity": "candidate",
-      "version": "0.1.1",
-      "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_ea7207e94aa6fa9c129e5bf381d77f932bf35911",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui",
+      "maturity": "incubating",
+      "version": "0.2.0",
+      "independent_compile": "pending_for_0.2.0_renderer_neutral_graph",
+      "git_url_install": "pending_for_0.2.0_renderer_neutral_graph",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "passed",
-        "earliest_failed_gate": "none",
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "local_clean_consumer",
         "satisfied": [
-          "presenter_boundary",
+          "neutral_presentation_dependency",
           "nested_prefab_links",
           "slot_and_item_replacement",
           "wired_shipped_prefabs",
           "required_visible_state_replay",
-          "prefab_graphic_raycast_pointer_keyboard",
-          "immutable_git_url_functional_consumer",
-          "input_system_only_sample_import_compile",
-          "upgrade_0.1.0_to_0.1.1_and_rollback",
-          "consumer_owned_prefab_variant_upgrade_rollback",
-          "candidate_release_review"
+          "prefab_graphic_raycast_pointer_keyboard"
         ],
-        "pending": []
+        "pending": [
+          "local_clean_consumer",
+          "immutable_git_url_clean_consumer",
+          "candidate_release_review"
+        ]
       }
     },
     {
-      "id": "com.lingkyn.inventory.xr",
-      "path": "com.lingkyn.inventory.xr",
+      "id": "com.lingkyn.inventory.uitoolkit",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit",
       "maturity": "incubating",
       "version": "0.1.0",
-      "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_55b419bb010c253ce130a09e80652eba9744424b",
+      "independent_compile": "pending_first_clean_consumer",
+      "git_url_install": "pending_first_immutable_revision",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "local_clean_consumer",
+        "satisfied": [
+          "neutral_presentation_dependency",
+          "visual_element_role_composition",
+          "semantic_state_and_intent_tests",
+          "state_gallery_sample"
+        ],
+        "pending": [
+          "local_clean_consumer",
+          "immutable_git_url_clean_consumer",
+          "renderer_acceptance",
+          "candidate_release_review"
+        ]
+      }
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.ugui",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "pending_renderer_explicit_package_graph",
+      "git_url_install": "pending_renderer_explicit_package_graph",
       "device_evidence": "pending_pico_device_evidence",
       "promotion": {
         "candidate_status": "blocked",
-        "earliest_failed_gate": "android_build_install_open",
+        "earliest_failed_gate": "local_clean_consumer",
         "satisfied": [
-          "provider_neutral_optional_dependency",
+          "renderer_explicit_package_boundary",
           "world_space_nested_prefab",
           "fail_closed_scene_validation",
           "non_head_locked_default_placement",
-          "tracked_ray_left_center_right_playmode",
-          "real_xri_poke_release_playmode",
-          "local_clean_consumer_editmode_playmode",
-          "upm_sample_import_compile_setup",
-          "immutable_git_url_clean_consumer"
+          "real_xri_ray_route_test_authored",
+          "real_xri_poke_release_test_authored"
         ],
         "pending": [
+          "local_clean_consumer",
+          "immutable_git_url_clean_consumer",
+          "unity_test_runner_xri_route",
           "android_build_install_open",
           "pico_device_evidence"
+        ]
+      }
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.uitoolkit",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "pending_first_clean_consumer",
+      "git_url_install": "pending_first_immutable_revision",
+      "device_evidence": "pending_independent_renderer_device_evidence",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "local_clean_consumer",
+        "satisfied": [
+          "renderer_explicit_package_boundary",
+          "world_space_panel_composition",
+          "fail_closed_renderer_validation",
+          "non_head_locked_default_placement",
+          "real_xri_ray_route_test_authored",
+          "strict_panel_and_collider_contract_authored"
+        ],
+        "pending": [
+          "local_clean_consumer",
+          "immutable_git_url_clean_consumer",
+          "unity_test_runner_xri_route",
+          "android_build_install_open",
+          "independent_named_device_evidence"
         ]
       }
     }

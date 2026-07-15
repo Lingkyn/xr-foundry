@@ -1,8 +1,8 @@
 # Lingkyn Inventory Core
 
-Status: **incubating prerelease**. `0.1.0-pre.1` establishes the first reviewed
-public API baseline; candidate compatibility is not promised until the recorded
-upgrade/rollback gate passes.
+Status: **candidate review in progress**. `0.1.0-pre.1` is the immutable public API
+baseline; version `0.1.0` remains incubating until its recorded clean-consumer
+upgrade and rollback gate passes.
 
 Inventory Core is an engine-light domain package for reusable Inventory behavior.
 It contains identities, definitions, stacks, containers, atomic mutations,

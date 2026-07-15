@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0 - Unreleased
+
+- Prepared the first candidate revision against the `0.1.0-pre.1` public API baseline.
+
 ## 0.1.0-pre.1 - 2026-07-15
 
 - Added the independently authored Inventory domain foundation and invariant tests.

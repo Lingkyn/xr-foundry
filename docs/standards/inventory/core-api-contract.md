@@ -8,6 +8,10 @@ over this baseline in an independent consumer, preserve or explicitly migrate it
 public and persisted contracts, and then roll back to this revision without corrupting
 consumer state or package resolution.
 
+The `0.1.0` candidate-review revision declares no public type removal or persisted
+schema break from that baseline. This remains a proposed compatibility verdict
+until the independent upgrade and rollback run is recorded.
+
 The machine-readable type list lives in `core-api-baseline.json`. Repository
 validation compares that list with public Runtime declarations so a public type
 cannot silently appear or disappear without a reviewed baseline change.

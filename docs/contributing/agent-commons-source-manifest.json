@@ -1,0 +1,135 @@
+{
+  "schema": "xr-foundry.agent_commons_source_manifest.v1",
+  "sources": [
+    {
+      "id": "github-issue-assignment",
+      "publisher": "GitHub",
+      "title": "Assigning issues and pull requests to other GitHub users",
+      "url": "https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/assigning-issues-and-pull-requests-to-other-github-users",
+      "source_role": "Permission boundary for direct assignment",
+      "positive_evidence": [
+        "Documents that direct assignment depends on repository permissions"
+      ],
+      "limits": [
+        "Does not define a community claim-lease protocol"
+      ]
+    },
+    {
+      "id": "github-project-access",
+      "publisher": "GitHub",
+      "title": "Managing access to your projects",
+      "url": "https://docs.github.com/en/issues/planning-and-tracking-with-projects/managing-your-project/managing-access-to-your-projects",
+      "source_role": "Public visibility and project edit-permission boundary",
+      "positive_evidence": [
+        "Separates public visibility from project edit access"
+      ],
+      "limits": [
+        "Project permissions do not replace repository permissions"
+      ]
+    },
+    {
+      "id": "github-issue-forms",
+      "publisher": "GitHub",
+      "title": "Configuring issue templates for your repository",
+      "url": "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
+      "source_role": "Structured public intake",
+      "positive_evidence": [
+        "Provides maintained YAML issue-form contracts"
+      ],
+      "limits": [
+        "Submitting a form is not readiness or authorization"
+      ]
+    },
+    {
+      "id": "github-codeowners",
+      "publisher": "GitHub",
+      "title": "About code owners",
+      "url": "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners",
+      "source_role": "Review routing for governed files",
+      "positive_evidence": [
+        "Provides path-based review ownership"
+      ],
+      "limits": [
+        "Enforcement also depends on repository branch rules"
+      ]
+    },
+    {
+      "id": "github-discussion-category-forms",
+      "publisher": "GitHub",
+      "title": "Creating discussion category forms",
+      "url": "https://docs.github.com/en/discussions/managing-discussions-for-your-community/creating-discussion-category-forms",
+      "source_role": "Structured public RFC intake",
+      "positive_evidence": [
+        "Defines category-slug YAML forms for public Discussions"
+      ],
+      "limits": [
+        "Submitting a Discussion form does not admit Ready work or grant authority"
+      ]
+    },
+    {
+      "id": "github-actions-security",
+      "publisher": "GitHub",
+      "title": "Secure use reference",
+      "url": "https://docs.github.com/en/actions/reference/security/secure-use",
+      "source_role": "Untrusted-input and workflow security boundary",
+      "positive_evidence": [
+        "Documents script injection, third-party action, and credential risks"
+      ],
+      "limits": [
+        "Repository-specific threat review remains necessary"
+      ]
+    },
+    {
+      "id": "github-actions-token",
+      "publisher": "GitHub",
+      "title": "Use GITHUB_TOKEN for authentication in workflows",
+      "url": "https://docs.github.com/en/actions/tutorials/authenticate-with-github_token",
+      "source_role": "Least-privilege workflow token configuration",
+      "positive_evidence": [
+        "Supports explicit, minimized workflow permissions"
+      ],
+      "limits": [
+        "A read-only token does not make executed contribution code trusted"
+      ]
+    },
+    {
+      "id": "github-rest-repository-rules",
+      "publisher": "GitHub",
+      "title": "REST API endpoints for rules",
+      "url": "https://docs.github.com/en/rest/repos/rules",
+      "source_role": "Machine interface for repository ruleset inspection and maintenance",
+      "positive_evidence": [
+        "Documents create, read, update, history, and branch-rule endpoints"
+      ],
+      "limits": [
+        "API capability does not authorize an agent or contributor to change repository settings"
+      ]
+    },
+    {
+      "id": "github-available-rulesets-rules",
+      "publisher": "GitHub",
+      "title": "Available rules for rulesets",
+      "url": "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets",
+      "source_role": "Normative rule semantics for protected branches",
+      "positive_evidence": [
+        "Documents pull-request, status-check, thread-resolution, deletion, and force-push rules"
+      ],
+      "limits": [
+        "Required-review counts must fit the repository's actual maintainer topology"
+      ]
+    },
+    {
+      "id": "meta-agentic-tools",
+      "publisher": "Meta Quest",
+      "title": "Agentic Tools",
+      "url": "https://github.com/meta-quest/agentic-tools",
+      "source_role": "Official provider-neutral XR agent-tool precedent",
+      "positive_evidence": [
+        "Publishes agent discovery instructions and XR device tooling for multiple coding assistants"
+      ],
+      "limits": [
+        "Reference precedent only; no code or permission model is inherited"
+      ]
+    }
+  ]
+}

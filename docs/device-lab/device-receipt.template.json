@@ -1,0 +1,91 @@
+{
+  "schema": "xr-foundry.device_execution_receipt.v1",
+  "receipt_id": "template-not-evidence",
+  "task_url": null,
+  "revision": {
+    "repository": "https://github.com/Lingkyn/xr-foundry",
+    "commit_sha": null
+  },
+  "artifact": {
+    "sha256": null,
+    "artifact_ref": null,
+    "application_id": null
+  },
+  "package_tuple": {
+    "composition_id": "inventory-ugui-xr",
+    "domain": {
+      "id": "com.lingkyn.inventory.core",
+      "version": "replace-with-version"
+    },
+    "presentation": {
+      "id": "com.lingkyn.inventory.presentation",
+      "version": "replace-with-version"
+    },
+    "renderer_adapter": {
+      "id": "com.lingkyn.inventory.ugui",
+      "version": "replace-with-version"
+    },
+    "xr_adapter": {
+      "id": "com.lingkyn.inventory.xr.ugui",
+      "version": "replace-with-version"
+    }
+  },
+  "device_profile_id": "pico-openxr-controller",
+  "test_plan_id": "inventory-world-space-ui-v1",
+  "software": {
+    "engine": "Unity",
+    "engine_version": null,
+    "runtime_id": "openxr-pico",
+    "runtime_version": null
+  },
+  "device": {
+    "family_id": "pico-4-family",
+    "model": null,
+    "os_family": "PICO OS",
+    "os_version": null
+  },
+  "input": {
+    "routes": [
+      "tracked-controller-ray"
+    ],
+    "device_description": null
+  },
+  "checks": [
+    { "id": "artifact-install", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "sample-open", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "world-anchor-head-turn", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "world-anchor-lateral-lean", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "binocular-readability", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-center-right-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-center-right-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "semantic-state-feedback", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "occlusion-clipping-comfort", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "restart-or-recenter", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "direct-poke-interaction", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "hand-ray-interaction", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "gaze-pinch-interaction", "status": "not_tested", "observation": "", "evidence_refs": [] }
+  ],
+  "optional_claims": [
+    { "id": "direct-poke", "supported": false },
+    { "id": "hand-ray", "supported": false },
+    { "id": "gaze-and-pinch", "supported": false }
+  ],
+  "overall_result": "not_tested",
+  "claims_supported": [],
+  "claims_not_supported": [
+    "inventory-ugui-xr-required-suite",
+    "inventory-ui-toolkit-xr-required-suite",
+    "direct-poke",
+    "hand-ray",
+    "gaze-and-pinch"
+  ],
+  "tester": {
+    "github_identity": null,
+    "execution_assistant": null
+  },
+  "timestamps": {
+    "started_at": null,
+    "completed_at": null
+  },
+  "legacy_receipts": []
+}

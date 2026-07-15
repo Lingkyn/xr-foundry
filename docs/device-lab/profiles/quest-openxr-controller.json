@@ -1,0 +1,26 @@
+{
+  "schema": "xr-foundry.device_profile.v1",
+  "profile_id": "quest-openxr-controller",
+  "profile_status": "proposed",
+  "claim_allowed": false,
+  "claim_gate_issue": "https://github.com/Lingkyn/xr-foundry/issues/29",
+  "evidence_status": "not_tested",
+  "device": {
+    "vendor": "Meta",
+    "family_id": "quest-standalone-family",
+    "family_name": "Meta Quest standalone family",
+    "os_family": "Meta Horizon OS"
+  },
+  "runtime": {
+    "runtime_id": "openxr-meta-quest",
+    "api_family": "OpenXR"
+  },
+  "input_routes": [
+    "tracked-controller-ray"
+  ],
+  "non_claims": [
+    "Device-test claims are not open until Issue #29 admits this profile",
+    "No Quest model, operating-system version, renderer, package composition, or capability has passed",
+    "PICO, Vision Pro, Editor, and simulator results cannot satisfy this profile"
+  ]
+}

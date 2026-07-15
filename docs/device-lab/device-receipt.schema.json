@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/device-lab/device-receipt.schema.json",
+  "title": "XR Foundry Device Lab execution receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "packageRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$" },
+        "version": {
+          "type": "string",
+          "pattern": "^(?:replace-with-version|(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?)$"
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref", "sha256"],
+      "properties": {
+        "kind": { "enum": ["repository_file", "public_url"] },
+        "ref": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "receipt_id",
+    "task_url",
+    "revision",
+    "artifact",
+    "package_tuple",
+    "device_profile_id",
+    "test_plan_id",
+    "software",
+    "device",
+    "input",
+    "checks",
+    "optional_claims",
+    "overall_result",
+    "claims_supported",
+    "claims_not_supported",
+    "tester",
+    "timestamps",
+    "legacy_receipts"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.device_execution_receipt.v1" },
+    "receipt_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "task_url": { "type": ["string", "null"], "format": "uri" },
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit_sha"],
+      "properties": {
+        "repository": { "const": "https://github.com/Lingkyn/xr-foundry" },
+        "commit_sha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "artifact_ref", "application_id"],
+      "properties": {
+        "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "artifact_ref": { "type": ["string", "null"], "format": "uri" },
+        "application_id": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        }
+      }
+    },
+    "package_tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["composition_id", "domain", "presentation", "renderer_adapter", "xr_adapter"],
+      "properties": {
+        "composition_id": { "type": "string", "minLength": 1 },
+        "domain": { "$ref": "#/$defs/packageRef" },
+        "presentation": { "$ref": "#/$defs/packageRef" },
+        "renderer_adapter": { "$ref": "#/$defs/packageRef" },
+        "xr_adapter": { "$ref": "#/$defs/packageRef" }
+      }
+    },
+    "device_profile_id": { "type": "string", "minLength": 1 },
+    "test_plan_id": { "type": "string", "minLength": 1 },
+    "software": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "engine_version", "runtime_id", "runtime_version"],
+      "properties": {
+        "engine": { "const": "Unity" },
+        "engine_version": { "type": ["string", "null"] },
+        "runtime_id": { "type": ["string", "null"] },
+        "runtime_version": { "type": ["string", "null"] }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family_id", "model", "os_family", "os_version"],
+      "properties": {
+        "family_id": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "os_family": { "type": ["string", "null"] },
+        "os_version": { "type": ["string", "null"] }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["routes", "device_description"],
+      "properties": {
+        "routes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "device_description": { "type": ["string", "null"] }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "observation", "evidence_refs"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pass", "fail", "blocked", "inconclusive", "not_tested"] },
+          "observation": { "type": "string" },
+          "evidence_refs": { "type": "array", "items": { "$ref": "#/$defs/evidenceRef" }, "uniqueItems": true }
+        }
+      }
+    },
+    "optional_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "supported"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "supported": { "type": "boolean" }
+        }
+      }
+    },
+    "overall_result": { "enum": ["pass", "fail", "blocked", "inconclusive", "not_tested"] },
+    "claims_supported": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "uniqueItems": true
+    },
+    "claims_not_supported": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "tester": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["github_identity", "execution_assistant"],
+      "properties": {
+        "github_identity": { "type": ["string", "null"] },
+        "execution_assistant": { "type": ["string", "null"] }
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "completed_at"],
+      "properties": {
+        "started_at": { "type": ["string", "null"], "format": "date-time" },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "legacy_receipts": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

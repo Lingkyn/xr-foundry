@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -415,10 +417,97 @@ class RepositoryContractTests(unittest.TestCase):
             with self.subTest(package_id=package_id):
                 self.assertEqual(
                     [],
-                    MODULE.validate_inventory_xr_device_receipt(
-                        completed_inventory_xr_device_receipt(package_id), require_pass=True
+                    MODULE.validate_inventory_xr_device_receipt_against_contract(
+                        completed_inventory_xr_device_receipt(package_id),
+                        ROOT,
+                        require_pass=True,
+                        label="Inventory XR test receipt",
                     ),
                 )
+
+    def test_inventory_xr_device_receipt_schema_rejects_cross_renderer_extra_claim(self) -> None:
+        payload = completed_inventory_xr_device_receipt()
+        payload["sibling_renderer_claim_allowed"] = True
+
+        errors = MODULE.validate_inventory_xr_device_receipt_against_contract(
+            payload,
+            ROOT,
+            require_pass=True,
+            label="Inventory XR test receipt",
+        )
+
+        self.assertTrue(any("JSON Schema violation" in error for error in errors))
+
+    def test_inventory_xr_device_receipt_schema_rejects_extra_nested_property(self) -> None:
+        payload = completed_inventory_xr_device_receipt()
+        payload["package"]["sibling_renderer_claim_allowed"] = True
+
+        errors = MODULE.validate_inventory_xr_device_receipt_against_contract(
+            payload,
+            ROOT,
+            require_pass=True,
+            label="Inventory XR test receipt",
+        )
+
+        self.assertTrue(any("JSON Schema violation" in error for error in errors))
+
+    def test_inventory_xr_cli_rejects_cross_renderer_extra_claim(self) -> None:
+        payload = completed_inventory_xr_device_receipt()
+        payload["sibling_renderer_claim_allowed"] = True
+        with tempfile.TemporaryDirectory() as directory:
+            receipt_path = Path(directory) / "inventory-xr-device-receipt.json"
+            receipt_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--root",
+                    str(ROOT),
+                    "--device-receipt",
+                    str(receipt_path),
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+        self.assertEqual(1, result.returncode)
+        report = json.loads(result.stdout)
+        self.assertTrue(
+            any("JSON Schema violation" in error for error in report["errors"])
+        )
+
+    def test_inventory_xr_template_contract_runs_closed_json_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            validation_root = root / "docs" / "validation"
+            validation_root.mkdir(parents=True)
+            source_root = ROOT / "docs" / "validation"
+            for name in (
+                "inventory-xr-device-receipt.schema.json",
+                "inventory-xr-device-receipt-template.md",
+            ):
+                (validation_root / name).write_text(
+                    (source_root / name).read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+            template = json.loads(
+                (source_root / "inventory-xr-device-receipt.template.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            template["sibling_renderer_claim_allowed"] = True
+            (validation_root / "inventory-xr-device-receipt.template.json").write_text(
+                json.dumps(template),
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_inventory_xr_device_receipt_contract(root)
+
+            self.assertTrue(any("JSON Schema violation" in error for error in errors))
 
     def test_inventory_xr_device_receipt_rejects_renderer_package_mismatch(self) -> None:
         payload = completed_inventory_xr_device_receipt()

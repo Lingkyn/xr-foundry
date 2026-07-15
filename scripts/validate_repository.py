@@ -468,7 +468,14 @@ def validate_inventory_xr_device_receipt_contract(root: Path) -> list[str]:
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             errors.append(f"Inventory XR device receipt template is invalid JSON: {exc}")
         else:
-            errors.extend(validate_inventory_xr_device_receipt(template, require_pass=False))
+            errors.extend(
+                validate_inventory_xr_device_receipt_against_contract(
+                    template,
+                    root,
+                    require_pass=False,
+                    label="Inventory XR device receipt template",
+                )
+            )
             template_checks = {
                 str(item.get("id", "")): item
                 for item in template.get("checks", [])
@@ -580,6 +587,23 @@ def validate_json_schema_instance(
     ):
         location = ".".join(str(part) for part in issue.absolute_path) or "$"
         errors.append(f"{label}: JSON Schema violation at {location}: {issue.message}")
+    return errors
+
+
+def validate_inventory_xr_device_receipt_against_contract(
+    payload: Any,
+    root: Path,
+    *,
+    require_pass: bool,
+    label: str,
+) -> list[str]:
+    """Apply both the closed JSON shape and the semantic device-evidence gate."""
+    errors = validate_json_schema_instance(
+        payload,
+        root / INVENTORY_XR_DEVICE_RECEIPT_SCHEMA,
+        label,
+    )
+    errors.extend(validate_inventory_xr_device_receipt(payload, require_pass=require_pass))
     return errors
 
 
@@ -2633,7 +2657,14 @@ def main() -> int:
             except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                 errors.append(f"Inventory XR device receipt is invalid JSON: {exc}")
             else:
-                errors.extend(validate_inventory_xr_device_receipt(receipt, require_pass=True))
+                errors.extend(
+                    validate_inventory_xr_device_receipt_against_contract(
+                        receipt,
+                        root,
+                        require_pass=True,
+                        label="Inventory XR CLI receipt",
+                    )
+                )
 
     device_lab_receipt_path: Path | None = None
     if args.device_lab_receipt is not None:

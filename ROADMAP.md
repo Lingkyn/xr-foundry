@@ -18,22 +18,21 @@ thin.
 - Documentation and samples match the shipped API.
 - XR claims have current real-device evidence where required.
 
-## Incubating system packages
+## Inventory package family
 
-Inventory is now an incubating system standard with a positive-external-source-only
+Inventory is an incubating system standard with a positive-external-source-only
 manifest, package-family architecture, nested presentation composition, and a
-verification contract. The independently authored Core implementation is admitted
-at `incubating` maturity and has passed local and immutable Git URL clean-consumer
-tests. Candidate promotion remains blocked on persistence round-trip and migration
-coverage, API/compatibility review, and a second clean-consumer release comparison.
-Unity authoring, UGUI, and XR packages are not implemented yet. A tested Core is
-not evidence that the complete Inventory family or its VR experience is finished.
+verification contract. The independently authored Core `0.1.0` implementation is
+admitted at `candidate` maturity after persistence/migration, typed instance-state,
+public API, immutable install, upgrade, rollback, and clean-consumer gates passed.
+Unity authoring, UGUI, and XR packages are still not implemented. A candidate Core
+is not evidence that the complete Inventory family or its VR experience is finished.
 
 ## Reference-library evolution
 
 - Add coverage, extension seams, failure cases, and migration evidence to each
   reference entry as packages mature.
-- Incubate inventory as a system reference before promoting any package.
+- Build Unity authoring, UGUI, and optional XR layers without weakening the candidate Core boundary.
 - Add reusable tools, templates, and validation contracts when they have a real
   consumer and evidence.
 - Consider Unreal Engine and Godot collections only when working implementations,

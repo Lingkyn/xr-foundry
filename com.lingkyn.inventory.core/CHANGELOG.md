@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0 - 2026-07-15
+
+- Promoted the first Core candidate after immutable Git install, upgrade from
+  `0.1.0-pre.1`, rollback, and clean-consumer tests.
+
 ## 0.1.0-pre.1 - 2026-07-15
 
 - Added the independently authored Inventory domain foundation and invariant tests.

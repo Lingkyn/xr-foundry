@@ -83,7 +83,7 @@ be prepared, but they cannot promote a package around an earlier failure.
 
 | Layer | Satisfied evidence | Earliest unsatisfied gate | Claim allowed now |
 | --- | --- | --- | --- |
-| Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; local and immutable Git URL clean consumers | Public API compatibility and upgrade/rollback evidence | Incubating Core evaluation only |
+| Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; immutable prerelease/candidate clean consumers; public API review; upgrade and rollback | None for Core candidate | Candidate Core only; not the complete Inventory family |
 | Unity authoring | Package boundary defined | Authoring implementation and EditMode tests | Architecture reference only |
 | UGUI | Nested composition contract defined | Presentation implementation, prefab/state coverage, and PlayMode tests | Architecture reference only |
 | XR | World-space/device contract defined | XR implementation, automated configuration checks, and Pico evidence | Architecture reference only; no headset claim |

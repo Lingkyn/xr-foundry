@@ -8,6 +8,11 @@ over this baseline in an independent consumer, preserve or explicitly migrate it
 public and persisted contracts, and then roll back to this revision without corrupting
 consumer state or package resolution.
 
+The `0.1.0` candidate declares no public type removal or persisted schema break
+from that baseline. The independent consumer installed the prerelease, upgraded to
+the immutable candidate package tree, and rolled back to the prerelease with all
+package tests passing at each boundary.
+
 The machine-readable type list lives in `core-api-baseline.json`. Repository
 validation compares that list with public Runtime declarations so a public type
 cannot silently appear or disappear without a reviewed baseline change.

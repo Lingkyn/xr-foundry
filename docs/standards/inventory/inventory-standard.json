@@ -45,8 +45,8 @@
       "id": "com.lingkyn.inventory.core",
       "responsibility": "engine-light domain model, policies, transactions, events, snapshots, and persistence contracts",
       "required_dependencies": [],
-      "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "public_api_compatibility_review"
+      "implementation_status": "implemented_candidate",
+      "earliest_failed_gate": "none"
     },
     {
       "id": "com.lingkyn.inventory.unity",

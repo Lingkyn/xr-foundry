@@ -86,7 +86,7 @@ candidate, not a stable package.
 
 | Layer | Current state | Earliest unsatisfied gate |
 | --- | --- | --- |
-| `com.lingkyn.inventory.core` | Implemented, incubating; transactional persistence round-trip/migration and clean consumers pass | Typed mutable instance state and public API compatibility across a release |
+| `com.lingkyn.inventory.core` | Implemented, incubating; transactional persistence, typed mutable instance state, and clean consumers pass | Public API compatibility review and upgrade/rollback evidence |
 | `com.lingkyn.inventory.unity` | Not implemented | ScriptableObject authoring, catalog conversion, validation, and asset-immutability tests |
 | `com.lingkyn.inventory.ugui` | Not implemented | Presenter boundary, nested-prefab composition, state coverage, and PlayMode tests |
 | `com.lingkyn.inventory.xr` | Not implemented | World-space/XRI adapter, automated configuration tests, and real Pico evidence |

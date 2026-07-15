@@ -31,6 +31,10 @@ namespace Lingkyn.Inventory.Core
                     return ApplySplit(state, request);
                 case MutationKind.Merge:
                     return ApplyMerge(state, request);
+                case MutationKind.SetInstanceState:
+                    return ApplySetInstanceState(state, request);
+                case MutationKind.RemoveInstanceState:
+                    return ApplyRemoveInstanceState(state, request);
                 default:
                     return MutationPlanResult.Fail(MutationFailure.InvalidRequest, "Unknown mutation kind.");
             }
@@ -100,7 +104,11 @@ namespace Lingkyn.Inventory.Core
                 var accepted = definition.InstanceMode == ItemInstanceMode.Unique
                     ? 1
                     : Math.Min(remaining, definition.MaximumStack);
-                slots[index] = new ItemStack(stack.DefinitionId, accepted, stack.InstanceId);
+                slots[index] = new ItemStack(
+                    stack.DefinitionId,
+                    accepted,
+                    stack.InstanceId,
+                    stack.StateFragments);
                 remaining -= accepted;
                 affected.Add(new SlotAddress(request.TargetContainer.Value, index));
             }
@@ -186,7 +194,11 @@ namespace Lingkyn.Inventory.Core
                 return MutationPlanResult.Fail(MutationFailure.InvalidRequest, "A unique instance moves as one item.");
             }
 
-            destinationSlots[destinationAddress.Index] = new ItemStack(source.DefinitionId, request.Quantity, source.InstanceId);
+            destinationSlots[destinationAddress.Index] = new ItemStack(
+                source.DefinitionId,
+                request.Quantity,
+                source.InstanceId,
+                source.StateFragments);
             sourceSlots[sourceAddress.Index] = request.Quantity == source.Quantity
                 ? null
                 : source.WithQuantity(source.Quantity - request.Quantity);
@@ -315,6 +327,63 @@ namespace Lingkyn.Inventory.Core
                 ? null
                 : source.WithQuantity(source.Quantity - request.Quantity);
             return MutationPlanResult.Success(request.Quantity, new[] { sourceAddress, destinationAddress });
+        }
+
+        private static MutationPlanResult ApplySetInstanceState(
+            Dictionary<ContainerId, ItemStack[]> state,
+            MutationRequest request)
+        {
+            if (!TryResolve(state, request.Source.Value, out var slots, out var stack, out var failure))
+            {
+                return failure;
+            }
+
+            if (stack == null)
+            {
+                return MutationPlanResult.Fail(MutationFailure.SourceEmpty, "The source slot is empty.");
+            }
+
+            if (!stack.IsUnique)
+            {
+                return MutationPlanResult.Fail(
+                    MutationFailure.InvalidInstanceState,
+                    "Only a unique item instance can carry mutable instance state.");
+            }
+
+            slots[request.Source.Value.Index] = stack.WithState(request.StateFragment);
+            return MutationPlanResult.Success(1, new[] { request.Source.Value });
+        }
+
+        private static MutationPlanResult ApplyRemoveInstanceState(
+            Dictionary<ContainerId, ItemStack[]> state,
+            MutationRequest request)
+        {
+            if (!TryResolve(state, request.Source.Value, out var slots, out var stack, out var failure))
+            {
+                return failure;
+            }
+
+            if (stack == null)
+            {
+                return MutationPlanResult.Fail(MutationFailure.SourceEmpty, "The source slot is empty.");
+            }
+
+            if (!stack.IsUnique)
+            {
+                return MutationPlanResult.Fail(
+                    MutationFailure.InvalidInstanceState,
+                    "Only a unique item instance can carry mutable instance state.");
+            }
+
+            if (!stack.TryGetState(request.StateFragmentTypeId.Value, out _))
+            {
+                return MutationPlanResult.Fail(
+                    MutationFailure.InvalidInstanceState,
+                    $"The item instance has no state fragment '{request.StateFragmentTypeId.Value}'.");
+            }
+
+            slots[request.Source.Value.Index] = stack.WithoutState(request.StateFragmentTypeId.Value);
+            return MutationPlanResult.Success(1, new[] { request.Source.Value });
         }
 
         private static bool TryResolve(

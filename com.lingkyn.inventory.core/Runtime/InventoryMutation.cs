@@ -13,6 +13,8 @@ namespace Lingkyn.Inventory.Core
         Split,
         Merge,
         Transfer,
+        SetInstanceState,
+        RemoveInstanceState,
     }
 
     public enum MutationFailure
@@ -29,6 +31,7 @@ namespace Lingkyn.Inventory.Core
         InsufficientQuantity,
         CapacityExceeded,
         DuplicateInstance,
+        InvalidInstanceState,
         PolicyRejected,
     }
 
@@ -41,7 +44,9 @@ namespace Lingkyn.Inventory.Core
             SlotAddress? source,
             SlotAddress? destination,
             int quantity,
-            bool allowPartial)
+            bool allowPartial,
+            ItemStateFragment stateFragment,
+            ItemStateFragmentTypeId? stateFragmentTypeId)
         {
             Kind = kind;
             Stack = stack;
@@ -50,6 +55,8 @@ namespace Lingkyn.Inventory.Core
             Destination = destination;
             Quantity = quantity;
             AllowPartial = allowPartial;
+            StateFragment = stateFragment;
+            StateFragmentTypeId = stateFragmentTypeId;
         }
 
         public MutationKind Kind { get; }
@@ -59,6 +66,8 @@ namespace Lingkyn.Inventory.Core
         public SlotAddress? Destination { get; }
         public int Quantity { get; }
         public bool AllowPartial { get; }
+        public ItemStateFragment StateFragment { get; }
+        public ItemStateFragmentTypeId? StateFragmentTypeId { get; }
 
         public static MutationRequest Add(ItemStack stack, ContainerId targetContainer, bool allowPartial = false)
         {
@@ -67,26 +76,59 @@ namespace Lingkyn.Inventory.Core
                 throw new ArgumentNullException(nameof(stack));
             }
 
-            return new MutationRequest(MutationKind.Add, stack, targetContainer, null, null, stack.Quantity, allowPartial);
+            return new MutationRequest(MutationKind.Add, stack, targetContainer, null, null, stack.Quantity, allowPartial, null, null);
         }
 
         public static MutationRequest Remove(SlotAddress source, int quantity) =>
-            new MutationRequest(MutationKind.Remove, null, null, source, null, quantity, false);
+            new MutationRequest(MutationKind.Remove, null, null, source, null, quantity, false, null, null);
 
         public static MutationRequest Move(SlotAddress source, SlotAddress destination, int quantity) =>
-            new MutationRequest(MutationKind.Move, null, null, source, destination, quantity, false);
+            new MutationRequest(MutationKind.Move, null, null, source, destination, quantity, false, null, null);
 
         public static MutationRequest Swap(SlotAddress source, SlotAddress destination) =>
-            new MutationRequest(MutationKind.Swap, null, null, source, destination, 0, false);
+            new MutationRequest(MutationKind.Swap, null, null, source, destination, 0, false, null, null);
 
         public static MutationRequest Split(SlotAddress source, SlotAddress destination, int quantity) =>
-            new MutationRequest(MutationKind.Split, null, null, source, destination, quantity, false);
+            new MutationRequest(MutationKind.Split, null, null, source, destination, quantity, false, null, null);
 
         public static MutationRequest Merge(SlotAddress source, SlotAddress destination, int quantity) =>
-            new MutationRequest(MutationKind.Merge, null, null, source, destination, quantity, false);
+            new MutationRequest(MutationKind.Merge, null, null, source, destination, quantity, false, null, null);
 
         public static MutationRequest Transfer(SlotAddress source, SlotAddress destination, int quantity) =>
-            new MutationRequest(MutationKind.Transfer, null, null, source, destination, quantity, false);
+            new MutationRequest(MutationKind.Transfer, null, null, source, destination, quantity, false, null, null);
+
+        public static MutationRequest SetInstanceState(SlotAddress source, ItemStateFragment fragment)
+        {
+            if (fragment == null)
+            {
+                throw new ArgumentNullException(nameof(fragment));
+            }
+
+            return new MutationRequest(
+                MutationKind.SetInstanceState,
+                null,
+                null,
+                source,
+                null,
+                1,
+                false,
+                fragment,
+                fragment.TypeId);
+        }
+
+        public static MutationRequest RemoveInstanceState(
+            SlotAddress source,
+            ItemStateFragmentTypeId fragmentTypeId) =>
+            new MutationRequest(
+                MutationKind.RemoveInstanceState,
+                null,
+                null,
+                source,
+                null,
+                1,
+                false,
+                null,
+                fragmentTypeId);
     }
 
     public readonly struct PolicyDecision

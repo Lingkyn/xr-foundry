@@ -54,6 +54,12 @@ require a universal dictionary of unvalidated objects. Equipment, use actions,
 crafting, currency, shops, drops, pickups, durability, and online authority attach
 through explicit integrations.
 
+Mutable state on a unique item instance uses registered typed codecs. Each stored
+fragment has a stable type ID and independent schema version; the codec validates,
+decodes, and normalizes its payload. The aggregate owns atomic set/remove commands
+and persistence of the immutable encoded fragment, while serializer choice remains
+outside Core. Unknown codecs or invalid/future fragment schemas fail explicitly.
+
 ## Persistence
 
 The core owns serializable state contracts, not disk or cloud I/O. A persistence

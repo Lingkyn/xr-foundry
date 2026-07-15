@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -50,6 +51,68 @@ class RepositoryContractTests(unittest.TestCase):
             )
             errors = MODULE.validate_internal_namespace_links(package)
             self.assertTrue(any("no source declaration" in error for error in errors))
+
+    def test_inventory_manifest_rejects_non_positive_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "source-manifest.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema": "xr-foundry.inventory_source_manifest.v1",
+                        "derivation_policy": "admitted_positive_external_sources_only",
+                        "consumer_material_allowed": False,
+                        "screened_out_material_allowed": False,
+                        "implementation_policy": "independently_authored_from_public_contracts",
+                        "forbidden_source_scopes": [
+                            "consumer_project",
+                            "course_project",
+                            "internal_prototype",
+                            "screened_out_candidate",
+                        ],
+                        "sources": [
+                            {
+                                "id": "bad-seed",
+                                "admission": "raw_material",
+                                "provenance_scope": "external_public",
+                                "code_seed_allowed": False,
+                                "authority_class": "maintained_open_source_implementation",
+                                "url": "https://example.com/bad-seed",
+                                "positive_evidence": ["popular"],
+                                "limits": ["not reviewed"],
+                                "license_boundary": "unknown",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_inventory_source_manifest(path)
+            self.assertTrue(any("not an admitted positive source" in error for error in errors))
+
+    def test_inventory_manifest_rejects_consumer_material(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "source-manifest.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema": "xr-foundry.inventory_source_manifest.v1",
+                        "derivation_policy": "admitted_positive_external_sources_only",
+                        "consumer_material_allowed": True,
+                        "screened_out_material_allowed": False,
+                        "implementation_policy": "independently_authored_from_public_contracts",
+                        "forbidden_source_scopes": [
+                            "consumer_project",
+                            "course_project",
+                            "internal_prototype",
+                            "screened_out_candidate",
+                        ],
+                        "sources": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_inventory_source_manifest(path)
+            self.assertTrue(any("reject consumer material" in error for error in errors))
 
 
 if __name__ == "__main__":

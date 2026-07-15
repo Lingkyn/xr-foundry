@@ -20,10 +20,10 @@ thin.
 
 ## Incubating system packages
 
-Inventory and other mature game systems may be proposed after comparing official,
-professional, and strongly adopted sources for coverage, maintenance, license, data
-model, extensibility, save/load, UI separation, tests, and migration. A proposal is
-not a stable package.
+Inventory is now an incubating system standard with a positive-external-source-only
+manifest, package-family architecture, nested presentation composition, and a
+verification contract. Implementation remains unadmitted until the architecture
+gate and core invariant-test plan are frozen. A standard is not a stable package.
 
 ## Reference-library evolution
 

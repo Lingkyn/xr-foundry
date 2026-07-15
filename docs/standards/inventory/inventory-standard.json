@@ -1,0 +1,116 @@
+{
+  "schema": "xr-foundry.inventory_standard.v1",
+  "version": "0.1.0",
+  "maturity": "incubating",
+  "implementation_admitted": false,
+  "core_implementation_admitted": true,
+  "source_manifest": "source-manifest.json",
+  "source_isolation": {
+    "positive_external_sources_only": true,
+    "consumer_projects_are_generation_inputs": false,
+    "screened_out_candidates_are_generation_inputs": false
+  },
+  "evidence_coverage": [
+    {
+      "capability": "definition_instance_identity",
+      "source_ids": ["epic-lyra-inventory", "unity-economy-player-inventory", "opsive-ultimate-inventory"]
+    },
+    {
+      "capability": "inventory_equipment_separation",
+      "source_ids": ["epic-lyra-inventory", "more-mountains-inventory-engine", "opsive-ultimate-inventory"]
+    },
+    {
+      "capability": "containers_stacks_and_policies",
+      "source_ids": ["opsive-ultimate-inventory", "more-mountains-inventory-engine", "game-creator-inventory"]
+    },
+    {
+      "capability": "persistence_and_authority",
+      "source_ids": ["unity-economy-player-inventory", "opsive-ultimate-inventory", "more-mountains-inventory-engine"]
+    },
+    {
+      "capability": "presentation_separation_and_composition",
+      "source_ids": ["unity-scriptableobject-architecture", "unity-nested-prefabs", "more-mountains-inventory-engine"]
+    },
+    {
+      "capability": "package_and_test_contract",
+      "source_ids": ["unity-custom-packages", "unity-package-tests"]
+    },
+    {
+      "capability": "xr_world_space_interaction",
+      "source_ids": ["unity-xri", "unity-xri-examples"]
+    }
+  ],
+  "package_family": [
+    {
+      "id": "com.lingkyn.inventory.core",
+      "responsibility": "engine-light domain model, policies, transactions, events, snapshots, and persistence contracts",
+      "required_dependencies": []
+    },
+    {
+      "id": "com.lingkyn.inventory.unity",
+      "responsibility": "Unity authoring assets, catalogs, inspectors, and serialization adapters",
+      "required_dependencies": ["com.lingkyn.inventory.core"]
+    },
+    {
+      "id": "com.lingkyn.inventory.ugui",
+      "responsibility": "presenters, view bindings, nested prefabs, and non-XR Unity UI samples",
+      "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.unity"]
+    },
+    {
+      "id": "com.lingkyn.inventory.xr",
+      "responsibility": "optional world-space UI, tracked-controller interaction, and XR validation samples",
+      "required_dependencies": ["com.lingkyn.inventory.ugui", "com.unity.xr.interaction.toolkit"]
+    }
+  ],
+  "required_domain_types": [
+    "ItemDefinitionId",
+    "ItemInstanceId",
+    "ItemDefinition",
+    "ItemInstance",
+    "ItemStack",
+    "InventoryId",
+    "ContainerId",
+    "SlotAddress",
+    "InventorySnapshot",
+    "MutationRequest",
+    "MutationResult",
+    "InventoryEvent",
+    "PersistenceEnvelope"
+  ],
+  "required_operations": [
+    "add",
+    "remove",
+    "move",
+    "swap",
+    "split",
+    "merge",
+    "transfer"
+  ],
+  "required_policies": [
+    "capacity",
+    "stacking",
+    "placement",
+    "category_or_tag",
+    "ownership",
+    "mutation_authority"
+  ],
+  "required_ui_prefab_roles": [
+    "inventory_shell",
+    "inventory_panel",
+    "inventory_grid",
+    "inventory_slot",
+    "item_view",
+    "item_details",
+    "action_menu"
+  ],
+  "promotion_order": [
+    "source_gate",
+    "architecture_gate",
+    "core_invariant_tests",
+    "unity_authoring_tests",
+    "presentation_composition_tests",
+    "independent_consumer_compile",
+    "xr_adapter_tests",
+    "real_device_evidence_for_xr_claims"
+  ]
+}

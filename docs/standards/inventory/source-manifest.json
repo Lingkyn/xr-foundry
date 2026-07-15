@@ -1,0 +1,226 @@
+{
+  "schema": "xr-foundry.inventory_source_manifest.v1",
+  "standard_version": "0.1.0",
+  "retrieved_on": "2026-07-15",
+  "derivation_policy": "admitted_positive_external_sources_only",
+  "consumer_material_allowed": false,
+  "screened_out_material_allowed": false,
+  "community_code_seed_admitted": false,
+  "implementation_policy": "independently_authored_from_public_contracts",
+  "forbidden_source_scopes": [
+    "consumer_project",
+    "course_project",
+    "internal_prototype",
+    "screened_out_candidate"
+  ],
+  "sources": [
+    {
+      "id": "unity-custom-packages",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "Creating custom packages",
+      "url": "https://docs.unity3d.com/Manual/CustomPackages.html",
+      "source_role": "package_contract",
+      "positive_evidence": [
+        "Defines the supported custom-package workflow and conventional package layout",
+        "Requires package tests and recommends changelog maintenance for shared packages"
+      ],
+      "limits": ["Does not define Inventory domain semantics"],
+      "license_boundary": "Documentation may be summarized and linked; no source-code copy is required"
+    },
+    {
+      "id": "unity-package-tests",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "Adding tests to a package",
+      "url": "https://docs.unity3d.com/Manual/cus-tests.html",
+      "source_role": "verification_contract",
+      "positive_evidence": [
+        "Defines Editor and Runtime test locations and test assembly requirements"
+      ],
+      "limits": ["Does not prescribe domain test cases"],
+      "license_boundary": "Documentation reference only"
+    },
+    {
+      "id": "unity-scriptableobject-architecture",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_professional_guidance",
+      "publisher": "Unity Technologies",
+      "title": "Architect your code for efficient changes and debugging with ScriptableObjects",
+      "url": "https://unity.com/how-to/architect-game-code-scriptable-objects",
+      "source_role": "architecture_reference",
+      "positive_evidence": [
+        "Published by Unity from production guidance by Schell Games principal engineer Ryan Hipple",
+        "Advocates modular, data-driven systems without hard references between game systems",
+        "Uses Inventory as an example of replaceable state and recommends self-contained prefabs"
+      ],
+      "limits": ["A pattern guide, not a complete Inventory implementation"],
+      "license_boundary": "Conceptual reference; implementation is independently authored"
+    },
+    {
+      "id": "unity-nested-prefabs",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "Nested Prefabs",
+      "url": "https://docs.unity3d.com/Manual/NestedPrefabs.html",
+      "source_role": "presentation_composition",
+      "positive_evidence": [
+        "Defines supported nesting where child prefab instances retain links to their own assets"
+      ],
+      "limits": ["Does not decide which Inventory UI components deserve prefab boundaries"],
+      "license_boundary": "Documentation reference only"
+    },
+    {
+      "id": "unity-economy-player-inventory",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_first_party_system",
+      "publisher": "Unity Technologies",
+      "title": "Player inventory",
+      "url": "https://docs.unity.com/en-us/economy/sdk/player-inventory",
+      "source_role": "online_and_identity_reference",
+      "positive_evidence": [
+        "Separates configuration item IDs from unique player Inventory instance IDs",
+        "Models per-instance data, pagination, structured asynchronous operations, and optimistic write locks"
+      ],
+      "limits": [
+        "Service-specific limits and APIs are not imposed on the local core",
+        "Does not provide slot, grid, or offline presentation behavior"
+      ],
+      "license_boundary": "Behavioral benchmark only; no SDK dependency in the core"
+    },
+    {
+      "id": "epic-lyra-inventory",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_first_party_reference",
+      "publisher": "Epic Games",
+      "title": "Lyra Inventory and Equipment",
+      "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/lyra-inventory-and-equipment-in-unreal-engine",
+      "source_role": "domain_architecture_reference",
+      "positive_evidence": [
+        "Separates Inventory ownership and lifetime from Equipment presentation and lifetime",
+        "Separates shared item definitions from runtime item instances",
+        "Uses optional fragments to compose item capabilities without deep inheritance"
+      ],
+      "limits": [
+        "Unreal-specific replication, gameplay tags, actors, and abilities are not copied into the Unity API"
+      ],
+      "license_boundary": "Cross-engine conceptual comparison only; no Unreal source is copied"
+    },
+    {
+      "id": "opsive-ultimate-inventory",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "professional_product_benchmark",
+      "publisher": "Opsive",
+      "title": "Ultimate Inventory System public documentation",
+      "url": "https://opsive.com/support/documentation/ultimate-inventory-system/",
+      "source_role": "production_coverage_benchmark",
+      "positive_evidence": [
+        "Documents definition, mutable instance, unique item, stack, collection, restriction, transaction, save, and UI-view concepts",
+        "Exposes extension seams for restrictions, import/export, save integration, and item views"
+      ],
+      "limits": [
+        "Commercial implementation is proprietary",
+        "Its singleton and category choices are benchmarked rather than adopted by default"
+      ],
+      "license_boundary": "Public documentation informs coverage only; no proprietary code or assets are copied"
+    },
+    {
+      "id": "more-mountains-inventory-engine",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "professional_product_benchmark",
+      "publisher": "More Mountains",
+      "title": "Inventory Engine documentation",
+      "url": "https://inventory-engine-docs.moremountains.com/",
+      "source_role": "production_coverage_benchmark",
+      "positive_evidence": [
+        "Separates invisible Inventory storage from InventoryDisplay",
+        "Documents multiple inventories, slots, equipment inventories, details, hotbars, actions, and save/load",
+        "Treats a display as composed grids, slots, and states rather than one indivisible panel"
+      ],
+      "limits": ["Commercial implementation is proprietary"],
+      "license_boundary": "Public documentation informs coverage only; no proprietary code or assets are copied"
+    },
+    {
+      "id": "game-creator-inventory",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "professional_product_benchmark",
+      "publisher": "Catsoft Works",
+      "title": "Game Creator Inventory documentation",
+      "url": "https://docs.gamecreator.io/inventory/",
+      "source_role": "production_coverage_benchmark",
+      "positive_evidence": [
+        "Documents authored item assets, bags, grid shapes, inheritance, sockets, equipment, use actions, and crafting",
+        "Demonstrates designer-facing workflows for complex Inventory features"
+      ],
+      "limits": [
+        "Commercial implementation is proprietary",
+        "Instruction and condition frameworks are product-specific and remain optional integration seams"
+      ],
+      "license_boundary": "Public documentation informs coverage only; no proprietary code or assets are copied"
+    },
+    {
+      "id": "unity-xri",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "XR Interaction Toolkit for Unity 6",
+      "url": "https://docs.unity3d.com/Manual/com.unity.xr.interaction.toolkit.html",
+      "source_role": "xr_interaction_contract",
+      "positive_evidence": [
+        "Defines the supported component framework for 3D and UI interaction in Unity 6",
+        "Current Unity 6 documentation lists released XRI versions and compatibility"
+      ],
+      "limits": ["XR interaction belongs in an optional adapter, not the Inventory core"],
+      "license_boundary": "Package API dependency is isolated to the XR adapter"
+    },
+    {
+      "id": "unity-xri-examples",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_first_party_reference",
+      "publisher": "Unity Technologies",
+      "title": "XR Interaction Toolkit Examples",
+      "url": "https://github.com/Unity-Technologies/XR-Interaction-Toolkit-Examples",
+      "immutable_revision": "881f7e197c7b0958621ebd1a05f249bbe254d36f",
+      "observed_popularity": {
+        "stars": 1299,
+        "forks": 434,
+        "observed_on": "2026-07-15"
+      },
+      "source_role": "xr_presentation_reference",
+      "positive_evidence": [
+        "Official maintained sample with world-space UI prefabs, UI controls, presets, and interaction examples",
+        "Strong public adoption provides an additional operational signal"
+      ],
+      "limits": [
+        "Unity Companion License restricts use to Unity-dependent projects",
+        "Sample assets are not copied into the generic core"
+      ],
+      "license_boundary": "Reference and Unity-only adapter comparison under the Unity Companion License"
+    }
+  ]
+}

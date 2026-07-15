@@ -28,6 +28,46 @@
       "purpose": "Vendor-neutral XR greybox initialization, rig helpers, configuration, and interaction validation.",
       "evidence": ["tests", "samples", "docs/validation/2026-07-15-git-url-unity-smoke.md"],
       "non_claims": ["No vendor runtime is bundled", "No headset behavior is claimed without device evidence"]
+    },
+    {
+      "id": "unity-inventory-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "com.lingkyn.inventory.core",
+      "package_id": "com.lingkyn.inventory.core",
+      "maturity": "incubating",
+      "use_modes": ["reference_only"],
+      "purpose": "Engine-light Inventory domain model, transactions, policies, events, snapshots, and persistence contracts.",
+      "evidence": [
+        "docs/standards/inventory/source-manifest.json",
+        "docs/standards/inventory/coverage-matrix.md",
+        "com.lingkyn.inventory.core/Tests/Editor",
+        "docs/validation/2026-07-15-inventory-core-local-consumer.md"
+      ],
+      "non_claims": [
+        "Public Git URL install is pending",
+        "No Unity authoring, UI, equipment, persistence provider, networking, or XR adapter is included",
+        "Public API compatibility is not promised"
+      ]
+    },
+    {
+      "id": "inventory-package-family-standard",
+      "kind": "system_standard",
+      "engine": "engine-neutral-core_with_unity_profile",
+      "path": "docs/standards/inventory",
+      "maturity": "incubating",
+      "use_modes": ["reference_only"],
+      "purpose": "Positive-source-only architecture, package boundaries, capability coverage, and verification gates for a reusable Inventory package family.",
+      "evidence": [
+        "docs/standards/inventory/source-manifest.json",
+        "docs/standards/inventory/inventory-standard.json",
+        "docs/standards/inventory/verification-contract.md"
+      ],
+      "non_claims": [
+        "No Inventory implementation is admitted yet",
+        "No community Inventory repository is an admitted code seed",
+        "No XR runtime behavior is claimed"
+      ]
     }
   ],
   "roadmap_only": [

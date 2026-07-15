@@ -37,6 +37,16 @@ answers for different models.
 | --- | --- | --- |
 | [`com.lingkyn.project-initializer`](com.lingkyn.project-initializer/) | Incubating | Configurable folder/scene scaffold, baseline prefabs, validation, and editor tools |
 | [`com.lingkyn.xr-baseline`](com.lingkyn.xr-baseline/) | Incubating | Vendor-neutral XR Sandbox assets, rig helpers, configuration, and smoke-build tools |
+| [`com.lingkyn.inventory.core`](com.lingkyn.inventory.core/) | Incubating | Engine-light Inventory domain, atomic mutations, policies, snapshots, and persistence contracts |
+
+## Incubating system standards
+
+The first reusable game-system candidate is the
+[`Inventory Package Family Standard`](docs/standards/inventory/README.md). Its
+design inputs are restricted to admitted positive external sources. It deliberately
+excludes consumer and screened-out code from derivation. The core implementation
+has passed a local clean-consumer compile and tests; public Git URL evidence and the
+Unity authoring, UI, and XR layers remain pending.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and
@@ -113,8 +123,7 @@ Unity package tests run from a Unity consumer through the Test Framework.
 
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SUPPORT.md`](SUPPORT.md), and
 [`SECURITY.md`](SECURITY.md). Package proposals begin as `incubating`; mature game
-systems such as inventory require a source and coverage bake-off before code is
-admitted.
+systems require a positive-source and coverage bake-off before code is admitted.
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.

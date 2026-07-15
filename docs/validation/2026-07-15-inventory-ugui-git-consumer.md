@@ -1,9 +1,15 @@
 # Inventory UGUI immutable non-XR consumer validation — 2026-07-15
 
-## Verdict
+> **Superseded and withdrawn:** this historical receipt validated prefab source
+> links but failed to detect null shipped view bindings and missing usable
+> visual/input controls. `0.1.0` is not functional-candidate evidence. See the
+> [`0.1.1` corrective candidate receipt](2026-07-15-inventory-ugui-0.1.1-candidate.md).
 
-`com.lingkyn.inventory.ugui@0.1.0` passes the UGUI candidate gate. Core, authoring,
-and UGUI resolved from one immutable Git revision in a consumer manifest containing
+## Historical verdict (withdrawn)
+
+The original run reported that `com.lingkyn.inventory.ugui@0.1.0` passed the UGUI
+candidate gate. That conclusion is withdrawn. Core, authoring, and UGUI resolved
+from one immutable Git revision in a consumer manifest containing
 no XR package. Shipped prefabs were validated read-only from the package cache.
 
 This verdict does not cover world-space Canvas configuration, tracked controllers,

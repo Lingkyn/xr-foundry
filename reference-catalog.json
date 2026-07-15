@@ -68,7 +68,7 @@
         "docs/standards/inventory/verification-contract.md"
       ],
       "non_claims": [
-        "Core and Unity authoring are candidate; UGUI and XR remain pending",
+        "Core, Unity authoring, and UGUI are candidate; XR remains pending",
         "No community Inventory repository is an admitted code seed",
         "No XR runtime behavior is claimed"
       ]
@@ -100,7 +100,7 @@
       "engine": "Unity",
       "path": "com.lingkyn.inventory.ugui",
       "package_id": "com.lingkyn.inventory.ugui",
-      "maturity": "incubating",
+      "maturity": "candidate",
       "use_modes": ["install", "reference_only"],
       "purpose": "Presenter-owned Inventory UGUI with independently replaceable nested prefab roles and replayable states.",
       "evidence": [
@@ -108,10 +108,11 @@
         "com.lingkyn.inventory.ugui/Runtime/Prefabs",
         "com.lingkyn.inventory.ugui/Tests",
         "docs/validation/2026-07-15-inventory-ugui-local-consumer.md",
-        "docs/validation/2026-07-15-inventory-ugui-git-consumer.md"
+        "docs/validation/2026-07-15-inventory-ugui-git-consumer.md",
+        "docs/validation/2026-07-15-inventory-ugui-0.1.1-candidate.md"
       ],
       "non_claims": [
-        "The 0.1.0 structure-only receipt does not establish a functional shipped-prefab candidate; 0.1.1 immutable validation is pending",
+        "The 0.1.0 structure-only receipt is superseded and is not functional-candidate evidence",
         "No XR Interaction Toolkit dependency or world-space comfort claim",
         "No product styling, scene, localization catalog, or item database",
         "Candidate presentation evidence does not prove world-space or headset usability"

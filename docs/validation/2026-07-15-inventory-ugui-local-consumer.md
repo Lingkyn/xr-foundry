@@ -1,6 +1,10 @@
 # Inventory UGUI local-consumer validation — 2026-07-15
 
-## Verdict
+> **Historical only:** this pre-correction run did not prove functional shipped
+> prefab bindings. Current evidence is the
+> [`0.1.1` corrective candidate receipt](2026-07-15-inventory-ugui-0.1.1-candidate.md).
+
+## Historical local verdict
 
 The local Inventory UGUI slice passes its incubating presentation boundary. The
 presenter alone owns aggregate mutation, view models are read-only, every required

@@ -25,9 +25,9 @@ manifest, package-family architecture, nested presentation composition, and a
 verification contract. The independently authored Core `0.1.0` implementation is
 admitted at `candidate` maturity after persistence/migration, typed instance-state,
 public API, immutable install, upgrade, rollback, and clean-consumer gates passed.
-Unity authoring is also candidate. UGUI `0.1.1` is an incubating correction after
-the `0.1.0` structure-only prefab verdict was withdrawn; its functional local tests
-pass, while immutable install, sample, upgrade/rollback, and review remain gated.
+Unity authoring is also candidate. UGUI `0.1.1` is candidate after the withdrawn
+`0.1.0` structure-only verdict was corrected with functional shipped prefabs,
+immutable install, sample, consumer-owned variant upgrade/rollback, and review evidence.
 XR is still not implemented. Candidate lower layers are not evidence that the
 complete family or XR experience is finished.
 
@@ -35,7 +35,7 @@ complete family or XR experience is finished.
 | --- | --- | --- | --- |
 | `com.lingkyn.inventory.core` | `0.1.0` | `candidate` | `none` |
 | `com.lingkyn.inventory.unity` | `0.1.0` | `candidate` | `none` |
-| `com.lingkyn.inventory.ugui` | `0.1.1` | `incubating` | `immutable_git_url_functional_consumer` |
+| `com.lingkyn.inventory.ugui` | `0.1.1` | `candidate` | `none` |
 
 ## Reference-library evolution
 

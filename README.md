@@ -39,7 +39,7 @@ answers for different models.
 | [`com.lingkyn.xr-baseline`](com.lingkyn.xr-baseline/) | Incubating | Vendor-neutral XR Sandbox assets, rig helpers, configuration, and smoke-build tools |
 | [`com.lingkyn.inventory.core`](com.lingkyn.inventory.core/) | Candidate | Engine-light Inventory domain, atomic mutations, policies, snapshots, and persistence contracts |
 | [`com.lingkyn.inventory.unity`](com.lingkyn.inventory.unity/) | Candidate | ScriptableObject authoring, validation, and deterministic Core conversion |
-| [`com.lingkyn.inventory.ugui`](com.lingkyn.inventory.ugui/) | Incubating correction | Functional nested UGUI prefabs, presenter/view-model boundaries, and neutral input/state handling |
+| [`com.lingkyn.inventory.ugui`](com.lingkyn.inventory.ugui/) | Candidate | Functional nested UGUI prefabs, presenter/view-model boundaries, and neutral input/state handling |
 
 ## Incubating system standards
 
@@ -47,10 +47,10 @@ The first reusable game-system candidate is the
 [`Inventory Package Family Standard`](docs/standards/inventory/README.md). Its
 design inputs are restricted to admitted positive external sources. It deliberately
 excludes consumer and screened-out code from derivation. Core and Unity authoring
-have candidate evidence. UGUI `0.1.1` is correcting a structure-only `0.1.0`
-prefab verdict and remains incubating until the corrected immutable consumer,
-sample, upgrade/rollback, and review gates pass. XR remains pending and cannot
-inherit a presentation claim from the withdrawn UGUI verdict.
+have candidate evidence. UGUI `0.1.1` is also candidate after correcting the
+structure-only `0.1.0` verdict through immutable consumer, sample, Input System,
+upgrade/rollback, and consumer-owned prefab-variant evidence. XR remains pending and
+cannot inherit a world-space or device claim from the non-XR UGUI candidate.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and

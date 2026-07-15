@@ -74,28 +74,28 @@
     {
       "id": "com.lingkyn.inventory.ugui",
       "path": "com.lingkyn.inventory.ugui",
-      "maturity": "incubating",
+      "maturity": "candidate",
       "version": "0.1.1",
-      "independent_compile": "passed_local_2026-07-15",
-      "git_url_install": "pending_0.1.1_immutable_revision",
+      "independent_compile": "passed_2026-07-15",
+      "git_url_install": "passed_ea7207e94aa6fa9c129e5bf381d77f932bf35911",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "blocked",
-        "earliest_failed_gate": "immutable_git_url_functional_consumer",
+        "candidate_status": "passed",
+        "earliest_failed_gate": "none",
         "satisfied": [
           "presenter_boundary",
           "nested_prefab_links",
           "slot_and_item_replacement",
-          "wired_shipped_prefabs_local",
-          "required_visible_state_replay_local",
-          "prefab_graphic_raycast_pointer_keyboard_local"
-        ],
-        "pending": [
+          "wired_shipped_prefabs",
+          "required_visible_state_replay",
+          "prefab_graphic_raycast_pointer_keyboard",
           "immutable_git_url_functional_consumer",
-          "sample_import_compile",
+          "input_system_only_sample_import_compile",
           "upgrade_0.1.0_to_0.1.1_and_rollback",
+          "consumer_owned_prefab_variant_upgrade_rollback",
           "candidate_release_review"
-        ]
+        ],
+        "pending": []
       }
     }
   ]

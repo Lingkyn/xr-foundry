@@ -25,16 +25,16 @@ manifest, package-family architecture, nested presentation composition, and a
 verification contract. The independently authored Core `0.1.0` implementation is
 admitted at `candidate` maturity after persistence/migration, typed instance-state,
 public API, immutable install, upgrade, rollback, and clean-consumer gates passed.
-Unity authoring is implemented at incubating maturity with local clean-consumer
-EditMode evidence; immutable Git consumption remains pending. UGUI and XR packages
-are still not implemented. A candidate Core or local authoring adapter is not
-evidence that the complete Inventory family or its VR experience is finished.
+Unity authoring `0.1.0` is also admitted at candidate maturity after local and
+immutable Git clean-consumer EditMode evidence. UGUI and XR packages are still not
+implemented. Candidate Core and authoring packages are not evidence that the
+complete Inventory family or its VR experience is finished.
 
 ## Reference-library evolution
 
 - Add coverage, extension seams, failure cases, and migration evidence to each
   reference entry as packages mature.
-- Build Unity authoring, UGUI, and optional XR layers without weakening the candidate Core boundary.
+- Build UGUI and optional XR layers without weakening the candidate Core and authoring boundaries.
 - Add reusable tools, templates, and validation contracts when they have a real
   consumer and evidence.
 - Consider Unreal Engine and Godot collections only when working implementations,

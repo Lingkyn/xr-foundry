@@ -52,8 +52,8 @@
       "id": "com.lingkyn.inventory.unity",
       "responsibility": "Unity authoring assets, catalogs, inspectors, and serialization adapters",
       "required_dependencies": ["com.lingkyn.inventory.core"],
-      "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "immutable_git_url_clean_consumer"
+      "implementation_status": "implemented_candidate",
+      "earliest_failed_gate": "none"
     },
     {
       "id": "com.lingkyn.inventory.ugui",

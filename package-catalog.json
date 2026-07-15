@@ -50,26 +50,25 @@
     {
       "id": "com.lingkyn.inventory.unity",
       "path": "com.lingkyn.inventory.unity",
-      "maturity": "incubating",
+      "maturity": "candidate",
       "version": "0.1.0",
       "independent_compile": "passed_2026-07-15",
-      "git_url_install": "pending_reviewed_revision",
+      "git_url_install": "passed_b8b49235a66d8a388a123739d3fc7586bd7cf211",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "blocked",
-        "earliest_failed_gate": "immutable_git_url_clean_consumer",
+        "candidate_status": "passed",
+        "earliest_failed_gate": "none",
         "satisfied": [
           "scriptableobject_authoring",
           "stable_explicit_ids",
           "deterministic_domain_conversion",
           "actionable_validation",
           "asset_immutability",
-          "local_clean_consumer_editmode_tests"
-        ],
-        "pending": [
+          "local_clean_consumer_editmode_tests",
           "immutable_git_url_clean_consumer",
           "candidate_release_review"
-        ]
+        ],
+        "pending": []
       }
     }
   ]

@@ -369,6 +369,31 @@ def validate_inventory_api_baseline(root: Path) -> list[str]:
     return errors
 
 
+def validate_package_promotion(package_id: str, promotion: Any) -> list[str]:
+    errors: list[str] = []
+    if promotion is None:
+        return errors
+    if not isinstance(promotion, dict):
+        return [f"{package_id}: promotion state must be an object"]
+    status = promotion.get("candidate_status")
+    earliest = str(promotion.get("earliest_failed_gate", "")).strip()
+    satisfied = promotion.get("satisfied")
+    pending = promotion.get("pending")
+    if status not in {"blocked", "eligible", "passed"}:
+        errors.append(f"{package_id}: candidate promotion status is invalid")
+    if not earliest:
+        errors.append(f"{package_id}: earliest failed gate or 'none' is required")
+    if not isinstance(satisfied, list) or not satisfied:
+        errors.append(f"{package_id}: satisfied promotion gates are required")
+    if not isinstance(pending, list):
+        errors.append(f"{package_id}: pending promotion gates must be a list")
+    elif status == "passed" and (earliest != "none" or pending):
+        errors.append(f"{package_id}: passed candidate must have no failed or pending gate")
+    elif status == "blocked" and (earliest == "none" or not pending):
+        errors.append(f"{package_id}: blocked candidate must name failed and pending gates")
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
@@ -422,6 +447,7 @@ def validate_repository(root: Path) -> list[str]:
             errors.append(f"package path must match package id: {relative} != {package_id}")
         if item.get("maturity") not in catalog.get("maturity_states", []):
             errors.append(f"unknown maturity for {package_id}: {item.get('maturity')}")
+        errors.extend(validate_package_promotion(package_id, item.get("promotion")))
         for required in sorted(REQUIRED_PACKAGE_ENTRIES):
             if not (package_root / required).exists():
                 errors.append(f"{package_id}: missing {required}")

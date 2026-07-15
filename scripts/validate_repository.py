@@ -265,12 +265,21 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
     if not isinstance(promotion, dict):
         errors.append("Inventory Core must declare machine-readable promotion state")
     else:
-        if promotion.get("candidate_status") not in {"blocked", "eligible", "passed"}:
+        candidate_status = promotion.get("candidate_status")
+        if candidate_status not in {"blocked", "eligible", "passed"}:
             errors.append("Inventory Core candidate promotion status is invalid")
-        if not str(promotion.get("earliest_failed_gate", "")).strip():
-            errors.append("Inventory Core must name its earliest failed promotion gate")
-        if not promotion.get("satisfied") or not promotion.get("pending"):
-            errors.append("Inventory Core promotion state must name satisfied and pending gates")
+        earliest_failed_gate = str(promotion.get("earliest_failed_gate", "")).strip()
+        if not earliest_failed_gate:
+            errors.append("Inventory Core must name its earliest failed promotion gate or 'none'")
+        if not promotion.get("satisfied"):
+            errors.append("Inventory Core promotion state must name satisfied gates")
+        pending = promotion.get("pending")
+        if not isinstance(pending, list):
+            errors.append("Inventory Core promotion state must provide a pending-gate list")
+        elif candidate_status == "passed" and (earliest_failed_gate != "none" or pending):
+            errors.append("Passed Inventory Core candidate must have no failed or pending gate")
+        elif candidate_status == "blocked" and (earliest_failed_gate == "none" or not pending):
+            errors.append("Blocked Inventory Core candidate must name its earliest failed and pending gates")
 
     package_family = {
         str(item.get("id", "")): item
@@ -279,8 +288,9 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
     }
     core_standard = package_family.get("com.lingkyn.inventory.core", {})
     if standard.get("core_implementation_admitted") is True:
-        if core_standard.get("implementation_status") != "implemented_incubating":
-            errors.append("Admitted Inventory Core must be represented as implemented_incubating")
+        expected_status = "implemented_candidate" if core.get("maturity") == "candidate" else "implemented_incubating"
+        if core_standard.get("implementation_status") != expected_status:
+            errors.append(f"Admitted Inventory Core must be represented as {expected_status}")
         stale_surfaces = {
             "ROADMAP.md": roadmap_path.read_text(encoding="utf-8"),
             "docs/standards/inventory/README.md": standard_readme_path.read_text(encoding="utf-8"),

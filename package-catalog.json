@@ -24,14 +24,14 @@
     {
       "id": "com.lingkyn.inventory.core",
       "path": "com.lingkyn.inventory.core",
-      "maturity": "incubating",
+      "maturity": "candidate",
       "version": "0.1.0",
       "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_3bb74d14b85a51b520f8c78a1e919c1f9e00de03",
+      "git_url_install": "passed_4810c07abde55848dbca7fa3eb128414a33d7977",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "blocked",
-        "earliest_failed_gate": "public_api_compatibility_review",
+        "candidate_status": "passed",
+        "earliest_failed_gate": "none",
         "satisfied": [
           "positive_source_gate",
           "architecture_gate",
@@ -39,12 +39,12 @@
           "local_clean_consumer",
           "immutable_git_url_clean_consumer",
           "persistence_round_trip_and_migration",
-          "typed_instance_state"
-        ],
-        "pending": [
+          "typed_instance_state",
           "public_api_compatibility_review",
+          "immutable_candidate_clean_consumer",
           "upgrade_and_rollback_across_a_release"
-        ]
+        ],
+        "pending": []
       }
     }
   ]

@@ -35,7 +35,7 @@
       "engine": "Unity",
       "path": "com.lingkyn.inventory.core",
       "package_id": "com.lingkyn.inventory.core",
-      "maturity": "incubating",
+      "maturity": "candidate",
       "use_modes": ["install", "reference_only"],
       "purpose": "Engine-light Inventory domain model, transactions, policies, events, snapshots, and persistence contracts.",
       "evidence": [
@@ -45,11 +45,12 @@
         "docs/validation/2026-07-15-inventory-core-local-consumer.md",
         "docs/validation/2026-07-15-inventory-core-git-url-consumer.md",
         "docs/validation/2026-07-15-inventory-core-persistence.md",
-        "docs/validation/2026-07-15-inventory-core-instance-state.md"
+        "docs/validation/2026-07-15-inventory-core-instance-state.md",
+        "docs/validation/2026-07-15-inventory-core-candidate.md"
       ],
       "non_claims": [
         "No Unity authoring, UI, equipment, persistence provider, networking, or XR adapter is included",
-        "Public API compatibility is not promised",
+        "Candidate compatibility applies to the 0.1.x Core release line; no stable or 1.0 claim is made",
         "Clean-consumer Core evidence does not prove the complete Inventory product family"
       ]
     },
@@ -67,7 +68,7 @@
         "docs/standards/inventory/verification-contract.md"
       ],
       "non_claims": [
-        "Only the Core implementation is currently admitted at incubating maturity; Unity authoring, UGUI, and XR remain pending",
+        "Only the Core implementation is currently admitted at candidate maturity; Unity authoring, UGUI, and XR remain pending",
         "No community Inventory repository is an admitted code seed",
         "No XR runtime behavior is claimed"
       ]

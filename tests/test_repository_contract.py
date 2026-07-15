@@ -86,6 +86,62 @@ class RepositoryContractTests(unittest.TestCase):
             errors = MODULE.validate_inventory_projection_coherence(root)
             self.assertTrue(any("stale Inventory implementation claim" in error for error in errors))
 
+    def test_passed_candidate_rejects_pending_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            standard_root = root / "docs" / "standards" / "inventory"
+            standard_root.mkdir(parents=True)
+            (root / "ROADMAP.md").write_text("Candidate Core", encoding="utf-8")
+            (standard_root / "README.md").write_text("Candidate Core", encoding="utf-8")
+            (standard_root / "inventory-standard.json").write_text(
+                json.dumps(
+                    {
+                        "core_implementation_admitted": True,
+                        "package_family": [
+                            {
+                                "id": "com.lingkyn.inventory.core",
+                                "implementation_status": "implemented_candidate",
+                                "earliest_failed_gate": "none",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "package-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "id": "com.lingkyn.inventory.core",
+                                "maturity": "candidate",
+                                "promotion": {
+                                    "candidate_status": "passed",
+                                    "earliest_failed_gate": "none",
+                                    "satisfied": ["candidate_gate"],
+                                    "pending": ["should_not_remain"],
+                                },
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "reference-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "artifacts": [
+                            {"id": "unity-inventory-core", "maturity": "candidate"},
+                            {"id": "inventory-package-family-standard", "maturity": "incubating"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_inventory_projection_coherence(root)
+            self.assertTrue(any("no failed or pending gate" in error for error in errors))
+
     def test_consumer_project_marker_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

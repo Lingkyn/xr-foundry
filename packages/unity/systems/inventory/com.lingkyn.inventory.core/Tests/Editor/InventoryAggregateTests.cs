@@ -66,6 +66,7 @@ namespace Lingkyn.Inventory.Core.Tests
 
             Assert.That(result.Succeeded, Is.False);
             Assert.That(result.Failure, Is.EqualTo(MutationFailure.UnknownDefinition));
+            Assert.That(result.RevisionBefore, Is.EqualTo(revisionBefore));
             Assert.That(result.RevisionAfter, Is.EqualTo(revisionBefore));
             Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
             Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));

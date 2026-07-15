@@ -107,14 +107,14 @@ Reviewed at `2026-07-15T17:21:04Z` against handoff commit
   failed-operation immutability invariants already exist in section 3 of the
   Inventory verification contract, and the runtime already implements them.
 - Review hardening: Codex added assertions that the seed mutation succeeds and
-  that the aggregate's actual revision remains unchanged, rather than trusting
-  only the returned `RevisionAfter` value.
+  that the result's before/after revisions and the aggregate's actual revision
+  all remain unchanged.
 - Focused Unity `6000.3.19f1` EditMode rerun: pass, 1/1 tests, 0 failed;
   result XML SHA-256
-  `2266BA4375950886C9EC7ABA69E00198AE6ECA334526998A1FC0FFB84A7CDD5A`.
+  `23410942C20BEBCE5E127F337D372AACBF43CEBFED134A3F5A9F278D9ED537D5`.
 - Full Inventory Core EditMode rerun: pass, 22/22 tests, 0 failed;
   result XML SHA-256
-  `F9BC704B73ED5DF17BA0BDE1A2EC7A70AFF6A4067D3C66BDF686F505757DAD5C`.
+  `83B8434359EE78352A50EE9BCCCE5CE15AF9ED85DDCE17A1F433C58F3911261F`.
 - Independent repository validator rerun: pass, `errors: []`.
 - Privacy audit: pass after replacing the validator's local worktree root with
   the placeholder shown above. Raw Unity logs and XML remain local because Unity

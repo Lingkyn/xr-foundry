@@ -88,13 +88,13 @@ candidate, not a stable package.
 
 | Layer | Current state | Earliest unsatisfied gate |
 | --- | --- | --- |
-| `com.lingkyn.inventory.core` | Incubating `0.1.0`; source, domain, persistence, typed state, API review, and local-consumer gates pass | Fresh immutable consumer at the canonical nested repository path |
-| `com.lingkyn.inventory.unity` | Incubating `0.1.0`; authoring, conversion, diagnostics, immutability, and local-consumer gates pass | Fresh immutable consumer at the canonical nested repository path |
-| `com.lingkyn.inventory.presentation` | Incubating `0.1.0`; renderer-neutral view state, intents, view port, presenter, and engine-light tests | Fresh clean-consumer and immutable Git validation |
-| `com.lingkyn.inventory.ugui` | Incubating `0.2.0`; nested UGUI roles consume the neutral presentation contract | Fresh local and immutable Git consumer validation |
-| `com.lingkyn.inventory.uitoolkit` | Incubating `0.1.0`; peer VisualElement/UXML/USS route, state gallery, and renderer tests | Fresh clean-consumer and renderer acceptance |
-| `com.lingkyn.inventory.xr.ugui` | Incubating `0.1.0`; explicit UGUI/XRI composition | Fresh package-graph install/build, then named-device evidence |
-| `com.lingkyn.inventory.xr.uitoolkit` | Incubating `0.1.0`; explicit UI Toolkit/XRI world-space composition and validation | Fresh package-graph install/build, then independent named-device evidence |
+| `com.lingkyn.inventory.core` | Incubating `0.1.0`; source, domain, persistence, typed state, API, local-consumer, and canonical nested Git gates pass | Formal candidate release review |
+| `com.lingkyn.inventory.unity` | Incubating `0.1.0`; authoring, conversion, diagnostics, immutability, local-consumer, and canonical nested Git gates pass | Formal candidate release review |
+| `com.lingkyn.inventory.presentation` | Incubating `0.1.0`; renderer-neutral contract and local/canonical Git consumer tests pass | Public API review |
+| `com.lingkyn.inventory.ugui` | Incubating `0.2.0`; neutral presentation, nested roles, and local/canonical Git consumer tests pass | Formal candidate release review |
+| `com.lingkyn.inventory.uitoolkit` | Incubating `0.1.0`; peer VisualElement/UXML/USS route and local/canonical Git consumer tests pass | Renderer acceptance |
+| `com.lingkyn.inventory.xr.ugui` | Incubating `0.1.0`; explicit UGUI/XRI composition and automated canonical Git tests pass | Android build/install/open, then renderer-scoped named-device evidence |
+| `com.lingkyn.inventory.xr.uitoolkit` | Incubating `0.1.0`; explicit UI Toolkit/XRI composition and automated canonical Git tests pass | Android build/install/open, then independent renderer-scoped named-device evidence |
 
 These rows are claim boundaries, not a percentage-complete estimate. A lower layer
 may reach candidate maturity without promoting a higher layer or the whole family.

@@ -100,13 +100,13 @@ be prepared, but they cannot promote a package around an earlier failure.
 
 | Layer | Satisfied evidence | Earliest unsatisfied gate | Claim allowed now |
 | --- | --- | --- | --- |
-| Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; local consumer and public API review | Immutable Git consumer at the canonical nested path | Incubating Core only; not the complete Inventory family |
-| Unity authoring | ScriptableObject assets; stable IDs; deterministic conversion; actionable diagnostics; asset immutability; local clean-consumer EditMode tests | Immutable Git consumer at the canonical nested path | Incubating Unity authoring only; no presentation or XR claim |
-| Presentation | Renderer-neutral API extracted from the proven presenter seam; engine-light assembly contract and unit tests prepared | Fresh clean-consumer compile and immutable Git install | Incubating neutral presentation contract only |
-| UGUI | `0.2.0` consumes the neutral presentation assembly and retains nested renderer roles/tests | Fresh local and immutable Git consumer | Incubating UGUI renderer; no XR claim |
-| UI Toolkit | Working VisualElement/UXML/USS route, semantic state/input tests, and sample prepared | Fresh local and immutable Git consumer plus renderer acceptance | Incubating UI Toolkit adapter only |
-| XR UGUI | Renderer-explicit world-space Canvas, fail-closed validation, placement, and real-XRI route tests are authored | Fresh install/build and Unity Test Runner evidence, then named-device evidence | Incubating XR UGUI adapter only; no headset usability claim |
-| XR UI Toolkit | Renderer-specific world-space panel, XRI input route, fail-closed validation, placement, sample, and tests prepared | Fresh install/build, renderer tests, then independent named-device evidence | Incubating XR UI Toolkit adapter only; no headset usability claim |
+| Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; local consumer; canonical nested Git consumer | Formal candidate release review | Incubating Core only; not the complete Inventory family |
+| Unity authoring | ScriptableObject assets; stable IDs; deterministic conversion; actionable diagnostics; asset immutability; local and canonical nested Git consumer tests | Formal candidate release review | Incubating Unity authoring only; no presentation or XR claim |
+| Presentation | Renderer-neutral API; engine-light contract; unit tests; local and canonical nested Git consumer tests | Public API review | Incubating neutral presentation contract only |
+| UGUI | `0.2.0` neutral-presentation composition, nested renderer roles/tests, and local/canonical Git consumer tests | Formal candidate release review | Incubating UGUI renderer; no XR claim |
+| UI Toolkit | Working VisualElement/UXML/USS route, semantic state/input tests, sample, and local/canonical Git consumer tests | Renderer acceptance, then candidate release review | Incubating UI Toolkit adapter only |
+| XR UGUI | Renderer-explicit world-space Canvas, fail-closed validation, placement, canonical Git install, and real-XRI EditMode/PlayMode routes | Android build/install/open, then renderer-scoped named-device evidence | Incubating XR UGUI adapter only; no headset usability claim |
+| XR UI Toolkit | Renderer-specific world-space panel, fail-closed validation, placement, canonical Git install, and real-XRI EditMode/PlayMode routes | Android build/install/open, then independent renderer-scoped named-device evidence | Incubating XR UI Toolkit adapter only; no headset usability claim |
 
 Candidate promotion updates this ledger, `inventory-standard.json`,
 `package-catalog.json`, `reference-catalog.json`, package documentation, and the

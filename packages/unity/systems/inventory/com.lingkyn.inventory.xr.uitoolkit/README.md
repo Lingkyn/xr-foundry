@@ -44,7 +44,9 @@ dependency in an immutable Unity consumer project.
 The automated gate and PlayMode test establish component identity,
 configuration, static reach, and fail-closed behavior. They do **not** synthesize
 an XR pointer click and therefore do not claim hover or activation through the
-XR route; those claims remain pending immutable-consumer and device evidence.
+XR route; those claims remain pending Android and named-device evidence. The
+canonical nested Git consumer itself passes at revision
+`b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`.
 
 ## Git installation
 

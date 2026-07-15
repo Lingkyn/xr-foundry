@@ -24,22 +24,23 @@ Inventory is an incubating system standard with a positive-external-source-only
 manifest, package-family architecture, nested presentation composition, and a
 verification contract. The independently authored Core `0.1.0` implementation is
 implemented with source, API, persistence, and local-consumer evidence. The
-canonical nested repository path still requires a fresh immutable Git consumer,
-so Core and Unity authoring remain incubating until that exact path is proven.
-Presentation, UGUI, UI Toolkit, XR UGUI, and XR UI Toolkit form the canonical
-renderer-neutral graph. Android and named-device gates remain independent for each
-XR renderer, so lower-layer evidence is not evidence that the complete family or
-XR experience is finished.
+canonical nested repository layout now has a fresh immutable Git consumer at
+`b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`: all nine packages resolved from
+GitHub, compiled, and passed 49 EditMode plus 8 PlayMode tests. Presentation,
+UGUI, UI Toolkit, XR UGUI, and XR UI Toolkit form the canonical renderer-neutral
+graph. Candidate review, renderer acceptance, Android, and named-device gates
+remain independent; lower-layer evidence is not evidence that the complete family
+or XR experience is finished.
 
 | Package | Version | Maturity | Earliest unsatisfied gate |
 | --- | --- | --- | --- |
-| `com.lingkyn.inventory.core` | `0.1.0` | `incubating` | `immutable_nested_path_git_consumer` |
-| `com.lingkyn.inventory.unity` | `0.1.0` | `incubating` | `immutable_nested_path_git_consumer` |
-| `com.lingkyn.inventory.presentation` | `0.1.0` | `incubating` | `local_clean_consumer` |
-| `com.lingkyn.inventory.ugui` | `0.2.0` | `incubating` | `local_clean_consumer` |
-| `com.lingkyn.inventory.uitoolkit` | `0.1.0` | `incubating` | `local_clean_consumer` |
-| `com.lingkyn.inventory.xr.ugui` | `0.1.0` | `incubating` | `local_clean_consumer` |
-| `com.lingkyn.inventory.xr.uitoolkit` | `0.1.0` | `incubating` | `local_clean_consumer` |
+| `com.lingkyn.inventory.core` | `0.1.0` | `incubating` | `candidate_release_review` |
+| `com.lingkyn.inventory.unity` | `0.1.0` | `incubating` | `candidate_release_review` |
+| `com.lingkyn.inventory.presentation` | `0.1.0` | `incubating` | `public_api_review` |
+| `com.lingkyn.inventory.ugui` | `0.2.0` | `incubating` | `candidate_release_review` |
+| `com.lingkyn.inventory.uitoolkit` | `0.1.0` | `incubating` | `renderer_acceptance` |
+| `com.lingkyn.inventory.xr.ugui` | `0.1.0` | `incubating` | `android_build_install_open` |
+| `com.lingkyn.inventory.xr.uitoolkit` | `0.1.0` | `incubating` | `android_build_install_open` |
 
 ## Reference-library evolution
 

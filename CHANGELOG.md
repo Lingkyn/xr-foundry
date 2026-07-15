@@ -11,6 +11,10 @@ live in each package's `CHANGELOG.md`.
 - Finalized the initialization layout under `packages/unity/foundations` and
   `packages/unity/systems/inventory`. Catalogs, install URLs, reference paths, and
   validation use that single layout; no old-path compatibility surface is kept.
+- Validated all nine packages from their canonical nested Git selectors at
+  revision `b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`: Unity `6000.3.19f1`
+  compilation, 49 EditMode tests, and 8 PlayMode tests pass; Android and physical
+  device claims remain explicitly untested.
 - Added current official Unity world-space UI Toolkit, XRI UI Toolkit, PICO
   multimodal direction, and Apple spatial-design sources with bounded roles and
   explicit non-claim limits.

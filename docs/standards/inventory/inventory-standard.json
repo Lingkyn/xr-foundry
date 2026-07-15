@@ -62,49 +62,49 @@
       "responsibility": "engine-light domain model, policies, transactions, events, snapshots, and persistence contracts",
       "required_dependencies": [],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "immutable_nested_path_git_consumer"
+      "earliest_failed_gate": "candidate_release_review"
     },
     {
       "id": "com.lingkyn.inventory.unity",
       "responsibility": "Unity authoring assets, catalogs, inspectors, and serialization adapters",
       "required_dependencies": ["com.lingkyn.inventory.core"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "immutable_nested_path_git_consumer"
+      "earliest_failed_gate": "candidate_release_review"
     },
     {
       "id": "com.lingkyn.inventory.presentation",
       "responsibility": "renderer-neutral view state, immutable view models, semantic intents, view port, and presenter",
       "required_dependencies": ["com.lingkyn.inventory.core"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "local_clean_consumer"
+      "earliest_failed_gate": "public_api_review"
     },
     {
       "id": "com.lingkyn.inventory.ugui",
       "responsibility": "UGUI view bindings, nested prefabs, input routing, and non-XR renderer samples",
       "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.presentation", "com.unity.ugui"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "local_clean_consumer"
+      "earliest_failed_gate": "candidate_release_review"
     },
     {
       "id": "com.lingkyn.inventory.uitoolkit",
       "responsibility": "UI Toolkit view bindings, UXML and USS composition, input routing, and non-XR renderer samples",
       "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.presentation", "com.unity.modules.uielements"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "local_clean_consumer"
+      "earliest_failed_gate": "renderer_acceptance"
     },
     {
       "id": "com.lingkyn.inventory.xr.ugui",
       "responsibility": "optional UGUI world-space Canvas, tracked-controller interaction, and renderer-specific XR validation samples",
       "required_dependencies": ["com.lingkyn.inventory.presentation", "com.lingkyn.inventory.ugui", "com.unity.xr.interaction.toolkit"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "local_clean_consumer"
+      "earliest_failed_gate": "android_build_install_open"
     },
     {
       "id": "com.lingkyn.inventory.xr.uitoolkit",
       "responsibility": "optional UI Toolkit world-space panel, XRI interaction, and renderer-specific XR validation samples",
       "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.presentation", "com.lingkyn.inventory.uitoolkit", "com.unity.xr.interaction.toolkit"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "local_clean_consumer"
+      "earliest_failed_gate": "android_build_install_open"
     }
   ],
   "required_domain_types": [

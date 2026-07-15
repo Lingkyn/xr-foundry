@@ -1,7 +1,9 @@
 # Lingkyn Inventory XR UGUI
 
-Status: **incubating**. A fresh immutable Git consumer run is required before
-promotion.
+Status: **incubating**. Canonical nested Git resolution, compilation, EditMode,
+and PlayMode tests pass at revision
+`b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`; Android and renderer-scoped
+named-device evidence remain separate promotion gates.
 
 This optional, renderer-explicit package composes `com.lingkyn.inventory.ugui` on a world-space
 Canvas using XR Interaction Toolkit `3.3.2`. It does not redefine Inventory

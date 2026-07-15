@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 4,
+  "revision": 5,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -192,7 +192,7 @@
         "expires_at": "2026-07-22T18:05:12Z",
         "ended_at": null,
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": "Lingkyn remains the accountable GitHub identity while Cursor executes the bounded validator change and Codex performs independent review."
+        "transition_reason": null
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": {

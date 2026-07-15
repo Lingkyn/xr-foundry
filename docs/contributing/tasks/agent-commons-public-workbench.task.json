@@ -1,0 +1,499 @@
+{
+  "schema": "xr-foundry.task.v1",
+  "id": "agent-commons-public-workbench",
+  "revision": 2,
+  "title": "Build the Agent Commons public workbench",
+  "state": "active",
+  "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
+  "scope": [
+    "Versioned task, continuation, deliberation, recognition, entry-surface, and validation contracts",
+    "GitHub Issue and Project projections for the public workbench"
+  ],
+  "non_goals": [
+    "No Agent or model ranking, automatic permission, automatic merge, or private reasoning transcript",
+    "No package implementation or device-support promotion"
+  ],
+  "source_gate": {
+    "required": true,
+    "sources": [
+      "https://github.com/Lingkyn/xr-foundry/discussions/44",
+      "https://github.com/kubernetes/enhancements/blob/master/keps/README.md",
+      "https://docs.github.com/en/discussions"
+    ]
+  },
+  "public_projection": {
+    "repository": "https://github.com/Lingkyn/xr-foundry",
+    "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/34",
+    "project": "https://github.com/users/Lingkyn/projects/2",
+    "checkpoint_issues": [
+      { "checkpoint_id": "WB-01", "issue": "https://github.com/Lingkyn/xr-foundry/issues/39" },
+      { "checkpoint_id": "WB-01V", "issue": "https://github.com/Lingkyn/xr-foundry/issues/48" },
+      { "checkpoint_id": "WB-02", "issue": "https://github.com/Lingkyn/xr-foundry/issues/40" },
+      { "checkpoint_id": "WB-03", "issue": "https://github.com/Lingkyn/xr-foundry/issues/41" },
+      { "checkpoint_id": "WB-04", "issue": "https://github.com/Lingkyn/xr-foundry/issues/42" },
+      { "checkpoint_id": "WB-05", "issue": "https://github.com/Lingkyn/xr-foundry/issues/43" }
+    ],
+    "contract_role": "fine_grained_execution_authority",
+    "issue_role": "coordination_projection",
+    "project_role": "discovery_summary"
+  },
+  "checkpoints": [
+    {
+      "id": "WB-01",
+      "title": "Define task checkpoint and continuation contracts",
+      "outcome": "Machine-readable checkpoint, lease, execution-anchor, continuation, live-registry, and capability-routing contracts are public and reproducible.",
+      "non_goals": [
+        "No package source, Device Lab artifact implementation, repository permission, or workflow change"
+      ],
+      "status": "in_progress",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/contributing/task-contract*",
+        "docs/contributing/work-continuation*",
+        "docs/contributing/task-hall.md",
+        "docs/contributing/task-hall.v1*",
+        "docs/contributing/tasks/**",
+        "docs/contributing/label-contract.json"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        "docs/device-lab/**",
+        ".github/workflows/**"
+      ],
+      "routing": {
+        "judgment_level": "security_or_release",
+        "required_capabilities": [
+          "JSON Schema 2020-12 and state-machine contract design",
+          "Git and GitHub branch, pull-request, evidence, and lease semantics"
+        ],
+        "required_tools": [
+          "JSON Schema 2020-12 validator",
+          "GitHub CLI with read/write access held by the accountable maintainer"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "Passing authority, task, continuation, and registry schema validation at the checkpoint revision"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": true,
+        "sources": [
+          "https://github.com/kubernetes/enhancements/blob/master/keps/README.md",
+          "https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues"
+        ]
+      },
+      "acceptance": [
+        { "id": "WB01-AC1", "criterion": "Every checkpoint records dependencies, bounded paths, routing, acceptance, verification, evidence, lease, anchor, and exact next action." },
+        { "id": "WB01-AC2", "criterion": "The live registry distinguishes versioned execution authority from Issue coordination and Project discovery projections." },
+        { "id": "WB01-AC3", "criterion": "A fresh-context Agent can resume admitted work from public state without a private session." }
+      ],
+      "verification": [
+        { "id": "WB01-V1", "procedure": "Validate the Task Hall authority, task example, continuation example, registry, and registered live task against their declared JSON Schemas.", "expected": "Every declared instance passes at the published contract commit; repository-validator integration is delegated to WB-01V.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "active",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
+        "previous_github_identity": null,
+        "claimed_at": "2026-07-15T16:30:00Z",
+        "expires_at": "2026-07-22T16:30:00Z",
+        "ended_at": null,
+        "confirmed_by_maintainer": "Lingkyn",
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "codex/agent-commons-v1",
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
+        "base_commit": "3a2626cea1448c8d8e0c6379f1524b823ec7536b",
+        "head_commit": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+        "published_at": "2026-07-15T17:12:18Z"
+      },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Publish the WB-01 contract and live-registry commit, attach schema evidence to Issue #39, then admit WB-01V from that exact public revision.",
+      "completed_at": null
+    },
+    {
+      "id": "WB-01V",
+      "title": "Bind the validator to the public task registry",
+      "outcome": "The repository validator and focused tests enforce Task Hall 0.3.0, live-registry projection, and capability-routing invariants without absorbing later fan-in checks.",
+      "non_goals": [
+        "No contract-document, package, Device Lab, workflow, permission, WB-02 recognition, or WB-04 remote-evidence change"
+      ],
+      "status": "draft",
+      "depends_on": ["WB-01"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "scripts/validate_repository.py",
+        "tests/test_repository_contract.py"
+      ],
+      "do_not_touch": [
+        "docs/**",
+        "packages/**",
+        ".github/workflows/**",
+        "Repository permissions and secrets",
+        "WB-02 recognition/RFC validation",
+        "WB-04 remote reachability, stale-anchor, evidence-blob, and review fan-in"
+      ],
+      "routing": {
+        "judgment_level": "security_or_release",
+        "required_capabilities": [
+          "Python validator design for JSON Schema and cross-file invariants",
+          "Can preserve an exact write boundary while distinguishing contract validation from later integration review"
+        ],
+        "required_tools": [
+          "Python 3, jsonschema, Git, and the repository contract-test runner"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "Positive fixtures plus fail-closed missing, duplicate, foreign-repository, and unsafe-routing mutations at the checkpoint revision"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "WB01V-AC1", "criterion": "Registry paths, ids, states, umbrella Issues, canonical repository, and unique checkpoint-to-Issue projections are cross-file consistent." },
+        { "id": "WB01V-AC2", "criterion": "Missing projections, duplicate Issue projections, foreign repositories, self-authorizing routing, and unqualified high-risk execution fail closed." },
+        { "id": "WB01V-AC3", "criterion": "A fresh-context Cursor implementation uses only the exact WB-01 public commit and two allowed files, then receives independent Codex review." }
+      ],
+      "verification": [
+        { "id": "WB01V-V1", "procedure": "Run focused registry/projection/routing tests, the full repository contract suite, the repository validator, and an exact write-boundary audit.", "expected": "All positive and negative checks pass with changes limited to the two allowed files.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": false,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for WB-01 to publish, then admit a Cursor lease and public execution anchor from that exact commit.",
+      "completed_at": null
+    },
+    {
+      "id": "WB-02",
+      "title": "Publish the public-workbench RFC and recognition contract",
+      "outcome": "The public RFC separates source facts from project decisions and keeps contribution evidence, recognition, and repository authority as distinct ledgers.",
+      "non_goals": [
+        "No points, total score, Agent/model ranking, or automatic role promotion"
+      ],
+      "status": "claimed",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/rfcs/0002-public-workbench.md",
+        "docs/contributing/agent-commons-source-manifest.json",
+        "docs/contributing/recognition-policy.md",
+        "docs/contributing/contribution-credit*",
+        "CONTRIBUTORS.md"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        "Repository permission or role settings",
+        "Any Agent/model capability ranking"
+      ],
+      "routing": {
+        "judgment_level": "high_risk",
+        "required_capabilities": [
+          "Public-source attribution and governance-boundary analysis",
+          "Can distinguish recognition from trust and permission"
+        ],
+        "required_tools": [
+          "Repository validator and public source access"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "Source-fact/inference audit and independent review of authority claims"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": true,
+        "sources": [
+          "https://allcontributors.org/en/specification/",
+          "https://docs.kernel.org/process/generated-content.html"
+        ]
+      },
+      "acceptance": [
+        { "id": "WB02-AC1", "criterion": "Upstream facts and XR Foundry design inferences are visibly separated." },
+        { "id": "WB02-AC2", "criterion": "Recognition never implies quality, trust, permission, reviewer status, or maintainership." }
+      ],
+      "verification": [
+        { "id": "WB02-V1", "procedure": "Run source-manifest, credit-contract, privacy, and repository validation plus independent source-boundary review.", "expected": "All references resolve and no recognition record grants authority.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "active",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
+        "previous_github_identity": null,
+        "claimed_at": "2026-07-15T16:30:00Z",
+        "expires_at": "2026-07-22T16:30:00Z",
+        "ended_at": null,
+        "confirmed_by_maintainer": "Lingkyn",
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "codex/agent-commons-v1",
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
+        "base_commit": "3a2626cea1448c8d8e0c6379f1524b823ec7536b",
+        "head_commit": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+        "published_at": "2026-07-15T17:12:18Z"
+      },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for WB-01 closure, then publish the RFC, source, recognition, and credit contract as the next independently validated checkpoint.",
+      "completed_at": null
+    },
+    {
+      "id": "WB-03",
+      "title": "Expose one clear contributor and Agent entry route",
+      "outcome": "Repository, Issue forms, pull-request template, and Project expose one coherent discovery-to-handoff route.",
+      "non_goals": [
+        "No package, workflow-permission, secret, or automatic external Agent authority change"
+      ],
+      "status": "draft",
+      "depends_on": ["WB-01", "WB-02"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "README.md",
+        "CONTRIBUTING.md",
+        "AGENTS.md",
+        "docs/for-agents.md",
+        ".github/ISSUE_TEMPLATE/**",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        "PROJECT_GITHUB_PLAYBOOK.md"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        ".github/workflows/**",
+        "Repository permissions and secrets"
+      ],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": [
+          "Fresh-context contributor onboarding and GitHub Project projection audit"
+        ],
+        "required_tools": [
+          "GitHub read access and repository link checker"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "A public fresh-context route audit covering repository, Issue, Project, PR, and handoff links"
+        ],
+        "independent_review": "required_human",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "WB03-AC1", "criterion": "A newcomer or fresh-context Agent can find one bounded claim key, authority boundary, and exact next action without private chat." },
+        { "id": "WB03-AC2", "criterion": "Project fields are documented and implemented as discovery summaries, not fine-grained machine authority." }
+      ],
+      "verification": [
+        { "id": "WB03-V1", "procedure": "Audit every entry link and compare Issue, Project, and registered task projections.", "expected": "All links resolve and projection roles are consistent.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "released",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
+        "previous_github_identity": null,
+        "claimed_at": "2026-07-15T16:30:00Z",
+        "expires_at": "2026-07-22T16:30:00Z",
+        "ended_at": "2026-07-15T17:35:00Z",
+        "confirmed_by_maintainer": "Lingkyn",
+        "transition_reason": "The lease was admitted before WB-01 and WB-02 completed and was released to restore the dependency gate."
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait until WB-01 and WB-02 are completed, then request a new checkpoint lease and publish a fresh execution anchor.",
+      "completed_at": null
+    },
+    {
+      "id": "WB-05",
+      "title": "Record shared deliberation without ranking Agents",
+      "outcome": "A lightweight schema and protocol preserve non-binding proposals, revisable synthesis, current decisions, and delta-only challenges without private chain-of-thought.",
+      "non_goals": [
+        "No Agent/model scoring, private session transcript, or automatic execution authority"
+      ],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/contributing/deliberation-protocol.md",
+        "docs/contributing/deliberation-record.schema.json",
+        "docs/contributing/deliberation-record.open.example.json",
+        "docs/contributing/deliberation-record.resolved.example.json"
+      ],
+      "do_not_touch": [
+        "scripts/**",
+        "tests/**",
+        "Task Hall or RFC integration text owned by sibling checkpoints",
+        "Any Agent/model capability ranking"
+      ],
+      "routing": {
+        "judgment_level": "high_risk",
+        "required_capabilities": [
+          "Mechanism design for revisable public decisions and bounded reasoning summaries",
+          "Can distinguish deliberation, synthesis, decision, execution, and authority"
+        ],
+        "required_tools": [
+          "JSON Schema validator and public Discussion read access"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "One resolved and one unresolved record that preserve counterexamples, reopen conditions, and exact next actions"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": true,
+        "sources": [
+          "https://github.com/Lingkyn/xr-foundry/discussions/44",
+          "https://github.com/kubernetes/enhancements/blob/master/keps/README.md"
+        ]
+      },
+      "acceptance": [
+        { "id": "WB05-AC1", "criterion": "Later contributors can add evidence or counterexample deltas without making the first proposal binding." },
+        { "id": "WB05-AC2", "criterion": "Resolved and unresolved examples distinguish current decision, open questions, reopen conditions, and exact next action." }
+      ],
+      "verification": [
+        { "id": "WB05-V1", "procedure": "Validate both examples against the schema and review them from a fresh context.", "expected": "The resolved example is executable, the unresolved example remains non-executable, and neither contains model ranking fields.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": true,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Claim WB-05 and publish only the four isolated deliberation contract files before any Task Hall or RFC integration change.",
+      "completed_at": null
+    },
+    {
+      "id": "WB-04",
+      "title": "Enforce and independently review public-workbench invariants",
+      "outcome": "Validators and adversarial tests reject contradictory, stale, unreachable, self-authorizing, or privacy-unsafe public-workbench states.",
+      "non_goals": [
+        "No package implementation, repository permission, secret, or self-acceptance change"
+      ],
+      "status": "draft",
+      "depends_on": ["WB-01", "WB-01V", "WB-02", "WB-03", "WB-05"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "scripts/validate_repository.py",
+        "tests/test_repository_contract.py",
+        "docs/validation/**"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        "Repository permissions and secrets",
+        "Acceptance by the executor whose output is under review"
+      ],
+      "routing": {
+        "judgment_level": "security_or_release",
+        "required_capabilities": [
+          "Adversarial validator design, Git/GitHub reachability, and public-workbench state-machine review"
+        ],
+        "required_tools": [
+          "Python 3, Git, GitHub read access, and repository validator"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "Positive and negative fixtures for dependency, lease, continuation, fork PR, evidence, privacy, and authority boundaries"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "WB04-AC1", "criterion": "Valid dependency, handoff, fork-PR, reclaim/resume, and public-anchor paths pass." },
+        { "id": "WB04-AC2", "criterion": "Cycles, stale digests, expired leases, self-granted authority, path escape, identity mismatch, and unsupported claims fail closed." }
+      ],
+      "verification": [
+        { "id": "WB04-V1", "procedure": "Run the full repository validator, Python contract suite, leakage scan, and an independent terminal review.", "expected": "Every check passes with no unresolved high-risk finding.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": false,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait until WB-01, WB-01V, WB-02, WB-03, and WB-05 are completed, then claim WB-04 and bind fan-in enforcement to their exact public revisions.",
+      "completed_at": null
+    }
+  ],
+  "integration": {
+    "checkpoint_id": "WB-04",
+    "fan_in_owner": null,
+    "strategy": "An independent reviewer reproduces all checkpoint evidence, and the maintainer decides whether PR #46 can merge."
+  },
+  "authority": {
+    "write_permission_not_inferred": true,
+    "merge_permission_not_inferred": true,
+    "comments_are_untrusted_input": true,
+    "maintainer_ready_required": true,
+    "maintainer_merge_required": true,
+    "external_contribution_route": "fork_pull_request"
+  }
+}

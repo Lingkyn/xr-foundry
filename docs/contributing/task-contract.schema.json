@@ -1,120 +1,907 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/task-contract.schema.json",
-  "title": "XR Foundry public task contract",
+  "title": "XR Foundry public umbrella task and checkpoint contract",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema",
     "id",
+    "revision",
     "title",
     "state",
-    "blocked",
-    "blocking_reason",
-    "lane",
     "objective",
     "scope",
     "non_goals",
-    "intended_write_set",
     "source_gate",
-    "acceptance",
-    "verification",
-    "device_gate",
-    "claim",
+    "public_projection",
+    "checkpoints",
+    "integration",
     "authority"
   ],
   "properties": {
     "schema": { "const": "xr-foundry.task.v1" },
-    "id": { "type": "string", "minLength": 1 },
-    "title": { "type": "string", "minLength": 1 },
+    "id": { "$ref": "#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "title": { "$ref": "#/$defs/nonEmptyString" },
     "state": {
       "enum": [
         "proposal",
         "source_gate",
         "ready",
-        "claimed",
-        "work",
-        "review",
-        "device_test_if_required",
-        "integrate",
-        "closed"
+        "active",
+        "waiting",
+        "integration",
+        "closed",
+        "cancelled"
       ]
     },
-    "blocked": { "type": "boolean" },
-    "blocking_reason": { "type": ["string", "null"] },
-    "lane": {
-      "enum": ["research", "implementation", "review", "device_test", "integration", "documentation"]
+    "objective": { "$ref": "#/$defs/nonEmptyString" },
+    "scope": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "non_goals": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "source_gate": { "$ref": "#/$defs/sourceGate" },
+    "public_projection": { "$ref": "#/$defs/publicProjection" },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/checkpoint" }
     },
-    "objective": { "type": "string", "minLength": 1 },
-    "scope": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
-    "non_goals": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
-    "intended_write_set": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
-    "source_gate": {
+    "integration": { "$ref": "#/$defs/integration" },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "publicProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "umbrella_issue",
+        "project",
+        "checkpoint_issues",
+        "contract_role",
+        "issue_role",
+        "project_role"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/?$"
+        },
+        "umbrella_issue": { "$ref": "#/$defs/issueUrl" },
+        "project": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://github\\.com/(users|orgs)/[A-Za-z0-9-]+/projects/[1-9][0-9]*$"
+        },
+        "checkpoint_issues": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["checkpoint_id", "issue"],
+            "properties": {
+              "checkpoint_id": { "$ref": "#/$defs/identifier" },
+              "issue": { "$ref": "#/$defs/issueUrl" }
+            }
+          }
+        },
+        "contract_role": { "const": "fine_grained_execution_authority" },
+        "issue_role": { "const": "coordination_projection" },
+        "project_role": { "const": "discovery_summary" }
+      }
+    },
+    "issueUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/issues/[1-9][0-9]*$"
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "judgment_level",
+        "required_capabilities",
+        "required_tools",
+        "required_devices",
+        "qualification_evidence",
+        "independent_review",
+        "self_report_grants_authority",
+        "agent_or_model_ranking_prohibited",
+        "no_qualified_executor"
+      ],
+      "properties": {
+        "judgment_level": {
+          "enum": ["routine", "bounded_domain", "high_risk", "security_or_release"]
+        },
+        "required_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "required_tools": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "required_devices": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "qualification_evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "independent_review": {
+          "enum": [
+            "not_required",
+            "advisory",
+            "required_human",
+            "required_maintainer",
+            "required_device"
+          ]
+        },
+        "self_report_grants_authority": { "const": false },
+        "agent_or_model_ranking_prohibited": { "const": true },
+        "no_qualified_executor": { "const": "remain_not_ready" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "judgment_level": { "enum": ["high_risk", "security_or_release"] }
+            },
+            "required": ["judgment_level"]
+          },
+          "then": {
+            "properties": {
+              "required_capabilities": { "minItems": 1 },
+              "qualification_evidence": { "minItems": 1 },
+              "independent_review": {
+                "enum": ["required_human", "required_maintainer", "required_device"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "sourceGate": {
       "type": "object",
       "additionalProperties": false,
       "required": ["required", "sources"],
       "properties": {
         "required": { "type": "boolean" },
-        "sources": { "type": "array", "items": { "type": "string", "format": "uri" } }
+        "sources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "format": "uri" }
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "required": { "const": true } }, "required": ["required"] },
-          "then": { "properties": { "sources": { "minItems": 1, "uniqueItems": true } } },
+          "if": {
+            "properties": { "required": { "const": true } },
+            "required": ["required"]
+          },
+          "then": { "properties": { "sources": { "minItems": 1 } } },
           "else": { "properties": { "sources": { "maxItems": 0 } } }
         }
       ]
     },
-    "acceptance": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
-    "verification": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
-    "device_gate": {
+    "acceptanceItem": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["required", "profiles"],
+      "required": ["id", "criterion"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "criterion": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "verificationItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "procedure", "expected", "evidence_required"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "procedure": { "$ref": "#/$defs/nonEmptyString" },
+        "expected": { "$ref": "#/$defs/nonEmptyString" },
+        "evidence_required": { "type": "boolean" }
+      }
+    },
+    "evidenceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "location", "commit", "summary"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "kind": {
+          "enum": [
+            "source",
+            "design",
+            "implementation",
+            "test",
+            "review",
+            "device",
+            "release",
+            "other"
+          ]
+        },
+        "location": { "$ref": "#/$defs/nonEmptyString" },
+        "commit": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          ]
+        },
+        "summary": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "deviceGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "profiles", "acceptance", "evidence"],
       "properties": {
         "required": { "type": "boolean" },
-        "profiles": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9-]+$" } }
+        "profiles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" }
+        },
+        "acceptance": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "required": { "const": true } }, "required": ["required"] },
-          "then": { "properties": { "profiles": { "minItems": 1, "uniqueItems": true } } },
-          "else": { "properties": { "profiles": { "maxItems": 0 } } }
+          "if": {
+            "properties": { "required": { "const": true } },
+            "required": ["required"]
+          },
+          "then": {
+            "properties": {
+              "profiles": { "minItems": 1 },
+              "acceptance": { "minItems": 1 }
+            }
+          },
+          "else": {
+            "properties": {
+              "profiles": { "maxItems": 0 },
+              "acceptance": { "maxItems": 0 },
+              "evidence": { "maxItems": 0 }
+            }
+          }
+        }
+      ]
+    },
+    "waiting": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reason", "owner", "resumes_when"],
+          "properties": {
+            "reason": { "$ref": "#/$defs/nonEmptyString" },
+            "owner": { "$ref": "#/$defs/nonEmptyString" },
+            "resumes_when": { "$ref": "#/$defs/nonEmptyString" }
+          }
         }
       ]
     },
     "claim": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "github_identity", "claimed_at", "expires_at", "confirmed_by_maintainer"],
+      "required": [
+        "status",
+        "adoptable",
+        "github_identity",
+        "previous_github_identity",
+        "claimed_at",
+        "expires_at",
+        "ended_at",
+        "confirmed_by_maintainer",
+        "transition_reason"
+      ],
       "properties": {
-        "status": { "enum": ["unclaimed", "claimed", "expired"] },
-        "github_identity": { "type": ["string", "null"], "minLength": 1 },
-        "claimed_at": { "type": ["string", "null"], "format": "date-time" },
-        "expires_at": { "type": ["string", "null"], "format": "date-time" },
-        "confirmed_by_maintainer": { "type": ["string", "null"], "minLength": 1 }
+        "status": {
+          "enum": ["unclaimed", "active", "released", "transferred", "expired"]
+        },
+        "adoptable": { "type": "boolean" },
+        "github_identity": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nonEmptyString" }]
+        },
+        "previous_github_identity": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nonEmptyString" }]
+        },
+        "claimed_at": {
+          "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }]
+        },
+        "expires_at": {
+          "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }]
+        },
+        "ended_at": {
+          "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }]
+        },
+        "confirmed_by_maintainer": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nonEmptyString" }]
+        },
+        "transition_reason": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nonEmptyString" }]
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "status": { "const": "unclaimed" } }, "required": ["status"] },
+          "if": {
+            "properties": { "status": { "const": "unclaimed" } },
+            "required": ["status"]
+          },
           "then": {
             "properties": {
               "github_identity": { "type": "null" },
+              "previous_github_identity": { "type": "null" },
               "claimed_at": { "type": "null" },
               "expires_at": { "type": "null" },
-              "confirmed_by_maintainer": { "type": "null" }
+              "ended_at": { "type": "null" },
+              "confirmed_by_maintainer": { "type": "null" },
+              "transition_reason": { "type": "null" }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "active" } },
+            "required": ["status"]
           },
-          "else": {
+          "then": {
             "properties": {
-              "github_identity": { "type": "string", "minLength": 1 },
+              "adoptable": { "const": false },
+              "github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "previous_github_identity": { "type": "null" },
               "claimed_at": { "type": "string", "format": "date-time" },
               "expires_at": { "type": "string", "format": "date-time" },
-              "confirmed_by_maintainer": { "type": "string", "minLength": 1 }
+              "ended_at": { "type": "null" },
+              "confirmed_by_maintainer": { "$ref": "#/$defs/nonEmptyString" },
+              "transition_reason": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "enum": ["released", "expired"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "previous_github_identity": { "type": "null" },
+              "claimed_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "string", "format": "date-time" },
+              "ended_at": { "type": "string", "format": "date-time" },
+              "confirmed_by_maintainer": { "$ref": "#/$defs/nonEmptyString" },
+              "transition_reason": { "$ref": "#/$defs/nonEmptyString" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "transferred" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "adoptable": { "const": false },
+              "github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "previous_github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "claimed_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "string", "format": "date-time" },
+              "ended_at": { "type": "string", "format": "date-time" },
+              "confirmed_by_maintainer": { "$ref": "#/$defs/nonEmptyString" },
+              "transition_reason": { "$ref": "#/$defs/nonEmptyString" }
             }
           }
         }
       ]
+    },
+    "salvage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "outputs", "constraints"],
+      "properties": {
+        "status": {
+          "enum": ["not_needed", "salvageable", "salvaged", "discarded"]
+        },
+        "outputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "constraints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "enum": ["salvageable", "salvaged"] } },
+            "required": ["status"]
+          },
+          "then": { "properties": { "outputs": { "minItems": 1 } } }
+        }
+      ]
+    },
+    "executionAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "repository",
+        "branch",
+        "pull_request",
+        "base_commit",
+        "head_commit",
+        "published_at"
+      ],
+      "properties": {
+        "status": { "enum": ["none", "public"] },
+        "repository": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/?$"
+            }
+          ]
+        },
+        "branch": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nonEmptyString" }]
+        },
+        "pull_request": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://github\\.com/"
+            }
+          ]
+        },
+        "base_commit": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          ]
+        },
+        "head_commit": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          ]
+        },
+        "published_at": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "format": "date-time" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "public" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "repository": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/?$"
+              },
+              "branch": { "$ref": "#/$defs/nonEmptyString" },
+              "base_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+              "head_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+              "published_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "else": {
+            "properties": {
+              "repository": { "type": "null" },
+              "branch": { "type": "null" },
+              "pull_request": { "type": "null" },
+              "base_commit": { "type": "null" },
+              "head_commit": { "type": "null" },
+              "published_at": { "type": "null" }
+            }
+          }
+        }
+      ]
+    },
+    "continuationRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "location", "sha256", "handoff_revision"],
+      "properties": {
+        "status": {
+          "enum": ["not_required", "current", "needs_review", "stale", "missing"]
+        },
+        "location": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "string",
+              "pattern": "^docs/contributing/[A-Za-z0-9._/-]+\\.json$"
+            }
+          ]
+        },
+        "sha256": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          ]
+        },
+        "handoff_revision": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "integer", "minimum": 1 }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["current", "needs_review", "stale"] }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "location": {
+                "type": "string",
+                "pattern": "^docs/contributing/[A-Za-z0-9._/-]+\\.json$"
+              },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "handoff_revision": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "else": {
+            "properties": {
+              "location": { "type": "null" },
+              "sha256": { "type": "null" },
+              "handoff_revision": { "type": "null" }
+            }
+          }
+        }
+      ]
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "outcome",
+        "non_goals",
+        "status",
+        "depends_on",
+        "write_mode",
+        "allowed_paths",
+        "do_not_touch",
+        "routing",
+        "source_gate",
+        "acceptance",
+        "verification",
+        "device",
+        "evidence",
+        "waiting",
+        "claim",
+        "salvage",
+        "execution_anchor",
+        "continuation",
+        "exact_next_action",
+        "completed_at"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "outcome": { "$ref": "#/$defs/nonEmptyString" },
+        "non_goals": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "status": {
+          "enum": [
+            "draft",
+            "source_gate",
+            "ready",
+            "claimed",
+            "in_progress",
+            "waiting_on_author",
+            "waiting_on_review",
+            "waiting_on_device",
+            "integrating",
+            "completed",
+            "cancelled"
+          ]
+        },
+        "depends_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "write_mode": { "enum": ["read_only", "bounded_paths"] },
+        "allowed_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "do_not_touch": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "routing": { "$ref": "#/$defs/routing" },
+        "source_gate": { "$ref": "#/$defs/sourceGate" },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/acceptanceItem" }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/verificationItem" }
+        },
+        "device": { "$ref": "#/$defs/deviceGate" },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceItem" }
+        },
+        "waiting": { "$ref": "#/$defs/waiting" },
+        "claim": { "$ref": "#/$defs/claim" },
+        "salvage": { "$ref": "#/$defs/salvage" },
+        "execution_anchor": { "$ref": "#/$defs/executionAnchor" },
+        "continuation": { "$ref": "#/$defs/continuationRef" },
+        "exact_next_action": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/nonEmptyString" }
+          ]
+        },
+        "completed_at": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "format": "date-time" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "write_mode": { "const": "read_only" } },
+            "required": ["write_mode"]
+          },
+          "then": { "properties": { "allowed_paths": { "maxItems": 0 } } },
+          "else": { "properties": { "allowed_paths": { "minItems": 1 } } }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "source_gate" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "source_gate": { "properties": { "required": { "const": true } } }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["waiting_on_author", "waiting_on_review", "waiting_on_device"]
+              }
+            },
+            "required": ["status"]
+          },
+          "then": { "properties": { "waiting": { "type": "object" } } },
+          "else": { "properties": { "waiting": { "type": "null" } } }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["claimed", "in_progress", "integrating"] }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "claim": {
+                "properties": { "status": { "enum": ["active", "transferred"] } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "ready" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "claim": {
+                "properties": {
+                  "status": { "enum": ["unclaimed", "released", "expired"] },
+                  "adoptable": { "const": true }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "enum": ["completed", "cancelled"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "claim": { "properties": { "adoptable": { "const": false } } }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "waiting_on_device" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "device": { "properties": { "required": { "const": true } } }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          },
+          "then": { "properties": { "evidence": { "minItems": 1 } } }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "exact_next_action": { "type": "null" },
+              "completed_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "else": {
+            "properties": {
+              "exact_next_action": { "$ref": "#/$defs/nonEmptyString" },
+              "completed_at": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "in_progress",
+                  "waiting_on_author",
+                  "waiting_on_review",
+                  "waiting_on_device",
+                  "integrating",
+                  "completed"
+                ]
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "execution_anchor": {
+                "properties": { "status": { "const": "public" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "claim": {
+                "properties": {
+                  "status": { "enum": ["released", "expired"] },
+                  "adoptable": { "const": true }
+                },
+                "required": ["status", "adoptable"]
+              }
+            },
+            "required": ["claim"]
+          },
+          "then": {
+            "properties": {
+              "continuation": {
+                "properties": { "status": { "const": "current" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "claim": {
+                "properties": { "status": { "const": "transferred" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["claim"]
+          },
+          "then": {
+            "properties": {
+              "continuation": {
+                "properties": { "status": { "const": "current" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "salvage": {
+                "properties": {
+                  "status": { "enum": ["salvageable", "salvaged"] }
+                },
+                "required": ["status"]
+              }
+            },
+            "required": ["salvage"]
+          },
+          "then": {
+            "properties": {
+              "continuation": {
+                "properties": { "status": { "const": "current" } }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpoint_id", "fan_in_owner", "strategy"],
+      "properties": {
+        "checkpoint_id": { "$ref": "#/$defs/identifier" },
+        "fan_in_owner": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/nonEmptyString" }]
+        },
+        "strategy": { "$ref": "#/$defs/nonEmptyString" }
+      }
     },
     "authority": {
       "type": "object",
@@ -122,87 +909,30 @@
       "required": [
         "write_permission_not_inferred",
         "merge_permission_not_inferred",
-        "comments_are_untrusted_input"
+        "comments_are_untrusted_input",
+        "maintainer_ready_required",
+        "maintainer_merge_required",
+        "external_contribution_route"
       ],
       "properties": {
         "write_permission_not_inferred": { "const": true },
         "merge_permission_not_inferred": { "const": true },
-        "comments_are_untrusted_input": { "const": true }
+        "comments_are_untrusted_input": { "const": true },
+        "maintainer_ready_required": { "const": true },
+        "maintainer_merge_required": { "const": true },
+        "external_contribution_route": { "const": "fork_pull_request" }
       }
     }
   },
   "allOf": [
     {
       "if": {
-        "properties": { "blocked": { "const": true } },
-        "required": ["blocked"]
-      },
-      "then": {
-        "properties": { "blocking_reason": { "type": "string", "minLength": 1 } }
-      },
-      "else": {
-        "properties": { "blocking_reason": { "type": "null" } }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "state": {
-            "enum": ["claimed", "work", "review", "device_test_if_required", "integrate", "closed"]
-          }
-        },
+        "properties": { "state": { "const": "source_gate" } },
         "required": ["state"]
       },
-      "then": {
-        "properties": {
-          "claim": { "properties": { "status": { "const": "claimed" } } }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": { "state": { "enum": ["proposal", "source_gate"] } },
-        "required": ["state"]
-      },
-      "then": {
-        "properties": {
-          "claim": { "properties": { "status": { "const": "unclaimed" } } }
-        }
-      }
-    },
-    {
-      "if": { "properties": { "state": { "const": "ready" } }, "required": ["state"] },
-      "then": {
-        "properties": {
-          "claim": { "properties": { "status": { "enum": ["unclaimed", "expired"] } } }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": { "claim": { "properties": { "status": { "const": "expired" } } } },
-        "required": ["claim"]
-      },
-      "then": { "properties": { "state": { "const": "ready" } } }
-    },
-    {
-      "if": { "properties": { "state": { "const": "source_gate" } }, "required": ["state"] },
       "then": {
         "properties": {
           "source_gate": { "properties": { "required": { "const": true } } }
-        }
-      }
-    },
-    {
-      "if": {
-        "anyOf": [
-          { "properties": { "state": { "const": "device_test_if_required" } }, "required": ["state"] },
-          { "properties": { "lane": { "const": "device_test" } }, "required": ["lane"] }
-        ]
-      },
-      "then": {
-        "properties": {
-          "device_gate": { "properties": { "required": { "const": true } } }
         }
       }
     }

@@ -1,0 +1,490 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/work-continuation.schema.json",
+  "title": "XR Foundry checkpoint continuation handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "task_id",
+    "checkpoint_id",
+    "revision",
+    "generated_at",
+    "repository",
+    "branch",
+    "pull_request",
+    "commit",
+    "checkpoint_status",
+    "claim_disposition",
+    "execution_transition",
+    "completed",
+    "remaining",
+    "evidence",
+    "blocker",
+    "exact_next_action",
+    "do_not_touch",
+    "resume_review"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.work_continuation.v1" },
+    "id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "checkpoint_id": { "$ref": "#/$defs/identifier" },
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["handoff", "task_contract"],
+      "properties": {
+        "handoff": { "type": "integer", "minimum": 1 },
+        "task_contract": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "repository": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/?$"
+    },
+    "branch": { "$ref": "#/$defs/nonEmptyString" },
+    "pull_request": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "format": "uri", "pattern": "^https://github\\.com/" }
+      ]
+    },
+    "commit": { "$ref": "#/$defs/commit" },
+    "checkpoint_status": {
+      "enum": [
+        "draft",
+        "source_gate",
+        "ready",
+        "claimed",
+        "in_progress",
+        "waiting_on_author",
+        "waiting_on_review",
+        "waiting_on_device",
+        "integrating",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "claim_disposition": { "$ref": "#/$defs/claimDisposition" },
+    "execution_transition": { "$ref": "#/$defs/executionTransition" },
+    "completed": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/completedWork" }
+    },
+    "remaining": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/remainingWork" }
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "blocker": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/blocker" }
+      ]
+    },
+    "exact_next_action": { "$ref": "#/$defs/nextAction" },
+    "do_not_touch": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "resume_review": { "$ref": "#/$defs/resumeReview" }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "nullableIdentity": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/nonEmptyString" }
+      ]
+    },
+    "nullableDateTime": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "format": "date-time" }
+      ]
+    },
+    "claimDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "from_github_identity",
+        "to_github_identity",
+        "confirmed_by_maintainer",
+        "effective_at",
+        "expires_at"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["unclaimed", "active", "released", "transferred", "expired"]
+        },
+        "from_github_identity": { "$ref": "#/$defs/nullableIdentity" },
+        "to_github_identity": { "$ref": "#/$defs/nullableIdentity" },
+        "confirmed_by_maintainer": { "$ref": "#/$defs/nullableIdentity" },
+        "effective_at": { "$ref": "#/$defs/nullableDateTime" },
+        "expires_at": { "$ref": "#/$defs/nullableDateTime" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "unclaimed" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "from_github_identity": { "type": "null" },
+              "to_github_identity": { "type": "null" },
+              "confirmed_by_maintainer": { "type": "null" },
+              "effective_at": { "type": "null" },
+              "expires_at": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "active" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "from_github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "to_github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "confirmed_by_maintainer": { "$ref": "#/$defs/nonEmptyString" },
+              "effective_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "enum": ["released", "expired"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "from_github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "to_github_identity": { "type": "null" },
+              "confirmed_by_maintainer": { "$ref": "#/$defs/nonEmptyString" },
+              "effective_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "transferred" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "from_github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "to_github_identity": { "$ref": "#/$defs/nonEmptyString" },
+              "confirmed_by_maintainer": { "$ref": "#/$defs/nonEmptyString" },
+              "effective_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      ]
+    },
+    "executionTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_executor",
+        "stop_reason",
+        "resume_mode",
+        "private_session_required"
+      ],
+      "properties": {
+        "prior_executor": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/nonEmptyString" }
+          ]
+        },
+        "stop_reason": {
+          "enum": [
+            "planned_pause",
+            "quota_exhausted",
+            "runtime_failure",
+            "agent_error",
+            "claim_release",
+            "claim_transfer",
+            "review_gate",
+            "device_gate",
+            "other"
+          ]
+        },
+        "resume_mode": { "const": "fresh_context_from_public_boundary" },
+        "private_session_required": { "const": false }
+      }
+    },
+    "completedWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcome", "paths", "evidence_ids", "completed_at", "commit"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "outcome": { "$ref": "#/$defs/nonEmptyString" },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "commit": { "$ref": "#/$defs/commit" }
+      }
+    },
+    "remainingWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcome", "acceptance", "depends_on"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "outcome": { "$ref": "#/$defs/nonEmptyString" },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "depends_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "location", "commit", "summary", "reproducible"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "kind": {
+          "enum": [
+            "source",
+            "design",
+            "implementation",
+            "test",
+            "review",
+            "device",
+            "release",
+            "other"
+          ]
+        },
+        "location": { "$ref": "#/$defs/nonEmptyString" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "summary": { "$ref": "#/$defs/nonEmptyString" },
+        "reproducible": { "type": "boolean" }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "summary", "owner", "resumes_when"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "author",
+            "review",
+            "device",
+            "dependency",
+            "permission",
+            "security",
+            "source",
+            "infrastructure"
+          ]
+        },
+        "summary": { "$ref": "#/$defs/nonEmptyString" },
+        "owner": { "$ref": "#/$defs/nonEmptyString" },
+        "resumes_when": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "nextAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "write_mode",
+        "allowed_paths",
+        "prerequisites",
+        "verification",
+        "expected_evidence"
+      ],
+      "properties": {
+        "outcome": { "$ref": "#/$defs/nonEmptyString" },
+        "write_mode": { "enum": ["read_only", "bounded_paths"] },
+        "allowed_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "prerequisites": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "expected_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "write_mode": { "const": "read_only" } },
+            "required": ["write_mode"]
+          },
+          "then": { "properties": { "allowed_paths": { "maxItems": 0 } } },
+          "else": { "properties": { "allowed_paths": { "minItems": 1 } } }
+        }
+      ]
+    },
+    "resumeReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "checks", "reviewed_by", "reviewed_at", "notes"],
+      "properties": {
+        "required": { "const": true },
+        "status": {
+          "enum": ["pending", "admitted", "needs_author", "stale", "blocked_missing"]
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "task_revision_matches",
+            "branch_matches",
+            "pull_request_matches",
+            "commit_matches",
+            "evidence_reachable",
+            "claim_valid",
+            "allowed_paths_clean"
+          ],
+          "properties": {
+            "task_revision_matches": { "type": ["boolean", "null"] },
+            "branch_matches": { "type": ["boolean", "null"] },
+            "pull_request_matches": { "type": ["boolean", "null"] },
+            "commit_matches": { "type": ["boolean", "null"] },
+            "evidence_reachable": { "type": ["boolean", "null"] },
+            "claim_valid": { "type": ["boolean", "null"] },
+            "allowed_paths_clean": { "type": ["boolean", "null"] }
+          }
+        },
+        "reviewed_by": { "$ref": "#/$defs/nullableIdentity" },
+        "reviewed_at": { "$ref": "#/$defs/nullableDateTime" },
+        "notes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "pending" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "task_revision_matches": { "type": "null" },
+                  "branch_matches": { "type": "null" },
+                  "pull_request_matches": { "type": "null" },
+                  "commit_matches": { "type": "null" },
+                  "evidence_reachable": { "type": "null" },
+                  "claim_valid": { "type": "null" },
+                  "allowed_paths_clean": { "type": "null" }
+                }
+              },
+              "reviewed_by": { "type": "null" },
+              "reviewed_at": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "admitted" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "task_revision_matches": { "const": true },
+                  "branch_matches": { "const": true },
+                  "pull_request_matches": { "const": true },
+                  "commit_matches": { "const": true },
+                  "evidence_reachable": { "const": true },
+                  "claim_valid": { "const": true },
+                  "allowed_paths_clean": { "const": true }
+                }
+              },
+              "reviewed_by": { "$ref": "#/$defs/nonEmptyString" },
+              "reviewed_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "checkpoint_status": { "const": "completed" } },
+        "required": ["checkpoint_status"]
+      },
+      "then": { "properties": { "remaining": { "maxItems": 0 } } },
+      "else": { "properties": { "remaining": { "minItems": 1 } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "checkpoint_status": {
+            "enum": ["waiting_on_author", "waiting_on_review", "waiting_on_device"]
+          }
+        },
+        "required": ["checkpoint_status"]
+      },
+      "then": { "properties": { "blocker": { "type": "object" } } }
+    }
+  ]
+}

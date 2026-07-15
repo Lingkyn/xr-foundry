@@ -1,0 +1,126 @@
+{
+  "schema": "xr-foundry.capability_test_plan.v1",
+  "test_plan_id": "inventory-world-space-ui-v1",
+  "capability": "Inventory world-space UI presentation and interaction",
+  "allowed_targets": [
+    {
+      "device_profile_id": "pico-openxr-controller",
+      "composition_ids": [
+        "inventory-ugui-xr",
+        "inventory-ui-toolkit-xr"
+      ],
+      "required_input_routes": [
+        "tracked-controller-ray"
+      ]
+    },
+    {
+      "device_profile_id": "quest-openxr-controller",
+      "composition_ids": [
+        "inventory-ugui-xr",
+        "inventory-ui-toolkit-xr"
+      ],
+      "required_input_routes": [
+        "tracked-controller-ray"
+      ]
+    }
+  ],
+  "allowed_package_compositions": [
+    {
+      "id": "inventory-ugui-xr",
+      "required_claim_id": "inventory-ugui-xr-required-suite",
+      "domain": "com.lingkyn.inventory.core",
+      "presentation": "com.lingkyn.inventory.presentation",
+      "renderer_adapter": "com.lingkyn.inventory.ugui",
+      "xr_adapter": "com.lingkyn.inventory.xr.ugui"
+    },
+    {
+      "id": "inventory-ui-toolkit-xr",
+      "required_claim_id": "inventory-ui-toolkit-xr-required-suite",
+      "domain": "com.lingkyn.inventory.core",
+      "presentation": "com.lingkyn.inventory.presentation",
+      "renderer_adapter": "com.lingkyn.inventory.uitoolkit",
+      "xr_adapter": "com.lingkyn.inventory.xr.uitoolkit"
+    }
+  ],
+  "required_checks": [
+    {
+      "id": "artifact-install",
+      "purpose": "Prove the digested build installs on the selected profile",
+      "expected": "The tested artifact installs without substituting another build."
+    },
+    {
+      "id": "sample-open",
+      "purpose": "Reach the declared package composition in the headset",
+      "expected": "The world-space Inventory sample opens and displays its declared composition."
+    },
+    {
+      "id": "world-anchor-head-turn",
+      "purpose": "Reject unintended head-locked UI",
+      "expected": "The UI remains world anchored while the tester turns their head."
+    },
+    {
+      "id": "world-anchor-lateral-lean",
+      "purpose": "Prove spatial anchoring under positional movement",
+      "expected": "The UI preserves its world pose while the tester leans laterally."
+    },
+    {
+      "id": "binocular-readability",
+      "purpose": "Evaluate headset readability at the recorded placement",
+      "expected": "Representative labels and values are readable binocularly at the recorded distance and scale."
+    },
+    {
+      "id": "left-center-right-hover",
+      "purpose": "Exercise the declared input route across the complete surface",
+      "expected": "Representative left, center, and right targets expose a stable hover/focus state."
+    },
+    {
+      "id": "left-center-right-activate",
+      "purpose": "Exercise activation across the complete surface",
+      "expected": "Representative left, center, and right targets activate exactly once with the declared input route."
+    },
+    {
+      "id": "semantic-state-feedback",
+      "purpose": "Verify renderer projection of neutral UI states",
+      "expected": "Hover, pressed, selected, disabled, empty, and error states remain distinguishable where applicable."
+    },
+    {
+      "id": "occlusion-clipping-comfort",
+      "purpose": "Capture human visual and comfort evidence",
+      "expected": "Placement has no severe clipping, unavoidable occlusion, or immediate discomfort in the recorded posture."
+    },
+    {
+      "id": "restart-or-recenter",
+      "purpose": "Exercise the profile's declared recovery path",
+      "expected": "Restart or recenter preserves a usable UI/input composition according to the task."
+    }
+  ],
+  "optional_checks": [
+    {
+      "id": "direct-poke-interaction",
+      "claim_id": "direct-poke",
+      "required_input_route": "direct-poke",
+      "purpose": "Collect evidence for direct poke without inheriting a controller-ray result",
+      "expected": "Representative targets can be hovered and activated by direct poke with correct state feedback."
+    },
+    {
+      "id": "hand-ray-interaction",
+      "claim_id": "hand-ray",
+      "required_input_route": "hand-ray",
+      "purpose": "Collect evidence for hand-ray interaction independently",
+      "expected": "Representative targets can be acquired and activated by the recorded hand-ray route."
+    },
+    {
+      "id": "gaze-pinch-interaction",
+      "claim_id": "gaze-and-pinch",
+      "required_input_route": "gaze-and-pinch",
+      "purpose": "Collect evidence for gaze and pinch independently",
+      "expected": "Representative targets can be focused and activated by gaze and pinch with correct state feedback."
+    }
+  ],
+  "non_claims": [
+    "Passing one package composition does not prove the sibling renderer or XR adapter",
+    "Passing one device profile, operating-system version, runtime, or input route does not prove another",
+    "Editor, simulator, screenshot, or source inspection cannot satisfy required headset checks",
+    "Optional capability claims require their own passed check and an input route admitted by the device profile"
+  ]
+}

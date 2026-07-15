@@ -1,0 +1,77 @@
+name: Device test
+description: Request or contribute one revision-bound Device Lab run
+title: "[Device Lab]: "
+labels: [device-lab]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form coordinates a device run. It is not a passing receipt. A maintainer applies the matching `needs-device:*` and claim labels. Use the public Device Lab receipt contract for results.
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Device profile
+      options:
+        - pico-openxr-controller
+        - quest-openxr-controller (proposed; claim disabled pending #29)
+        - vision-pro-spatial-input (proposed; claim disabled pending #30)
+        - New profile proposal
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Public revision
+      description: Full 40-character commit SHA to test, or the Issue/PR that will freeze it before the run.
+    validations:
+      required: true
+  - type: input
+    id: test_plan
+    attributes:
+      label: Capability test plan
+      description: State an existing public test_plan_id; a device profile is not a test procedure.
+    validations:
+      required: true
+  - type: textarea
+    id: package_tuple
+    attributes:
+      label: Exact package composition
+      description: State composition_id plus domain, presentation, renderer-adapter, and matching XR-adapter package IDs and versions.
+    validations:
+      required: true
+  - type: textarea
+    id: artifact
+    attributes:
+      label: Build artifact identity
+      description: State the planned SHA-256, artifact reference, and application ID. Do not attach signing material.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Software, device, and input composition
+      description: State engine/version, runtime ID/version, device family/model, OS family/version, and exact input routes.
+    validations:
+      required: true
+  - type: textarea
+    id: claims
+    attributes:
+      label: Claims in and out of scope
+      description: State the exact claim this run may support and the devices/routes it cannot support.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Evidence and authority acknowledgement
+      options:
+        - label: I will report fail, blocked, inconclusive, or not tested honestly; this request is not a passing receipt.
+          required: true
+        - label: I will not begin or claim a device run unless `claim_allowed=true`; if false, this request remains blocked or research-only and no comment can override the gate.
+          required: true
+        - label: I will execute every required check and will not claim an optional capability without its passed check and admitted input route.
+          required: true
+        - label: I understand that a test claim grants no repository permission and still requires review.
+          required: true
+        - label: I will remove serial numbers, account data, private content, credentials, local paths, and unredacted personal media.
+          required: true

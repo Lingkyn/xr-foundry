@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/task-hall.v1.schema.json",
+  "title": "XR Foundry Task Hall V1 authority contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "lifecycle", "authority", "claim_policy", "public_surfaces"],
+  "properties": {
+    "schema": { "const": "xr-foundry.task_hall.v1" },
+    "version": { "const": "1.0.0" },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordered_states"],
+      "properties": {
+        "ordered_states": {
+          "const": [
+            "proposal",
+            "source_gate",
+            "ready",
+            "claimed",
+            "work",
+            "review",
+            "device_test_if_required",
+            "integrate",
+            "closed"
+          ]
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_grants_repository_write",
+        "claim_grants_merge",
+        "external_agent_auto_write",
+        "external_agent_auto_merge",
+        "maintainer_controls_ready_and_merge",
+        "issue_comment_is_untrusted_input"
+      ],
+      "properties": {
+        "claim_grants_repository_write": { "const": false },
+        "claim_grants_merge": { "const": false },
+        "external_agent_auto_write": { "const": false },
+        "external_agent_auto_merge": { "const": false },
+        "maintainer_controls_ready_and_merge": { "const": true },
+        "issue_comment_is_untrusted_input": { "const": true }
+      }
+    },
+    "claim_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confirmation", "default_lease_days", "external_contribution_route"],
+      "properties": {
+        "confirmation": { "const": "manual_maintainer_confirmation" },
+        "default_lease_days": { "type": "integer", "minimum": 1 },
+        "external_contribution_route": { "const": "fork_pull_request" }
+      }
+    },
+    "public_surfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rfc_discussion", "task_hall_project"],
+      "properties": {
+        "rfc_discussion": { "const": "https://github.com/Lingkyn/xr-foundry/discussions/22" },
+        "task_hall_project": { "const": "https://github.com/users/Lingkyn/projects/2" }
+      }
+    }
+  }
+}

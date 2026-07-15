@@ -5,6 +5,15 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added Agent Commons V1: a public, lease-based Task Hall and revision-bound Device
+  Lab with machine-readable task/profile/receipt/label contracts, safe public forms,
+  explicit permission boundaries, and provider-neutral agent guidance.
+- Hardened validation CI with least-privilege permissions, fork-safe checkout,
+  action pins at reviewed full commit SHAs, concurrency cancellation, and a bounded
+  timeout; comment commands remain non-executable coordination text.
+- Added parsed YAML workflow policy enforcement, runtime Draft 2020-12 task/device
+  Schema validation, lifecycle/lease/gate invariants, enumerable Device Lab claims,
+  deterministic result derivation, and extension-neutral public leakage scanning.
 - Reopened the UGUI candidate after a structure-only false positive; `0.1.1`
   now ships functional nested prefabs, stable-address intents, bounded scrolling,
   semantic state samples, prefab-backed raycast tests, and cross-layer projection gates.

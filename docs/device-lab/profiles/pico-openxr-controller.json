@@ -1,0 +1,26 @@
+{
+  "schema": "xr-foundry.device_profile.v1",
+  "profile_id": "pico-openxr-controller",
+  "profile_status": "open_for_evidence",
+  "claim_allowed": true,
+  "claim_gate_issue": null,
+  "evidence_status": "not_tested",
+  "device": {
+    "vendor": "PICO",
+    "family_id": "pico-4-family",
+    "family_name": "PICO 4 family",
+    "os_family": "PICO OS"
+  },
+  "runtime": {
+    "runtime_id": "openxr-pico",
+    "api_family": "OpenXR"
+  },
+  "input_routes": [
+    "tracked-controller-ray"
+  ],
+  "non_claims": [
+    "claim_allowed permits a maintainer-confirmed evidence task; it is not a passing device claim",
+    "No device model, operating-system version, renderer, package composition, or capability has passed",
+    "Editor simulation and another device profile cannot satisfy this profile"
+  ]
+}

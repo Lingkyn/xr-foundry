@@ -1,0 +1,90 @@
+name: Task candidate
+description: Propose bounded research, implementation, review, integration, or documentation work
+title: "[Task]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submission creates a proposed task, not a permission grant. A maintainer applies `task:ready` after checking source, scope, acceptance, verification, and device gates. Do not include secrets, private project content, or local paths.
+  - type: input
+    id: objective
+    attributes:
+      label: Objective
+      description: State one reusable, observable outcome.
+    validations:
+      required: true
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Duty lane
+      options:
+        - Research
+        - Implementation
+        - Review
+        - Integration
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and intended write set
+      description: Name the package, public files, or evidence surface. State what may change.
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: State what this task must not claim or change.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Source gate
+      description: Link official/professional sources and state their limits, or explain why no new source gate applies.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions that determine completion.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: List exact validator, tests, consumer compile, review, and evidence steps.
+    validations:
+      required: true
+  - type: dropdown
+    id: renderer
+    attributes:
+      label: Renderer scope
+      options:
+        - Not applicable
+        - UGUI
+        - UI Toolkit
+        - Renderer-neutral contract
+        - Multiple renderers (state each composition)
+    validations:
+      required: true
+  - type: textarea
+    id: device_gate
+    attributes:
+      label: Device gate
+      description: Name exact required profiles, or state not applicable. Never infer one device from another.
+    validations:
+      required: true
+  - type: checkboxes
+    id: authority
+    attributes:
+      label: Authority and privacy acknowledgement
+      options:
+        - label: I understand that submitting or claiming this task grants no write, review, merge, release, or package-promotion permission.
+          required: true
+        - label: I removed secrets, private project data, device identifiers, and machine-local paths.
+          required: true

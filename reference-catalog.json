@@ -36,16 +36,16 @@
       "path": "com.lingkyn.inventory.core",
       "package_id": "com.lingkyn.inventory.core",
       "maturity": "incubating",
-      "use_modes": ["reference_only"],
+      "use_modes": ["install", "reference_only"],
       "purpose": "Engine-light Inventory domain model, transactions, policies, events, snapshots, and persistence contracts.",
       "evidence": [
         "docs/standards/inventory/source-manifest.json",
         "docs/standards/inventory/coverage-matrix.md",
         "com.lingkyn.inventory.core/Tests/Editor",
-        "docs/validation/2026-07-15-inventory-core-local-consumer.md"
+        "docs/validation/2026-07-15-inventory-core-local-consumer.md",
+        "docs/validation/2026-07-15-inventory-core-git-url-consumer.md"
       ],
       "non_claims": [
-        "Public Git URL install is pending",
         "No Unity authoring, UI, equipment, persistence provider, networking, or XR adapter is included",
         "Public API compatibility is not promised"
       ]

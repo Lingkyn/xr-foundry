@@ -19,7 +19,7 @@ Status: passed after restoring the explicit test dependency.
 | Compile package EditMode tests | Pass |
 | Run deterministic and stateful tests | Pass - 10 total, 10 passed, 0 failed, 0 skipped |
 | Batch-mode shutdown | Pass - exit code 0 |
-| Git URL install | Pending until the reviewed revision is public |
+| Git URL install | Not part of this run; subsequently passed in the linked Git URL receipt |
 | UI or XR behavior | Not present and not claimed |
 
 Compile/test log SHA-256:
@@ -39,7 +39,10 @@ all ten tests.
 
 ## Boundary
 
-This proves local package resolution, compilation, and the current core invariant
-tests. It does not prove public Git installation, compatibility with an existing
-game, persistence-provider behavior, Unity authoring, UI, XR interaction, or device
-behavior.
+This local run proves local package resolution, compilation, and the current core
+invariant tests. It does not by itself prove public Git installation, compatibility
+with an existing game, persistence-provider behavior, Unity authoring, UI, XR
+interaction, or device behavior.
+
+Subsequent Git URL evidence:
+[`2026-07-15-inventory-core-git-url-consumer.md`](2026-07-15-inventory-core-git-url-consumer.md).

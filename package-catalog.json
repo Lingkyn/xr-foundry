@@ -104,11 +104,11 @@
       "maturity": "incubating",
       "version": "0.1.0",
       "independent_compile": "passed_2026-07-15",
-      "git_url_install": "pending_immutable_git_consumer",
+      "git_url_install": "passed_55b419bb010c253ce130a09e80652eba9744424b",
       "device_evidence": "pending_pico_device_evidence",
       "promotion": {
         "candidate_status": "blocked",
-        "earliest_failed_gate": "immutable_git_url_clean_consumer",
+        "earliest_failed_gate": "android_build_install_open",
         "satisfied": [
           "provider_neutral_optional_dependency",
           "world_space_nested_prefab",
@@ -117,10 +117,10 @@
           "tracked_ray_left_center_right_playmode",
           "real_xri_poke_release_playmode",
           "local_clean_consumer_editmode_playmode",
-          "upm_sample_import_compile_setup"
+          "upm_sample_import_compile_setup",
+          "immutable_git_url_clean_consumer"
         ],
         "pending": [
-          "immutable_git_url_clean_consumer",
           "android_build_install_open",
           "pico_device_evidence"
         ]

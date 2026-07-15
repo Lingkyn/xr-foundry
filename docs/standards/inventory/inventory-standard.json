@@ -67,7 +67,7 @@
       "responsibility": "optional world-space UI, tracked-controller interaction, and XR validation samples",
       "required_dependencies": ["com.lingkyn.inventory.ugui", "com.unity.xr.interaction.toolkit"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "immutable_git_url_clean_consumer"
+      "earliest_failed_gate": "android_build_install_open"
     }
   ],
   "required_domain_types": [

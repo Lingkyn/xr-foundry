@@ -51,9 +51,9 @@ excludes consumer and screened-out code from derivation. Core and Unity authorin
 have candidate evidence. UGUI `0.1.1` is also candidate after correcting the
 structure-only `0.1.0` verdict through immutable consumer, sample, Input System,
 upgrade/rollback, and consumer-owned prefab-variant evidence. XR `0.1.0` is now an
-implemented incubating adapter with local world-space, tracked-ray, real-poke, and
-sample-import evidence. It cannot claim headset usability until immutable-consumer,
-Android, and real-device gates pass.
+implemented incubating adapter with local and immutable-Git world-space,
+tracked-ray, real-poke, and sample-import evidence. It cannot claim headset
+usability until Android and real-device gates pass.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and

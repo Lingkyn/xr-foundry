@@ -1,6 +1,8 @@
 # Lingkyn Inventory XR
 
-Status: **incubating** until immutable consumer and real-device gates pass.
+Status: **incubating** until Android and real-device gates pass. Immutable Git
+consumer validation has passed for the source revision recorded in the public
+validation receipt.
 
 This optional package composes `com.lingkyn.inventory.ugui` on a world-space
 Canvas using XR Interaction Toolkit `3.3.2`. It does not redefine Inventory

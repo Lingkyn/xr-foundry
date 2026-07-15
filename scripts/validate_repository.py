@@ -104,6 +104,10 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/contributing/task-hall.v1.schema.json",
     "docs/contributing/task-contract.schema.json",
     "docs/contributing/task-contract.example.json",
+    "docs/contributing/work-continuation.schema.json",
+    "docs/contributing/work-continuation.example.json",
+    "docs/contributing/tasks/task-registry.json",
+    "docs/contributing/tasks/task-registry.schema.json",
     "docs/contributing/label-contract.json",
     "docs/device-lab/README.md",
     "docs/device-lab/capability-test-plan.schema.json",
@@ -130,17 +134,83 @@ UNITY_EDITOR_VERSION_PATTERN = re.compile(
 EXACT_RUNTIME_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)(?:\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*"
 )
-TASK_HALL_LIFECYCLE = [
+TASK_HALL_VERSION = "0.3.0"
+TASK_HALL_REGISTRY_PATH = "docs/contributing/tasks/task-registry.json"
+TASK_HALL_PROJECT = "https://github.com/users/Lingkyn/projects/2"
+TASK_HALL_TASKS_DIR = "docs/contributing/tasks"
+TASK_HALL_UMBRELLA_STATES = [
     "proposal",
     "source_gate",
     "ready",
-    "claimed",
-    "work",
-    "review",
-    "device_test_if_required",
-    "integrate",
+    "active",
+    "waiting",
+    "integration",
     "closed",
+    "cancelled",
 ]
+TASK_HALL_CHECKPOINT_STATES = [
+    "draft",
+    "source_gate",
+    "ready",
+    "claimed",
+    "in_progress",
+    "waiting_on_author",
+    "waiting_on_review",
+    "waiting_on_device",
+    "integrating",
+    "completed",
+    "cancelled",
+]
+TASK_HALL_WAITING_STATES = [
+    "waiting_on_author",
+    "waiting_on_review",
+    "waiting_on_device",
+]
+TASK_HALL_TERMINAL_CHECKPOINT_STATES = ["completed", "cancelled"]
+TASK_HALL_CHECKPOINT_POLICY = {
+    "graph": "directed_acyclic_graph",
+    "ids_unique_within_task": True,
+    "dependencies_complete_before_ready": True,
+    "one_outcome_per_checkpoint": True,
+    "allowed_paths_required": True,
+    "read_only_checkpoint_uses_empty_allowed_paths": True,
+    "source_gate_is_checkpoint_explicit": True,
+    "independent_acceptance_required": True,
+    "independent_verification_required": True,
+    "references_resolve_within_checkpoint": True,
+    "independent_completion_persists": True,
+    "discovered_work_requires_new_checkpoint": True,
+    "fan_in_checkpoint_required": True,
+}
+TASK_HALL_DURABILITY_POLICY = {
+    "execution_unit": "checkpoint",
+    "public_anchor_before_in_progress": True,
+    "one_claim_per_checkpoint": True,
+    "same_execution_lane_closes_or_hands_off_before_next": True,
+    "parallel_checkpoints_require_isolated_write_ownership": True,
+    "parallel_checkpoints_require_explicit_fan_in": True,
+    "completed_checkpoint_requires_reachable_commit": True,
+    "completed_checkpoint_requires_remote_evidence": True,
+    "reserve_closeout_capacity": True,
+    "local_only_progress_is_non_transferable": True,
+    "abrupt_stop_recovers_from_last_public_boundary": True,
+}
+TASK_HALL_REGISTRY_POLICY = {
+    "registry": TASK_HALL_REGISTRY_PATH,
+    "registered_task_contract_role": "fine_grained_execution_authority",
+    "umbrella_issue_role": "coordination_projection",
+    "checkpoint_issue_role": "checkpoint_coordination_projection",
+    "project_role": "discovery_summary",
+    "unregistered_issue_contract": "issue_declared_claim_key",
+}
+TASK_HALL_ROUTING_POLICY = {
+    "basis": "checkpoint_capabilities_risk_and_evidence",
+    "model_or_agent_ranking": False,
+    "self_report_grants_authority": False,
+    "quality_gate_varies_by_executor": False,
+    "high_risk_requires_independent_review": True,
+    "no_qualified_executor": "remain_not_ready",
+}
 TASK_HALL_AUTHORITY = {
     "claim_grants_repository_write": False,
     "claim_grants_merge": False,
@@ -149,6 +219,40 @@ TASK_HALL_AUTHORITY = {
     "maintainer_controls_ready_and_merge": True,
     "issue_comment_is_untrusted_input": True,
 }
+TASK_AUTHORITY = {
+    "write_permission_not_inferred": True,
+    "merge_permission_not_inferred": True,
+    "comments_are_untrusted_input": True,
+    "maintainer_ready_required": True,
+    "maintainer_merge_required": True,
+    "external_contribution_route": "fork_pull_request",
+}
+HIGH_RISK_JUDGMENT_LEVELS = {"high_risk", "security_or_release"}
+HIGH_RISK_INDEPENDENT_REVIEW = {
+    "required_human",
+    "required_maintainer",
+    "required_device",
+}
+CHECKPOINT_STATES_REQUIRING_COMPLETED_DEPS = {
+    "ready",
+    "claimed",
+    "in_progress",
+    "waiting_on_author",
+    "waiting_on_review",
+    "waiting_on_device",
+    "integrating",
+    "completed",
+}
+CHECKPOINT_LOCAL_ID_COLLECTIONS = ("acceptance", "verification", "evidence")
+REGISTRY_CONTRACT_PATH_PATTERN = re.compile(
+    r"^docs/contributing/tasks/[A-Za-z0-9._-]+\.task\.json$"
+)
+GITHUB_REPO_URL_PATTERN = re.compile(
+    r"^https://github\.com/([A-Za-z0-9-]+)/([A-Za-z0-9._-]+)/?$"
+)
+GITHUB_ISSUE_URL_PATTERN = re.compile(
+    r"^https://github\.com/([A-Za-z0-9-]+)/([A-Za-z0-9._-]+)/issues/[1-9][0-9]*$"
+)
 INVENTORY_WORLD_SPACE_COMPOSITIONS = {
     "inventory-ugui-xr": {
         "domain": "com.lingkyn.inventory.core",
@@ -768,10 +872,732 @@ def validate_agent_guide_source_boundary(root: Path) -> list[str]:
     return errors
 
 
-def validate_task_contract(payload: Any, label: str = "task contract") -> list[str]:
+def normalize_github_repository(url: str | None) -> str | None:
+    if not isinstance(url, str):
+        return None
+    match = GITHUB_REPO_URL_PATTERN.fullmatch(url.rstrip("/"))
+    if match is None:
+        match = GITHUB_ISSUE_URL_PATTERN.fullmatch(url)
+        if match is None:
+            return None
+    return f"https://github.com/{match.group(1)}/{match.group(2)}"
+
+
+def is_safe_registry_contract_path(relative_path: str) -> bool:
+    if not isinstance(relative_path, str) or not REGISTRY_CONTRACT_PATH_PATTERN.fullmatch(
+        relative_path
+    ):
+        return False
+    candidate = Path(relative_path)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        return False
+    return candidate.as_posix() == relative_path
+
+
+def policy_matches(actual: Any, expected: dict[str, Any], label: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(actual, dict):
+        return [f"{label} is missing"]
+    if set(actual) != set(expected):
+        errors.append(f"{label} fields are incomplete")
+    for field, required in expected.items():
+        if actual.get(field) != required:
+            errors.append(f"{label} must keep {field}={required!r}")
+    return errors
+
+
+def checkpoint_dependency_cycles(checkpoints_by_id: dict[str, dict[str, Any]]) -> list[str]:
+    visiting: set[str] = set()
+    visited: set[str] = set()
+    cyclic: list[str] = []
+
+    def visit(node: str) -> None:
+        if node in visited:
+            return
+        if node in visiting:
+            cyclic.append(node)
+            return
+        visiting.add(node)
+        checkpoint = checkpoints_by_id.get(node, {})
+        deps = checkpoint.get("depends_on", [])
+        if isinstance(deps, list):
+            for dep in deps:
+                if isinstance(dep, str) and dep in checkpoints_by_id:
+                    visit(dep)
+        visiting.remove(node)
+        visited.add(node)
+
+    for checkpoint_id in checkpoints_by_id:
+        visit(checkpoint_id)
+    return cyclic
+
+
+def checkpoint_transitive_dependencies(
+    checkpoint_id: str,
+    checkpoints_by_id: dict[str, dict[str, Any]],
+) -> set[str]:
+    ancestors: set[str] = set()
+    pending = [checkpoint_id]
+    seen: set[str] = set()
+    while pending:
+        node = pending.pop()
+        if node in seen:
+            continue
+        seen.add(node)
+        checkpoint = checkpoints_by_id.get(node, {})
+        deps = checkpoint.get("depends_on", [])
+        if not isinstance(deps, list):
+            continue
+        for dep in deps:
+            if not isinstance(dep, str) or dep not in checkpoints_by_id:
+                continue
+            if dep not in ancestors:
+                ancestors.add(dep)
+                pending.append(dep)
+    return ancestors
+
+
+def checkpoints_have_dependency_ordering(
+    left_id: str,
+    right_id: str,
+    checkpoints_by_id: dict[str, dict[str, Any]],
+) -> bool:
+    left_ancestors = checkpoint_transitive_dependencies(left_id, checkpoints_by_id)
+    if right_id in left_ancestors:
+        return True
+    right_ancestors = checkpoint_transitive_dependencies(right_id, checkpoints_by_id)
+    return left_id in right_ancestors
+
+
+# Portable ownership-key contract for repository-relative allowed_paths.
+# Stored form must already be canonical POSIX; * and ? remain glob operators only.
+# Windows officially reserves superscript COM¹/²/³ and LPT¹/²/³ device stems
+# (ISO/IEC 8859-1 digits) in every directory, including with extensions:
+# https://learn.microsoft.com/windows/win32/fileio/naming-a-file
+_WINDOWS_SUPERSCRIPT_DEVICE_DIGITS = ("¹", "²", "³")
+_WINDOWS_RESERVED_DEVICE_STEMS = frozenset(
+    {
+        "con",
+        "prn",
+        "aux",
+        "nul",
+        *(f"com{index}" for index in range(1, 10)),
+        *(f"lpt{index}" for index in range(1, 10)),
+        *(f"com{digit}" for digit in _WINDOWS_SUPERSCRIPT_DEVICE_DIGITS),
+        *(f"lpt{digit}" for digit in _WINDOWS_SUPERSCRIPT_DEVICE_DIGITS),
+    }
+)
+_WINDOWS_INVALID_LITERAL_CHARS = frozenset("<>:\"|\\")
+
+
+def allowed_path_ownership_key(pattern: str) -> str | None:
+    """Return the portable ownership key, or None when storage form is unsafe.
+
+    Safety, duplicate detection, matching, and overlap/intersection all share this
+    key: reject all Unicode Other (C*) categories (Cc controls, Cf format/bidi,
+    Cs/Co/Cn), outer whitespace, relative backslashes, colon/ADS and other
+    Windows-invalid literals (keeping * / ? as globs), trailing segment
+    dot/space, reserved device stems including COM1–9/LPT1–9 and superscript
+    COM¹/²/³ and LPT¹/²/³ (with extensions), and non-NFC storage; then NFC
+    before casefold.
+    """
+    if not isinstance(pattern, str) or not pattern:
+        return None
+    # Conservative portable rule: any Unicode General Category Other (C*).
+    if any(unicodedata.category(char).startswith("C") for char in pattern):
+        return None
+    if pattern.strip() != pattern:
+        return None
+    if "\\" in pattern:
+        return None
+    nfc = unicodedata.normalize("NFC", pattern)
+    if nfc != pattern:
+        return None
+    if any(char in _WINDOWS_INVALID_LITERAL_CHARS for char in pattern):
+        return None
+    if pattern.startswith("/") or pattern.startswith("//"):
+        return None
+    if re.match(r"^[A-Za-z]:", pattern) is not None:
+        return None
+    try:
+        if Path(pattern).is_absolute() or PurePosixPath(pattern).is_absolute():
+            return None
+    except (OSError, RuntimeError, ValueError):
+        return None
+    parts = pattern.split("/")
+    for part in parts:
+        if part == "" or part == "." or part == "..":
+            return None
+        # Fail closed: ** is legal only as a complete path segment.
+        if "**" in part and part != "**":
+            return None
+        if part.endswith(".") or part.endswith(" "):
+            return None
+        stem = part.split(".", 1)[0].casefold()
+        if stem in _WINDOWS_RESERVED_DEVICE_STEMS:
+            return None
+    return nfc.casefold()
+
+
+def normalize_allowed_path_pattern(pattern: str) -> str:
+    """Return NFC text without rewriting noncanonical storage aliases."""
+    if not isinstance(pattern, str):
+        return ""
+    return unicodedata.normalize("NFC", pattern)
+
+
+def is_safe_repository_relative_allowed_path(pattern: str) -> bool:
+    """Accept only canonical portable repository-relative allowed_paths."""
+    return allowed_path_ownership_key(pattern) is not None
+
+
+def tokenize_allowed_path_pattern(pattern: str) -> list[str]:
+    key = allowed_path_ownership_key(pattern)
+    if key is None:
+        return []
+    stripped = key.strip("/")
+    if not stripped:
+        return []
+    return list(stripped.split("/"))
+
+
+def casefold_allowed_path_pattern(pattern: str) -> str:
+    key = allowed_path_ownership_key(pattern)
+    return key if key is not None else ""
+
+
+def segment_glob_matches_text(pattern: str, text: str) -> bool:
+    """Match one concrete segment against a * / ? glob segment."""
+    memo: dict[tuple[int, int], bool] = {}
+
+    def dp(i: int, j: int) -> bool:
+        key = (i, j)
+        if key in memo:
+            return memo[key]
+        if i == len(pattern) and j == len(text):
+            memo[key] = True
+            return True
+        if i == len(pattern):
+            memo[key] = False
+            return False
+        if pattern[i] == "*":
+            if dp(i + 1, j):
+                memo[key] = True
+                return True
+            if j < len(text) and dp(i, j + 1):
+                memo[key] = True
+                return True
+            memo[key] = False
+            return False
+        if j == len(text):
+            memo[key] = False
+            return False
+        if pattern[i] == "?" or pattern[i] == text[j]:
+            result = dp(i + 1, j + 1)
+        else:
+            result = False
+        memo[key] = result
+        return result
+
+    return dp(0, 0)
+
+
+def segment_globs_intersect(left: str, right: str) -> bool:
+    """Return True when some single path segment matches both * / ? globs."""
+    memo: dict[tuple[int, int], bool] = {}
+
+    def dp(i: int, j: int) -> bool:
+        key = (i, j)
+        if key in memo:
+            return memo[key]
+        if i == len(left) and j == len(right):
+            memo[key] = True
+            return True
+
+        left_star = i < len(left) and left[i] == "*"
+        right_star = j < len(right) and right[j] == "*"
+        if left_star and right_star:
+            result = dp(i + 1, j) or dp(i, j + 1)
+            memo[key] = result
+            return result
+        if left_star:
+            if dp(i + 1, j):
+                memo[key] = True
+                return True
+            if j < len(right):
+                # Consume one concrete/? character from the right pattern.
+                if dp(i, j + 1) or dp(i + 1, j + 1):
+                    memo[key] = True
+                    return True
+            memo[key] = False
+            return False
+        if right_star:
+            if dp(i, j + 1):
+                memo[key] = True
+                return True
+            if i < len(left):
+                if dp(i + 1, j) or dp(i + 1, j + 1):
+                    memo[key] = True
+                    return True
+            memo[key] = False
+            return False
+        if i == len(left) or j == len(right):
+            memo[key] = False
+            return False
+        left_char = left[i]
+        right_char = right[j]
+        if left_char == "?" or right_char == "?" or left_char == right_char:
+            result = dp(i + 1, j + 1)
+        else:
+            result = False
+        memo[key] = result
+        return result
+
+    return dp(0, 0)
+
+
+def allowed_path_patterns_intersect(left_tokens: list[str], right_tokens: list[str]) -> bool:
+    """Sound intersection for the supported path grammar (*, ?, and ** segments)."""
+    memo: dict[tuple[int, int], bool] = {}
+
+    def dp(i: int, j: int) -> bool:
+        key = (i, j)
+        if key in memo:
+            return memo[key]
+        if i == len(left_tokens) and j == len(right_tokens):
+            memo[key] = True
+            return True
+
+        left_token = left_tokens[i] if i < len(left_tokens) else None
+        right_token = right_tokens[j] if j < len(right_tokens) else None
+
+        if left_token == "**":
+            # Match zero segments, or consume one segment while keeping **.
+            if dp(i + 1, j):
+                memo[key] = True
+                return True
+            if j < len(right_tokens):
+                result = dp(i, j + 1)
+                memo[key] = result
+                return result
+            memo[key] = False
+            return False
+
+        if right_token == "**":
+            if dp(i, j + 1):
+                memo[key] = True
+                return True
+            if i < len(left_tokens):
+                result = dp(i + 1, j)
+                memo[key] = result
+                return result
+            memo[key] = False
+            return False
+
+        if left_token is None or right_token is None:
+            memo[key] = False
+            return False
+
+        result = segment_globs_intersect(left_token, right_token) and dp(i + 1, j + 1)
+        memo[key] = result
+        return result
+
+    return dp(0, 0)
+
+
+def path_tokens_match_pattern(path_tokens: list[str], pattern_tokens: list[str]) -> bool:
+    """Match concrete path tokens against the unified *, ?, ** segment grammar."""
+    memo: dict[tuple[int, int], bool] = {}
+
+    def dp(i: int, j: int) -> bool:
+        key = (i, j)
+        if key in memo:
+            return memo[key]
+        if i == len(path_tokens) and j == len(pattern_tokens):
+            memo[key] = True
+            return True
+
+        pattern_token = pattern_tokens[j] if j < len(pattern_tokens) else None
+        if pattern_token == "**":
+            if dp(i, j + 1):
+                memo[key] = True
+                return True
+            if i < len(path_tokens) and dp(i + 1, j):
+                memo[key] = True
+                return True
+            memo[key] = False
+            return False
+
+        if i == len(path_tokens) or pattern_token is None:
+            memo[key] = False
+            return False
+
+        result = segment_glob_matches_text(pattern_token, path_tokens[i]) and dp(i + 1, j + 1)
+        memo[key] = result
+        return result
+
+    return dp(0, 0)
+
+
+def allowed_path_matches(path: str, pattern: str) -> bool:
+    path_key = allowed_path_ownership_key(path)
+    pattern_key = allowed_path_ownership_key(pattern)
+    if path_key is None or pattern_key is None:
+        return False
+    return path_tokens_match_pattern(
+        tokenize_allowed_path_pattern(path),
+        tokenize_allowed_path_pattern(pattern),
+    )
+
+
+def allowed_paths_overlap(left: str, right: str) -> bool:
+    # Fail closed: unsafe patterns cannot be proven disjoint.
+    left_key = allowed_path_ownership_key(left)
+    right_key = allowed_path_ownership_key(right)
+    if left_key is None or right_key is None:
+        return True
+    if left_key == right_key:
+        return True
+    return allowed_path_patterns_intersect(
+        tokenize_allowed_path_pattern(left),
+        tokenize_allowed_path_pattern(right),
+    )
+
+
+def validate_checkpoint_allowed_paths(
+    checkpoint: dict[str, Any],
+    label: str,
+) -> list[str]:
+    errors: list[str] = []
+    paths = checkpoint.get("allowed_paths")
+    if not isinstance(paths, list):
+        return errors
+    seen_ownership_keys: set[str] = set()
+    for path in paths:
+        if not isinstance(path, str):
+            continue
+        ownership_key = allowed_path_ownership_key(path)
+        if ownership_key is None:
+            errors.append(
+                f"{label}: allowed_path {path!r} is not a safe repository-relative path"
+            )
+            continue
+        if ownership_key in seen_ownership_keys:
+            errors.append(
+                f"{label}: allowed_path {path!r} collides under portable ownership-key aliasing"
+            )
+        seen_ownership_keys.add(ownership_key)
+    return errors
+
+
+def collection_duplicate_local_ids(items: Any) -> list[str]:
+    if not isinstance(items, list):
+        return []
+    seen: set[str] = set()
+    duplicates: list[str] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        item_id = item.get("id")
+        if not isinstance(item_id, str) or not item_id:
+            continue
+        if item_id in seen and item_id not in duplicates:
+            duplicates.append(item_id)
+        seen.add(item_id)
+    return duplicates
+
+
+def validate_checkpoint_local_id_uniqueness(
+    checkpoint: dict[str, Any],
+    label: str,
+) -> list[str]:
+    errors: list[str] = []
+    for collection_name in CHECKPOINT_LOCAL_ID_COLLECTIONS:
+        duplicates = collection_duplicate_local_ids(checkpoint.get(collection_name))
+        for item_id in duplicates:
+            errors.append(
+                f"{label}: duplicate {collection_name} id {item_id}"
+            )
+    return errors
+
+
+def validate_device_evidence_references(
+    device: Any,
+    evidence: Any,
+    label: str,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(device, dict):
+        return errors
+    refs = device.get("evidence")
+    if not isinstance(refs, list) or not refs:
+        return errors
+    evidence_items = evidence if isinstance(evidence, list) else []
+    evidence_ids = {
+        item.get("id")
+        for item in evidence_items
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    for ref in refs:
+        if not isinstance(ref, str) or ref not in evidence_ids:
+            errors.append(
+                f"{label}: device evidence reference {ref!r} does not resolve within the checkpoint"
+            )
+    return errors
+
+
+def validate_parallel_checkpoint_write_ownership(
+    checkpoints_by_id: dict[str, dict[str, Any]],
+    label: str,
+) -> list[str]:
+    errors: list[str] = []
+    concurrent_ids = sorted(
+        checkpoint_id
+        for checkpoint_id, checkpoint in checkpoints_by_id.items()
+        if checkpoint.get("status") not in TASK_HALL_TERMINAL_CHECKPOINT_STATES
+    )
+    for index, left_id in enumerate(concurrent_ids):
+        left = checkpoints_by_id[left_id]
+        left_paths = left.get("allowed_paths")
+        if not isinstance(left_paths, list) or not left_paths:
+            continue
+        for right_id in concurrent_ids[index + 1 :]:
+            if checkpoints_have_dependency_ordering(left_id, right_id, checkpoints_by_id):
+                continue
+            right = checkpoints_by_id[right_id]
+            right_paths = right.get("allowed_paths")
+            if not isinstance(right_paths, list) or not right_paths:
+                continue
+            overlapping = False
+            for left_path in left_paths:
+                if not isinstance(left_path, str):
+                    continue
+                for right_path in right_paths:
+                    if not isinstance(right_path, str):
+                        continue
+                    if allowed_paths_overlap(left_path, right_path):
+                        overlapping = True
+                        break
+                if overlapping:
+                    break
+            if overlapping:
+                errors.append(
+                    f"{label}: concurrent checkpoints {left_id} and {right_id} "
+                    "claim overlapping allowed_paths"
+                )
+    return errors
+
+
+def validate_integration_fan_in(
+    integration: Any,
+    checkpoints_by_id: dict[str, dict[str, Any]],
+    label: str,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(integration, dict):
+        return errors
+    fan_in_id = integration.get("checkpoint_id")
+    if not isinstance(fan_in_id, str) or fan_in_id not in checkpoints_by_id:
+        return errors
+    ancestors = checkpoint_transitive_dependencies(fan_in_id, checkpoints_by_id)
+    for checkpoint_id, checkpoint in checkpoints_by_id.items():
+        if checkpoint_id == fan_in_id:
+            continue
+        if checkpoint.get("status") == "cancelled":
+            continue
+        if checkpoint_id not in ancestors:
+            errors.append(
+                f"{label}: integration checkpoint {fan_in_id} must be downstream of "
+                f"{checkpoint_id}"
+            )
+    return errors
+
+
+def validate_checkpoint_routing(
+    routing: Any,
+    label: str,
+    *,
+    device: Any = None,
+    evidence: Any = None,
+    status: Any = None,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(routing, dict):
+        return [f"{label}: routing is missing"]
+    if routing.get("self_report_grants_authority") is not False:
+        errors.append(f"{label}: self-authorizing routing is prohibited")
+    if routing.get("agent_or_model_ranking_prohibited") is not True:
+        errors.append(f"{label}: agent or model ranking must remain prohibited")
+    if routing.get("no_qualified_executor") != "remain_not_ready":
+        errors.append(f"{label}: unqualified execution must remain_not_ready")
+    judgment = routing.get("judgment_level")
+    review = routing.get("independent_review")
+    if judgment in HIGH_RISK_JUDGMENT_LEVELS:
+        capabilities = routing.get("required_capabilities")
+        qualification = routing.get("qualification_evidence")
+        if not isinstance(capabilities, list) or not capabilities:
+            errors.append(f"{label}: high-risk routing requires required_capabilities")
+        if not isinstance(qualification, list) or not qualification:
+            errors.append(f"{label}: high-risk routing requires qualification_evidence")
+        if review not in HIGH_RISK_INDEPENDENT_REVIEW:
+            errors.append(
+                f"{label}: unqualified high-risk execution requires independent review"
+            )
+    if review == "required_device":
+        required_devices = routing.get("required_devices")
+        if not isinstance(required_devices, list) or not required_devices:
+            errors.append(
+                f"{label}: required_device review requires non-empty required_devices"
+            )
+        if not isinstance(device, dict) or device.get("required") is not True:
+            errors.append(f"{label}: required_device review requires a coherent device gate")
+        else:
+            profiles = device.get("profiles")
+            acceptance = device.get("acceptance")
+            if not isinstance(profiles, list) or not profiles:
+                errors.append(
+                    f"{label}: required_device review requires device.profiles"
+                )
+            if not isinstance(acceptance, list) or not acceptance:
+                errors.append(
+                    f"{label}: required_device review requires device.acceptance"
+                )
+        if status == "completed":
+            evidence_items = evidence if isinstance(evidence, list) else []
+            evidence_by_id = {
+                item.get("id"): item
+                for item in evidence_items
+                if isinstance(item, dict) and isinstance(item.get("id"), str)
+            }
+            device_evidence_ids = (
+                device.get("evidence") if isinstance(device, dict) else None
+            )
+            if not isinstance(device_evidence_ids, list) or not device_evidence_ids:
+                errors.append(
+                    f"{label}: completed required_device checkpoint requires device evidence"
+                )
+            else:
+                for evidence_id in device_evidence_ids:
+                    item = evidence_by_id.get(evidence_id)
+                    if not isinstance(item, dict) or item.get("kind") != "device":
+                        errors.append(
+                            f"{label}: completed required_device checkpoint requires device evidence"
+                        )
+                        break
+    errors.extend(validate_device_evidence_references(device, evidence, label))
+    return errors
+
+
+def is_symlink_junction_or_reparse(path: Path) -> bool:
+    try:
+        if path.is_symlink():
+            return True
+        is_junction = getattr(path, "is_junction", None)
+        if callable(is_junction) and is_junction():
+            return True
+        path_stat = path.lstat()
+    except FileNotFoundError:
+        return False
+    except OSError:
+        raise
+    attributes = getattr(path_stat, "st_file_attributes", 0)
+    # Windows FILE_ATTRIBUTE_REPARSE_POINT
+    return bool(attributes & 0x400)
+
+
+def resolve_controlled_tasks_root(
+    root: Path,
+    label: str,
+) -> tuple[Path | None, Path | None, list[str]]:
+    """Resolve repo + controlled tasks roots; reject link/reparse escapes fail-closed."""
+    try:
+        repo_root = root.resolve()
+    except (OSError, RuntimeError) as error:
+        return None, None, [f"{label}: repository root is unreadable: {error}"]
+
+    try:
+        cursor = root
+        for part in PurePosixPath(TASK_HALL_TASKS_DIR).parts:
+            cursor = cursor / part
+            try:
+                if is_symlink_junction_or_reparse(cursor):
+                    return None, None, [
+                        f"{label}: controlled tasks path component {cursor.as_posix()!r} "
+                        "must not be a symlink, junction, or reparse point"
+                    ]
+            except (OSError, RuntimeError) as error:
+                return None, None, [
+                    f"{label}: controlled tasks directory is unreadable: {error}"
+                ]
+        tasks_root = (root / TASK_HALL_TASKS_DIR).resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        return None, None, [f"{label}: controlled tasks directory is unreadable: {error}"]
+
+    try:
+        tasks_root.relative_to(repo_root)
+    except ValueError:
+        return None, None, [
+            f"{label}: controlled tasks directory resolves outside the repository root"
+        ]
+    return repo_root, tasks_root, []
+
+
+def inspect_registered_contract_path(
+    root: Path,
+    relative_path: str,
+    label: str,
+) -> tuple[Path | None, list[str]]:
+    errors: list[str] = []
+    if not isinstance(relative_path, str) or not is_safe_registry_contract_path(relative_path):
+        return None, [f"{label}: contract path is unsafe"]
+    repo_root, tasks_root, root_errors = resolve_controlled_tasks_root(root, label)
+    if root_errors or repo_root is None or tasks_root is None:
+        return None, root_errors
+    absolute = root / relative_path
+    try:
+        if is_symlink_junction_or_reparse(absolute):
+            return None, [f"{label}: registered contract must not be a symlink"]
+        if not absolute.exists():
+            return None, [f"{label}: registered contract does not exist"]
+        resolved = absolute.resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        return None, [f"{label}: registered contract is unreadable: {error}"]
+    try:
+        resolved.relative_to(repo_root)
+    except ValueError:
+        return None, [
+            f"{label}: registered contract resolved path escapes the repository root"
+        ]
+    try:
+        resolved.relative_to(tasks_root)
+    except ValueError:
+        return None, [
+            f"{label}: registered contract resolved path escapes {TASK_HALL_TASKS_DIR}"
+        ]
+    try:
+        if is_symlink_junction_or_reparse(resolved):
+            return None, [f"{label}: registered contract must not be a symlink"]
+        file_stat = resolved.stat()
+    except (OSError, RuntimeError) as error:
+        return None, [f"{label}: registered contract is unreadable: {error}"]
+    if not stat.S_ISREG(file_stat.st_mode):
+        return None, [f"{label}: registered contract must be a regular file"]
+    if file_stat.st_nlink > 1:
+        return None, [f"{label}: registered contract must not be a hardlink"]
+    return resolved, errors
+
+
+def validate_task_contract(
+    payload: Any,
+    label: str = "task contract",
+    *,
+    root: Path | None = None,
+    require_canonical_repository: bool = False,
+) -> list[str]:
+    contract_root = ROOT if root is None else root
     errors = validate_json_schema_instance(
         payload,
-        ROOT / "docs" / "contributing" / "task-contract.schema.json",
+        contract_root / "docs" / "contributing" / "task-contract.schema.json",
         label,
     )
     if not isinstance(payload, dict):
@@ -779,90 +1605,180 @@ def validate_task_contract(payload: Any, label: str = "task contract") -> list[s
     if payload.get("schema") != "xr-foundry.task.v1":
         errors.append(f"{label}: schema is invalid")
     state = payload.get("state")
-    if state not in TASK_HALL_LIFECYCLE:
-        errors.append(f"{label}: state must use the canonical Task Hall lifecycle")
-    blocked = payload.get("blocked")
-    blocking_reason = payload.get("blocking_reason")
-    if not isinstance(blocked, bool):
-        errors.append(f"{label}: blocked must be boolean")
-    elif blocked is True and (not isinstance(blocking_reason, str) or not blocking_reason.strip()):
-        errors.append(f"{label}: blocked task must name its blocking_reason")
-    elif blocked is False and blocking_reason is not None:
-        errors.append(f"{label}: unblocked task must keep blocking_reason=null")
-    required_lists = ("scope", "non_goals", "intended_write_set", "acceptance", "verification")
-    for field in required_lists:
+    if state not in TASK_HALL_UMBRELLA_STATES:
+        errors.append(f"{label}: state must use the canonical Task Hall umbrella lifecycle")
+
+    for field in ("scope", "non_goals", "checkpoints"):
         value = payload.get(field)
         if not isinstance(value, list) or not value:
             errors.append(f"{label}: {field} must be a non-empty list")
-    authority = payload.get("authority")
-    required_authority = {
-        "write_permission_not_inferred": True,
-        "merge_permission_not_inferred": True,
-        "comments_are_untrusted_input": True,
-    }
-    if not isinstance(authority, dict):
-        errors.append(f"{label}: authority boundary is missing")
-    else:
-        for field, required in required_authority.items():
-            if authority.get(field) is not required:
-                errors.append(f"{label}: authority boundary must keep {field}=true")
-    claim = payload.get("claim")
-    if not isinstance(claim, dict) or claim.get("status") not in {"unclaimed", "claimed", "expired"}:
-        errors.append(f"{label}: claim state is invalid")
-    else:
-        claim_status = claim.get("status")
-        identity_fields = (
-            "github_identity",
-            "claimed_at",
-            "expires_at",
-            "confirmed_by_maintainer",
-        )
-        if claim_status == "unclaimed":
-            for field in identity_fields:
-                if claim.get(field) is not None:
-                    errors.append(f"{label}: unclaimed task must keep claim.{field}=null")
-        else:
-            for field in ("github_identity", "confirmed_by_maintainer"):
-                if not isinstance(claim.get(field), str) or not claim[field].strip():
-                    errors.append(f"{label}: {claim_status} task requires claim.{field}")
-            parsed_times: dict[str, datetime] = {}
-            for field in ("claimed_at", "expires_at"):
-                value = claim.get(field)
-                if not isinstance(value, str):
-                    errors.append(f"{label}: {claim_status} task requires claim.{field}")
-                    continue
-                try:
-                    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-                    if parsed.tzinfo is None:
-                        raise ValueError("timezone required")
-                    parsed_times[field] = parsed
-                except ValueError:
-                    errors.append(f"{label}: claim.{field} must be timezone-aware ISO 8601")
-            if (
-                "claimed_at" in parsed_times
-                and "expires_at" in parsed_times
-                and parsed_times["expires_at"] <= parsed_times["claimed_at"]
-            ):
-                errors.append(f"{label}: claim.expires_at must be after claim.claimed_at")
 
-        claimed_states = {
-            "claimed",
-            "work",
-            "review",
-            "device_test_if_required",
-            "integrate",
-            "closed",
-        }
-        if state in claimed_states and claim_status != "claimed":
-            errors.append(f"{label}: state={state} requires claim.status=claimed")
-        if state in {"proposal", "source_gate"} and claim_status != "unclaimed":
-            errors.append(f"{label}: state={state} requires claim.status=unclaimed")
-        if state == "ready" and claim_status not in {"unclaimed", "expired"}:
-            errors.append(f"{label}: state=ready allows only unclaimed or expired claim state")
-        if claim_status == "claimed" and state not in claimed_states:
-            errors.append(f"{label}: claim.status=claimed requires a claimed-or-later lifecycle state")
-        if claim_status == "expired" and state != "ready":
-            errors.append(f"{label}: claim.status=expired requires state=ready")
+    authority = payload.get("authority")
+    errors.extend(policy_matches(authority, TASK_AUTHORITY, f"{label}: authority boundary"))
+
+    projection = payload.get("public_projection")
+    repository = None
+    umbrella = None
+    if not isinstance(projection, dict):
+        errors.append(f"{label}: public_projection is missing")
+    else:
+        repository = normalize_github_repository(str(projection.get("repository", "")))
+        if repository is None:
+            errors.append(f"{label}: public_projection.repository is invalid")
+        elif require_canonical_repository and repository != PUBLIC_REPOSITORY:
+            errors.append(f"{label}: registered task must use the canonical repository")
+        if projection.get("contract_role") != "fine_grained_execution_authority":
+            errors.append(f"{label}: public_projection.contract_role is invalid")
+        if projection.get("issue_role") != "coordination_projection":
+            errors.append(f"{label}: public_projection.issue_role is invalid")
+        if projection.get("project_role") != "discovery_summary":
+            errors.append(f"{label}: public_projection.project_role is invalid")
+        project = projection.get("project")
+        if require_canonical_repository:
+            if project != TASK_HALL_PROJECT:
+                errors.append(
+                    f"{label}: public_projection.project must be the canonical Task Hall Project"
+                )
+        umbrella = projection.get("umbrella_issue")
+        if isinstance(umbrella, str):
+            umbrella_repo = normalize_github_repository(umbrella)
+            if repository is not None and umbrella_repo != repository:
+                errors.append(f"{label}: umbrella Issue belongs to a foreign repository")
+
+    checkpoints = payload.get("checkpoints")
+    checkpoints_by_id: dict[str, dict[str, Any]] = {}
+    if isinstance(checkpoints, list):
+        for index, checkpoint in enumerate(checkpoints):
+            checkpoint_label = f"{label} checkpoint[{index}]"
+            if not isinstance(checkpoint, dict):
+                errors.append(f"{checkpoint_label}: must be an object")
+                continue
+            checkpoint_id = checkpoint.get("id")
+            if not isinstance(checkpoint_id, str) or not checkpoint_id:
+                errors.append(f"{checkpoint_label}: id is missing")
+                continue
+            if checkpoint_id in checkpoints_by_id:
+                errors.append(f"{label}: duplicate checkpoint id {checkpoint_id}")
+            checkpoints_by_id[checkpoint_id] = checkpoint
+            status = checkpoint.get("status")
+            if status not in TASK_HALL_CHECKPOINT_STATES:
+                errors.append(
+                    f"{label}: checkpoint {checkpoint_id} uses an invalid checkpoint lifecycle state"
+                )
+            checkpoint_label = f"{label}: checkpoint {checkpoint_id}"
+            errors.extend(
+                validate_checkpoint_local_id_uniqueness(checkpoint, checkpoint_label)
+            )
+            errors.extend(validate_checkpoint_allowed_paths(checkpoint, checkpoint_label))
+            errors.extend(
+                validate_checkpoint_routing(
+                    checkpoint.get("routing"),
+                    checkpoint_label,
+                    device=checkpoint.get("device"),
+                    evidence=checkpoint.get("evidence"),
+                    status=status,
+                )
+            )
+            deps = checkpoint.get("depends_on", [])
+            if isinstance(deps, list):
+                for dep in deps:
+                    if dep == checkpoint_id:
+                        errors.append(
+                            f"{label}: checkpoint {checkpoint_id} cannot depend on itself"
+                        )
+
+        known_ids = set(checkpoints_by_id)
+        for checkpoint_id, checkpoint in checkpoints_by_id.items():
+            deps = checkpoint.get("depends_on", [])
+            if not isinstance(deps, list):
+                continue
+            for dep in deps:
+                if not isinstance(dep, str):
+                    continue
+                if dep not in known_ids:
+                    errors.append(
+                        f"{label}: checkpoint {checkpoint_id} depends on missing {dep}"
+                    )
+            status = checkpoint.get("status")
+            if status in CHECKPOINT_STATES_REQUIRING_COMPLETED_DEPS:
+                for dep in deps:
+                    if not isinstance(dep, str) or dep not in checkpoints_by_id:
+                        continue
+                    if checkpoints_by_id[dep].get("status") != "completed":
+                        errors.append(
+                            f"{label}: checkpoint {checkpoint_id} requires completed dependency {dep}"
+                        )
+        for node in checkpoint_dependency_cycles(checkpoints_by_id):
+            errors.append(f"{label}: checkpoint dependency cycle involving {node}")
+        errors.extend(
+            validate_parallel_checkpoint_write_ownership(checkpoints_by_id, label)
+        )
+
+    if isinstance(projection, dict):
+        projections = projection.get("checkpoint_issues")
+        if not isinstance(projections, list) or not projections:
+            errors.append(f"{label}: checkpoint Issue projections are missing")
+        else:
+            projected_ids: list[str] = []
+            issue_urls: list[str] = []
+            for index, entry in enumerate(projections):
+                entry_label = f"{label} checkpoint_issues[{index}]"
+                if not isinstance(entry, dict):
+                    errors.append(f"{entry_label}: must be an object")
+                    continue
+                checkpoint_id = entry.get("checkpoint_id")
+                issue = entry.get("issue")
+                if not isinstance(checkpoint_id, str) or not checkpoint_id:
+                    errors.append(f"{entry_label}: checkpoint_id is missing")
+                else:
+                    projected_ids.append(checkpoint_id)
+                if not isinstance(issue, str) or not issue:
+                    errors.append(f"{entry_label}: issue is missing")
+                else:
+                    issue_urls.append(issue)
+                    issue_repo = normalize_github_repository(issue)
+                    if repository is not None and issue_repo != repository:
+                        errors.append(
+                            f"{label}: checkpoint Issue projection uses a foreign repository"
+                        )
+                    if isinstance(umbrella, str) and issue == umbrella:
+                        errors.append(
+                            f"{label}: checkpoint Issue cannot equal umbrella Issue"
+                        )
+            if len(projected_ids) != len(set(projected_ids)):
+                errors.append(f"{label}: duplicate checkpoint Issue projections")
+            if len(issue_urls) != len(set(issue_urls)):
+                errors.append(f"{label}: duplicate Issue projections")
+            role_separated_urls = [
+                *( [umbrella] if isinstance(umbrella, str) else [] ),
+                *issue_urls,
+            ]
+            if len(role_separated_urls) != len(set(role_separated_urls)):
+                errors.append(
+                    f"{label}: umbrella and checkpoint Issues must form a unique role-separated set"
+                )
+            projected_set = set(projected_ids)
+            checkpoint_ids = set(checkpoints_by_id)
+            missing = checkpoint_ids - projected_set
+            extra = projected_set - checkpoint_ids
+            if missing:
+                errors.append(
+                    f"{label}: missing checkpoint Issue projections for {sorted(missing)}"
+                )
+            if extra:
+                errors.append(
+                    f"{label}: checkpoint Issue projections reference unknown {sorted(extra)}"
+                )
+
+    integration = payload.get("integration")
+    if isinstance(integration, dict):
+        fan_in_id = integration.get("checkpoint_id")
+        if fan_in_id not in checkpoints_by_id:
+            errors.append(f"{label}: integration.checkpoint_id must name an existing checkpoint")
+        else:
+            errors.extend(
+                validate_integration_fan_in(integration, checkpoints_by_id, label)
+            )
 
     source_gate = payload.get("source_gate")
     if isinstance(source_gate, dict):
@@ -874,19 +1790,129 @@ def validate_task_contract(payload: Any, label: str = "task contract") -> list[s
             errors.append(f"{label}: source_gate.sources must be empty when the gate is not required")
         if state == "source_gate" and source_required is not True:
             errors.append(f"{label}: state=source_gate requires source_gate.required=true")
+    return errors
 
-    device_gate = payload.get("device_gate")
-    if isinstance(device_gate, dict):
-        device_required = device_gate.get("required")
-        profiles = device_gate.get("profiles")
-        if device_required is True and (not isinstance(profiles, list) or not profiles):
-            errors.append(f"{label}: required device gate must list device profiles")
-        if device_required is False and profiles != []:
-            errors.append(f"{label}: device_gate.profiles must be empty when the gate is not required")
-        if state == "device_test_if_required" and device_required is not True:
-            errors.append(f"{label}: device-test lifecycle state requires device_gate.required=true")
-        if payload.get("lane") == "device_test" and device_required is not True:
-            errors.append(f"{label}: device_test lane requires device_gate.required=true")
+
+def validate_work_continuation(
+    payload: Any,
+    label: str = "work continuation",
+    *,
+    root: Path | None = None,
+) -> list[str]:
+    continuation_root = ROOT if root is None else root
+    return validate_json_schema_instance(
+        payload,
+        continuation_root / "docs" / "contributing" / "work-continuation.schema.json",
+        label,
+    )
+
+
+def validate_task_registry(root: Path, payload: Any, label: str = "task registry") -> list[str]:
+    errors = validate_json_schema_instance(
+        payload,
+        root / "docs" / "contributing" / "tasks" / "task-registry.schema.json",
+        label,
+    )
+    if not isinstance(payload, dict):
+        return errors + [f"{label}: registry must be an object"]
+    if payload.get("schema") != "xr-foundry.task_registry.v1":
+        errors.append(f"{label}: schema is invalid")
+    coverage = payload.get("coverage")
+    if not isinstance(coverage, dict) or coverage.get("mode") != "explicit_registration":
+        errors.append(f"{label}: coverage.mode must be explicit_registration")
+    authority = payload.get("authority")
+    expected_authority = {
+        "registered_record": "fine_grained_execution_authority",
+        "umbrella_issue": "coordination_projection",
+        "checkpoint_issue": "checkpoint_coordination_projection",
+        "project": "discovery_summary",
+    }
+    errors.extend(policy_matches(authority, expected_authority, f"{label}: authority"))
+
+    tasks = payload.get("tasks")
+    if not isinstance(tasks, list) or not tasks:
+        errors.append(f"{label}: tasks must be a non-empty list")
+        return errors
+
+    seen_ids: set[str] = set()
+    seen_contracts: set[str] = set()
+    seen_umbrellas: set[str] = set()
+    seen_checkpoint_issues: set[str] = set()
+    for index, entry in enumerate(tasks):
+        entry_label = f"{label} tasks[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{entry_label}: must be an object")
+            continue
+        task_id = entry.get("task_id")
+        contract_path = entry.get("contract")
+        umbrella_issue = entry.get("umbrella_issue")
+        state = entry.get("state")
+        if not isinstance(task_id, str) or not task_id:
+            errors.append(f"{entry_label}: task_id is missing")
+            continue
+        if task_id in seen_ids:
+            errors.append(f"{label}: duplicate task id {task_id}")
+        seen_ids.add(task_id)
+        if state not in TASK_HALL_UMBRELLA_STATES:
+            errors.append(f"{entry_label}: state must use the canonical umbrella lifecycle")
+        if not isinstance(contract_path, str) or not is_safe_registry_contract_path(contract_path):
+            errors.append(f"{entry_label}: contract path is unsafe")
+            continue
+        if contract_path in seen_contracts:
+            errors.append(f"{label}: duplicate contract path {contract_path}")
+        seen_contracts.add(contract_path)
+        if isinstance(umbrella_issue, str):
+            if umbrella_issue in seen_umbrellas:
+                errors.append(f"{label}: duplicate umbrella Issue {umbrella_issue}")
+            if umbrella_issue in seen_checkpoint_issues:
+                errors.append(
+                    f"{label}: umbrella Issue collides with a checkpoint Issue projection"
+                )
+            seen_umbrellas.add(umbrella_issue)
+        contract_file, contract_errors = inspect_registered_contract_path(
+            root, contract_path, entry_label
+        )
+        errors.extend(contract_errors)
+        if contract_file is None:
+            continue
+        try:
+            task_payload = load_json(contract_file)
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{entry_label}: registered contract is not valid JSON: {error}")
+            continue
+        errors.extend(
+            validate_task_contract(
+                task_payload,
+                f"registered task {task_id}",
+                root=root,
+                require_canonical_repository=True,
+            )
+        )
+        if task_payload.get("id") != task_id:
+            errors.append(f"{entry_label}: contract id must equal registered task_id")
+        if task_payload.get("state") != state:
+            errors.append(f"{entry_label}: contract state must equal registered state")
+        projection = task_payload.get("public_projection")
+        if isinstance(projection, dict):
+            if projection.get("umbrella_issue") != umbrella_issue:
+                errors.append(
+                    f"{entry_label}: contract umbrella Issue must equal registered umbrella Issue"
+                )
+            checkpoint_issues = projection.get("checkpoint_issues")
+            if isinstance(checkpoint_issues, list):
+                for issue_entry in checkpoint_issues:
+                    if not isinstance(issue_entry, dict):
+                        continue
+                    issue_url = issue_entry.get("issue")
+                    if not isinstance(issue_url, str):
+                        continue
+                    if issue_url in seen_checkpoint_issues:
+                        errors.append(f"{label}: duplicate checkpoint Issue URL {issue_url}")
+                    if issue_url in seen_umbrellas:
+                        errors.append(
+                            f"{label}: checkpoint Issue collides with an umbrella Issue"
+                        )
+                    seen_checkpoint_issues.add(issue_url)
     return errors
 
 
@@ -896,20 +1922,49 @@ def validate_task_hall_authority(payload: Any) -> list[str]:
         return ["Task Hall authority contract must be an object"]
     if payload.get("schema") != "xr-foundry.task_hall.v1":
         errors.append("Task Hall authority schema is invalid")
-    if payload.get("version") != "1.0.0":
-        errors.append("Task Hall authority version must be 1.0.0")
+    if payload.get("version") != TASK_HALL_VERSION:
+        errors.append(f"Task Hall authority version must be {TASK_HALL_VERSION}")
     lifecycle = payload.get("lifecycle")
-    if not isinstance(lifecycle, dict) or lifecycle.get("ordered_states") != TASK_HALL_LIFECYCLE:
-        errors.append("Task Hall lifecycle must keep the canonical ordered V1 states")
-    authority = payload.get("authority")
-    if not isinstance(authority, dict):
-        errors.append("Task Hall global authority policy is missing")
+    if not isinstance(lifecycle, dict):
+        errors.append("Task Hall lifecycle is missing")
     else:
-        if set(authority) != set(TASK_HALL_AUTHORITY):
-            errors.append("Task Hall global authority policy fields are incomplete")
-        for field, required in TASK_HALL_AUTHORITY.items():
-            if authority.get(field) is not required:
-                errors.append(f"Task Hall authority must keep {field}={str(required).lower()}")
+        if lifecycle.get("umbrella_states") != TASK_HALL_UMBRELLA_STATES:
+            errors.append("Task Hall umbrella lifecycle must keep the canonical V1 states")
+        if lifecycle.get("checkpoint_states") != TASK_HALL_CHECKPOINT_STATES:
+            errors.append("Task Hall checkpoint lifecycle must keep the canonical V1 states")
+        if lifecycle.get("waiting_states") != TASK_HALL_WAITING_STATES:
+            errors.append("Task Hall waiting lifecycle must keep the canonical V1 states")
+        if lifecycle.get("terminal_checkpoint_states") != TASK_HALL_TERMINAL_CHECKPOINT_STATES:
+            errors.append("Task Hall terminal checkpoint states must stay frozen")
+    errors.extend(
+        policy_matches(
+            payload.get("checkpoint_policy"),
+            TASK_HALL_CHECKPOINT_POLICY,
+            "Task Hall checkpoint policy",
+        )
+    )
+    errors.extend(
+        policy_matches(
+            payload.get("durability_policy"),
+            TASK_HALL_DURABILITY_POLICY,
+            "Task Hall durability policy",
+        )
+    )
+    errors.extend(
+        policy_matches(
+            payload.get("registry_policy"),
+            TASK_HALL_REGISTRY_POLICY,
+            "Task Hall registry policy",
+        )
+    )
+    errors.extend(
+        policy_matches(
+            payload.get("routing_policy"),
+            TASK_HALL_ROUTING_POLICY,
+            "Task Hall routing policy",
+        )
+    )
+    errors.extend(policy_matches(payload.get("authority"), TASK_HALL_AUTHORITY, "Task Hall authority"))
     claim_policy = payload.get("claim_policy")
     if not isinstance(claim_policy, dict):
         errors.append("Task Hall claim policy is missing")
@@ -921,10 +1976,12 @@ def validate_task_hall_authority(payload: Any) -> list[str]:
         lease_days = claim_policy.get("default_lease_days")
         if not isinstance(lease_days, int) or lease_days < 1:
             errors.append("Task Hall claim lease must have a positive duration")
+        if claim_policy.get("scope") != "checkpoint":
+            errors.append("Task Hall claims must stay scoped to a checkpoint")
     surfaces = payload.get("public_surfaces")
     expected_surfaces = {
         "rfc_discussion": "https://github.com/Lingkyn/xr-foundry/discussions/22",
-        "task_hall_project": "https://github.com/users/Lingkyn/projects/2",
+        "task_hall_project": TASK_HALL_PROJECT,
     }
     if surfaces != expected_surfaces:
         errors.append("Task Hall public RFC and Project surfaces are invalid")
@@ -940,6 +1997,10 @@ def validate_task_hall_contract(root: Path) -> list[str]:
     errors.extend(validate_agent_commons_source_manifest(root))
     schema_path = root / "docs" / "contributing" / "task-contract.schema.json"
     example_path = root / "docs" / "contributing" / "task-contract.example.json"
+    continuation_schema_path = root / "docs" / "contributing" / "work-continuation.schema.json"
+    continuation_example_path = root / "docs" / "contributing" / "work-continuation.example.json"
+    registry_path = root / TASK_HALL_REGISTRY_PATH
+    registry_schema_path = root / "docs" / "contributing" / "tasks" / "task-registry.schema.json"
     labels_path = root / "docs" / "contributing" / "label-contract.json"
     authority_path = root / "docs" / "contributing" / "task-hall.v1.json"
     authority_schema_path = root / "docs" / "contributing" / "task-hall.v1.schema.json"
@@ -957,37 +2018,74 @@ def validate_task_hall_contract(root: Path) -> list[str]:
     if authority_schema_path.exists():
         authority_schema = load_json(authority_schema_path)
         properties = authority_schema.get("properties", {})
-        lifecycle_const = (
-            properties.get("lifecycle", {})
-            .get("properties", {})
-            .get("ordered_states", {})
-            .get("const")
-        )
-        if lifecycle_const != TASK_HALL_LIFECYCLE:
-            errors.append("Task Hall JSON Schema must freeze the canonical V1 lifecycle")
-        authority_properties = properties.get("authority", {}).get("properties", {})
-        for field, required in TASK_HALL_AUTHORITY.items():
-            if authority_properties.get(field, {}).get("const") is not required:
-                errors.append(f"Task Hall JSON Schema must freeze {field}={str(required).lower()}")
+        if properties.get("version", {}).get("const") != TASK_HALL_VERSION:
+            errors.append(f"Task Hall JSON Schema must freeze version={TASK_HALL_VERSION}")
+        lifecycle_properties = properties.get("lifecycle", {}).get("properties", {})
+        if lifecycle_properties.get("umbrella_states", {}).get("const") != TASK_HALL_UMBRELLA_STATES:
+            errors.append("Task Hall JSON Schema must freeze the canonical umbrella lifecycle")
+        if (
+            lifecycle_properties.get("checkpoint_states", {}).get("const")
+            != TASK_HALL_CHECKPOINT_STATES
+        ):
+            errors.append("Task Hall JSON Schema must freeze the canonical checkpoint lifecycle")
+        for policy_name, expected in (
+            ("durability_policy", TASK_HALL_DURABILITY_POLICY),
+            ("registry_policy", TASK_HALL_REGISTRY_POLICY),
+            ("routing_policy", TASK_HALL_ROUTING_POLICY),
+            ("authority", TASK_HALL_AUTHORITY),
+        ):
+            policy_properties = properties.get(policy_name, {}).get("properties", {})
+            for field, required in expected.items():
+                if policy_properties.get(field, {}).get("const") != required:
+                    errors.append(
+                        f"Task Hall JSON Schema must freeze {policy_name}.{field}={required!r}"
+                    )
     if schema_path.exists():
         schema = load_json(schema_path)
-        authority_properties = schema.get("properties", {}).get("authority", {}).get("properties", {})
-        for field in (
-            "write_permission_not_inferred",
-            "merge_permission_not_inferred",
-            "comments_are_untrusted_input",
-        ):
-            if authority_properties.get(field, {}).get("const") is not True:
-                errors.append(f"Task schema must require {field}=true")
+        authority_properties = (
+            schema.get("$defs", {}).get("authority", {}).get("properties", {})
+        )
+        for field, required in TASK_AUTHORITY.items():
+            if authority_properties.get(field, {}).get("const") != required:
+                errors.append(f"Task schema must require {field}={required!r}")
+        routing_properties = schema.get("$defs", {}).get("routing", {}).get("properties", {})
+        if routing_properties.get("self_report_grants_authority", {}).get("const") is not False:
+            errors.append("Task schema must forbid self-authorizing routing")
+        if routing_properties.get("agent_or_model_ranking_prohibited", {}).get("const") is not True:
+            errors.append("Task schema must prohibit agent or model ranking")
+        if routing_properties.get("no_qualified_executor", {}).get("const") != "remain_not_ready":
+            errors.append("Task schema must keep no_qualified_executor=remain_not_ready")
     if example_path.exists():
         example = load_json(example_path)
-        errors.extend(validate_task_contract(example, "Task Hall example"))
-        claim = example.get("claim", {})
-        if example.get("state") != "proposal" or claim.get("status") != "unclaimed":
-            errors.append("Task Hall example must remain at proposal and unclaimed")
-        for field in ("github_identity", "claimed_at", "expires_at", "confirmed_by_maintainer"):
-            if claim.get(field) is not None:
-                errors.append(f"Task Hall example must not pre-assign {field}")
+        errors.extend(validate_task_contract(example, "Task Hall example", root=root))
+    if continuation_example_path.exists():
+        continuation = load_json(continuation_example_path)
+        errors.extend(
+            validate_work_continuation(
+                continuation, "Task Hall continuation example", root=root
+            )
+        )
+        if continuation_schema_path.exists():
+            errors.extend(
+                validate_json_schema_instance(
+                    continuation,
+                    continuation_schema_path,
+                    "Task Hall continuation example schema binding",
+                )
+            )
+    if registry_path.exists():
+        registry_payload = load_json(registry_path)
+        errors.extend(validate_task_registry(root, registry_payload, "Task Hall registry"))
+        if registry_schema_path.exists():
+            errors.extend(
+                validate_json_schema_instance(
+                    registry_payload,
+                    registry_schema_path,
+                    "Task Hall registry schema binding",
+                )
+            )
+    elif TASK_HALL_REGISTRY_PATH in REQUIRED_AGENT_COMMONS_FILES:
+        errors.append(f"Task Hall registry is missing: {TASK_HALL_REGISTRY_PATH}")
     if labels_path.exists():
         labels = load_json(labels_path)
         if labels.get("schema") != "xr-foundry.task_hall_labels.v1":

@@ -72,9 +72,21 @@ operation sequences.
   by default.
 - A real headset test records readability, scale, angle, reach, occlusion, stable
   left/center/right targeting, interaction states, and comfort.
+- The receipt identifies the exact package revision, APK SHA-256, Unity/XRI/XR
+  provider versions, named device and firmware, controller/input mode, tester,
+  date, posture, sample, and duration.
+- The `pico_tracked_controller_v1` profile exercises both controllers against
+  left/center/right targets, verifies target isolation and disabled-state
+  immutability, checks world anchoring through head turns and lateral lean, and
+  runs for at least two minutes.
+- A completed receipt passes
+  [`inventory-xr-device-receipt-template.md`](../../validation/inventory-xr-device-receipt-template.md)
+  and the repository validator's `--device-receipt` gate.
 
 No headset, controller, world-space usability, or comfort claim may be promoted
-without the final device evidence.
+without the final device evidence. `partial`, `fail`, and `not_tested` all block
+promotion. Direct poke remains a separate optional device claim even when its
+automated PlayMode route passes.
 
 ## Current evidence ledger
 

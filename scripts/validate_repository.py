@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,41 @@ REQUIRED_INVENTORY_STANDARD_FILES = {
     "core-api-baseline.json",
 }
 TEXT_SUFFIXES = {".cs", ".asmdef", ".json", ".md", ".yml", ".yaml", ".txt"}
+INVENTORY_XR_DEVICE_RECEIPT_TEMPLATE = (
+    Path("docs") / "validation" / "inventory-xr-device-receipt.template.json"
+)
+INVENTORY_XR_DEVICE_RECEIPT_GUIDE = (
+    Path("docs") / "validation" / "inventory-xr-device-receipt-template.md"
+)
+REQUIRED_INVENTORY_XR_DEVICE_CHECKS = {
+    "apk_install",
+    "sample_open",
+    "binocular_readability",
+    "world_fixed_head_turn",
+    "world_fixed_lateral_lean",
+    "left_controller_lcr_hover",
+    "left_controller_lcr_press",
+    "right_controller_lcr_hover",
+    "right_controller_lcr_press",
+    "target_isolation",
+    "hover_state_visible",
+    "selected_state_visible",
+    "disabled_state_visible",
+    "disabled_no_mutation",
+    "scene_occlusion",
+    "panel_scale",
+    "panel_angle",
+    "controller_reach",
+    "comfort_two_minutes",
+}
+OPTIONAL_INVENTORY_XR_DEVICE_CHECKS = {"direct_poke_device"}
+DEVICE_CHECK_RESULTS = {"pass", "partial", "fail", "not_tested"}
+INVENTORY_XR_DEVICE_CLAIM_BOUNDARIES = {
+    "device_gate_passed",
+    "headset_usability_claim_allowed",
+    "controller_ray_claim_allowed",
+    "direct_poke_device_claim_allowed",
+}
 
 
 def forbidden_public_markers() -> list[str]:
@@ -46,6 +82,247 @@ def forbidden_public_markers() -> list[str]:
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def validate_inventory_xr_device_receipt(
+    payload: Any, *, require_pass: bool
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["Inventory XR device receipt must be a JSON object"]
+    if payload.get("schema") != "xr-foundry.inventory_xr_device_receipt.v1":
+        errors.append("Inventory XR device receipt schema is invalid")
+    if payload.get("validation_profile") != "pico_tracked_controller_v1":
+        errors.append("Inventory XR device receipt must use pico_tracked_controller_v1")
+
+    serialized = json.dumps(payload, ensure_ascii=False)
+    if re.search(r"\b[A-Za-z]:\\", serialized):
+        errors.append("Inventory XR device receipt must not contain a machine-local Windows path")
+    lowered = serialized.casefold()
+    for marker in forbidden_public_markers():
+        if marker in lowered:
+            errors.append("Inventory XR device receipt contains a non-public marker")
+            break
+
+    required_text_fields = {
+        "receipt_id": payload.get("receipt_id"),
+    }
+    package = payload.get("package")
+    artifact = payload.get("artifact")
+    software = payload.get("software")
+    device = payload.get("device")
+    execution = payload.get("execution")
+    claim_boundary = payload.get("claim_boundary")
+    for name, value in {
+        "package": package,
+        "artifact": artifact,
+        "software": software,
+        "device": device,
+        "execution": execution,
+        "claim_boundary": claim_boundary,
+    }.items():
+        if not isinstance(value, dict):
+            errors.append(f"Inventory XR device receipt {name} must be an object")
+
+    if isinstance(package, dict):
+        if package.get("id") != "com.lingkyn.inventory.xr":
+            errors.append("Inventory XR device receipt package id is invalid")
+        required_text_fields.update(
+            {
+                "package.version": package.get("version"),
+                "package.revision": package.get("revision"),
+            }
+        )
+    if isinstance(artifact, dict):
+        required_text_fields.update(
+            {
+                "artifact.apk_sha256": artifact.get("apk_sha256"),
+                "artifact.artifact_ref": artifact.get("artifact_ref"),
+                "artifact.application_id": artifact.get("application_id"),
+            }
+        )
+    if isinstance(software, dict):
+        for key in (
+            "unity_version",
+            "xri_version",
+            "xr_management_version",
+            "openxr_version",
+            "pico_integration_version",
+            "runtime_provider",
+            "android_target_api",
+            "graphics_api",
+        ):
+            required_text_fields[f"software.{key}"] = software.get(key)
+    if isinstance(device, dict):
+        for key in (
+            "manufacturer",
+            "model",
+            "os_version",
+            "firmware_version",
+            "controller_input_mode",
+        ):
+            required_text_fields[f"device.{key}"] = device.get(key)
+        if str(device.get("manufacturer", "")).casefold() != "pico":
+            errors.append("pico_tracked_controller_v1 requires a named PICO device")
+        if device.get("controller_input_mode") != "tracked_controllers":
+            errors.append("pico_tracked_controller_v1 requires tracked_controllers")
+    if isinstance(execution, dict):
+        for key in ("tested_at_utc", "tester", "sample_scene", "posture"):
+            required_text_fields[f"execution.{key}"] = execution.get(key)
+        if execution.get("install_result") not in DEVICE_CHECK_RESULTS:
+            errors.append("Inventory XR install_result is invalid")
+        if execution.get("open_result") not in DEVICE_CHECK_RESULTS:
+            errors.append("Inventory XR open_result is invalid")
+        duration = execution.get("duration_seconds")
+        if not isinstance(duration, int) or duration < 0:
+            errors.append("Inventory XR duration_seconds must be a non-negative integer")
+    if isinstance(claim_boundary, dict):
+        if set(claim_boundary) != INVENTORY_XR_DEVICE_CLAIM_BOUNDARIES:
+            errors.append("Inventory XR device receipt claim boundaries are incomplete")
+        for key in INVENTORY_XR_DEVICE_CLAIM_BOUNDARIES:
+            if not isinstance(claim_boundary.get(key), bool):
+                errors.append(f"Inventory XR claim_boundary.{key} must be boolean")
+
+    for field, value in required_text_fields.items():
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"Inventory XR device receipt requires {field}")
+
+    checks = payload.get("checks")
+    check_by_id: dict[str, dict[str, Any]] = {}
+    if not isinstance(checks, list):
+        errors.append("Inventory XR device receipt checks must be a list")
+    else:
+        for item in checks:
+            if not isinstance(item, dict):
+                errors.append("Inventory XR device checks must be objects")
+                continue
+            check_id = str(item.get("id", ""))
+            if not check_id or check_id in check_by_id:
+                errors.append(f"Inventory XR device check id is missing or duplicated: {check_id}")
+                continue
+            check_by_id[check_id] = item
+            if item.get("status") not in DEVICE_CHECK_RESULTS:
+                errors.append(f"Inventory XR device check status is invalid: {check_id}")
+            if not isinstance(item.get("observation"), str):
+                errors.append(f"Inventory XR device check observation must be text: {check_id}")
+            if not isinstance(item.get("evidence_refs"), list):
+                errors.append(f"Inventory XR device check evidence_refs must be a list: {check_id}")
+    missing_checks = REQUIRED_INVENTORY_XR_DEVICE_CHECKS - set(check_by_id)
+    if missing_checks:
+        errors.append(f"Inventory XR device receipt is missing required checks: {sorted(missing_checks)}")
+    missing_optional = OPTIONAL_INVENTORY_XR_DEVICE_CHECKS - set(check_by_id)
+    if missing_optional:
+        errors.append(f"Inventory XR device receipt must explicitly classify optional checks: {sorted(missing_optional)}")
+
+    if payload.get("overall_result") not in {"pass", "partial", "fail", "not_run"}:
+        errors.append("Inventory XR device receipt overall_result is invalid")
+    if not isinstance(payload.get("failures_and_follow_up"), list):
+        errors.append("Inventory XR device receipt failures_and_follow_up must be a list")
+
+    if not require_pass:
+        return errors
+
+    if any(
+        isinstance(value, str) and "replace-with" in value.casefold()
+        for value in required_text_fields.values()
+    ):
+        errors.append("Completed Inventory XR device receipt contains placeholder text")
+    revision = str(package.get("revision", "")) if isinstance(package, dict) else ""
+    if not re.fullmatch(r"[0-9a-fA-F]{40}", revision) or set(revision) == {"0"}:
+        errors.append("Completed Inventory XR package revision must be a non-zero full Git SHA")
+    apk_sha = str(artifact.get("apk_sha256", "")) if isinstance(artifact, dict) else ""
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", apk_sha) or set(apk_sha) == {"0"}:
+        errors.append("Completed Inventory XR APK SHA-256 must be a non-zero 64-character hash")
+
+    if isinstance(execution, dict):
+        if execution.get("install_result") != "pass":
+            errors.append("Completed Inventory XR receipt requires install_result=pass")
+        if execution.get("open_result") != "pass":
+            errors.append("Completed Inventory XR receipt requires open_result=pass")
+        if not isinstance(execution.get("duration_seconds"), int) or execution.get("duration_seconds", 0) < 120:
+            errors.append("Completed Inventory XR device session must last at least 120 seconds")
+        if execution.get("posture") not in {"seated", "standing", "seated_then_standing"}:
+            errors.append("Completed Inventory XR posture must name the tested posture")
+        timestamp = str(execution.get("tested_at_utc", ""))
+        try:
+            parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            if parsed_timestamp.year <= 1970 or parsed_timestamp.tzinfo is None:
+                raise ValueError
+        except ValueError:
+            errors.append("Completed Inventory XR tested_at_utc must be a real ISO-8601 timestamp")
+
+    for check_id in sorted(REQUIRED_INVENTORY_XR_DEVICE_CHECKS):
+        item = check_by_id.get(check_id, {})
+        if item.get("status") != "pass":
+            errors.append(f"Completed Inventory XR required check did not pass: {check_id}")
+        if not str(item.get("observation", "")).strip():
+            errors.append(f"Completed Inventory XR required check lacks an observation: {check_id}")
+        evidence_refs = item.get("evidence_refs")
+        if not isinstance(evidence_refs, list) or not evidence_refs or any(
+            not isinstance(reference, str) or not reference.strip() for reference in evidence_refs
+        ):
+            errors.append(f"Completed Inventory XR required check lacks evidence: {check_id}")
+
+    if payload.get("overall_result") != "pass":
+        errors.append("Completed Inventory XR receipt requires overall_result=pass")
+    if isinstance(claim_boundary, dict):
+        for key in INVENTORY_XR_DEVICE_CLAIM_BOUNDARIES - {"direct_poke_device_claim_allowed"}:
+            if claim_boundary.get(key) is not True:
+                errors.append(f"Completed Inventory XR receipt requires claim_boundary.{key}=true")
+        direct_poke_claim = claim_boundary.get("direct_poke_device_claim_allowed")
+        if not isinstance(direct_poke_claim, bool):
+            errors.append("Inventory XR direct-poke claim boundary must be boolean")
+        elif direct_poke_claim:
+            direct_poke = check_by_id.get("direct_poke_device", {})
+            if direct_poke.get("status") != "pass":
+                errors.append("Direct-poke device claim requires direct_poke_device=pass")
+            if not str(direct_poke.get("observation", "")).strip() or not direct_poke.get("evidence_refs"):
+                errors.append("Direct-poke device claim requires observation and evidence")
+    return errors
+
+
+def validate_inventory_xr_device_receipt_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    template_path = root / INVENTORY_XR_DEVICE_RECEIPT_TEMPLATE
+    guide_path = root / INVENTORY_XR_DEVICE_RECEIPT_GUIDE
+    if not template_path.exists():
+        errors.append("Inventory XR device receipt JSON template is missing")
+    else:
+        try:
+            template = load_json(template_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            errors.append(f"Inventory XR device receipt template is invalid JSON: {exc}")
+        else:
+            errors.extend(validate_inventory_xr_device_receipt(template, require_pass=False))
+            template_checks = {
+                str(item.get("id", "")): item
+                for item in template.get("checks", [])
+                if isinstance(item, dict)
+            }
+            for check_id in REQUIRED_INVENTORY_XR_DEVICE_CHECKS | OPTIONAL_INVENTORY_XR_DEVICE_CHECKS:
+                if template_checks.get(check_id, {}).get("status") != "not_tested":
+                    errors.append(f"Inventory XR template must start {check_id} as not_tested")
+            if template.get("overall_result") != "not_run":
+                errors.append("Inventory XR template must start with overall_result=not_run")
+            claims = template.get("claim_boundary", {})
+            if not isinstance(claims, dict) or any(value is not False for value in claims.values()):
+                errors.append("Inventory XR template must start with every claim boundary false")
+    if not guide_path.exists():
+        errors.append("Inventory XR device receipt guide is missing")
+    else:
+        guide = guide_path.read_text(encoding="utf-8")
+        required_guide_tokens = {
+            "pico_tracked_controller_v1",
+            "--device-receipt",
+            "partial",
+            "not_tested",
+            "direct_poke_device_claim_allowed",
+            "at least 120 seconds",
+        }
+        for token in required_guide_tokens:
+            if token not in guide:
+                errors.append(f"Inventory XR device receipt guide lacks required token: {token}")
+    return errors
 
 
 def scan_text_safety(root: Path) -> list[str]:
@@ -422,6 +699,7 @@ def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_inventory_standard(root))
+    errors.extend(validate_inventory_xr_device_receipt_contract(root))
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))
     for name in sorted(REQUIRED_ROOT_FILES):
@@ -525,14 +803,37 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--device-receipt",
+        type=Path,
+        help="also require a completed Inventory XR device receipt to pass",
+    )
     args = parser.parse_args()
-    errors = validate_repository(args.root.resolve())
+    root = args.root.resolve()
+    errors = validate_repository(root)
+    device_receipt_path: Path | None = None
+    if args.device_receipt is not None:
+        device_receipt_path = args.device_receipt
+        if not device_receipt_path.is_absolute():
+            device_receipt_path = root / device_receipt_path
+        device_receipt_path = device_receipt_path.resolve()
+        if not device_receipt_path.exists():
+            errors.append(f"Inventory XR device receipt does not exist: {device_receipt_path}")
+        else:
+            try:
+                receipt = load_json(device_receipt_path)
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                errors.append(f"Inventory XR device receipt is invalid JSON: {exc}")
+            else:
+                errors.extend(validate_inventory_xr_device_receipt(receipt, require_pass=True))
     report = {
         "schema": "xr-foundry.repository_validation.v1",
-        "root": str(args.root.resolve()),
+        "root": str(root),
         "status": "pass" if not errors else "fail",
         "errors": errors,
     }
+    if device_receipt_path is not None:
+        report["device_receipt"] = str(device_receipt_path)
     print(json.dumps(report, indent=2))
     return 0 if not errors else 1
 

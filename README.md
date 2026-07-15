@@ -54,6 +54,10 @@ upgrade/rollback, and consumer-owned prefab-variant evidence. XR `0.1.0` is now 
 implemented incubating adapter with local and immutable-Git world-space,
 tracked-ray, real-poke, and sample-import evidence. It cannot claim headset
 usability until Android and real-device gates pass.
+The exact named-device handoff is the
+[`Inventory XR Device Acceptance Receipt`](docs/validation/inventory-xr-device-receipt-template.md),
+which includes a machine-validatable PICO tracked-controller profile without
+adding a vendor dependency to the package.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and

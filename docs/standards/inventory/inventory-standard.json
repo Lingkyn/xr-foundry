@@ -37,7 +37,15 @@
     },
     {
       "capability": "xr_world_space_interaction",
-      "source_ids": ["unity-xri", "unity-xri-examples"]
+      "source_ids": [
+        "unity-xri",
+        "unity-xri-examples",
+        "pico-unity-project-validation",
+        "pico-unity-controller-ray-canvas",
+        "pico-unity-build-run",
+        "pico-unity-input-mapping",
+        "pico-unity-openxr-release-notes"
+      ]
     }
   ],
   "package_family": [

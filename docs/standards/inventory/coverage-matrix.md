@@ -17,7 +17,7 @@ a professional implementation benchmark.
 | Domain and presentation separation | `more-mountains-inventory-engine`, `unity-scriptableobject-architecture`, `epic-lyra-inventory` | UI consumes snapshots/view models and sends commands |
 | Nested reusable presentation parts | `unity-nested-prefabs`, `unity-scriptableobject-architecture`, `more-mountains-inventory-engine` | Panel, grid, slot, item, details, and action views are independent nested prefabs |
 | Package shape and tests | `unity-custom-packages`, `unity-package-tests` | Every package has conventional layout, assemblies, tests, samples, docs, and changelog |
-| Optional XR world-space presentation | `unity-xri`, `unity-xri-examples` | XR belongs in a separate adapter using supported tracked-device UI paths |
+| Optional XR world-space presentation and device acceptance | `unity-xri`, `unity-xri-examples`, `pico-unity-project-validation`, `pico-unity-controller-ray-canvas`, `pico-unity-build-run`, `pico-unity-input-mapping`, `pico-unity-openxr-release-notes` | XR belongs in a separate adapter using supported tracked-device UI paths; configuration and automated routing are prerequisites, while named-device installation, interaction, readability, anchoring, and comfort remain a separate evidence gate |
 
 ## Deliberate synthesis
 

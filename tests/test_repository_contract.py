@@ -15,12 +15,101 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
+def completed_inventory_xr_device_receipt() -> dict:
+    payload = json.loads(
+        (ROOT / "docs" / "validation" / "inventory-xr-device-receipt.template.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    payload["receipt_id"] = "inventory-xr-pico-acceptance-2026-07-15"
+    payload["package"]["revision"] = "a" * 40
+    payload["artifact"].update(
+        {
+            "apk_sha256": "b" * 64,
+            "artifact_ref": "public-artifact-123",
+            "application_id": "com.example.inventoryxrvalidation",
+        }
+    )
+    payload["software"].update(
+        {
+            "unity_version": "6000.3.19f1",
+            "xr_management_version": "4.5.0",
+            "openxr_version": "not_used",
+            "pico_integration_version": "3.1.0",
+            "runtime_provider": "PICO XR",
+            "android_target_api": "35",
+            "graphics_api": "Vulkan",
+        }
+    )
+    payload["device"].update(
+        {
+            "model": "PICO 4",
+            "os_version": "5.13.0",
+            "firmware_version": "5.13.0",
+        }
+    )
+    payload["execution"].update(
+        {
+            "tested_at_utc": "2026-07-15T12:00:00Z",
+            "tester": "public-tester-1",
+            "sample_scene": "InventoryWorldSpaceValidation",
+            "posture": "seated",
+            "duration_seconds": 120,
+            "install_result": "pass",
+            "open_result": "pass",
+        }
+    )
+    for item in payload["checks"]:
+        if item["id"] in MODULE.REQUIRED_INVENTORY_XR_DEVICE_CHECKS:
+            item.update(
+                {
+                    "status": "pass",
+                    "observation": f"Observed {item['id']} on the named device.",
+                    "evidence_refs": [f"evidence/{item['id']}.md"],
+                }
+            )
+    payload["claim_boundary"].update(
+        {
+            "device_gate_passed": True,
+            "headset_usability_claim_allowed": True,
+            "controller_ray_claim_allowed": True,
+            "direct_poke_device_claim_allowed": False,
+        }
+    )
+    payload["overall_result"] = "pass"
+    return payload
+
+
 class RepositoryContractTests(unittest.TestCase):
     def test_current_repository_passes(self) -> None:
         self.assertEqual([], MODULE.validate_repository(ROOT))
 
     def test_current_inventory_projections_are_coherent(self) -> None:
         self.assertEqual([], MODULE.validate_inventory_projection_coherence(ROOT))
+
+    def test_current_inventory_xr_device_receipt_contract_passes(self) -> None:
+        self.assertEqual([], MODULE.validate_inventory_xr_device_receipt_contract(ROOT))
+
+    def test_completed_inventory_xr_device_receipt_passes(self) -> None:
+        self.assertEqual(
+            [],
+            MODULE.validate_inventory_xr_device_receipt(
+                completed_inventory_xr_device_receipt(), require_pass=True
+            ),
+        )
+
+    def test_inventory_xr_device_receipt_rejects_untested_required_check(self) -> None:
+        payload = completed_inventory_xr_device_receipt()
+        target = next(item for item in payload["checks"] if item["id"] == "right_controller_lcr_press")
+        target.update({"status": "not_tested", "observation": "", "evidence_refs": []})
+        errors = MODULE.validate_inventory_xr_device_receipt(payload, require_pass=True)
+        self.assertTrue(any("right_controller_lcr_press" in error for error in errors))
+
+    def test_inventory_xr_device_receipt_rejects_unproven_direct_poke_claim(self) -> None:
+        payload = completed_inventory_xr_device_receipt()
+        payload["claim_boundary"]["direct_poke_device_claim_allowed"] = True
+        errors = MODULE.validate_inventory_xr_device_receipt(payload, require_pass=True)
+        self.assertTrue(any("Direct-poke device claim" in error for error in errors))
 
     def test_inventory_projection_rejects_stale_unadmitted_claim(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

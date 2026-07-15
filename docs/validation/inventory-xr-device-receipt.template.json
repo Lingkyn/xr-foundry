@@ -1,0 +1,71 @@
+{
+  "schema": "xr-foundry.inventory_xr_device_receipt.v1",
+  "receipt_id": "replace-with-public-receipt-id",
+  "validation_profile": "pico_tracked_controller_v1",
+  "package": {
+    "id": "com.lingkyn.inventory.xr",
+    "version": "0.1.0",
+    "revision": "0000000000000000000000000000000000000000"
+  },
+  "artifact": {
+    "apk_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "artifact_ref": "replace-with-public-artifact-reference",
+    "application_id": "replace-with-application-id"
+  },
+  "software": {
+    "unity_version": "replace-with-version",
+    "xri_version": "3.3.2",
+    "xr_management_version": "replace-with-version",
+    "openxr_version": "replace-with-version-or-not_used",
+    "pico_integration_version": "replace-with-version-or-not_used",
+    "runtime_provider": "replace-with-active-provider",
+    "android_target_api": "replace-with-api-level",
+    "graphics_api": "replace-with-api"
+  },
+  "device": {
+    "manufacturer": "PICO",
+    "model": "replace-with-model",
+    "os_version": "replace-with-os-version",
+    "firmware_version": "replace-with-firmware-version",
+    "controller_input_mode": "tracked_controllers"
+  },
+  "execution": {
+    "tested_at_utc": "1970-01-01T00:00:00Z",
+    "tester": "replace-with-public-tester-identifier",
+    "sample_scene": "replace-with-public-sample-identifier",
+    "posture": "seated_or_standing",
+    "duration_seconds": 0,
+    "install_result": "not_tested",
+    "open_result": "not_tested"
+  },
+  "checks": [
+    {"id": "apk_install", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "sample_open", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "binocular_readability", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "world_fixed_head_turn", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "world_fixed_lateral_lean", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "left_controller_lcr_hover", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "left_controller_lcr_press", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "right_controller_lcr_hover", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "right_controller_lcr_press", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "target_isolation", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "hover_state_visible", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "selected_state_visible", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "disabled_state_visible", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "disabled_no_mutation", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "scene_occlusion", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "panel_scale", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "panel_angle", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "controller_reach", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "comfort_two_minutes", "status": "not_tested", "observation": "", "evidence_refs": []},
+    {"id": "direct_poke_device", "status": "not_tested", "observation": "optional claim not tested", "evidence_refs": []}
+  ],
+  "claim_boundary": {
+    "device_gate_passed": false,
+    "headset_usability_claim_allowed": false,
+    "controller_ray_claim_allowed": false,
+    "direct_poke_device_claim_allowed": false
+  },
+  "overall_result": "not_run",
+  "failures_and_follow_up": []
+}

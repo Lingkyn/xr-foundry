@@ -38,6 +38,13 @@ raycasts into distinct shipped slots, a real `XRPokeInteractor` release route,
 and non-head-locked behavior. Only real headset evidence can prove controller
 usability, readability, scale, angle, occlusion, reach, or comfort.
 
+Use the repository's
+[`Inventory XR Device Acceptance Receipt`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/validation/inventory-xr-device-receipt-template.md)
+for the named-device gate. The first profile covers a PICO headset with tracked
+controllers while keeping the package itself independent of a vendor SDK. Every
+required observation must pass before XR candidate promotion; automated poke
+coverage does not create a direct-poke device claim.
+
 ## Git installation
 
 When evaluating this package from Git, explicitly pin Core, Unity authoring,

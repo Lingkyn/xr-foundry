@@ -197,6 +197,104 @@
       "license_boundary": "Package API dependency is isolated to the XR adapter"
     },
     {
+      "id": "pico-unity-project-validation",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "PICO",
+      "title": "Project Validation",
+      "url": "https://developer.picoxr.com/llmstxt/document/unity-integration/en/en_project-validation.md",
+      "canonical_url": "https://developer.picoxr.com/document/unity/project-validation/",
+      "source_role": "xr_platform_configuration_validation",
+      "positive_evidence": [
+        "Defines a first-party Unity project-configuration validation surface for PICO deployment",
+        "Classifies required, recommended, and optional configuration rules before a project is built"
+      ],
+      "limits": [
+        "Project validation does not prove installation, binocular readability, controller targeting, world anchoring, or comfort on a physical headset"
+      ],
+      "license_boundary": "Documentation reference only; the public acceptance contract is independently authored"
+    },
+    {
+      "id": "pico-unity-controller-ray-canvas",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "PICO",
+      "title": "Enable interaction between the controller ray and a canvas",
+      "url": "https://developer.picoxr.com/llmstxt/document/unity-integration/en/en_create-interactive-ui.md",
+      "source_role": "xr_world_space_ui_configuration",
+      "positive_evidence": [
+        "Requires the Canvas render mode to be World Space for the documented controller-ray UI path",
+        "Documents Tracked Device Graphic Raycaster setup and separate left/right XR Ray Interactor configuration",
+        "Requires ray reach to exceed the camera-to-UI distance"
+      ],
+      "limits": [
+        "Configuration instructions do not prove target isolation, readability, world anchoring, or comfort on a named device"
+      ],
+      "license_boundary": "Documentation reference only; no sample source or images are copied"
+    },
+    {
+      "id": "pico-unity-build-run",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "PICO",
+      "title": "Build and run the scene",
+      "url": "https://developer.picoxr.com/llmstxt/document/unity-integration/en/en_build-and-run-the-scene.md",
+      "source_role": "xr_android_device_execution",
+      "positive_evidence": [
+        "Defines Android as the target platform for the documented PICO XR build path",
+        "Separates producing the APK from selecting a connected PICO run device and launching the app on the headset"
+      ],
+      "limits": [
+        "A successful Build And Run does not establish Inventory UI quality or controller correctness"
+      ],
+      "license_boundary": "Documentation reference only"
+    },
+    {
+      "id": "pico-unity-input-mapping",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "PICO",
+      "title": "Controller and HMD input mapping",
+      "url": "https://developer.picoxr.com/llmstxt/document/unity-integration/en/en_input-mapping.md",
+      "source_role": "xr_named_device_input_evidence",
+      "positive_evidence": [
+        "Documents PICO controller and HMD actions as Unity XR input events",
+        "Provides model-specific controller mappings, supporting named-model and input-mode recording"
+      ],
+      "limits": [
+        "Input mapping does not prove a consumer scene routes a ray to the intended UI target"
+      ],
+      "license_boundary": "Documentation reference only"
+    },
+    {
+      "id": "pico-unity-openxr-release-notes",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_first_party_reference",
+      "publisher": "PICO",
+      "title": "PICO Unity OpenXR SDK release notes",
+      "url": "https://developer.picoxr.com/document/updates-unity-openxr/",
+      "source_role": "xr_device_runtime_compatibility",
+      "positive_evidence": [
+        "Records required PICO device-system versions for Unity OpenXR SDK releases",
+        "Records device-runtime interaction limitations, demonstrating that an automated or visible ray does not by itself prove working device interaction"
+      ],
+      "limits": [
+        "Release notes do not define Inventory-specific target layout or acceptance thresholds",
+        "A pass remains scoped to the named device, firmware, runtime stack, APK, and package revision"
+      ],
+      "license_boundary": "Documentation reference only; no SDK source or assets are copied"
+    },
+    {
       "id": "unity-xri-examples",
       "admission": "admitted_positive",
       "provenance_scope": "external_public",

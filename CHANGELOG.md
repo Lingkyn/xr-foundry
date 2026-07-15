@@ -5,6 +5,10 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added a provider-neutral, machine-checkable Inventory XR device receipt with a
+  PICO tracked-controller acceptance profile, official PICO evidence boundaries,
+  and fail-closed promotion rules for install/open, world anchoring, targeting,
+  interaction states, readability, reach, occlusion, and comfort.
 - Added the optional `com.lingkyn.inventory.xr` incubating package with a
   provider-neutral world-space prefab, ScriptableObject profile, fail-closed scene
   validation, tracked-ray and real XRI poke tests, and an imported setup sample;

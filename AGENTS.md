@@ -16,7 +16,9 @@ library. Do not treat it as a bag of code to copy wholesale.
 6. Run `python scripts/validate_repository.py --json`, the repository tests, and
    the consuming project's own resolution/compile/tests.
 7. Require real-device evidence before claiming XR runtime, controller, comfort,
-   spatial-audio, or headset behavior.
+   spatial-audio, or headset behavior. For Inventory XR, use
+   `docs/validation/inventory-xr-device-receipt-template.md` and validate the
+   completed JSON receipt with `--device-receipt`.
 
 ## Current implementation boundary
 
@@ -35,4 +37,3 @@ popularity alone is not a standard.
 Provider adapters must stay thin. Shared facts belong in `reference-catalog.json`,
 package manifests, tests, and public documentation—not duplicated in model-specific
 instruction files.
-

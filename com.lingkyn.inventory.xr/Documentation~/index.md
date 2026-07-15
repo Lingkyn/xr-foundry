@@ -33,3 +33,8 @@ resolution without a configured registry.
 Editor and PlayMode tests are not headset evidence. Record a named device, runtime
 versions, build revision, tester, and observations before claiming readability,
 targeting, reach, occlusion, scale, angle, or comfort.
+
+The public
+[`Inventory XR Device Acceptance Receipt`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/validation/inventory-xr-device-receipt-template.md)
+defines the exact PICO tracked-controller sequence, immutable APK/package identity,
+pass rule, optional direct-poke boundary, and machine-validation command.

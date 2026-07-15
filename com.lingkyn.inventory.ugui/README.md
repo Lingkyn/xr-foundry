@@ -1,6 +1,6 @@
 # Lingkyn Inventory UGUI
 
-Status: **incubating**. This package presents Inventory Core snapshots through
+Status: **candidate**. This package presents Inventory Core snapshots through
 replaceable presenters and UGUI views. It contains no XR Interaction Toolkit or
 consumer-specific styling, content, localization, scene, or item database.
 
@@ -23,4 +23,5 @@ to the aggregate.
 
 The package demonstrates empty, partial, full, rejected, selected, disabled,
 loading, and error states. Pointer and keyboard submit use standard EventSystem
-interfaces and do not require XR packages.
+interfaces and do not require XR packages. Candidate evidence includes an immutable
+Git consumer whose manifest contains no XR package.

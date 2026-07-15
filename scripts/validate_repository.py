@@ -17,6 +17,14 @@ REQUIRED_PACKAGE_ENTRIES = {
     "package.json", "README.md", "CHANGELOG.md", "LICENSE.md",
     "Documentation~", "Tests", "Samples~",
 }
+REQUIRED_INVENTORY_STANDARD_FILES = {
+    "README.md",
+    "architecture-contract.md",
+    "coverage-matrix.md",
+    "inventory-standard.json",
+    "source-manifest.json",
+    "verification-contract.md",
+}
 TEXT_SUFFIXES = {".cs", ".asmdef", ".json", ".md", ".yml", ".yaml", ".txt"}
 
 
@@ -75,10 +83,10 @@ def validate_internal_namespace_links(package_root: Path) -> list[str]:
     imports: list[tuple[Path, str]] = []
     for source in package_root.rglob("*.cs"):
         text = source.read_text(encoding="utf-8")
-        declarations.update(re.findall(r"\bnamespace\s+(Lingkyn\.Unity\.[A-Za-z0-9_.]+)", text))
+        declarations.update(re.findall(r"\bnamespace\s+(Lingkyn\.[A-Za-z0-9_.]+)", text))
         imports.extend(
             (source, value)
-            for value in re.findall(r"\busing\s+(?:static\s+)?(Lingkyn\.Unity\.[A-Za-z0-9_.]+)\s*;", text)
+            for value in re.findall(r"\busing\s+(?:static\s+)?(Lingkyn\.[A-Za-z0-9_.]+)\s*;", text)
         )
     errors: list[str] = []
     for source, imported in imports:
@@ -87,9 +95,140 @@ def validate_internal_namespace_links(package_root: Path) -> list[str]:
     return errors
 
 
+def validate_inventory_source_manifest(path: Path) -> list[str]:
+    errors: list[str] = []
+    if not path.exists():
+        return ["Inventory standard source manifest is missing"]
+    payload = load_json(path)
+    if payload.get("schema") != "xr-foundry.inventory_source_manifest.v1":
+        errors.append("Inventory source manifest schema is invalid")
+    if payload.get("derivation_policy") != "admitted_positive_external_sources_only":
+        errors.append("Inventory derivation policy must allow admitted positive external sources only")
+    if payload.get("consumer_material_allowed") is not False:
+        errors.append("Inventory source manifest must reject consumer material")
+    if payload.get("screened_out_material_allowed") is not False:
+        errors.append("Inventory source manifest must reject screened-out material")
+    if payload.get("implementation_policy") != "independently_authored_from_public_contracts":
+        errors.append("Inventory implementation policy must require independent authorship")
+    required_forbidden_scopes = {
+        "consumer_project",
+        "course_project",
+        "internal_prototype",
+        "screened_out_candidate",
+    }
+    if set(payload.get("forbidden_source_scopes", [])) != required_forbidden_scopes:
+        errors.append("Inventory source manifest must forbid all non-standard source scopes")
+
+    allowed_authority_classes = {
+        "official_normative",
+        "official_professional_guidance",
+        "official_first_party_system",
+        "official_first_party_reference",
+        "professional_product_benchmark",
+        "maintained_open_source_implementation",
+    }
+    ids: set[str] = set()
+    sources = payload.get("sources", [])
+    if not sources:
+        errors.append("Inventory source manifest must contain admitted sources")
+    for source in sources:
+        if not isinstance(source, dict):
+            errors.append("Inventory sources must be objects")
+            continue
+        source_id = str(source.get("id", ""))
+        if not source_id or source_id in ids:
+            errors.append(f"Inventory source id is missing or duplicated: {source_id}")
+        ids.add(source_id)
+        if source.get("admission") != "admitted_positive":
+            errors.append(f"Inventory derivation source is not an admitted positive source: {source_id}")
+        if source.get("provenance_scope") != "external_public":
+            errors.append(f"Inventory source is not external public evidence: {source_id}")
+        if source.get("code_seed_allowed") is not False:
+            errors.append(f"Inventory first-round source cannot be used as a code seed: {source_id}")
+        if source.get("authority_class") not in allowed_authority_classes:
+            errors.append(f"Inventory source has a non-admitted authority class: {source_id}")
+        if not str(source.get("url", "")).startswith("https://"):
+            errors.append(f"Inventory source must use a public HTTPS URL: {source_id}")
+        if not source.get("positive_evidence"):
+            errors.append(f"Inventory source must state positive evidence: {source_id}")
+        if not source.get("publisher") or not source.get("title") or not source.get("source_role"):
+            errors.append(f"Inventory source must state publisher, title, and source role: {source_id}")
+        if not source.get("limits"):
+            errors.append(f"Inventory source must state limits: {source_id}")
+        if not source.get("license_boundary"):
+            errors.append(f"Inventory source must state a license boundary: {source_id}")
+    return errors
+
+
+def validate_inventory_standard(root: Path) -> list[str]:
+    errors: list[str] = []
+    standard_root = root / "docs" / "standards" / "inventory"
+    for name in sorted(REQUIRED_INVENTORY_STANDARD_FILES):
+        if not (standard_root / name).exists():
+            errors.append(f"Inventory standard is missing {name}")
+    errors.extend(validate_inventory_source_manifest(standard_root / "source-manifest.json"))
+    contract_path = standard_root / "inventory-standard.json"
+    if contract_path.exists():
+        contract = load_json(contract_path)
+        if contract.get("schema") != "xr-foundry.inventory_standard.v1":
+            errors.append("Inventory standard schema is invalid")
+        isolation = contract.get("source_isolation", {})
+        if isolation.get("positive_external_sources_only") is not True:
+            errors.append("Inventory standard must require positive external sources only")
+        if isolation.get("consumer_projects_are_generation_inputs") is not False:
+            errors.append("Inventory standard must exclude consumer projects from generation inputs")
+        if isolation.get("screened_out_candidates_are_generation_inputs") is not False:
+            errors.append("Inventory standard must exclude screened-out candidates from generation inputs")
+        manifest_path = standard_root / "source-manifest.json"
+        source_ids = {
+            str(item.get("id", ""))
+            for item in load_json(manifest_path).get("sources", [])
+            if isinstance(item, dict)
+        } if manifest_path.exists() else set()
+        required_capabilities = {
+            "definition_instance_identity",
+            "inventory_equipment_separation",
+            "containers_stacks_and_policies",
+            "persistence_and_authority",
+            "presentation_separation_and_composition",
+            "package_and_test_contract",
+            "xr_world_space_interaction",
+        }
+        coverage = contract.get("evidence_coverage", [])
+        covered_capabilities = {
+            str(item.get("capability", ""))
+            for item in coverage
+            if isinstance(item, dict)
+        }
+        if covered_capabilities != required_capabilities:
+            errors.append("Inventory evidence coverage is incomplete")
+        for item in coverage:
+            if not isinstance(item, dict):
+                errors.append("Inventory evidence coverage entries must be objects")
+                continue
+            references = set(item.get("source_ids", []))
+            if len(references) < 2:
+                errors.append(f"Inventory capability lacks convergent evidence: {item.get('capability', '')}")
+            unknown = references - source_ids
+            if unknown:
+                errors.append(f"Inventory capability references unknown sources: {sorted(unknown)}")
+        packages = contract.get("package_family", [])
+        package_ids = [str(item.get("id", "")) for item in packages if isinstance(item, dict)]
+        required_package_ids = {
+            "com.lingkyn.inventory.core",
+            "com.lingkyn.inventory.unity",
+            "com.lingkyn.inventory.ugui",
+            "com.lingkyn.inventory.xr",
+        }
+        if set(package_ids) != required_package_ids:
+            errors.append("Inventory package family boundaries are incomplete")
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
+    errors.extend(validate_inventory_standard(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")
@@ -108,17 +247,17 @@ def validate_repository(root: Path) -> list[str]:
         reference_catalog = load_json(reference_catalog_path)
         if reference_catalog.get("schema") != "xr-foundry.reference_catalog.v1":
             errors.append("reference catalog schema is invalid")
-        artifact_paths = {
+        package_artifact_paths = {
             str(item.get("path", ""))
             for item in reference_catalog.get("artifacts", [])
-            if isinstance(item, dict)
+            if isinstance(item, dict) and item.get("package_id")
         }
         package_paths = {
             str(item.get("path", ""))
             for item in catalog.get("packages", [])
             if isinstance(item, dict)
         }
-        if artifact_paths != package_paths:
+        if package_artifact_paths != package_paths:
             errors.append("reference/package catalog paths must agree for all live packages")
 
     catalog_packages = catalog.get("packages", [])
@@ -173,8 +312,8 @@ def validate_repository(root: Path) -> list[str]:
         for source in package_root.rglob("*.cs"):
             text = source.read_text(encoding="utf-8")
             namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)
-            if not namespaces or any(not value.startswith("Lingkyn.Unity.") for value in namespaces):
-                errors.append(f"{source.relative_to(root)}: namespace must start with Lingkyn.Unity.")
+            if not namespaces or any(not value.startswith("Lingkyn.") for value in namespaces):
+                errors.append(f"{source.relative_to(root)}: namespace must start with Lingkyn.")
             if not source.with_name(source.name + ".meta").exists():
                 errors.append(f"{source.relative_to(root)}: missing .meta")
         for asmdef in package_root.rglob("*.asmdef"):

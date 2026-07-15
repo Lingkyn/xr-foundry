@@ -37,6 +37,16 @@ answers for different models.
 | --- | --- | --- |
 | [`com.lingkyn.project-initializer`](com.lingkyn.project-initializer/) | Incubating | Configurable folder/scene scaffold, baseline prefabs, validation, and editor tools |
 | [`com.lingkyn.xr-baseline`](com.lingkyn.xr-baseline/) | Incubating | Vendor-neutral XR Sandbox assets, rig helpers, configuration, and smoke-build tools |
+| [`com.lingkyn.inventory.core`](com.lingkyn.inventory.core/) | Incubating | Engine-light Inventory domain, atomic mutations, policies, snapshots, and persistence contracts |
+
+## Incubating system standards
+
+The first reusable game-system candidate is the
+[`Inventory Package Family Standard`](docs/standards/inventory/README.md). Its
+design inputs are restricted to admitted positive external sources. It deliberately
+excludes consumer and screened-out code from derivation. The core implementation
+has passed local and public Git clean-consumer compilation and tests; the Unity
+authoring, UI, and XR layers remain pending.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and
@@ -54,7 +64,8 @@ Pin a reviewed commit SHA rather than `main`:
 {
   "dependencies": {
     "com.lingkyn.project-initializer": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.project-initializer#<commit-sha>",
-    "com.lingkyn.xr-baseline": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.xr-baseline#<commit-sha>"
+    "com.lingkyn.xr-baseline": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.xr-baseline#<commit-sha>",
+    "com.lingkyn.inventory.core": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.inventory.core#<full-40-character-commit-sha>"
   }
 }
 ```
@@ -62,6 +73,9 @@ Pin a reviewed commit SHA rather than `main`:
 During package development, use `file:` dependencies from a separate Unity smoke
 project. Do not create a release tag until the compatibility evidence for that
 revision is recorded.
+
+Use the full 40-character commit SHA for Git package pins. The Inventory clean
+consumer gate confirmed that Unity Package Manager rejects a short SHA in this URL.
 
 ## Use as reference material
 
@@ -113,8 +127,7 @@ Unity package tests run from a Unity consumer through the Test Framework.
 
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SUPPORT.md`](SUPPORT.md), and
 [`SECURITY.md`](SECURITY.md). Package proposals begin as `incubating`; mature game
-systems such as inventory require a source and coverage bake-off before code is
-admitted.
+systems require a positive-source and coverage bake-off before code is admitted.
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.

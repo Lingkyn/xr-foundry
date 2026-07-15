@@ -20,6 +20,15 @@
       "independent_compile": "passed_2026-07-15",
       "git_url_install": "passed_e0bfc8ab02d6a37af957336e87854da33a3cddad",
       "device_evidence": "pending_for_device_claims"
+    },
+    {
+      "id": "com.lingkyn.inventory.core",
+      "path": "com.lingkyn.inventory.core",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "passed_2026-07-15",
+      "git_url_install": "passed_3bb74d14b85a51b520f8c78a1e919c1f9e00de03",
+      "device_evidence": "not_applicable"
     }
   ]
 }

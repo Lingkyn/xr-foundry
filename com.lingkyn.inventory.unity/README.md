@@ -1,6 +1,6 @@
 # Lingkyn Inventory Unity Authoring
 
-Status: **incubating**. This package is the designer-facing ScriptableObject adapter
+Status: **candidate**. This package is the designer-facing ScriptableObject adapter
 for the candidate Inventory Core package. It contains no UGUI, XR, scene, service,
 save-provider, or product-content dependency.
 
@@ -18,7 +18,8 @@ objects, so runtime mutations cannot write back into authored assets.
 Use the custom inspectors or `Tools/XR Foundry/Inventory/Validate All Authoring
 Assets` for diagnostics that include the asset path, field, code, and corrective
 message. No Resources folder, scene singleton, service locator, or mandatory
-project folder is required.
+project folder is required. Candidate evidence covers local and immutable Git URL
+clean consumers on Unity `6000.3.19f1`.
 
 When installing from this Git monorepo, pin both `com.lingkyn.inventory.core` and
 `com.lingkyn.inventory.unity` to the same reviewed revision in the consumer

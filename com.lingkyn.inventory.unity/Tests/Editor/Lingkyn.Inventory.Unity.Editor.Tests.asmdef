@@ -1,0 +1,19 @@
+{
+  "name": "Lingkyn.Inventory.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.Inventory.Unity.Tests",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Unity",
+    "Lingkyn.Inventory.Unity.Editor"
+  ],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

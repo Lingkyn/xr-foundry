@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/validation/unity-compile-result.schema.json",
+  "title": "XR Foundry Unity compile result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "profile_id",
+    "commit_sha",
+    "unity_version",
+    "build_target",
+    "graphics_api",
+    "scripting_backend",
+    "architecture",
+    "manifest_sha256",
+    "lock_sha256",
+    "batchmode",
+    "result",
+    "error_count",
+    "warning_count",
+    "started_at",
+    "completed_at"
+  ],
+  "properties": {
+    "$schema": { "const": "docs/validation/unity-compile-result.schema.json" },
+    "schema": { "const": "xr-foundry.unity_compile_result.v1" },
+    "profile_id": { "type": "string", "minLength": 1 },
+    "commit_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "unity_version": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)[abfp](?:0|[1-9][0-9]*)$"
+    },
+    "build_target": { "type": "string", "minLength": 1 },
+    "graphics_api": { "type": "string", "minLength": 1 },
+    "scripting_backend": { "type": "string", "minLength": 1 },
+    "architecture": { "type": "string", "minLength": 1 },
+    "manifest_sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "lock_sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "batchmode": { "const": true },
+    "result": { "enum": ["pass", "fail"] },
+    "error_count": { "type": "integer", "minimum": 0 },
+    "warning_count": { "type": "integer", "minimum": 0 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" }
+  }
+}

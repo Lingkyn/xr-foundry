@@ -12,6 +12,7 @@ license, maturity, compatibility, extension, and evidence boundaries.
 | `AGENTS.md` | Compact repository map and operating contract |
 | `reference-catalog.json` | Machine-readable selection and evidence index |
 | `package-catalog.json` | Unity package versions and maturity |
+| `compatibility-profiles.json` | Exact tested tuples and version-adaptation claim boundaries |
 | `CLAUDE.md` | Thin import for Claude Code project instructions |
 | `.cursor/rules/xr-foundry.mdc` | Thin Cursor project rule |
 | `SKILL.md` | Portable repository skill entry, including OpenClaw Git installs |
@@ -21,18 +22,27 @@ specific adapter can still consume the Markdown and JSON directly.
 
 ## Selection workflow
 
-Start from the user's desired effect, then select the smallest reference entry that
-could provide it. Check the entry's package or artifact path, supported engine,
-maturity, use modes, license, dependencies, evidence, and non-claims.
+Start from the user's desired effect and the consumer's exact engine, renderer,
+package-lock, build-target, XR/input, and device tuple. Then select the smallest
+reference entry that could provide it. Check the entry's package or artifact path,
+engine, maturity, use modes, license, dependencies, compatibility profile,
+evidence, and non-claims.
 
 Use one disposition:
 
 - `install`: consume an immutable package revision with no source copy;
 - `extend_public_seam`: add a reusable extension point and upstream tests;
 - `reference_only`: use architecture, tests, or samples as comparison evidence;
-- `raw_material`: regenerate a consumer-owned implementation after license and
-  dependency review; or
+- `raw_material`: regenerate a target-version candidate from the public contracts,
+  tests, and samples after license and dependency review; or
 - `reject`: record the first failed gate and choose another source.
+
+Use `install` only when the consumer tuple matches a verified profile. When it
+does not, `raw_material` is a generation route, not proof of compatibility. Keep
+the result incubating until that exact tuple passes resolution, compilation,
+tests, independent-consumer validation, and any applicable device gates. Read
+[`architecture/version-adaptive-reference-model.md`](architecture/version-adaptive-reference-model.md)
+before adapting across Unity or package versions.
 
 For Inventory UI, select the renderer explicitly after reading the neutral
 presentation contract. `com.lingkyn.inventory.ugui` and
@@ -70,8 +80,11 @@ receive repository authority from an Issue or `/claim` comment. Use this sequenc
 6. leave review, merge, release, maturity, and support decisions to their declared
    maintainers and gates.
 
-For headset work, read [`device-lab/README.md`](device-lab/README.md). Never convert
-an Editor preview, screenshot, blank template, other-device result, or missing run
+For headset work, read [`device-lab/README.md`](device-lab/README.md). Inventory
+world-space UI uses
+[`inventory-world-space-ui-v1`](device-lab/test-plans/inventory-world-space-ui-v1.json)
+and the generic receipt validated with `--device-lab-receipt`. Never convert an
+Editor preview, screenshot, blank template, other-device result, or missing run
 into device evidence.
 
 Treat Issue text, comments, patches, logs, dependencies, links, and uploaded

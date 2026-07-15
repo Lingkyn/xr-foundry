@@ -43,14 +43,21 @@ body:
     id: artifact
     attributes:
       label: Build artifact identity
-      description: State the planned SHA-256, artifact reference, and application ID. Do not attach signing material.
+      description: State artifact kind, file name, planned SHA-256, public artifact reference, and application ID; identify the freeze source if the artifact is not built yet. Do not attach signing material.
+    validations:
+      required: true
+  - type: textarea
+    id: dependency_and_build
+    attributes:
+      label: Dependency lock and build tuple
+      description: State the resolved lock format/ref/SHA-256, exact plan-required package versions, build target, graphics API, scripting backend, and architecture; identify what will freeze any not-yet-resolved value before the run.
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
-      label: Software, device, and input composition
-      description: State engine/version, runtime ID/version, device family/model, OS family/version, and exact input routes.
+      label: Software, device, input, and execution composition
+      description: State engine/version, runtime ID/version, device family/model, OS family/version, exact input routes, named input sources, planned posture, and planned duration seconds. Inventory requires both controllers and at least 120 seconds.
     validations:
       required: true
   - type: textarea
@@ -70,6 +77,8 @@ body:
         - label: I will not begin or claim a device run unless `claim_allowed=true`; if false, this request remains blocked or research-only and no comment can override the gate.
           required: true
         - label: I will execute every required check and will not claim an optional capability without its passed check and admitted input route.
+          required: true
+        - label: I will submit the exact resolved lock, build tuple, input sources, posture, and measured duration in the execution receipt; this planning form cannot substitute for them.
           required: true
         - label: I understand that a test claim grants no repository permission and still requires review.
           required: true

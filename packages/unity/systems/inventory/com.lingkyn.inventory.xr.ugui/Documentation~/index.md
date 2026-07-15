@@ -1,7 +1,7 @@
 # Inventory XR UGUI adapter
 
 Install this package only in consumers that need UGUI-based XR presentation. It depends on
-Inventory UGUI and XR Interaction Toolkit `3.3.2`; it has no direct XR Management,
+Inventory UGUI and XR Interaction Toolkit `3.5.1`; it has no direct XR Management,
 OpenXR, or vendor SDK dependency.
 
 The package ID is `com.lingkyn.inventory.xr.ugui`. For a Git install, use the
@@ -44,6 +44,9 @@ versions, build revision, tester, and observations before claiming readability,
 targeting, reach, occlusion, scale, angle, or comfort.
 
 The public
-[`Inventory XR Device Acceptance Receipt`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/validation/inventory-xr-device-receipt-template.md)
-defines the exact PICO tracked-controller sequence, immutable APK/package identity,
-pass rule, optional direct-poke boundary, and machine-validation command.
+[`Device Lab`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/device-lab/README.md)
+and
+[`Inventory world-space UI plan`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/device-lab/test-plans/inventory-world-space-ui-v1.json)
+define the exact renderer/device/input composition, immutable build/package
+identity, required checks, optional-claim boundary, and the generic
+`--device-lab-receipt` validation route.

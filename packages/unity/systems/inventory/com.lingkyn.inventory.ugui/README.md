@@ -1,7 +1,7 @@
 # Lingkyn Inventory UGUI
 
 Maturity and exact evidence are recorded in the repository package catalog. Version
-`0.2.0` is the first renderer-adapter release line. This package presents renderer-neutral
+`0.2.0` is the current renderer-adapter release line. This package presents renderer-neutral
 Inventory Presentation models through replaceable UGUI views. The presenter, immutable
 view models, semantic states, and stable intents now belong to
 `com.lingkyn.inventory.presentation`; this package contains the concrete UGUI renderer.
@@ -25,8 +25,7 @@ replaced independently while the parent prefab retains its nested links. Views r
 immutable view models and emit intent; only the presentation package's
 `InventoryPresenter` can send mutations to the aggregate.
 
-The functional prefab chain introduced in `0.1.1` remains shipped in `0.2.0`:
-serialized view
+The package ships a functional prefab chain whose serialized view
 references are wired, the grid materializes snapshot slots, labels and UI states are
 visible, large inventories stay inside a masked vertical scroll view, slot and action
 targets use standard UGUI raycasting/selection, and disabled targets suppress activation.

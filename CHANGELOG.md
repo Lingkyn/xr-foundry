@@ -11,17 +11,20 @@ live in each package's `CHANGELOG.md`.
 - Finalized the initialization layout under `packages/unity/foundations` and
   `packages/unity/systems/inventory`. Catalogs, install URLs, reference paths, and
   validation use that single layout; no old-path compatibility surface is kept.
-- Validated all nine packages from their canonical nested Git selectors at
-  revision `b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`: Unity `6000.3.19f1`
-  compilation, 49 EditMode tests, and 8 PlayMode tests pass; Android and physical
-  device claims remain explicitly untested.
+- Added a version-adaptive reference contract: standards and tests may generate a
+  target-specific candidate, while each installable manifest and support claim
+  remains bound to an exact machine-validated compatibility profile.
+- Reset current Git-consumer and compatibility-profile evidence to pending until
+  the finalized package tree is tested at one immutable revision. Historical
+  results are not transferred across version, dependency, renderer, build, input,
+  runtime, or device tuples.
 - Added current official Unity world-space UI Toolkit, XRI UI Toolkit, PICO
   multimodal direction, and Apple spatial-design sources with bounded roles and
   explicit non-claim limits.
-- Added a provider-neutral, machine-checkable Inventory XR device receipt with a
-  PICO tracked-controller acceptance profile, official PICO evidence boundaries,
-  and fail-closed promotion rules for install/open, world anchoring, targeting,
-  interaction states, readability, reach, occlusion, and comfort.
+- Added a provider-neutral, machine-checkable Device Lab route with an Inventory
+  world-space UI plan, PICO tracked-controller profile, and fail-closed promotion
+  rules for install/open, world anchoring, targeting, interaction states,
+  readability, reach, occlusion, and comfort.
 - Added Agent Commons V1: a public, lease-based Task Hall and revision-bound Device
   Lab with machine-readable task/profile/receipt/label contracts, safe public forms,
   explicit permission boundaries, and provider-neutral agent guidance.
@@ -31,12 +34,9 @@ live in each package's `CHANGELOG.md`.
 - Added parsed YAML workflow policy enforcement, runtime Draft 2020-12 task/device
   Schema validation, lifecycle/lease/gate invariants, enumerable Device Lab claims,
   deterministic result derivation, and extension-neutral public leakage scanning.
-- Reopened the UGUI candidate after a structure-only false positive; `0.1.1`
-  now ships functional nested prefabs, stable-address intents, bounded scrolling,
-  semantic state samples, prefab-backed raycast tests, and cross-layer projection gates.
-- Promoted UGUI `0.1.1` to candidate after immutable Git install, Input System-only
-  sample setup, full package tests, and consumer-owned prefab-variant upgrade,
-  rollback, and final-upgrade evidence passed; retained `0.1.0` as superseded history.
+- Established UGUI `0.2.0` directly as the incubating renderer projection with
+  functional nested prefabs, stable-address intents, bounded scrolling, semantic
+  state samples, prefab-backed raycast tests, and cross-layer projection gates.
 - Reconciled Inventory implementation, roadmap, package/reference catalogs, and
   promotion evidence; added a fail-closed projection-coherence validator and
   explicit earliest-unsatisfied gates for every Inventory package layer.

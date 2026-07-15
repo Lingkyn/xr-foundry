@@ -1,6 +1,6 @@
 {
   "name": "com.lingkyn.inventory.core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Lingkyn Inventory Core",
   "description": "Consumer-neutral Inventory domain model, transactions, policies, events, snapshots, and persistence contracts.",
   "unity": "6000.0",

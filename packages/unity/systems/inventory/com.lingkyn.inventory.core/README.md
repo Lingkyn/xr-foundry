@@ -1,8 +1,8 @@
 # Lingkyn Inventory Core
 
-Status: **incubating**. Version `0.1.0` has source, domain, persistence, API, and
-local-consumer evidence. Candidate promotion waits for a clean immutable install
-from the repository's canonical nested package path.
+Status: **incubating**. Version `0.1.1` implements the source, domain, persistence,
+and API contracts. Exact consumer evidence and the earliest unsatisfied promotion
+gate are recorded in the repository catalogs and compatibility profiles.
 
 Inventory Core is an engine-light domain package for reusable Inventory behavior.
 It contains identities, definitions, stacks, containers, atomic mutations,

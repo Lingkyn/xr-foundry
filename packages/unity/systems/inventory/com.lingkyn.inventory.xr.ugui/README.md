@@ -1,12 +1,11 @@
 # Lingkyn Inventory XR UGUI
 
-Status: **incubating**. Canonical nested Git resolution, compilation, EditMode,
-and PlayMode tests pass at revision
-`b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`; Android and renderer-scoped
-named-device evidence remain separate promotion gates.
+Status: **incubating**. Exact automated validation and immutable-consumer evidence
+are recorded in the repository catalogs and compatibility profiles. Android and
+renderer-scoped named-device evidence remain separate promotion gates.
 
 This optional, renderer-explicit package composes `com.lingkyn.inventory.ugui` on a world-space
-Canvas using XR Interaction Toolkit `3.3.2`. It does not redefine Inventory
+Canvas using XR Interaction Toolkit `3.5.1`. It does not redefine Inventory
 domain types and does not add XR dependencies to Core, Unity authoring, or UGUI.
 
 The package/dependency ID is `com.lingkyn.inventory.xr.ugui`; its runtime assembly
@@ -50,11 +49,14 @@ they pass in the recorded immutable consumer. Only real headset evidence can pro
 usability, readability, scale, angle, occlusion, reach, or comfort.
 
 Use the repository's
-[`Inventory XR Device Acceptance Receipt`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/validation/inventory-xr-device-receipt-template.md)
-for the named-device gate. The first profile covers a PICO headset with tracked
-controllers while keeping the package itself independent of a vendor SDK. Every
-required observation must pass before XR candidate promotion; automated poke
-coverage does not create a direct-poke device claim.
+[`Public Device Lab V1`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/device-lab/README.md)
+and
+[`Inventory world-space UI plan`](https://github.com/Lingkyn/xr-foundry/blob/main/docs/device-lab/test-plans/inventory-world-space-ui-v1.json)
+for the named-device gate, then validate the completed generic receipt with
+`--device-lab-receipt`. The first admitted profile covers a PICO headset with
+tracked controllers while keeping the package itself independent of a vendor SDK.
+Every required observation must pass before XR candidate promotion; automated
+poke coverage does not create a direct-poke device claim.
 
 ## Git installation
 

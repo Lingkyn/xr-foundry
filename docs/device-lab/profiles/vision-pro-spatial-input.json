@@ -19,6 +19,23 @@
     "gaze-and-pinch",
     "direct-touch"
   ],
+  "input_sources": [
+    {
+      "id": "gaze",
+      "kind": "gaze",
+      "handedness": "none"
+    },
+    {
+      "id": "left-hand",
+      "kind": "hand",
+      "handedness": "left"
+    },
+    {
+      "id": "right-hand",
+      "kind": "hand",
+      "handedness": "right"
+    }
+  ],
   "non_claims": [
     "Device-test claims are not open until Issue #30 admits this profile",
     "No visionOS version, renderer, engine composition, package composition, or capability has passed",

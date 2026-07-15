@@ -32,7 +32,10 @@ and evidence files.
   promotion.
 - Require a Device Lab receipt before claiming headset, controller, hand, gaze,
   comfort, spatial-audio, or other hardware behavior.
-- Keep legacy receipts immutable; add a new receipt for a new revision or rerun.
+- Preserve every reviewed execution receipt; add a new receipt for a new revision
+  or rerun. Bind it to the resolved dependency-lock digest, exact dependency
+  versions, build tuple, input sources, posture, and duration. Validate all device
+  evidence through the generic Device Lab schema and selected capability test plan.
 
 ## Work and authority
 

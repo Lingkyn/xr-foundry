@@ -1,6 +1,6 @@
 {
   "name": "com.lingkyn.inventory.unity",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Lingkyn Inventory Unity Authoring",
   "description": "ScriptableObject authoring, catalogs, validation, inspectors, and deterministic conversion for Lingkyn Inventory Core.",
   "unity": "6000.0",
@@ -23,6 +23,6 @@
     }
   ],
   "dependencies": {
-    "com.lingkyn.inventory.core": "0.1.0"
+    "com.lingkyn.inventory.core": "0.1.1"
   }
 }

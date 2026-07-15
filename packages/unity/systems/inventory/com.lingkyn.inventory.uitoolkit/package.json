@@ -18,7 +18,7 @@
     }
   ],
   "dependencies": {
-    "com.lingkyn.inventory.core": "0.1.0",
+    "com.lingkyn.inventory.core": "0.1.1",
     "com.lingkyn.inventory.presentation": "0.1.0",
     "com.unity.modules.uielements": "1.0.0"
   }

@@ -41,7 +41,7 @@ answers for different models.
 | --- | --- | --- |
 | [`com.lingkyn.project-initializer`](packages/unity/foundations/com.lingkyn.project-initializer/) | Incubating | Configurable folder/scene scaffold, baseline prefabs, validation, and editor tools |
 | [`com.lingkyn.xr-baseline`](packages/unity/foundations/com.lingkyn.xr-baseline/) | Incubating | Vendor-neutral XR Sandbox assets, rig helpers, configuration, and smoke-build tools |
-| [`Inventory Package Family`](docs/standards/inventory/README.md) | Mixed | One reusable Inventory system with optional Core, Unity authoring, renderer-neutral Presentation, UGUI, UI Toolkit, and renderer-specific XR modules |
+| [`Inventory Package Family`](docs/standards/inventory/README.md) | Incubating | One reusable Inventory system with optional Core, Unity authoring, renderer-neutral Presentation, UGUI, UI Toolkit, and renderer-specific XR modules |
 
 The human-facing landing page groups a reusable system into one row to reduce
 cognitive load. Its family page explains recommended compositions and lets a
@@ -56,25 +56,26 @@ The first reusable game-system candidate is the
 [`Inventory Package Family Standard`](docs/standards/inventory/README.md). Its
 design inputs are restricted to admitted positive external sources. It deliberately
 excludes consumer and screened-out code from derivation. Core and Unity authoring
-retain candidate evidence. The canonical renderer-neutral architecture contains
-Presentation `0.1.0`, UGUI `0.2.0`, UI Toolkit `0.1.0`, XR UGUI `0.1.0`, and XR UI
-Toolkit `0.1.0` as incubating packages. Each current package graph needs its own
+retain their public version/API history, while current-revision execution evidence
+is pending. The canonical renderer-neutral architecture contains
+Core `0.1.1`, Unity authoring `0.1.1`, Presentation `0.1.0`, UGUI `0.2.0`, UI
+Toolkit `0.1.0`, XR UGUI `0.1.0`, and XR UI Toolkit `0.1.0` as incubating packages.
+Each current package graph needs its own
 consumer evidence, and each XR renderer/device tuple needs its own real-device
 receipt. No old package path or renderer-ambiguous XR compatibility layer is part
 of the active repository surface.
-The exact named-device handoff is the
-[`Inventory XR Device Acceptance Receipt`](docs/validation/inventory-xr-device-receipt-template.md),
-which includes a machine-validatable PICO tracked-controller profile without
-adding a vendor dependency to the package.
+The exact named-device handoff uses the generic
+[`Public Device Lab V1`](docs/device-lab/README.md), its
+[`Inventory world-space UI plan`](docs/device-lab/test-plans/inventory-world-space-ui-v1.json),
+and the machine-validatable
+[`execution receipt`](docs/device-lab/device-receipt.template.json). This admits a
+PICO tracked-controller profile without adding a vendor dependency to the package,
+while keeping the same route available for other reviewed device profiles.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and
 a clean independent Unity consumer compile. XR behavior additionally needs real
 device evidence before a stable claim.
-
-Historical root-path foundation compile evidence (not proof of the current nested
-paths):
-[`docs/validation/2026-07-15-git-url-unity-smoke.md`](docs/validation/2026-07-15-git-url-unity-smoke.md).
 
 ## Install for evaluation
 
@@ -119,20 +120,28 @@ from a folder name. It should:
 
 See [`docs/for-agents.md`](docs/for-agents.md) for the provider-neutral workflow.
 
-## Current compatibility target
+## Version-adaptive references and current implementation profile
 
-- Unity 6000.3 LTS
-- Universal Render Pipeline 17.x
-- Input System 1.11+
-- Repository XR baseline: XR Interaction Toolkit 3.3+, XR Management 4.5+,
-  OpenXR 1.14+
-- Inventory renderer adapters target the Unity 6000.3 UI systems. XR UGUI retains
-  XRI 3.3.2 compatibility; the UI Toolkit XR route declares its exact minimum in
-  its package manifest and does not install or claim a vendor runtime.
+The repository's standards, tests, and samples are version-adaptive raw material;
+they are not limited to the Editor version used for the current implementation.
+An Agent may generate a target-specific candidate for another Unity, UI Toolkit,
+XRI, or future engine version. Each installable package revision still declares a
+concrete manifest and may claim only its own verified profile. See the
+[`Version-Adaptive Reference Model`](docs/architecture/version-adaptive-reference-model.md)
+and [`compatibility-profiles.json`](compatibility-profiles.json).
 
-Compatibility is a tested target, not a promise for unlisted versions. Unity is
-the only implemented engine collection in this foundation. Unreal Engine and Godot
-are roadmap directions, not current support claims.
+The first immutable validation target is one concrete profile: Unity
+`6000.3.19f1`, URP `17.3.0`, Input System `1.19.0`, UGUI `2.0.0`, XRI `3.5.1`,
+XR Plug-in Management `4.5.3`, and OpenXR `1.16.0`. It remains pending until the
+current package tree is committed and that exact resolved tuple is recorded in a
+machine-readable receipt. `compatibility-profiles.json` is authoritative for the
+live state and evidence.
+
+That tuple is a reproducibility boundary, not a minimum-version declaration or a
+claim that other versions cannot be generated. Unlisted tuples begin as adaptation
+candidates and become installable compatibility claims only after their own
+validation. Unity is the only implemented engine collection in this foundation.
+Unreal Engine and Godot are roadmap directions, not current support claims.
 
 ## Quality contract
 

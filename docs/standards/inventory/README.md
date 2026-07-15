@@ -4,8 +4,9 @@ Status: **incubating standard**
 Standard version: **0.1.0**
 Implementation status: **Core, Unity authoring, renderer-neutral Presentation,
 UGUI, UI Toolkit, XR UGUI, and XR UI Toolkit are implemented as incubating work.
-All packages await proof at the canonical nested repository paths; XR routes also
-retain their independent device gates.**
+Fresh immutable Git-consumer validation for the current package tree is pending.
+Renderer-specific acceptance, Android, and named-device gates remain independent
+and cannot inherit evidence from another version or composition.**
 
 This standard defines the evidence and architecture required to implement and
 promote the Inventory package family in XR Foundry. It is intentionally independent
@@ -88,13 +89,13 @@ candidate, not a stable package.
 
 | Layer | Current state | Earliest unsatisfied gate |
 | --- | --- | --- |
-| `com.lingkyn.inventory.core` | Incubating `0.1.0`; source, domain, persistence, typed state, API, local-consumer, and canonical nested Git gates pass | Formal candidate release review |
-| `com.lingkyn.inventory.unity` | Incubating `0.1.0`; authoring, conversion, diagnostics, immutability, local-consumer, and canonical nested Git gates pass | Formal candidate release review |
-| `com.lingkyn.inventory.presentation` | Incubating `0.1.0`; renderer-neutral contract and local/canonical Git consumer tests pass | Public API review |
-| `com.lingkyn.inventory.ugui` | Incubating `0.2.0`; neutral presentation, nested roles, and local/canonical Git consumer tests pass | Formal candidate release review |
-| `com.lingkyn.inventory.uitoolkit` | Incubating `0.1.0`; peer VisualElement/UXML/USS route and local/canonical Git consumer tests pass | Renderer acceptance |
-| `com.lingkyn.inventory.xr.ugui` | Incubating `0.1.0`; explicit UGUI/XRI composition and automated canonical Git tests pass | Android build/install/open, then renderer-scoped named-device evidence |
-| `com.lingkyn.inventory.xr.uitoolkit` | Incubating `0.1.0`; explicit UI Toolkit/XRI composition and automated canonical Git tests pass | Android build/install/open, then independent renderer-scoped named-device evidence |
+| `com.lingkyn.inventory.core` | Incubating `0.1.1`; source and architecture are present | Run current atomic/persistence/state/API tests, then immutable consumer and review gates |
+| `com.lingkyn.inventory.unity` | Incubating `0.1.1`; authoring, conversion, diagnostics, and immutability surfaces are present | Run current clean-consumer EditMode tests, then immutable consumer and review gates |
+| `com.lingkyn.inventory.presentation` | Incubating `0.1.0`; renderer-neutral contract is present | Run presenter/compile/consumer tests, then immutable consumer and API review |
+| `com.lingkyn.inventory.ugui` | Incubating `0.2.0`; neutral nested renderer composition is present | Run state/raycast/local tests, then non-XR immutable consumer and review |
+| `com.lingkyn.inventory.uitoolkit` | Incubating `0.1.0`; peer VisualElement/UXML/USS route and sample are present | Run semantic/local tests, then immutable consumer and renderer review |
+| `com.lingkyn.inventory.xr.ugui` | Incubating `0.1.0`; explicit UGUI/XRI composition and test routes are present | Run local/immutable/XRI tests, then Android/device gates |
+| `com.lingkyn.inventory.xr.uitoolkit` | Incubating `0.1.0`; explicit UI Toolkit/XRI composition and test routes are present | Run local/immutable/XRI tests, then Android/device gates |
 
 These rows are claim boundaries, not a percentage-complete estimate. A lower layer
 may reach candidate maturity without promoting a higher layer or the whole family.

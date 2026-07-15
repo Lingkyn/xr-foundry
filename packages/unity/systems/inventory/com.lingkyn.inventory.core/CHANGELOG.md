@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-07-15
+
+- Aligned package guidance with the canonical nested layout and version-adaptive
+  evidence contract.
+
 ## 0.1.0 - 2026-07-15
 
 - Promoted the first Core candidate after immutable Git install, upgrade from

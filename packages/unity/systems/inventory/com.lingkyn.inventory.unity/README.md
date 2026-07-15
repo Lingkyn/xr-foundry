@@ -1,9 +1,9 @@
 # Lingkyn Inventory Unity Authoring
 
 Status: **incubating**. This package is the designer-facing ScriptableObject adapter
-for Inventory Core. Its canonical nested Git install and automated consumer tests
-pass; candidate promotion now waits for formal release review. It contains no
-UGUI, XR, scene, service, save-provider, or product-content dependency.
+for Inventory Core. Exact install/test evidence and the earliest unsatisfied gate
+are recorded in the repository catalogs and compatibility profiles. It contains
+no UGUI, XR, scene, service, save-provider, or product-content dependency.
 
 ## Assets
 
@@ -19,9 +19,9 @@ objects, so runtime mutations cannot write back into authored assets.
 Use the custom inspectors or `Tools/XR Foundry/Inventory/Validate All Authoring
 Assets` for diagnostics that include the asset path, field, code, and corrective
 message. No Resources folder, scene singleton, service locator, or mandatory
-project folder is required. Local and canonical nested Git consumer evidence
-covers the current content on Unity `6000.3.19f1` at revision
-`b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`.
+project folder is required. The repository validation ledger binds every admitted
+consumer result to its exact implementation profile, immutable revision, and
+evidence digests.
 
 When installing from this Git monorepo, pin both `com.lingkyn.inventory.core` and
 `com.lingkyn.inventory.unity` to the same reviewed revision in the consumer

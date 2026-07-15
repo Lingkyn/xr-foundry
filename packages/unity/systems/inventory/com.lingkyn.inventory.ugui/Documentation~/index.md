@@ -24,11 +24,7 @@ so their address, item label, and interactable state cannot leak from an earlier
 product database or XR package. World-space Canvas and tracked-device interaction
 belong to the optional XR adapter.
 
-## 0.2.0 migration
-
-Presentation contracts no longer live in the UGUI assembly. Replace their
-`Lingkyn.Inventory.UGUI` imports with `Lingkyn.Inventory.Presentation` and add
-`Lingkyn.Inventory.Presentation` to any assembly definition that directly uses the
-contracts. Keep UGUI component imports and assembly references unchanged. The
-`com.lingkyn.inventory.unity` authoring package is no longer an unused dependency of
-this renderer.
+Presentation contracts live in `Lingkyn.Inventory.Presentation`; any assembly that
+uses them directly references `Lingkyn.Inventory.Presentation`. UGUI components
+remain in `Lingkyn.Inventory.UGUI`. The renderer does not depend on the optional
+Unity authoring package.

@@ -23,9 +23,5 @@ The runtime assembly is engine-free. Device scale, layout, world-space compositi
 ray/poke/gaze input, accessibility, and visual styling belong to renderer and XR
 adapter packages and require their own verification.
 
-## Migration
-
-For consumers upgrading from Inventory UGUI `0.1.x` to `0.2.0`, replace imports of
-presentation types from `Lingkyn.Inventory.UGUI` with
-`Lingkyn.Inventory.Presentation`, reference the `Lingkyn.Inventory.Presentation`
-assembly, and keep renderer component imports in `Lingkyn.Inventory.UGUI`.
+Presentation types live in `Lingkyn.Inventory.Presentation`; UGUI and UI Toolkit
+component types remain in their renderer-owned namespaces and assemblies.

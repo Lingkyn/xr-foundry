@@ -14,6 +14,7 @@
     "device",
     "runtime",
     "input_routes",
+    "input_sources",
     "non_claims"
   ],
   "properties": {
@@ -46,6 +47,21 @@
     "input_routes": {
       "type": "array",
       "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "input_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "handedness"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "kind": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "handedness": { "enum": ["left", "right", "none", "unknown"] }
+        }
+      },
       "minItems": 1,
       "uniqueItems": true
     },

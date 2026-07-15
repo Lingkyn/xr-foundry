@@ -19,7 +19,7 @@
     }
   ],
   "dependencies": {
-    "com.lingkyn.inventory.core": "0.1.0",
+    "com.lingkyn.inventory.core": "0.1.1",
     "com.lingkyn.inventory.presentation": "0.1.0",
     "com.lingkyn.inventory.uitoolkit": "0.1.0",
     "com.unity.xr.interaction.toolkit": "3.5.1"

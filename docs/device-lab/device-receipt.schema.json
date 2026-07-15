@@ -17,12 +17,35 @@
         }
       }
     },
+    "resolvedPackageRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)+$" },
+        "version": {
+          "type": ["string", "null"],
+          "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+        }
+      }
+    },
+    "inputSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "handedness", "description"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "kind": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "handedness": { "enum": ["left", "right", "none", "unknown"] },
+        "description": { "type": ["string", "null"] }
+      }
+    },
     "evidenceRef": {
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "ref", "sha256"],
       "properties": {
-        "kind": { "enum": ["repository_file", "public_url"] },
+        "kind": { "const": "repository_file" },
         "ref": { "type": "string", "minLength": 1 },
         "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
       }
@@ -31,27 +54,31 @@
   "required": [
     "schema",
     "receipt_id",
+    "compatibility_profile_id",
     "task_url",
     "revision",
     "artifact",
     "package_tuple",
+    "dependency_resolution",
     "device_profile_id",
     "test_plan_id",
     "software",
+    "build",
     "device",
     "input",
+    "execution_context",
     "checks",
     "optional_claims",
     "overall_result",
     "claims_supported",
     "claims_not_supported",
     "tester",
-    "timestamps",
-    "legacy_receipts"
+    "timestamps"
   ],
   "properties": {
     "schema": { "const": "xr-foundry.device_execution_receipt.v1" },
     "receipt_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "compatibility_profile_id": { "type": ["string", "null"] },
     "task_url": { "type": ["string", "null"], "format": "uri" },
     "revision": {
       "type": "object",
@@ -65,13 +92,49 @@
     "artifact": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sha256", "artifact_ref", "application_id"],
+      "required": ["kind", "file_name", "sha256", "repository_path", "application_id"],
       "properties": {
+        "kind": { "const": "android-apk" },
+        "file_name": { "type": ["string", "null"] },
         "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
-        "artifact_ref": { "type": ["string", "null"], "format": "uri" },
+        "repository_path": { "type": ["string", "null"] },
         "application_id": {
           "type": ["string", "null"],
           "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        }
+      }
+    },
+    "dependency_resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "lock", "resolved_packages"],
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "kind", "ref", "sha256"],
+          "properties": {
+            "format": { "const": "unity-manifest-v1" },
+            "kind": { "const": "repository_file" },
+            "ref": { "type": ["string", "null"] },
+            "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "kind", "ref", "sha256"],
+          "properties": {
+            "format": { "type": "string", "pattern": "^[a-z0-9.-]+$" },
+            "kind": { "const": "repository_file" },
+            "ref": { "type": ["string", "null"] },
+            "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "resolved_packages": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/resolvedPackageRef" },
+          "uniqueItems": true
         }
       }
     },
@@ -92,12 +155,33 @@
     "software": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["engine", "engine_version", "runtime_id", "runtime_version"],
+      "required": ["engine", "engine_version", "editor_version", "runtime_id", "runtime_version"],
       "properties": {
         "engine": { "const": "Unity" },
-        "engine_version": { "type": ["string", "null"] },
+        "engine_version": {
+          "type": ["string", "null"],
+          "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)[abfp](?:0|[1-9][0-9]*)$"
+        },
+        "editor_version": {
+          "type": ["string", "null"],
+          "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)[abfp](?:0|[1-9][0-9]*)$"
+        },
         "runtime_id": { "type": ["string", "null"] },
-        "runtime_version": { "type": ["string", "null"] }
+        "runtime_version": {
+          "type": ["string", "null"],
+          "pattern": "^(?:0|[1-9][0-9]*)(?:\\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*$"
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "graphics_api", "scripting_backend", "architecture"],
+      "properties": {
+        "target": { "type": ["string", "null"] },
+        "graphics_api": { "type": ["string", "null"] },
+        "scripting_backend": { "type": ["string", "null"] },
+        "architecture": { "type": ["string", "null"] }
       }
     },
     "device": {
@@ -108,20 +192,37 @@
         "family_id": { "type": ["string", "null"] },
         "model": { "type": ["string", "null"] },
         "os_family": { "type": ["string", "null"] },
-        "os_version": { "type": ["string", "null"] }
+        "os_version": {
+          "type": ["string", "null"],
+          "pattern": "^(?:0|[1-9][0-9]*)(?:\\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*$"
+        }
       }
     },
     "input": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["routes", "device_description"],
+      "required": ["routes", "sources", "device_description"],
       "properties": {
         "routes": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 },
           "uniqueItems": true
         },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/inputSource" },
+          "uniqueItems": true
+        },
         "device_description": { "type": ["string", "null"] }
+      }
+    },
+    "execution_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["posture", "duration_seconds"],
+      "properties": {
+        "posture": { "type": ["string", "null"], "pattern": "^[a-z0-9-]+$" },
+        "duration_seconds": { "type": ["integer", "null"], "minimum": 0 }
       }
     },
     "checks": {
@@ -179,7 +280,140 @@
         "started_at": { "type": ["string", "null"], "format": "date-time" },
         "completed_at": { "type": ["string", "null"], "format": "date-time" }
       }
-    },
-    "legacy_receipts": { "type": "array", "items": { "type": "string", "minLength": 1 } }
-  }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "overall_result": { "not": { "const": "not_tested" } } },
+        "required": ["overall_result"]
+      },
+      "then": {
+        "properties": {
+          "artifact": {
+            "properties": {
+              "file_name": { "type": "string", "minLength": 1 },
+              "sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+              "repository_path": {
+                "type": "string",
+                "pattern": "^docs/validation/evidence/[A-Za-z0-9._/-]+\\.apk$"
+              },
+              "application_id": { "type": "string" }
+            }
+          },
+          "compatibility_profile_id": { "type": "string", "minLength": 1 },
+          "dependency_resolution": {
+            "properties": {
+              "manifest": {
+                "properties": {
+                  "ref": { "type": "string", "minLength": 1 },
+                  "sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" }
+                }
+              },
+              "lock": {
+                "properties": {
+                  "ref": { "type": "string", "minLength": 1 },
+                  "sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" }
+                }
+              },
+              "resolved_packages": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "version": {
+                      "type": "string",
+                      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)[0-9A-Za-z.+-]*$"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "build": {
+            "properties": {
+              "target": { "type": "string", "minLength": 1 },
+              "graphics_api": { "type": "string", "minLength": 1 },
+              "scripting_backend": { "type": "string", "minLength": 1 },
+              "architecture": { "type": "string", "minLength": 1 }
+            }
+          },
+          "input": {
+            "properties": {
+              "sources": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "description": { "type": "string", "minLength": 1 }
+                  }
+                }
+              }
+            }
+          },
+          "execution_context": {
+            "properties": {
+              "posture": { "type": "string", "minLength": 1 },
+              "duration_seconds": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "artifact": {
+            "properties": {
+              "file_name": { "type": "null" },
+              "sha256": { "type": "null" },
+              "repository_path": { "type": "null" },
+              "application_id": { "type": "null" }
+            }
+          },
+          "compatibility_profile_id": { "type": "null" },
+          "dependency_resolution": {
+            "properties": {
+              "manifest": {
+                "properties": {
+                  "ref": { "type": "null" },
+                  "sha256": { "type": "null" }
+                }
+              },
+              "lock": {
+                "properties": {
+                  "ref": { "type": "null" },
+                  "sha256": { "type": "null" }
+                }
+              },
+              "resolved_packages": {
+                "items": {
+                  "properties": { "version": { "type": "null" } }
+                }
+              }
+            }
+          },
+          "build": {
+            "properties": {
+              "target": { "type": "null" },
+              "graphics_api": { "type": "null" },
+              "scripting_backend": { "type": "null" },
+              "architecture": { "type": "null" }
+            }
+          },
+          "input": {
+            "properties": {
+              "sources": {
+                "items": {
+                  "properties": { "description": { "type": "null" } }
+                }
+              }
+            }
+          },
+          "execution_context": {
+            "properties": {
+              "posture": { "type": "null" },
+              "duration_seconds": { "type": "null" }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

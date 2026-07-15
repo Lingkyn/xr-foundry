@@ -20,6 +20,6 @@
   "dependencies": {
     "com.lingkyn.inventory.presentation": "0.1.0",
     "com.lingkyn.inventory.ugui": "0.2.0",
-    "com.unity.xr.interaction.toolkit": "3.3.2"
+    "com.unity.xr.interaction.toolkit": "3.5.1"
   }
 }

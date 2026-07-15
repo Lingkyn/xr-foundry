@@ -1,12 +1,12 @@
 {
   "schema": "xr-foundry.inventory_core_api_baseline.v1",
   "package_id": "com.lingkyn.inventory.core",
-  "version": "0.1.0",
-  "status": "candidate",
+  "version": "0.1.1",
+  "status": "incubating",
   "previous_baseline": {
-    "version": "0.1.0-pre.1",
-    "tag": "com.lingkyn.inventory.core@0.1.0-pre.1",
-    "commit": "c88ce8ca404504efb0aa11b9cf51310393078612",
+    "version": "0.1.0",
+    "tag": "com.lingkyn.inventory.core@0.1.0",
+    "commit": "4f7832c81b296eab8714295aacc96be48fe588a8",
     "public_type_delta": "none"
   },
   "public_types": [

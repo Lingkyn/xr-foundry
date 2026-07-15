@@ -36,6 +36,11 @@ Future engine collections may add sibling roots such as `packages/unreal/` or
 `packages/godot/` only when an implementation exists. Roadmap intent is not an
 empty directory.
 
+The tree is canonical but the reference knowledge is version-adaptive. Engine and
+package-version variations are recorded as evidence profiles, generated package
+revisions, or bounded conditional code; they do not create duplicate root layouts.
+See [`version-adaptive-reference-model.md`](version-adaptive-reference-model.md).
+
 ## Discovery and dependency rules
 
 - The public landing page presents one row per capability family. A family page
@@ -64,6 +69,10 @@ This is the repository's only active package layout. Because XR Foundry is still
 being initialized, it does not publish an old-path compatibility layer,
 duplicate manifests, redirects, or symlink shims. Git history remains history;
 it is not an additional supported repository surface.
+
+This no-shim rule concerns repository structure. It does not prevent an Agent from
+generating and validating a new package revision for another Unity or dependency
+version from the same public reference standard.
 
 Unity Package Manager does not support a Git URL as a package-to-package
 dependency. Until these packages are published to a compatible registry, a Git

@@ -8,7 +8,8 @@ thin.
 ## Candidate gate
 
 - Repository validator and Python contract tests pass.
-- Every promoted package resolves and compiles in a fresh Unity 6000.3 project.
+- Every promoted package resolves and compiles in a fresh consumer matching its
+  declared compatibility profile.
 - EditMode package tests pass.
 - Installation and migration evidence names an immutable commit.
 
@@ -22,25 +23,26 @@ thin.
 
 Inventory is an incubating system standard with a positive-external-source-only
 manifest, package-family architecture, nested presentation composition, and a
-verification contract. The independently authored Core `0.1.0` implementation is
-implemented with source, API, persistence, and local-consumer evidence. The
-canonical nested repository layout now has a fresh immutable Git consumer at
-`b3d4b8dfd3ae9f6025026bc6737eb10cacbd894f`: all nine packages resolved from
-GitHub, compiled, and passed 49 EditMode plus 8 PlayMode tests. Presentation,
-UGUI, UI Toolkit, XR UGUI, and XR UI Toolkit form the canonical renderer-neutral
-graph. Candidate review, renderer acceptance, Android, and named-device gates
-remain independent; lower-layer evidence is not evidence that the complete family
-or XR experience is finished.
+verification contract. Core, Unity authoring, Presentation, UGUI, UI Toolkit, XR
+UGUI, and XR UI Toolkit form the implemented renderer-neutral graph. The current
+package tree still needs fresh immutable Git-consumer evidence before any layer can
+advance to its later review, renderer, Android, or named-device gates; evidence
+from an earlier package or dependency tuple is not inherited.
+
+Unity `6000.3.19f1` is the first automated implementation profile, not the
+repository's generation limit. Another Unity, UI, XRI, or future engine tuple
+begins as raw-material regeneration and earns its own profile only after equivalent
+validation.
 
 | Package | Version | Maturity | Earliest unsatisfied gate |
 | --- | --- | --- | --- |
-| `com.lingkyn.inventory.core` | `0.1.0` | `incubating` | `candidate_release_review` |
-| `com.lingkyn.inventory.unity` | `0.1.0` | `incubating` | `candidate_release_review` |
-| `com.lingkyn.inventory.presentation` | `0.1.0` | `incubating` | `public_api_review` |
-| `com.lingkyn.inventory.ugui` | `0.2.0` | `incubating` | `candidate_release_review` |
-| `com.lingkyn.inventory.uitoolkit` | `0.1.0` | `incubating` | `renderer_acceptance` |
-| `com.lingkyn.inventory.xr.ugui` | `0.1.0` | `incubating` | `android_build_install_open` |
-| `com.lingkyn.inventory.xr.uitoolkit` | `0.1.0` | `incubating` | `android_build_install_open` |
+| `com.lingkyn.inventory.core` | `0.1.1` | `incubating` | `core_atomic_mutation_tests` |
+| `com.lingkyn.inventory.unity` | `0.1.1` | `incubating` | `local_clean_consumer_editmode_tests` |
+| `com.lingkyn.inventory.presentation` | `0.1.0` | `incubating` | `presenter_unit_tests` |
+| `com.lingkyn.inventory.ugui` | `0.2.0` | `incubating` | `required_visible_state_replay` |
+| `com.lingkyn.inventory.uitoolkit` | `0.1.0` | `incubating` | `semantic_state_and_intent_tests` |
+| `com.lingkyn.inventory.xr.ugui` | `0.1.0` | `incubating` | `local_clean_consumer` |
+| `com.lingkyn.inventory.xr.uitoolkit` | `0.1.0` | `incubating` | `local_clean_consumer` |
 
 ## Reference-library evolution
 

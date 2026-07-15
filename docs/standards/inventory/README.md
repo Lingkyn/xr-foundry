@@ -2,8 +2,8 @@
 
 Status: **incubating standard**
 Standard version: **0.1.0**
-Implementation status: **Core, Unity authoring, and UGUI admitted at candidate
-maturity; XR pending**
+Implementation status: **Core, Unity authoring, and UGUI `0.1.1` are candidate;
+XR pending**
 
 This standard defines the evidence and architecture required to implement and
 promote the Inventory package family in XR Foundry. It is intentionally independent
@@ -88,7 +88,7 @@ candidate, not a stable package.
 | --- | --- | --- |
 | `com.lingkyn.inventory.core` | Candidate `0.1.0`; persistence, typed state, immutable install, API review, upgrade, and rollback pass | None for Core candidate |
 | `com.lingkyn.inventory.unity` | Candidate `0.1.0`; authoring, conversion, diagnostics, immutability, and local/immutable consumers pass | None for Unity authoring candidate |
-| `com.lingkyn.inventory.ugui` | Candidate `0.1.0`; presenter, nested prefab, replacement, state, local and immutable non-XR tests pass | None for UGUI candidate |
+| `com.lingkyn.inventory.ugui` | Candidate `0.1.1`; functional shipped prefabs, immutable consumer, Input System sample, tests, and consumer variant upgrade/rollback pass; the `0.1.0` verdict is withdrawn | None for UGUI candidate |
 | `com.lingkyn.inventory.xr` | Not implemented | World-space/XRI adapter, automated configuration tests, and real Pico evidence |
 
 These rows are claim boundaries, not a percentage-complete estimate. A lower layer

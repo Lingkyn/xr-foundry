@@ -75,9 +75,9 @@
       "id": "com.lingkyn.inventory.ugui",
       "path": "com.lingkyn.inventory.ugui",
       "maturity": "candidate",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "independent_compile": "passed_2026-07-15",
-      "git_url_install": "passed_b50834418c3573fb1cf341400bf5a85337e43d3b",
+      "git_url_install": "passed_ea7207e94aa6fa9c129e5bf381d77f932bf35911",
       "device_evidence": "not_applicable",
       "promotion": {
         "candidate_status": "passed",
@@ -86,9 +86,13 @@
           "presenter_boundary",
           "nested_prefab_links",
           "slot_and_item_replacement",
-          "required_state_replay",
-          "pointer_keyboard_playmode",
-          "non_xr_immutable_git_consumer",
+          "wired_shipped_prefabs",
+          "required_visible_state_replay",
+          "prefab_graphic_raycast_pointer_keyboard",
+          "immutable_git_url_functional_consumer",
+          "input_system_only_sample_import_compile",
+          "upgrade_0.1.0_to_0.1.1_and_rollback",
+          "consumer_owned_prefab_variant_upgrade_rollback",
           "candidate_release_review"
         ],
         "pending": []

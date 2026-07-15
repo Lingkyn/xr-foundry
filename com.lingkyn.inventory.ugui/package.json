@@ -1,8 +1,8 @@
 {
   "name": "com.lingkyn.inventory.ugui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Lingkyn Inventory UGUI",
-  "description": "Replaceable Inventory presenters, UGUI views, nested prefabs, interaction states, and samples.",
+  "description": "Replaceable Inventory presenters, functional nested UGUI prefabs, interaction states, and samples.",
   "unity": "6000.0",
   "author": { "name": "Lingkyn", "url": "https://github.com/Lingkyn" },
   "license": "MIT",

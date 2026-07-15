@@ -74,22 +74,24 @@
     {
       "id": "com.lingkyn.inventory.ugui",
       "path": "com.lingkyn.inventory.ugui",
-      "maturity": "incubating",
+      "maturity": "candidate",
       "version": "0.1.0",
       "independent_compile": "passed_2026-07-15",
-      "git_url_install": "pending_reviewed_revision",
+      "git_url_install": "passed_b50834418c3573fb1cf341400bf5a85337e43d3b",
       "device_evidence": "not_applicable",
       "promotion": {
-        "candidate_status": "blocked",
-        "earliest_failed_gate": "non_xr_immutable_git_consumer",
+        "candidate_status": "passed",
+        "earliest_failed_gate": "none",
         "satisfied": [
           "presenter_boundary",
           "nested_prefab_links",
           "slot_and_item_replacement",
           "required_state_replay",
-          "pointer_keyboard_playmode"
+          "pointer_keyboard_playmode",
+          "non_xr_immutable_git_consumer",
+          "candidate_release_review"
         ],
-        "pending": ["non_xr_immutable_git_consumer", "candidate_release_review"]
+        "pending": []
       }
     }
   ]

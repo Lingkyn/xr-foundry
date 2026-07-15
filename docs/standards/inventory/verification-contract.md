@@ -75,3 +75,20 @@ operation sequences.
 
 No headset, controller, world-space usability, or comfort claim may be promoted
 without the final device evidence.
+
+## Current evidence ledger
+
+This ledger records the earliest unsatisfied gate for each layer. Later gates may
+be prepared, but they cannot promote a package around an earlier failure.
+
+| Layer | Satisfied evidence | Earliest unsatisfied gate | Claim allowed now |
+| --- | --- | --- | --- |
+| Core | Source/architecture gates; atomic mutation and invariant tests; local and immutable Git URL clean consumers | Persistence round-trip and migrations | Incubating Core evaluation only |
+| Unity authoring | Package boundary defined | Authoring implementation and EditMode tests | Architecture reference only |
+| UGUI | Nested composition contract defined | Presentation implementation, prefab/state coverage, and PlayMode tests | Architecture reference only |
+| XR | World-space/device contract defined | XR implementation, automated configuration checks, and Pico evidence | Architecture reference only; no headset claim |
+
+Candidate promotion updates this ledger, `inventory-standard.json`,
+`package-catalog.json`, `reference-catalog.json`, package documentation, and the
+public work item in the same reviewed change. A passing later-layer demo cannot
+override an earlier unsatisfied gate.

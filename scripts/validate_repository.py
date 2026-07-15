@@ -225,10 +225,87 @@ def validate_inventory_standard(root: Path) -> list[str]:
     return errors
 
 
+def validate_inventory_projection_coherence(root: Path) -> list[str]:
+    errors: list[str] = []
+    catalog_path = root / "package-catalog.json"
+    reference_path = root / "reference-catalog.json"
+    standard_path = root / "docs" / "standards" / "inventory" / "inventory-standard.json"
+    standard_readme_path = root / "docs" / "standards" / "inventory" / "README.md"
+    roadmap_path = root / "ROADMAP.md"
+    required = [catalog_path, reference_path, standard_path, standard_readme_path, roadmap_path]
+    if any(not path.exists() for path in required):
+        return errors
+
+    catalog = load_json(catalog_path)
+    reference = load_json(reference_path)
+    standard = load_json(standard_path)
+    package_entries = {
+        str(item.get("id", "")): item
+        for item in catalog.get("packages", [])
+        if isinstance(item, dict)
+    }
+    reference_entries = {
+        str(item.get("id", "")): item
+        for item in reference.get("artifacts", [])
+        if isinstance(item, dict)
+    }
+    core = package_entries.get("com.lingkyn.inventory.core")
+    core_reference = reference_entries.get("unity-inventory-core")
+    family_reference = reference_entries.get("inventory-package-family-standard")
+    if not core or not core_reference or not family_reference:
+        errors.append("Inventory package and reference catalog entries must exist")
+        return errors
+
+    if core_reference.get("maturity") != core.get("maturity"):
+        errors.append("Inventory Core maturity must agree across package and reference catalogs")
+
+    promotion = core.get("promotion")
+    if not isinstance(promotion, dict):
+        errors.append("Inventory Core must declare machine-readable promotion state")
+    else:
+        if promotion.get("candidate_status") not in {"blocked", "eligible", "passed"}:
+            errors.append("Inventory Core candidate promotion status is invalid")
+        if not str(promotion.get("earliest_failed_gate", "")).strip():
+            errors.append("Inventory Core must name its earliest failed promotion gate")
+        if not promotion.get("satisfied") or not promotion.get("pending"):
+            errors.append("Inventory Core promotion state must name satisfied and pending gates")
+
+    package_family = {
+        str(item.get("id", "")): item
+        for item in standard.get("package_family", [])
+        if isinstance(item, dict)
+    }
+    core_standard = package_family.get("com.lingkyn.inventory.core", {})
+    if standard.get("core_implementation_admitted") is True:
+        if core_standard.get("implementation_status") != "implemented_incubating":
+            errors.append("Admitted Inventory Core must be represented as implemented_incubating")
+        stale_surfaces = {
+            "ROADMAP.md": roadmap_path.read_text(encoding="utf-8"),
+            "docs/standards/inventory/README.md": standard_readme_path.read_text(encoding="utf-8"),
+            "reference-catalog.json": json.dumps(reference, ensure_ascii=False),
+        }
+        stale_markers = [
+            "Implementation remains unadmitted",
+            "Implementation status: **not yet admitted**",
+            "No Inventory implementation is admitted yet",
+        ]
+        for surface, text in stale_surfaces.items():
+            for marker in stale_markers:
+                if marker in text:
+                    errors.append(f"{surface}: stale Inventory implementation claim: {marker}")
+
+    if core_standard.get("earliest_failed_gate") != (
+        promotion.get("earliest_failed_gate") if isinstance(promotion, dict) else None
+    ):
+        errors.append("Inventory Core earliest failed gate must agree across standard and package catalog")
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_inventory_standard(root))
+    errors.extend(validate_inventory_projection_coherence(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")

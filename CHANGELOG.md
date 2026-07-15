@@ -5,6 +5,9 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Reconciled Inventory implementation, roadmap, package/reference catalogs, and
+  promotion evidence; added a fail-closed projection-coherence validator and
+  explicit earliest-unsatisfied gates for every Inventory package layer.
 - Added the first Inventory Package Family standard with a positive-external-source
   whitelist, engine-light core and optional Unity UI/XR package boundaries, nested
   prefab composition, persistence and transaction contracts, and promotion gates.

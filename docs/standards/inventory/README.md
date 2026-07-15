@@ -2,11 +2,13 @@
 
 Status: **incubating standard**
 Standard version: **0.1.0**
-Implementation status: **not yet admitted**
+Implementation status: **Core admitted at incubating maturity; Unity authoring,
+UGUI, and XR layers pending**
 
-This standard defines the evidence and architecture that must exist before an
-Inventory package is implemented or promoted in XR Foundry. It is intentionally
-independent of any consuming game.
+This standard defines the evidence and architecture required to implement and
+promote the Inventory package family in XR Foundry. It is intentionally independent
+of any consuming game. The Core package has entered the implementation phase, but
+the standard remains incubating until the complete promotion contract is proven.
 
 ## Source boundary
 
@@ -21,7 +23,7 @@ also have clear provenance, a compatible license or public-documentation boundar
 current relevance, and positive evidence for the capability it informs.
 
 No community Inventory repository reviewed in the first round passed all gates for
-use as a code seed. The first implementation will therefore be independently
+use as a code seed. The first Core implementation was therefore independently
 authored from the public contracts in this standard. Commercial products are
 coverage benchmarks only; their proprietary code and assets are not inputs.
 
@@ -79,6 +81,18 @@ positive external evidence
 
 Until these steps pass, the Inventory family is a standard and implementation
 candidate, not a stable package.
+
+## Current promotion state
+
+| Layer | Current state | Earliest unsatisfied gate |
+| --- | --- | --- |
+| `com.lingkyn.inventory.core` | Implemented, incubating; clean local and Git URL consumer tests pass | Persistence round-trip/migration and public API compatibility across a release |
+| `com.lingkyn.inventory.unity` | Not implemented | ScriptableObject authoring, catalog conversion, validation, and asset-immutability tests |
+| `com.lingkyn.inventory.ugui` | Not implemented | Presenter boundary, nested-prefab composition, state coverage, and PlayMode tests |
+| `com.lingkyn.inventory.xr` | Not implemented | World-space/XRI adapter, automated configuration tests, and real Pico evidence |
+
+These rows are claim boundaries, not a percentage-complete estimate. A lower layer
+may reach candidate maturity without promoting a higher layer or the whole family.
 
 ## Controlled artifacts
 

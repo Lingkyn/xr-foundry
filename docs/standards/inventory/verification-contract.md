@@ -85,7 +85,7 @@ be prepared, but they cannot promote a package around an earlier failure.
 | --- | --- | --- | --- |
 | Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; immutable prerelease/candidate clean consumers; public API review; upgrade and rollback | None for Core candidate | Candidate Core only; not the complete Inventory family |
 | Unity authoring | ScriptableObject assets; stable IDs; deterministic conversion; actionable diagnostics; asset immutability; local and immutable Git URL clean-consumer EditMode tests | None for Unity authoring candidate | Candidate Unity authoring only; no presentation or XR claim |
-| UGUI | Nested composition contract defined | Presentation implementation, prefab/state coverage, and PlayMode tests | Architecture reference only |
+| UGUI | Presenter boundary; independent nested prefab roles/variant; slot replacement; all states; pointer/keyboard PlayMode; immutable Git consumer with no XR package | None for UGUI candidate | Candidate UGUI only; no world-space or headset claim |
 | XR | World-space/device contract defined | XR implementation, automated configuration checks, and Pico evidence | Architecture reference only; no headset claim |
 
 Candidate promotion updates this ledger, `inventory-standard.json`,

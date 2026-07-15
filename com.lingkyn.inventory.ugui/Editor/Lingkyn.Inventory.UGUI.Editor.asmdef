@@ -1,0 +1,7 @@
+{
+  "name": "Lingkyn.Inventory.UGUI.Editor",
+  "rootNamespace": "Lingkyn.Inventory.UGUI.Editor",
+  "references": ["Lingkyn.Inventory.UGUI", "Unity.ugui"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

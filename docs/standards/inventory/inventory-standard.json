@@ -59,8 +59,8 @@
       "id": "com.lingkyn.inventory.ugui",
       "responsibility": "presenters, view bindings, nested prefabs, and non-XR Unity UI samples",
       "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.unity"],
-      "implementation_status": "not_implemented",
-      "earliest_failed_gate": "presentation_composition_tests"
+      "implementation_status": "implemented_candidate",
+      "earliest_failed_gate": "none"
     },
     {
       "id": "com.lingkyn.inventory.xr",

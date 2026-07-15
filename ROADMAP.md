@@ -25,10 +25,10 @@ manifest, package-family architecture, nested presentation composition, and a
 verification contract. The independently authored Core `0.1.0` implementation is
 admitted at `candidate` maturity after persistence/migration, typed instance-state,
 public API, immutable install, upgrade, rollback, and clean-consumer gates passed.
-Unity authoring `0.1.0` is also admitted at candidate maturity after local and
-immutable Git clean-consumer EditMode evidence. UGUI and XR packages are still not
-implemented. Candidate Core and authoring packages are not evidence that the
-complete Inventory family or its VR experience is finished.
+Unity authoring and UGUI `0.1.0` are also admitted at candidate maturity. UGUI has
+real nested prefab links plus local and immutable non-XR EditMode/PlayMode evidence.
+XR is still not implemented. Candidate lower layers are not evidence that the
+complete family or VR experience is finished.
 
 ## Reference-library evolution
 

@@ -43,7 +43,8 @@
         "docs/standards/inventory/coverage-matrix.md",
         "com.lingkyn.inventory.core/Tests/Editor",
         "docs/validation/2026-07-15-inventory-core-local-consumer.md",
-        "docs/validation/2026-07-15-inventory-core-git-url-consumer.md"
+        "docs/validation/2026-07-15-inventory-core-git-url-consumer.md",
+        "docs/validation/2026-07-15-inventory-core-persistence.md"
       ],
       "non_claims": [
         "No Unity authoring, UI, equipment, persistence provider, networking, or XR adapter is included",

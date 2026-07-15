@@ -28,20 +28,23 @@ public API, immutable install, upgrade, rollback, and clean-consumer gates passe
 Unity authoring is also candidate. UGUI `0.1.1` is candidate after the withdrawn
 `0.1.0` structure-only verdict was corrected with functional shipped prefabs,
 immutable install, sample, consumer-owned variant upgrade/rollback, and review evidence.
-XR is still not implemented. Candidate lower layers are not evidence that the
-complete family or XR experience is finished.
+XR `0.1.0` is implemented at incubating maturity with a provider-neutral world-space
+prefab, strict input validation, local tracked-ray/poke tests, and imported sample
+evidence. Immutable Git-consumer, Android, and Pico gates remain, so candidate lower
+layers are not evidence that the complete family or XR experience is finished.
 
 | Package | Version | Maturity | Earliest unsatisfied gate |
 | --- | --- | --- | --- |
 | `com.lingkyn.inventory.core` | `0.1.0` | `candidate` | `none` |
 | `com.lingkyn.inventory.unity` | `0.1.0` | `candidate` | `none` |
 | `com.lingkyn.inventory.ugui` | `0.1.1` | `candidate` | `none` |
+| `com.lingkyn.inventory.xr` | `0.1.0` | `incubating` | `immutable_git_url_clean_consumer` |
 
 ## Reference-library evolution
 
 - Add coverage, extension seams, failure cases, and migration evidence to each
   reference entry as packages mature.
-- Build UGUI and optional XR layers without weakening the candidate Core and authoring boundaries.
+- Promote the optional XR layer only after immutable-consumer, Android, and named-device evidence without weakening the candidate lower-layer boundaries.
 - Add reusable tools, templates, and validation contracts when they have a real
   consumer and evidence.
 - Consider Unreal Engine and Godot collections only when working implementations,

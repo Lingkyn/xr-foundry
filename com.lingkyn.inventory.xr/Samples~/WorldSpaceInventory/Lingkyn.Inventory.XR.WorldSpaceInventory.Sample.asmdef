@@ -1,0 +1,17 @@
+{
+  "name": "Lingkyn.Inventory.XR.WorldSpaceInventory.Sample",
+  "rootNamespace": "Lingkyn.Inventory.XR.Samples",
+  "references": [
+    "Lingkyn.Inventory.UGUI",
+    "Lingkyn.Inventory.XR"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

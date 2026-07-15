@@ -97,6 +97,34 @@
         ],
         "pending": []
       }
+    },
+    {
+      "id": "com.lingkyn.inventory.xr",
+      "path": "com.lingkyn.inventory.xr",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "passed_2026-07-15",
+      "git_url_install": "pending_immutable_git_consumer",
+      "device_evidence": "pending_pico_device_evidence",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "immutable_git_url_clean_consumer",
+        "satisfied": [
+          "provider_neutral_optional_dependency",
+          "world_space_nested_prefab",
+          "fail_closed_scene_validation",
+          "non_head_locked_default_placement",
+          "tracked_ray_left_center_right_playmode",
+          "real_xri_poke_release_playmode",
+          "local_clean_consumer_editmode_playmode",
+          "upm_sample_import_compile_setup"
+        ],
+        "pending": [
+          "immutable_git_url_clean_consumer",
+          "android_build_install_open",
+          "pico_device_evidence"
+        ]
+      }
     }
   ]
 }

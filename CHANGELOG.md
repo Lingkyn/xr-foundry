@@ -5,6 +5,10 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the optional `com.lingkyn.inventory.xr` incubating package with a
+  provider-neutral world-space prefab, ScriptableObject profile, fail-closed scene
+  validation, tracked-ray and real XRI poke tests, and an imported setup sample;
+  immutable Git-consumer, Android, and Pico evidence remain promotion gates.
 - Reopened the UGUI candidate after a structure-only false positive; `0.1.1`
   now ships functional nested prefabs, stable-address intents, bounded scrolling,
   semantic state samples, prefab-backed raycast tests, and cross-layer projection gates.

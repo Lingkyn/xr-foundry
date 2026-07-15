@@ -40,6 +40,7 @@ answers for different models.
 | [`com.lingkyn.inventory.core`](com.lingkyn.inventory.core/) | Candidate | Engine-light Inventory domain, atomic mutations, policies, snapshots, and persistence contracts |
 | [`com.lingkyn.inventory.unity`](com.lingkyn.inventory.unity/) | Candidate | ScriptableObject authoring, validation, and deterministic Core conversion |
 | [`com.lingkyn.inventory.ugui`](com.lingkyn.inventory.ugui/) | Candidate | Functional nested UGUI prefabs, presenter/view-model boundaries, and neutral input/state handling |
+| [`com.lingkyn.inventory.xr`](com.lingkyn.inventory.xr/) | Incubating | Provider-neutral world-space UGUI composition, strict XRI input validation, and tracked ray/poke routes |
 
 ## Incubating system standards
 
@@ -49,8 +50,10 @@ design inputs are restricted to admitted positive external sources. It deliberat
 excludes consumer and screened-out code from derivation. Core and Unity authoring
 have candidate evidence. UGUI `0.1.1` is also candidate after correcting the
 structure-only `0.1.0` verdict through immutable consumer, sample, Input System,
-upgrade/rollback, and consumer-owned prefab-variant evidence. XR remains pending and
-cannot inherit a world-space or device claim from the non-XR UGUI candidate.
+upgrade/rollback, and consumer-owned prefab-variant evidence. XR `0.1.0` is now an
+implemented incubating adapter with local world-space, tracked-ray, real-poke, and
+sample-import evidence. It cannot claim headset usability until immutable-consumer,
+Android, and real-device gates pass.
 
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and
@@ -69,7 +72,10 @@ Pin a reviewed commit SHA rather than `main`:
   "dependencies": {
     "com.lingkyn.project-initializer": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.project-initializer#<commit-sha>",
     "com.lingkyn.xr-baseline": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.xr-baseline#<commit-sha>",
-    "com.lingkyn.inventory.core": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.inventory.core#<full-40-character-commit-sha>"
+    "com.lingkyn.inventory.core": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.inventory.core#<full-40-character-commit-sha>",
+    "com.lingkyn.inventory.unity": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.inventory.unity#<same-full-40-character-commit-sha>",
+    "com.lingkyn.inventory.ugui": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.inventory.ugui#<same-full-40-character-commit-sha>",
+    "com.lingkyn.inventory.xr": "https://github.com/Lingkyn/xr-foundry.git?path=com.lingkyn.inventory.xr#<same-full-40-character-commit-sha>"
   }
 }
 ```
@@ -80,6 +86,8 @@ revision is recorded.
 
 Use the full 40-character commit SHA for Git package pins. The Inventory clean
 consumer gate confirmed that Unity Package Manager rejects a short SHA in this URL.
+Pin every `com.lingkyn.inventory.*` package used by a Git consumer to the same
+reviewed revision: custom transitive semver dependencies are not a public registry.
 
 ## Use as reference material
 
@@ -100,7 +108,11 @@ See [`docs/for-agents.md`](docs/for-agents.md) for the provider-neutral workflow
 - Unity 6000.3 LTS
 - Universal Render Pipeline 17.x
 - Input System 1.11+
-- XR Interaction Toolkit 3.3+, XR Management 4.5+, OpenXR 1.14+ for the XR package
+- Repository XR baseline: XR Interaction Toolkit 3.3+, XR Management 4.5+,
+  OpenXR 1.14+
+- Inventory XR `0.1.0` local automated evidence: Input System 1.19.0 and XRI
+  3.3.2; the provider-neutral adapter does not install or claim XR Management,
+  OpenXR, or a vendor runtime
 
 Compatibility is a tested target, not a promise for unlisted versions. Unity is
 the only implemented engine collection in this foundation. Unreal Engine and Godot

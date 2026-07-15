@@ -1,0 +1,19 @@
+{
+  "name": "Lingkyn.Inventory.XR.WorldSpaceInventory.Sample.Editor",
+  "rootNamespace": "Lingkyn.Inventory.XR.Samples.Editor",
+  "references": [
+    "Lingkyn.Inventory.XR",
+    "Lingkyn.Inventory.XR.WorldSpaceInventory.Sample",
+    "Lingkyn.Inventory.UGUI",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

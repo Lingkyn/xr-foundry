@@ -201,6 +201,68 @@ class RepositoryContractTests(unittest.TestCase):
             errors = MODULE.validate_inventory_projection_coherence(root)
             self.assertTrue(any("stale or missing projection row" in error for error in errors))
 
+    def test_inventory_projection_rejects_stale_xr_not_implemented_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            standard_root = root / "docs" / "standards" / "inventory"
+            standard_root.mkdir(parents=True)
+            (root / "README.md").write_text("XR adapter is incubating.", encoding="utf-8")
+            (root / "ROADMAP.md").write_text(
+                "XR is still not implemented.\n"
+                "| `com.lingkyn.inventory.xr` | `0.1.0` | `incubating` | "
+                "`immutable_git_url_clean_consumer` |\n",
+                encoding="utf-8",
+            )
+            (standard_root / "README.md").write_text("XR adapter is incubating.", encoding="utf-8")
+            (standard_root / "inventory-standard.json").write_text(
+                json.dumps(
+                    {
+                        "package_family": [
+                            {
+                                "id": "com.lingkyn.inventory.xr",
+                                "implementation_status": "implemented_incubating",
+                                "earliest_failed_gate": "immutable_git_url_clean_consumer",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "package-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "id": "com.lingkyn.inventory.xr",
+                                "version": "0.1.0",
+                                "maturity": "incubating",
+                                "promotion": {
+                                    "candidate_status": "blocked",
+                                    "earliest_failed_gate": "immutable_git_url_clean_consumer",
+                                    "satisfied": ["xr_adapter_tests"],
+                                    "pending": ["immutable_git_url_clean_consumer"],
+                                },
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "reference-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "artifacts": [
+                            {"id": "unity-inventory-xr", "maturity": "incubating"},
+                            {"id": "inventory-package-family-standard", "maturity": "incubating"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_inventory_projection_coherence(root)
+            self.assertTrue(any("stale Inventory XR implementation claim" in error for error in errors))
+
     def test_consumer_project_marker_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

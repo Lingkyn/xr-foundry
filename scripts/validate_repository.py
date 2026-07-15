@@ -274,6 +274,7 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
         "com.lingkyn.inventory.core": "unity-inventory-core",
         "com.lingkyn.inventory.unity": "unity-inventory-authoring",
         "com.lingkyn.inventory.ugui": "unity-inventory-ugui",
+        "com.lingkyn.inventory.xr": "unity-inventory-xr",
     }
     roadmap_text = roadmap_path.read_text(encoding="utf-8")
     for package_id, reference_id in layer_references.items():
@@ -324,6 +325,24 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
             for marker in stale_markers:
                 if marker in text:
                     errors.append(f"{surface}: stale Inventory implementation claim: {marker}")
+
+    xr_standard = package_family.get("com.lingkyn.inventory.xr", {})
+    if xr_standard.get("implementation_status") in {"implemented_incubating", "implemented_candidate"}:
+        xr_surfaces = {
+            "README.md": (root / "README.md").read_text(encoding="utf-8"),
+            "ROADMAP.md": roadmap_text,
+            "docs/standards/inventory/README.md": standard_readme_path.read_text(encoding="utf-8"),
+            "reference-catalog.json": json.dumps(reference, ensure_ascii=False),
+        }
+        stale_xr_markers = [
+            "XR is still not implemented",
+            "XR remains pending",
+            "XR pending**",
+        ]
+        for surface, text in xr_surfaces.items():
+            for marker in stale_xr_markers:
+                if marker in text:
+                    errors.append(f"{surface}: stale Inventory XR implementation claim: {marker}")
     return errors
 
 

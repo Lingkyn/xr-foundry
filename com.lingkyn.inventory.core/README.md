@@ -15,6 +15,7 @@ copy of a consumer project or commercial Inventory implementation.
 
 - fixed-capacity slot containers;
 - fungible stacks and unique runtime instances;
+- typed, schema-versioned state fragments for unique instances;
 - atomic add, remove, move, swap, split, merge, and transfer requests;
 - optional partial acceptance for add only;
 - structured failures, revisions, post-commit events, and immutable snapshots;
@@ -25,5 +26,13 @@ copy of a consumer project or commercial Inventory implementation.
 Persistence providers remain consumer-owned. The Core package exports immutable
 primitive state and validates migrations/restores, but it does not select JSON,
 disk, cloud, authentication, or server storage.
+
+Per-instance state is created and read through registered
+`ItemStateFragmentCodec<T>` implementations. The stored fragment is immutable and
+contains a stable type ID, schema version, and codec-owned payload. This keeps
+durability, quality, binding, ammunition, or similar data typed and migratable
+without exposing a universal dictionary of arbitrary objects. State changes use
+`MutationRequest.SetInstanceState` or `RemoveInstanceState`, so they follow the
+same policy, atomic commit, revision, and event path as placement mutations.
 
 Unity authoring, nested UI prefabs, and XR interaction are separate package layers.

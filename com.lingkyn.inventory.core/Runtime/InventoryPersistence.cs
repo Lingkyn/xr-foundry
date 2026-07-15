@@ -5,9 +5,34 @@ using System.Linq;
 
 namespace Lingkyn.Inventory.Core
 {
+    public sealed class InventoryStateFragmentData
+    {
+        public InventoryStateFragmentData(string typeId, int schemaVersion, string payload)
+        {
+            TypeId = IdentifierGuard.Require(typeId, nameof(typeId));
+            if (schemaVersion < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(schemaVersion));
+            }
+
+            SchemaVersion = schemaVersion;
+            Payload = payload ?? throw new ArgumentNullException(nameof(payload));
+        }
+
+        public string TypeId { get; }
+        public int SchemaVersion { get; }
+        public string Payload { get; }
+    }
+
     public sealed class InventorySlotState
     {
-        public InventorySlotState(string definitionId, int quantity, string instanceId = null)
+        private readonly ReadOnlyCollection<InventoryStateFragmentData> _stateFragments;
+
+        public InventorySlotState(
+            string definitionId,
+            int quantity,
+            string instanceId = null,
+            IEnumerable<InventoryStateFragmentData> stateFragments = null)
         {
             DefinitionId = IdentifierGuard.Require(definitionId, nameof(definitionId));
             if (quantity < 1)
@@ -17,11 +42,34 @@ namespace Lingkyn.Inventory.Core
 
             Quantity = quantity;
             InstanceId = string.IsNullOrWhiteSpace(instanceId) ? null : instanceId;
+            var fragments = (stateFragments ?? Array.Empty<InventoryStateFragmentData>())
+                .Select(fragment => fragment == null
+                    ? null
+                    : new InventoryStateFragmentData(fragment.TypeId, fragment.SchemaVersion, fragment.Payload))
+                .ToArray();
+            if (fragments.Any(fragment => fragment == null))
+            {
+                throw new ArgumentException("Persisted instance-state fragments cannot contain null values.", nameof(stateFragments));
+            }
+
+            var duplicate = fragments.GroupBy(fragment => fragment.TypeId, StringComparer.Ordinal)
+                .FirstOrDefault(group => group.Count() > 1);
+            if (duplicate != null)
+            {
+                throw new ArgumentException(
+                    $"Duplicate persisted instance-state fragment type: {duplicate.Key}",
+                    nameof(stateFragments));
+            }
+
+            _stateFragments = new ReadOnlyCollection<InventoryStateFragmentData>(fragments
+                .OrderBy(fragment => fragment.TypeId, StringComparer.Ordinal)
+                .ToArray());
         }
 
         public string DefinitionId { get; }
         public int Quantity { get; }
         public string InstanceId { get; }
+        public IReadOnlyList<InventoryStateFragmentData> StateFragments => _stateFragments;
     }
 
     public sealed class InventoryContainerState
@@ -49,7 +97,7 @@ namespace Lingkyn.Inventory.Core
 
         private static InventorySlotState Clone(InventorySlotState slot) => slot == null
             ? null
-            : new InventorySlotState(slot.DefinitionId, slot.Quantity, slot.InstanceId);
+            : new InventorySlotState(slot.DefinitionId, slot.Quantity, slot.InstanceId, slot.StateFragments);
     }
 
     public sealed class InventoryStateData
@@ -115,7 +163,11 @@ namespace Lingkyn.Inventory.Core
                             : new InventorySlotState(
                                 stack.DefinitionId.Value,
                                 stack.Quantity,
-                                stack.InstanceId?.Value)))));
+                                stack.InstanceId?.Value,
+                                stack.StateFragments.Select(fragment => new InventoryStateFragmentData(
+                                    fragment.TypeId.Value,
+                                    fragment.SchemaVersion,
+                                    fragment.Payload)))))));
         }
 
         internal InventorySnapshot ToSnapshot()
@@ -132,7 +184,11 @@ namespace Lingkyn.Inventory.Core
                             slot.Quantity,
                             string.IsNullOrWhiteSpace(slot.InstanceId)
                                 ? (ItemInstanceId?)null
-                                : new ItemInstanceId(slot.InstanceId)))
+                                : new ItemInstanceId(slot.InstanceId),
+                            slot.StateFragments.Select(fragment => new ItemStateFragment(
+                                new ItemStateFragmentTypeId(fragment.TypeId),
+                                fragment.SchemaVersion,
+                                fragment.Payload))))
                         .ToArray()));
         }
     }
@@ -157,6 +213,7 @@ namespace Lingkyn.Inventory.Core
         MissingDefinition = 8,
         InvalidStack = 9,
         DuplicateInstance = 10,
+        InvalidInstanceState = 11,
     }
 
     public sealed class InventoryRestoreResult

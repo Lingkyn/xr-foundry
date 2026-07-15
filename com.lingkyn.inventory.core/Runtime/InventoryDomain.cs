@@ -86,21 +86,34 @@ namespace Lingkyn.Inventory.Core
 
     public sealed class ItemInstance
     {
-        public ItemInstance(ItemInstanceId id, ItemDefinitionId definitionId)
+        private readonly ReadOnlyCollection<ItemStateFragment> _stateFragments;
+
+        public ItemInstance(
+            ItemInstanceId id,
+            ItemDefinitionId definitionId,
+            IEnumerable<ItemStateFragment> stateFragments = null)
         {
             IdentifierGuard.Require(id.Value, nameof(id));
             IdentifierGuard.Require(definitionId.Value, nameof(definitionId));
             Id = id;
             DefinitionId = definitionId;
+            _stateFragments = ItemStack.NormalizeFragments(stateFragments);
         }
 
         public ItemInstanceId Id { get; }
         public ItemDefinitionId DefinitionId { get; }
+        public IReadOnlyList<ItemStateFragment> StateFragments => _stateFragments;
     }
 
     public sealed class ItemStack : IEquatable<ItemStack>
     {
-        public ItemStack(ItemDefinitionId definitionId, int quantity, ItemInstanceId? instanceId = null)
+        private readonly ReadOnlyCollection<ItemStateFragment> _stateFragments;
+
+        public ItemStack(
+            ItemDefinitionId definitionId,
+            int quantity,
+            ItemInstanceId? instanceId = null,
+            IEnumerable<ItemStateFragment> stateFragments = null)
         {
             IdentifierGuard.Require(definitionId.Value, nameof(definitionId));
             if (quantity < 1)
@@ -113,31 +126,108 @@ namespace Lingkyn.Inventory.Core
                 throw new ArgumentException("A stack with a unique instance id must have quantity one.", nameof(quantity));
             }
 
+            var fragments = NormalizeFragments(stateFragments);
+            if (fragments.Count > 0 && !instanceId.HasValue)
+            {
+                throw new ArgumentException("Instance-state fragments require a unique instance id.", nameof(stateFragments));
+            }
+
             DefinitionId = definitionId;
             Quantity = quantity;
             InstanceId = instanceId;
+            _stateFragments = fragments;
         }
 
         public ItemDefinitionId DefinitionId { get; }
         public int Quantity { get; }
         public ItemInstanceId? InstanceId { get; }
         public bool IsUnique => InstanceId.HasValue;
+        public IReadOnlyList<ItemStateFragment> StateFragments => _stateFragments;
 
-        public ItemStack WithQuantity(int quantity) => new ItemStack(DefinitionId, quantity, InstanceId);
+        public ItemStack WithQuantity(int quantity) => new ItemStack(DefinitionId, quantity, InstanceId, _stateFragments);
+
+        public bool TryGetState(ItemStateFragmentTypeId typeId, out ItemStateFragment fragment)
+        {
+            fragment = _stateFragments.FirstOrDefault(candidate => candidate.TypeId == typeId);
+            return fragment != null;
+        }
+
+        public ItemStack WithState(ItemStateFragment fragment)
+        {
+            if (!IsUnique)
+            {
+                throw new InvalidOperationException("Only a unique item instance can carry mutable instance state.");
+            }
+
+            if (fragment == null)
+            {
+                throw new ArgumentNullException(nameof(fragment));
+            }
+
+            return new ItemStack(
+                DefinitionId,
+                Quantity,
+                InstanceId,
+                _stateFragments.Where(candidate => candidate.TypeId != fragment.TypeId).Concat(new[] { fragment }));
+        }
+
+        public ItemStack WithoutState(ItemStateFragmentTypeId typeId)
+        {
+            if (!IsUnique)
+            {
+                throw new InvalidOperationException("Only a unique item instance can carry mutable instance state.");
+            }
+
+            return new ItemStack(
+                DefinitionId,
+                Quantity,
+                InstanceId,
+                _stateFragments.Where(candidate => candidate.TypeId != typeId));
+        }
 
         public bool Equals(ItemStack other)
         {
             return other != null
                 && DefinitionId.Equals(other.DefinitionId)
                 && Quantity == other.Quantity
-                && Nullable.Equals(InstanceId, other.InstanceId);
+                && Nullable.Equals(InstanceId, other.InstanceId)
+                && _stateFragments.SequenceEqual(other._stateFragments);
         }
 
         public override bool Equals(object obj) => Equals(obj as ItemStack);
         public override int GetHashCode()
         {
             var hash = (DefinitionId.GetHashCode() * 397) ^ Quantity;
-            return (hash * 397) ^ (InstanceId.HasValue ? InstanceId.Value.GetHashCode() : 0);
+            hash = (hash * 397) ^ (InstanceId.HasValue ? InstanceId.Value.GetHashCode() : 0);
+            foreach (var fragment in _stateFragments)
+            {
+                hash = (hash * 397) ^ fragment.GetHashCode();
+            }
+
+            return hash;
+        }
+
+        internal static ReadOnlyCollection<ItemStateFragment> NormalizeFragments(
+            IEnumerable<ItemStateFragment> stateFragments)
+        {
+            var fragments = (stateFragments ?? Array.Empty<ItemStateFragment>()).ToArray();
+            if (fragments.Any(fragment => fragment == null))
+            {
+                throw new ArgumentException("Instance-state fragments cannot contain null values.", nameof(stateFragments));
+            }
+
+            var duplicate = fragments.GroupBy(fragment => fragment.TypeId)
+                .FirstOrDefault(group => group.Count() > 1);
+            if (duplicate != null)
+            {
+                throw new ArgumentException(
+                    $"Duplicate instance-state fragment type: {duplicate.Key}",
+                    nameof(stateFragments));
+            }
+
+            return new ReadOnlyCollection<ItemStateFragment>(fragments
+                .OrderBy(fragment => fragment.TypeId.Value, StringComparer.Ordinal)
+                .ToArray());
         }
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 
@@ -299,6 +300,7 @@ namespace Lingkyn.Inventory.Core.Tests
             inventory.Restored += snapshot => observed = snapshot;
             inventory.Restored += _ => throw new InvalidOperationException("observer failure");
             inventory.ObserverFaulted += exception => observerFault = exception;
+            inventory.ObserverFaulted += _ => throw new InvalidOperationException("diagnostic observer failure");
 
             var result = inventory.Restore(envelope);
 
@@ -310,10 +312,225 @@ namespace Lingkyn.Inventory.Core.Tests
             Assert.That(inventory.GetSnapshot().Get(new SlotAddress(BagId, 0)).Quantity, Is.EqualTo(2));
         }
 
+        [Test]
+        public void TypedInstanceStateSurvivesMutationMovePersistenceAndRestore()
+        {
+            var codec = new DurabilityCodec();
+            var registry = new ItemStateFragmentRegistry();
+            registry.Register(codec);
+            var inventory = CreateInventory(2, 2, stateFragmentRegistry: registry);
+            var initial = registry.Create(codec, new DurabilityState(100));
+            var add = inventory.Execute(MutationRequest.Add(
+                new ItemStack(
+                    SwordId,
+                    1,
+                    new ItemInstanceId("sword-typed"),
+                    new[] { initial }),
+                BagId));
+            Assert.That(add.Succeeded, Is.True);
+
+            var updated = registry.Create(codec, new DurabilityState(73));
+            var update = inventory.Execute(MutationRequest.SetInstanceState(
+                new SlotAddress(BagId, 0),
+                updated));
+            var move = inventory.Execute(MutationRequest.Transfer(
+                new SlotAddress(BagId, 0),
+                new SlotAddress(StashId, 1),
+                1));
+            var envelope = inventory.CreatePersistenceEnvelope();
+            var restored = CreateInventory(2, 2, stateFragmentRegistry: registry);
+            var restore = restored.Restore(envelope);
+
+            Assert.That(update.Succeeded, Is.True);
+            Assert.That(move.Succeeded, Is.True);
+            Assert.That(restore.Succeeded, Is.True);
+            var stack = restored.GetSnapshot().Get(new SlotAddress(StashId, 1));
+            Assert.That(stack.TryGetState(codec.TypeId, out var fragment), Is.True);
+            Assert.That(registry.Read(codec, fragment).Value, Is.EqualTo(73));
+            Assert.That(envelope.State.Containers
+                .Single(container => container.ContainerId == "stash")
+                .Slots[1]
+                .StateFragments.Single().TypeId, Is.EqualTo(codec.TypeId.Value));
+        }
+
+        [Test]
+        public void InvalidTypedStateRestoreIsStructuredAndAtomic()
+        {
+            var codec = new DurabilityCodec();
+            var registry = new ItemStateFragmentRegistry();
+            registry.Register(codec);
+            var inventory = CreateInventory(1, stateFragmentRegistry: registry);
+            inventory.Execute(MutationRequest.Add(
+                new ItemStack(SwordId, 1, new ItemInstanceId("existing")),
+                BagId));
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+            var invalid = new PersistenceEnvelope(
+                InventoryPersistence.CurrentSchemaVersion,
+                new InventoryStateData(
+                    "player",
+                    50,
+                    new[]
+                    {
+                        new InventoryContainerState(
+                            "bag",
+                            new[]
+                            {
+                                new InventorySlotState(
+                                    "sword",
+                                    1,
+                                    "invalid-state",
+                                    new[]
+                                    {
+                                        new InventoryStateFragmentData(
+                                            codec.TypeId.Value,
+                                            1,
+                                            "not-an-integer"),
+                                    }),
+                            }),
+                    }));
+
+            var result = inventory.Restore(invalid);
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Failure, Is.EqualTo(InventoryRestoreFailure.InvalidInstanceState));
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void UnregisteredTypedStateAndFungibleStateAreRejected()
+        {
+            var codec = new DurabilityCodec();
+            var producingRegistry = new ItemStateFragmentRegistry();
+            producingRegistry.Register(codec);
+            var fragment = producingRegistry.Create(codec, new DurabilityState(20));
+            var inventory = CreateInventory(2);
+
+            var unregistered = inventory.Execute(MutationRequest.Add(
+                new ItemStack(
+                    SwordId,
+                    1,
+                    new ItemInstanceId("unregistered"),
+                    new[] { fragment }),
+                BagId));
+            var invalidFungible = new PersistenceEnvelope(
+                InventoryPersistence.CurrentSchemaVersion,
+                new InventoryStateData(
+                    "player",
+                    1,
+                    new[]
+                    {
+                        new InventoryContainerState(
+                            "bag",
+                            new InventorySlotState[]
+                            {
+                                new InventorySlotState(
+                                    "potion",
+                                    1,
+                                    "not-allowed",
+                                    new[]
+                                    {
+                                        new InventoryStateFragmentData(codec.TypeId.Value, 1, "20"),
+                                    }),
+                                null,
+                            }),
+                    }));
+            var fungible = inventory.Restore(invalidFungible);
+
+            Assert.That(unregistered.Succeeded, Is.False);
+            Assert.That(unregistered.Failure, Is.EqualTo(MutationFailure.InvalidInstanceState));
+            Assert.That(fungible.Failure, Is.EqualTo(InventoryRestoreFailure.InvalidStack));
+            Assert.That(inventory.Revision, Is.Zero);
+        }
+
+        [Test]
+        public void InstanceStateRemovalIsExplicitAndTransactional()
+        {
+            var codec = new DurabilityCodec();
+            var registry = new ItemStateFragmentRegistry();
+            registry.Register(codec);
+            var inventory = CreateInventory(1, stateFragmentRegistry: registry);
+            inventory.Execute(MutationRequest.Add(
+                new ItemStack(
+                    SwordId,
+                    1,
+                    new ItemInstanceId("removable"),
+                    new[] { registry.Create(codec, new DurabilityState(10)) }),
+                BagId));
+
+            var removed = inventory.Execute(MutationRequest.RemoveInstanceState(
+                new SlotAddress(BagId, 0),
+                codec.TypeId));
+            var rejectedAgain = inventory.Execute(MutationRequest.RemoveInstanceState(
+                new SlotAddress(BagId, 0),
+                codec.TypeId));
+
+            Assert.That(removed.Succeeded, Is.True);
+            Assert.That(rejectedAgain.Failure, Is.EqualTo(MutationFailure.InvalidInstanceState));
+            Assert.That(inventory.GetSnapshot().Get(new SlotAddress(BagId, 0)).StateFragments, Is.Empty);
+            Assert.That(inventory.Revision, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void PreviousFragmentSchemaIsDecodedAndNormalizedToCurrentSchema()
+        {
+            var codec = new DurabilityCodec();
+            var registry = new ItemStateFragmentRegistry();
+            registry.Register(codec);
+            var inventory = CreateInventory(1, stateFragmentRegistry: registry);
+            var previous = new PersistenceEnvelope(
+                InventoryPersistence.CurrentSchemaVersion,
+                new InventoryStateData(
+                    "player",
+                    4,
+                    new[]
+                    {
+                        new InventoryContainerState(
+                            "bag",
+                            new[]
+                            {
+                                new InventorySlotState(
+                                    "sword",
+                                    1,
+                                    "old-durability",
+                                    new[]
+                                    {
+                                        new InventoryStateFragmentData(codec.TypeId.Value, 1, "42"),
+                                    }),
+                            }),
+                    }));
+
+            var result = inventory.Restore(previous);
+            var normalized = inventory.CreatePersistenceEnvelope().State
+                .Containers.Single().Slots.Single().StateFragments.Single();
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(normalized.SchemaVersion, Is.EqualTo(codec.CurrentSchemaVersion));
+            Assert.That(normalized.Payload, Is.EqualTo("v2:42"));
+            var stack = inventory.GetSnapshot().Get(new SlotAddress(BagId, 0));
+            Assert.That(stack.TryGetState(codec.TypeId, out var fragment), Is.True);
+            Assert.That(registry.Read(codec, fragment).Value, Is.EqualTo(42));
+        }
+
+        [Test]
+        public void FragmentRegistryRejectsDuplicateOrUnregisteredCodecInstances()
+        {
+            var registered = new DurabilityCodec();
+            var lookalike = new DurabilityCodec();
+            var registry = new ItemStateFragmentRegistry();
+            registry.Register(registered);
+
+            Assert.Throws<ArgumentException>(() => registry.Register(lookalike));
+            Assert.Throws<InvalidOperationException>(() =>
+                registry.Create(lookalike, new DurabilityState(1)));
+        }
+
         private static InventoryAggregate CreateInventory(
             int bagCapacity,
             int? stashCapacity = null,
-            IInventoryPolicy[] policies = null)
+            IInventoryPolicy[] policies = null,
+            ItemStateFragmentRegistry stateFragmentRegistry = null)
         {
             var definitions = new[]
             {
@@ -331,7 +548,8 @@ namespace Lingkyn.Inventory.Core.Tests
                 new InventoryId("player"),
                 new ItemDefinitionCatalog(definitions),
                 containers,
-                policies);
+                policies,
+                stateFragmentRegistry);
         }
 
         private static int Total(InventorySnapshot snapshot)
@@ -395,6 +613,59 @@ namespace Lingkyn.Inventory.Core.Tests
                                 slot.DefinitionId == "legacy-potion" ? "potion" : slot.DefinitionId,
                                 slot.Quantity,
                                 slot.InstanceId)))));
+            }
+        }
+
+        private sealed class DurabilityState
+        {
+            public DurabilityState(int value)
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+
+                Value = value;
+            }
+
+            public int Value { get; }
+        }
+
+        private sealed class DurabilityCodec : ItemStateFragmentCodec<DurabilityState>
+        {
+            public DurabilityCodec()
+                : base(new ItemStateFragmentTypeId("durability"), 2)
+            {
+            }
+
+            public override string Encode(DurabilityState value)
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                return $"v2:{value.Value.ToString(CultureInfo.InvariantCulture)}";
+            }
+
+            public override DurabilityState Decode(int schemaVersion, string payload)
+            {
+                if (schemaVersion == 1)
+                {
+                    return new DurabilityState(int.Parse(payload, CultureInfo.InvariantCulture));
+                }
+
+                if (schemaVersion == 2 && payload.StartsWith("v2:", StringComparison.Ordinal))
+                {
+                    return new DurabilityState(int.Parse(payload.Substring(3), CultureInfo.InvariantCulture));
+                }
+
+                if (schemaVersion != 2)
+                {
+                    throw new InvalidOperationException($"Unsupported durability schema: {schemaVersion}");
+                }
+
+                throw new FormatException("Durability schema 2 payloads must use the 'v2:' prefix.");
             }
         }
     }

@@ -38,7 +38,9 @@ namespace Lingkyn.Inventory.Core
 
         internal static ItemStack Clone(ItemStack stack)
         {
-            return stack == null ? null : new ItemStack(stack.DefinitionId, stack.Quantity, stack.InstanceId);
+            return stack == null
+                ? null
+                : new ItemStack(stack.DefinitionId, stack.Quantity, stack.InstanceId, stack.StateFragments);
         }
     }
 

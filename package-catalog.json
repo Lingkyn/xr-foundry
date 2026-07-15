@@ -31,17 +31,17 @@
       "device_evidence": "not_applicable",
       "promotion": {
         "candidate_status": "blocked",
-        "earliest_failed_gate": "typed_instance_state_and_api_compatibility",
+        "earliest_failed_gate": "public_api_compatibility_review",
         "satisfied": [
           "positive_source_gate",
           "architecture_gate",
           "core_atomic_mutation_tests",
           "local_clean_consumer",
           "immutable_git_url_clean_consumer",
-          "persistence_round_trip_and_migration"
+          "persistence_round_trip_and_migration",
+          "typed_instance_state"
         ],
         "pending": [
-          "typed_instance_state_and_api_compatibility",
           "public_api_compatibility_review",
           "upgrade_and_rollback_across_a_release"
         ]

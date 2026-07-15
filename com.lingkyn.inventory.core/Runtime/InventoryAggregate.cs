@@ -9,18 +9,21 @@ namespace Lingkyn.Inventory.Core
         private readonly IItemDefinitionCatalog _catalog;
         private readonly InventoryMutationPlanner _planner;
         private readonly List<IInventoryPolicy> _policies;
+        private readonly ItemStateFragmentRegistry _stateFragmentRegistry;
         private Dictionary<ContainerId, ItemStack[]> _state;
 
         public InventoryAggregate(
             InventoryId id,
             IItemDefinitionCatalog catalog,
             IEnumerable<ContainerDefinition> containers,
-            IEnumerable<IInventoryPolicy> policies = null)
+            IEnumerable<IInventoryPolicy> policies = null,
+            ItemStateFragmentRegistry stateFragmentRegistry = null)
         {
             IdentifierGuard.Require(id.Value, nameof(id));
             Id = id;
             _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             _planner = new InventoryMutationPlanner(_catalog);
+            _stateFragmentRegistry = stateFragmentRegistry ?? new ItemStateFragmentRegistry();
             if (containers == null)
             {
                 throw new ArgumentNullException(nameof(containers));
@@ -144,8 +147,11 @@ namespace Lingkyn.Inventory.Core
                     var invalidUnique = definition.InstanceMode == ItemInstanceMode.Unique
                         && (!instanceId.HasValue || slot.Quantity != 1);
                     var invalidFungible = definition.InstanceMode == ItemInstanceMode.Fungible
-                        && instanceId.HasValue;
-                    if (slot.Quantity > definition.MaximumStack || invalidUnique || invalidFungible)
+                        && (instanceId.HasValue || slot.StateFragments.Count > 0);
+                    if (slot.Quantity > definition.MaximumStack
+                        || invalidUnique
+                        || invalidFungible
+                        || (slot.StateFragments.Count > 0 && !instanceId.HasValue))
                     {
                         return RestoreFailure(
                             InventoryRestoreFailure.InvalidStack,
@@ -163,7 +169,27 @@ namespace Lingkyn.Inventory.Core
                             revisionBefore);
                     }
 
-                    slots[index] = new ItemStack(definitionId, slot.Quantity, instanceId);
+                    var fragments = new List<ItemStateFragment>();
+                    foreach (var fragment in slot.StateFragments)
+                    {
+                        try
+                        {
+                            fragments.Add(_stateFragmentRegistry.Rehydrate(
+                                new ItemStateFragmentTypeId(fragment.TypeId),
+                                fragment.SchemaVersion,
+                                fragment.Payload));
+                        }
+                        catch (Exception exception)
+                        {
+                            return RestoreFailure(
+                                InventoryRestoreFailure.InvalidInstanceState,
+                                $"Container '{configured.Key}' slot {index} has invalid instance state: {exception.Message}",
+                                schemaBefore,
+                                revisionBefore);
+                        }
+                    }
+
+                    slots[index] = new ItemStack(definitionId, slot.Quantity, instanceId, fragments);
                 }
 
                 working.Add(configured.Key, slots);
@@ -189,6 +215,16 @@ namespace Lingkyn.Inventory.Core
             if (shapeFailure.HasValue)
             {
                 return Failure(shapeFailure.Value, "The mutation request is incomplete or invalid.", request?.Quantity ?? 0, revisionBefore);
+            }
+
+            var stateFailure = ValidateInstanceState(request);
+            if (stateFailure != null)
+            {
+                return Failure(
+                    MutationFailure.InvalidInstanceState,
+                    stateFailure,
+                    request.Quantity,
+                    revisionBefore);
             }
 
             var snapshot = GetSnapshot();
@@ -253,9 +289,39 @@ namespace Lingkyn.Inventory.Core
                     return !request.Source.HasValue || !request.Destination.HasValue
                         ? MutationFailure.InvalidRequest
                         : (MutationFailure?)null;
+                case MutationKind.SetInstanceState:
+                    return !request.Source.HasValue || request.StateFragment == null
+                        ? MutationFailure.InvalidRequest
+                        : (MutationFailure?)null;
+                case MutationKind.RemoveInstanceState:
+                    return !request.Source.HasValue || !request.StateFragmentTypeId.HasValue
+                        ? MutationFailure.InvalidRequest
+                        : (MutationFailure?)null;
                 default:
                     return MutationFailure.InvalidRequest;
             }
+        }
+
+        private string ValidateInstanceState(MutationRequest request)
+        {
+            if (request.Kind == MutationKind.Add && request.Stack != null)
+            {
+                foreach (var fragment in request.Stack.StateFragments)
+                {
+                    if (!_stateFragmentRegistry.TryValidate(fragment, out var message))
+                    {
+                        return message;
+                    }
+                }
+            }
+
+            if (request.Kind == MutationKind.SetInstanceState
+                && !_stateFragmentRegistry.TryValidate(request.StateFragment, out var stateMessage))
+            {
+                return stateMessage;
+            }
+
+            return null;
         }
 
         private static MutationResult Failure(MutationFailure failure, string message, int requestedQuantity, long revision)
@@ -295,7 +361,7 @@ namespace Lingkyn.Inventory.Core
                 }
                 catch (Exception exception)
                 {
-                    ObserverFaulted?.Invoke(exception);
+                    RaiseObserverFault(exception);
                 }
             }
         }
@@ -316,7 +382,28 @@ namespace Lingkyn.Inventory.Core
                 }
                 catch (Exception exception)
                 {
-                    ObserverFaulted?.Invoke(exception);
+                    RaiseObserverFault(exception);
+                }
+            }
+        }
+
+        private void RaiseObserverFault(Exception exception)
+        {
+            var handlers = ObserverFaulted;
+            if (handlers == null)
+            {
+                return;
+            }
+
+            foreach (Action<Exception> handler in handlers.GetInvocationList())
+            {
+                try
+                {
+                    handler(exception);
+                }
+                catch
+                {
+                    // Observer diagnostics must never alter or mask a committed mutation.
                 }
             }
         }

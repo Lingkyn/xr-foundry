@@ -10,6 +10,9 @@ body:
       options:
         - com.lingkyn.project-initializer
         - com.lingkyn.xr-baseline
+        - com.lingkyn.inventory.core
+        - com.lingkyn.inventory.unity
+        - com.lingkyn.inventory.ugui
         - Repository tooling
     validations:
       required: true

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/device-lab/device-profile.schema.json",
+  "title": "XR Foundry hardware and runtime device profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "profile_id",
+    "profile_status",
+    "claim_allowed",
+    "claim_gate_issue",
+    "evidence_status",
+    "device",
+    "runtime",
+    "input_routes",
+    "non_claims"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.device_profile.v1" },
+    "profile_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "profile_status": { "enum": ["proposed", "open_for_evidence", "retired"] },
+    "claim_allowed": { "type": "boolean" },
+    "claim_gate_issue": { "type": ["string", "null"], "format": "uri" },
+    "evidence_status": { "enum": ["not_tested", "partial", "verified"] },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendor", "family_id", "family_name", "os_family"],
+      "properties": {
+        "vendor": { "type": "string", "minLength": 1 },
+        "family_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "family_name": { "type": "string", "minLength": 1 },
+        "os_family": { "type": "string", "minLength": 1 }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_id", "api_family"],
+      "properties": {
+        "runtime_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "api_family": { "type": "string", "minLength": 1 }
+      }
+    },
+    "input_routes": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "non_claims": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    }
+  }
+}

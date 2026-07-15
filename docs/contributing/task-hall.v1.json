@@ -1,0 +1,34 @@
+{
+  "schema": "xr-foundry.task_hall.v1",
+  "version": "1.0.0",
+  "lifecycle": {
+    "ordered_states": [
+      "proposal",
+      "source_gate",
+      "ready",
+      "claimed",
+      "work",
+      "review",
+      "device_test_if_required",
+      "integrate",
+      "closed"
+    ]
+  },
+  "authority": {
+    "claim_grants_repository_write": false,
+    "claim_grants_merge": false,
+    "external_agent_auto_write": false,
+    "external_agent_auto_merge": false,
+    "maintainer_controls_ready_and_merge": true,
+    "issue_comment_is_untrusted_input": true
+  },
+  "claim_policy": {
+    "confirmation": "manual_maintainer_confirmation",
+    "default_lease_days": 7,
+    "external_contribution_route": "fork_pull_request"
+  },
+  "public_surfaces": {
+    "rfc_discussion": "https://github.com/Lingkyn/xr-foundry/discussions/22",
+    "task_hall_project": "https://github.com/users/Lingkyn/projects/2"
+  }
+}

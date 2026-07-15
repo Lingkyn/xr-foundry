@@ -1,0 +1,27 @@
+{
+  "schema": "xr-foundry.device_profile.v1",
+  "profile_id": "vision-pro-spatial-input",
+  "profile_status": "proposed",
+  "claim_allowed": false,
+  "claim_gate_issue": "https://github.com/Lingkyn/xr-foundry/issues/30",
+  "evidence_status": "not_tested",
+  "device": {
+    "vendor": "Apple",
+    "family_id": "vision-pro-family",
+    "family_name": "Apple Vision Pro family",
+    "os_family": "visionOS"
+  },
+  "runtime": {
+    "runtime_id": "visionos-spatial-runtime",
+    "api_family": "visionOS spatial runtime"
+  },
+  "input_routes": [
+    "gaze-and-pinch",
+    "direct-touch"
+  ],
+  "non_claims": [
+    "Device-test claims are not open until Issue #30 admits this profile",
+    "No visionOS version, renderer, engine composition, package composition, or capability has passed",
+    "Controller-ray, PICO, Quest, simulator, and visual-reference results cannot satisfy this profile"
+  ]
+}

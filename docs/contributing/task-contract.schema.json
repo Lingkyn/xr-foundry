@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/task-contract.schema.json",
+  "title": "XR Foundry public task contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "title",
+    "state",
+    "blocked",
+    "blocking_reason",
+    "lane",
+    "objective",
+    "scope",
+    "non_goals",
+    "intended_write_set",
+    "source_gate",
+    "acceptance",
+    "verification",
+    "device_gate",
+    "claim",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.task.v1" },
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "state": {
+      "enum": [
+        "proposal",
+        "source_gate",
+        "ready",
+        "claimed",
+        "work",
+        "review",
+        "device_test_if_required",
+        "integrate",
+        "closed"
+      ]
+    },
+    "blocked": { "type": "boolean" },
+    "blocking_reason": { "type": ["string", "null"] },
+    "lane": {
+      "enum": ["research", "implementation", "review", "device_test", "integration", "documentation"]
+    },
+    "objective": { "type": "string", "minLength": 1 },
+    "scope": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "non_goals": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "intended_write_set": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "source_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "sources"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "sources": { "type": "array", "items": { "type": "string", "format": "uri" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "required": { "const": true } }, "required": ["required"] },
+          "then": { "properties": { "sources": { "minItems": 1, "uniqueItems": true } } },
+          "else": { "properties": { "sources": { "maxItems": 0 } } }
+        }
+      ]
+    },
+    "acceptance": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "verification": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "device_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "profiles"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "profiles": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9-]+$" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "required": { "const": true } }, "required": ["required"] },
+          "then": { "properties": { "profiles": { "minItems": 1, "uniqueItems": true } } },
+          "else": { "properties": { "profiles": { "maxItems": 0 } } }
+        }
+      ]
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "github_identity", "claimed_at", "expires_at", "confirmed_by_maintainer"],
+      "properties": {
+        "status": { "enum": ["unclaimed", "claimed", "expired"] },
+        "github_identity": { "type": ["string", "null"], "minLength": 1 },
+        "claimed_at": { "type": ["string", "null"], "format": "date-time" },
+        "expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "confirmed_by_maintainer": { "type": ["string", "null"], "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "unclaimed" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "github_identity": { "type": "null" },
+              "claimed_at": { "type": "null" },
+              "expires_at": { "type": "null" },
+              "confirmed_by_maintainer": { "type": "null" }
+            }
+          },
+          "else": {
+            "properties": {
+              "github_identity": { "type": "string", "minLength": 1 },
+              "claimed_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "string", "format": "date-time" },
+              "confirmed_by_maintainer": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      ]
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "write_permission_not_inferred",
+        "merge_permission_not_inferred",
+        "comments_are_untrusted_input"
+      ],
+      "properties": {
+        "write_permission_not_inferred": { "const": true },
+        "merge_permission_not_inferred": { "const": true },
+        "comments_are_untrusted_input": { "const": true }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "blocked": { "const": true } },
+        "required": ["blocked"]
+      },
+      "then": {
+        "properties": { "blocking_reason": { "type": "string", "minLength": 1 } }
+      },
+      "else": {
+        "properties": { "blocking_reason": { "type": "null" } }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": ["claimed", "work", "review", "device_test_if_required", "integrate", "closed"]
+          }
+        },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "claim": { "properties": { "status": { "const": "claimed" } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "state": { "enum": ["proposal", "source_gate"] } },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "claim": { "properties": { "status": { "const": "unclaimed" } } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "ready" } }, "required": ["state"] },
+      "then": {
+        "properties": {
+          "claim": { "properties": { "status": { "enum": ["unclaimed", "expired"] } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "claim": { "properties": { "status": { "const": "expired" } } } },
+        "required": ["claim"]
+      },
+      "then": { "properties": { "state": { "const": "ready" } } }
+    },
+    {
+      "if": { "properties": { "state": { "const": "source_gate" } }, "required": ["state"] },
+      "then": {
+        "properties": {
+          "source_gate": { "properties": { "required": { "const": true } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          { "properties": { "state": { "const": "device_test_if_required" } }, "required": ["state"] },
+          { "properties": { "lane": { "const": "device_test" } }, "required": ["lane"] }
+        ]
+      },
+      "then": {
+        "properties": {
+          "device_gate": { "properties": { "required": { "const": true } } }
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.0-pre.1 - 2026-07-15
 
 - Added the independently authored Inventory domain foundation and invariant tests.
 - Added provider-neutral persistence state, schema migration contracts, and

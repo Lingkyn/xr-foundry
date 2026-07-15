@@ -101,3 +101,5 @@ may reach candidate maturity without promoting a higher layer or the whole famil
 - [`inventory-standard.json`](inventory-standard.json): machine-readable package and capability contract.
 - [`architecture-contract.md`](architecture-contract.md): domain, package, UI, persistence, and XR boundaries.
 - [`verification-contract.md`](verification-contract.md): implementation and promotion evidence.
+- [`core-api-contract.md`](core-api-contract.md): prerelease compatibility and deprecation policy.
+- [`core-api-baseline.json`](core-api-baseline.json): machine-checked public type baseline.

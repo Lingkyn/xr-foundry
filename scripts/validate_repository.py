@@ -24,6 +24,8 @@ REQUIRED_INVENTORY_STANDARD_FILES = {
     "inventory-standard.json",
     "source-manifest.json",
     "verification-contract.md",
+    "core-api-contract.md",
+    "core-api-baseline.json",
 }
 TEXT_SUFFIXES = {".cs", ".asmdef", ".json", ".md", ".yml", ".yaml", ".txt"}
 
@@ -301,11 +303,59 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
     return errors
 
 
+def validate_inventory_api_baseline(root: Path) -> list[str]:
+    errors: list[str] = []
+    baseline_path = root / "docs" / "standards" / "inventory" / "core-api-baseline.json"
+    manifest_path = root / "com.lingkyn.inventory.core" / "package.json"
+    runtime_root = root / "com.lingkyn.inventory.core" / "Runtime"
+    if not baseline_path.exists() or not manifest_path.exists() or not runtime_root.exists():
+        return errors
+
+    baseline = load_json(baseline_path)
+    manifest = load_json(manifest_path)
+    if baseline.get("schema") != "xr-foundry.inventory_core_api_baseline.v1":
+        errors.append("Inventory Core API baseline schema is invalid")
+    if baseline.get("package_id") != manifest.get("name"):
+        errors.append("Inventory Core API baseline package id must match package.json")
+    if baseline.get("version") != manifest.get("version"):
+        errors.append("Inventory Core API baseline version must match package.json")
+
+    declared: set[str] = set()
+    declaration = re.compile(
+        r"\bpublic\s+(?:(?:sealed|static|abstract)\s+class|readonly\s+struct|enum|interface)\s+([A-Za-z0-9_]+)"
+    )
+    for source in runtime_root.glob("*.cs"):
+        declared.update(declaration.findall(source.read_text(encoding="utf-8")))
+    expected = baseline.get("public_types", [])
+    if len(expected) != len(set(expected)):
+        errors.append("Inventory Core API baseline contains duplicate public types")
+    if set(expected) != declared:
+        errors.append(
+            "Inventory Core API public type baseline mismatch: "
+            f"baseline={sorted(expected)} runtime={sorted(declared)}"
+        )
+
+    policy = baseline.get("compatibility_review", {})
+    required_true = {
+        "persistence_identifiers_are_contracts",
+        "enum_values_append_only",
+        "removal_requires_deprecation_or_documented_exception",
+        "first_candidate_requires_upgrade_and_rollback_receipt",
+    }
+    for key in required_true:
+        if policy.get(key) is not True:
+            errors.append(f"Inventory Core API compatibility policy is incomplete: {key}")
+    if policy.get("runtime_engine_dependencies") != []:
+        errors.append("Inventory Core API baseline must declare no runtime engine dependencies")
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_projection_coherence(root))
+    errors.extend(validate_inventory_api_baseline(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")

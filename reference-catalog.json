@@ -93,6 +93,27 @@
         "No UGUI, XR, scene, storage provider, or product content is included",
         "Candidate authoring evidence does not prove later presentation or XR layers"
       ]
+    },
+    {
+      "id": "unity-inventory-ugui",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "com.lingkyn.inventory.ugui",
+      "package_id": "com.lingkyn.inventory.ugui",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only"],
+      "purpose": "Presenter-owned Inventory UGUI with independently replaceable nested prefab roles and replayable states.",
+      "evidence": [
+        "docs/standards/inventory/architecture-contract.md",
+        "com.lingkyn.inventory.ugui/Runtime/Prefabs",
+        "com.lingkyn.inventory.ugui/Tests",
+        "docs/validation/2026-07-15-inventory-ugui-local-consumer.md"
+      ],
+      "non_claims": [
+        "No XR Interaction Toolkit dependency or world-space comfort claim",
+        "No product styling, scene, localization catalog, or item database",
+        "Local presentation evidence does not prove immutable non-XR consumption or headset usability"
+      ]
     }
   ],
   "roadmap_only": [

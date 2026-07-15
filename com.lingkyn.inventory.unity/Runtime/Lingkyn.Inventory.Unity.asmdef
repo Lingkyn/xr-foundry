@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.Inventory.Unity",
+  "rootNamespace": "Lingkyn.Inventory.Unity",
+  "references": [
+    "Lingkyn.Inventory.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

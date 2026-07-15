@@ -68,9 +68,29 @@
         "docs/standards/inventory/verification-contract.md"
       ],
       "non_claims": [
-        "Only the Core implementation is currently admitted at candidate maturity; Unity authoring, UGUI, and XR remain pending",
+        "Core is candidate and Unity authoring is incubating; UGUI and XR remain pending",
         "No community Inventory repository is an admitted code seed",
         "No XR runtime behavior is claimed"
+      ]
+    },
+    {
+      "id": "unity-inventory-authoring",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "com.lingkyn.inventory.unity",
+      "package_id": "com.lingkyn.inventory.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only"],
+      "purpose": "ScriptableObject item, catalog, container, and inventory authoring with deterministic Core conversion and actionable validation.",
+      "evidence": [
+        "docs/standards/inventory/architecture-contract.md",
+        "com.lingkyn.inventory.unity/Tests/Editor",
+        "docs/validation/2026-07-15-inventory-unity-local-consumer.md"
+      ],
+      "non_claims": [
+        "No player state is stored in authoring assets",
+        "No UGUI, XR, scene, storage provider, or product content is included",
+        "Local authoring evidence does not prove immutable Git consumption or later presentation layers"
       ]
     }
   ],

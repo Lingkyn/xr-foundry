@@ -90,6 +90,15 @@ def validate_internal_namespace_links(package_root: Path) -> list[str]:
             (source, value)
             for value in re.findall(r"\busing\s+(?:static\s+)?(Lingkyn\.[A-Za-z0-9_.]+)\s*;", text)
         )
+    manifest_path = package_root / "package.json"
+    if manifest_path.exists():
+        dependencies = load_json(manifest_path).get("dependencies", {})
+        for package_id in dependencies:
+            if not str(package_id).startswith("com.lingkyn."):
+                continue
+            dependency_root = package_root.parent / str(package_id)
+            for source in dependency_root.rglob("*.cs") if dependency_root.exists() else []:
+                declarations.update(re.findall(r"\bnamespace\s+(Lingkyn\.[A-Za-z0-9_.]+)", source.read_text(encoding="utf-8")))
     errors: list[str] = []
     for source, imported in imports:
         if not any(namespace == imported or namespace.startswith(imported + ".") for namespace in declarations):

@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.Inventory.Unity.Editor",
+  "rootNamespace": "Lingkyn.Inventory.Unity.Editor",
+  "references": [
+    "Lingkyn.Inventory.Unity"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

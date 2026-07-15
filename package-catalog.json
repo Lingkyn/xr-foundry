@@ -46,6 +46,31 @@
         ],
         "pending": []
       }
+    },
+    {
+      "id": "com.lingkyn.inventory.unity",
+      "path": "com.lingkyn.inventory.unity",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "passed_2026-07-15",
+      "git_url_install": "pending_reviewed_revision",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "immutable_git_url_clean_consumer",
+        "satisfied": [
+          "scriptableobject_authoring",
+          "stable_explicit_ids",
+          "deterministic_domain_conversion",
+          "actionable_validation",
+          "asset_immutability",
+          "local_clean_consumer_editmode_tests"
+        ],
+        "pending": [
+          "immutable_git_url_clean_consumer",
+          "candidate_release_review"
+        ]
+      }
     }
   ]
 }

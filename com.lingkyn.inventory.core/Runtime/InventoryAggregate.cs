@@ -57,9 +57,130 @@ namespace Lingkyn.Inventory.Core
         public InventoryId Id { get; }
         public long Revision { get; private set; }
         public event Action<InventoryEvent> Changed;
+        public event Action<InventorySnapshot> Restored;
         public event Action<Exception> ObserverFaulted;
 
         public InventorySnapshot GetSnapshot() => new InventorySnapshot(Id, Revision, _state);
+
+        public PersistenceEnvelope CreatePersistenceEnvelope() =>
+            new PersistenceEnvelope(InventoryPersistence.CurrentSchemaVersion, GetSnapshot());
+
+        public InventoryRestoreResult Restore(
+            PersistenceEnvelope envelope,
+            IEnumerable<IInventoryStateMigration> migrations = null)
+        {
+            var revisionBefore = Revision;
+            var schemaBefore = envelope?.SchemaVersion ?? 0;
+            if (!InventoryPersistence.TryMigrate(
+                    envelope,
+                    migrations,
+                    out var state,
+                    out var migrationFailure,
+                    out var migrationMessage))
+            {
+                return RestoreFailure(
+                    migrationFailure,
+                    migrationMessage,
+                    schemaBefore,
+                    revisionBefore);
+            }
+
+            if (!string.Equals(state.InventoryId, Id.Value, StringComparison.Ordinal))
+            {
+                return RestoreFailure(
+                    InventoryRestoreFailure.InventoryMismatch,
+                    $"State belongs to Inventory '{state.InventoryId}', not '{Id.Value}'.",
+                    schemaBefore,
+                    revisionBefore);
+            }
+
+            var containers = state.Containers.ToDictionary(
+                container => new ContainerId(container.ContainerId));
+            if (containers.Count != _state.Count || _state.Keys.Any(id => !containers.ContainsKey(id)))
+            {
+                return RestoreFailure(
+                    InventoryRestoreFailure.ContainerMismatch,
+                    "Persisted containers do not match the configured Inventory containers.",
+                    schemaBefore,
+                    revisionBefore);
+            }
+
+            var working = new Dictionary<ContainerId, ItemStack[]>();
+            var instanceIds = new HashSet<ItemInstanceId>();
+            foreach (var configured in _state)
+            {
+                var persisted = containers[configured.Key];
+                if (persisted.Capacity != configured.Value.Length)
+                {
+                    return RestoreFailure(
+                        InventoryRestoreFailure.CapacityMismatch,
+                        $"Container '{configured.Key}' expects {configured.Value.Length} slots but state contains {persisted.Capacity}.",
+                        schemaBefore,
+                        revisionBefore);
+                }
+
+                var slots = new ItemStack[persisted.Capacity];
+                for (var index = 0; index < persisted.Capacity; index++)
+                {
+                    var slot = persisted.Slots[index];
+                    if (slot == null)
+                    {
+                        continue;
+                    }
+
+                    var definitionId = new ItemDefinitionId(slot.DefinitionId);
+                    if (!_catalog.TryGet(definitionId, out var definition))
+                    {
+                        return RestoreFailure(
+                            InventoryRestoreFailure.MissingDefinition,
+                            $"Container '{configured.Key}' slot {index} references missing definition '{definitionId}'.",
+                            schemaBefore,
+                            revisionBefore);
+                    }
+
+                    var instanceId = string.IsNullOrWhiteSpace(slot.InstanceId)
+                        ? (ItemInstanceId?)null
+                        : new ItemInstanceId(slot.InstanceId);
+                    var invalidUnique = definition.InstanceMode == ItemInstanceMode.Unique
+                        && (!instanceId.HasValue || slot.Quantity != 1);
+                    var invalidFungible = definition.InstanceMode == ItemInstanceMode.Fungible
+                        && instanceId.HasValue;
+                    if (slot.Quantity > definition.MaximumStack || invalidUnique || invalidFungible)
+                    {
+                        return RestoreFailure(
+                            InventoryRestoreFailure.InvalidStack,
+                            $"Container '{configured.Key}' slot {index} violates definition '{definitionId}'.",
+                            schemaBefore,
+                            revisionBefore);
+                    }
+
+                    if (instanceId.HasValue && !instanceIds.Add(instanceId.Value))
+                    {
+                        return RestoreFailure(
+                            InventoryRestoreFailure.DuplicateInstance,
+                            $"Instance '{instanceId.Value}' appears more than once.",
+                            schemaBefore,
+                            revisionBefore);
+                    }
+
+                    slots[index] = new ItemStack(definitionId, slot.Quantity, instanceId);
+                }
+
+                working.Add(configured.Key, slots);
+            }
+
+            _state = working;
+            Revision = state.Revision;
+            RaiseRestored(GetSnapshot());
+            return new InventoryRestoreResult(
+                true,
+                InventoryRestoreFailure.None,
+                string.Empty,
+                schemaBefore,
+                InventoryPersistence.CurrentSchemaVersion,
+                revisionBefore,
+                Revision);
+        }
 
         public MutationResult Execute(MutationRequest request)
         {
@@ -142,6 +263,22 @@ namespace Lingkyn.Inventory.Core
             return new MutationResult(false, failure, message, requestedQuantity, 0, revision, revision, Array.Empty<SlotAddress>());
         }
 
+        private static InventoryRestoreResult RestoreFailure(
+            InventoryRestoreFailure failure,
+            string message,
+            int schemaVersionBefore,
+            long revision)
+        {
+            return new InventoryRestoreResult(
+                false,
+                failure,
+                message,
+                schemaVersionBefore,
+                InventoryPersistence.CurrentSchemaVersion,
+                revision,
+                revision);
+        }
+
         private void RaiseChanged(InventoryEvent inventoryEvent)
         {
             var handlers = Changed;
@@ -155,6 +292,27 @@ namespace Lingkyn.Inventory.Core
                 try
                 {
                     handler(inventoryEvent);
+                }
+                catch (Exception exception)
+                {
+                    ObserverFaulted?.Invoke(exception);
+                }
+            }
+        }
+
+        private void RaiseRestored(InventorySnapshot snapshot)
+        {
+            var handlers = Restored;
+            if (handlers == null)
+            {
+                return;
+            }
+
+            foreach (Action<InventorySnapshot> handler in handlers.GetInvocationList())
+            {
+                try
+                {
+                    handler(snapshot);
                 }
                 catch (Exception exception)
                 {

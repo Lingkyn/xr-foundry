@@ -19,6 +19,11 @@ copy of a consumer project or commercial Inventory implementation.
 - optional partial acceptance for add only;
 - structured failures, revisions, post-commit events, and immutable snapshots;
 - composable pre-commit policies; and
-- versioned persistence envelopes.
+- provider-neutral persistence state, explicit schema migrations, and transactional
+  restore with structured failures.
+
+Persistence providers remain consumer-owned. The Core package exports immutable
+primitive state and validates migrations/restores, but it does not select JSON,
+disk, cloud, authentication, or server storage.
 
 Unity authoring, nested UI prefabs, and XR interaction are separate package layers.

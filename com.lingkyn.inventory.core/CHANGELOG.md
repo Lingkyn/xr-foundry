@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-07-15
 
-- Prepared the first candidate revision against the `0.1.0-pre.1` public API baseline.
+- Promoted the first Core candidate after immutable Git install, upgrade from
+  `0.1.0-pre.1`, rollback, and clean-consumer tests.
 
 ## 0.1.0-pre.1 - 2026-07-15
 

@@ -5,6 +5,9 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Reopened the UGUI candidate after a structure-only false positive; `0.1.1`
+  now ships functional nested prefabs, stable-address intents, bounded scrolling,
+  semantic state samples, prefab-backed raycast tests, and cross-layer projection gates.
 - Reconciled Inventory implementation, roadmap, package/reference catalogs, and
   promotion evidence; added a fail-closed projection-coherence validator and
   explicit earliest-unsatisfied gates for every Inventory package layer.

@@ -100,7 +100,7 @@
       "engine": "Unity",
       "path": "com.lingkyn.inventory.ugui",
       "package_id": "com.lingkyn.inventory.ugui",
-      "maturity": "candidate",
+      "maturity": "incubating",
       "use_modes": ["install", "reference_only"],
       "purpose": "Presenter-owned Inventory UGUI with independently replaceable nested prefab roles and replayable states.",
       "evidence": [
@@ -111,6 +111,7 @@
         "docs/validation/2026-07-15-inventory-ugui-git-consumer.md"
       ],
       "non_claims": [
+        "The 0.1.0 structure-only receipt does not establish a functional shipped-prefab candidate; 0.1.1 immutable validation is pending",
         "No XR Interaction Toolkit dependency or world-space comfort claim",
         "No product styling, scene, localization catalog, or item database",
         "Candidate presentation evidence does not prove world-space or headset usability"

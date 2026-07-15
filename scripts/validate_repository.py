@@ -260,48 +260,58 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
         for item in reference.get("artifacts", [])
         if isinstance(item, dict)
     }
-    core = package_entries.get("com.lingkyn.inventory.core")
-    core_reference = reference_entries.get("unity-inventory-core")
     family_reference = reference_entries.get("inventory-package-family-standard")
-    if not core or not core_reference or not family_reference:
-        errors.append("Inventory package and reference catalog entries must exist")
+    if not family_reference:
+        errors.append("Inventory family reference catalog entry must exist")
         return errors
-
-    if core_reference.get("maturity") != core.get("maturity"):
-        errors.append("Inventory Core maturity must agree across package and reference catalogs")
-
-    promotion = core.get("promotion")
-    if not isinstance(promotion, dict):
-        errors.append("Inventory Core must declare machine-readable promotion state")
-    else:
-        candidate_status = promotion.get("candidate_status")
-        if candidate_status not in {"blocked", "eligible", "passed"}:
-            errors.append("Inventory Core candidate promotion status is invalid")
-        earliest_failed_gate = str(promotion.get("earliest_failed_gate", "")).strip()
-        if not earliest_failed_gate:
-            errors.append("Inventory Core must name its earliest failed promotion gate or 'none'")
-        if not promotion.get("satisfied"):
-            errors.append("Inventory Core promotion state must name satisfied gates")
-        pending = promotion.get("pending")
-        if not isinstance(pending, list):
-            errors.append("Inventory Core promotion state must provide a pending-gate list")
-        elif candidate_status == "passed" and (earliest_failed_gate != "none" or pending):
-            errors.append("Passed Inventory Core candidate must have no failed or pending gate")
-        elif candidate_status == "blocked" and (earliest_failed_gate == "none" or not pending):
-            errors.append("Blocked Inventory Core candidate must name its earliest failed and pending gates")
 
     package_family = {
         str(item.get("id", "")): item
         for item in standard.get("package_family", [])
         if isinstance(item, dict)
     }
+    layer_references = {
+        "com.lingkyn.inventory.core": "unity-inventory-core",
+        "com.lingkyn.inventory.unity": "unity-inventory-authoring",
+        "com.lingkyn.inventory.ugui": "unity-inventory-ugui",
+    }
+    roadmap_text = roadmap_path.read_text(encoding="utf-8")
+    for package_id, reference_id in layer_references.items():
+        package = package_entries.get(package_id)
+        if package is None:
+            continue
+        package_reference = reference_entries.get(reference_id)
+        package_standard = package_family.get(package_id)
+        label = package_id.removeprefix("com.lingkyn.inventory.").replace(".", " ").title()
+        if package_reference is None or package_standard is None:
+            errors.append(f"Inventory {label} package, standard, and reference entries must all exist")
+            continue
+        if package_reference.get("maturity") != package.get("maturity"):
+            errors.append(f"Inventory {label} maturity must agree across package and reference catalogs")
+
+        promotion = package.get("promotion")
+        if not isinstance(promotion, dict):
+            errors.append(f"Inventory {label} must declare machine-readable promotion state")
+            continue
+        errors.extend(validate_package_promotion(package_id, promotion))
+        expected_status = "implemented_candidate" if package.get("maturity") == "candidate" else "implemented_incubating"
+        if package_standard.get("implementation_status") != expected_status:
+            errors.append(f"Inventory {label} standard must be represented as {expected_status}")
+        if package_standard.get("earliest_failed_gate") != promotion.get("earliest_failed_gate"):
+            errors.append(f"Inventory {label} earliest failed gate must agree across standard and package catalog")
+
+        projection_row = (
+            f"| `{package_id}` | `{package.get('version')}` | `{package.get('maturity')}` | "
+            f"`{promotion.get('earliest_failed_gate')}` |"
+        )
+        if projection_row not in roadmap_text:
+            errors.append(f"ROADMAP.md: stale or missing projection row for {package_id}")
+
+    core = package_entries.get("com.lingkyn.inventory.core")
     core_standard = package_family.get("com.lingkyn.inventory.core", {})
-    if standard.get("core_implementation_admitted") is True:
-        expected_status = "implemented_candidate" if core.get("maturity") == "candidate" else "implemented_incubating"
-        if core_standard.get("implementation_status") != expected_status:
-            errors.append(f"Admitted Inventory Core must be represented as {expected_status}")
+    if core and standard.get("core_implementation_admitted") is True:
         stale_surfaces = {
-            "ROADMAP.md": roadmap_path.read_text(encoding="utf-8"),
+            "ROADMAP.md": roadmap_text,
             "docs/standards/inventory/README.md": standard_readme_path.read_text(encoding="utf-8"),
             "reference-catalog.json": json.dumps(reference, ensure_ascii=False),
         }
@@ -314,11 +324,6 @@ def validate_inventory_projection_coherence(root: Path) -> list[str]:
             for marker in stale_markers:
                 if marker in text:
                     errors.append(f"{surface}: stale Inventory implementation claim: {marker}")
-
-    if core_standard.get("earliest_failed_gate") != (
-        promotion.get("earliest_failed_gate") if isinstance(promotion, dict) else None
-    ):
-        errors.append("Inventory Core earliest failed gate must agree across standard and package catalog")
     return errors
 
 

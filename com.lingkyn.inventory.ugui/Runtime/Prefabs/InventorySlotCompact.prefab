@@ -12,6 +12,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: InventorySlotCompact
       objectReference: {fileID: 0}
+    - target: {fileID: 4484004487897575534, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
+      propertyPath: m_MinWidth
+      value: 112
+      objectReference: {fileID: 0}
+    - target: {fileID: 4484004487897575534, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
+      propertyPath: m_MinHeight
+      value: 52
+      objectReference: {fileID: 0}
+    - target: {fileID: 4484004487897575534, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
+      propertyPath: m_PreferredWidth
+      value: 144
+      objectReference: {fileID: 0}
+    - target: {fileID: 4484004487897575534, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
+      propertyPath: m_PreferredHeight
+      value: 60
+      objectReference: {fileID: 0}
     - target: {fileID: 5257885731701614568, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -38,11 +54,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5257885731701614568, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 144
       objectReference: {fileID: 0}
     - target: {fileID: 5257885731701614568, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 5257885731701614568, guid: ff3b0247ee8b30c4e92dcca8e5437162, type: 3}
       propertyPath: m_LocalPosition.x

@@ -142,6 +142,65 @@ class RepositoryContractTests(unittest.TestCase):
             errors = MODULE.validate_inventory_projection_coherence(root)
             self.assertTrue(any("no failed or pending gate" in error for error in errors))
 
+    def test_inventory_projection_rejects_stale_ugui_roadmap_row(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            standard_root = root / "docs" / "standards" / "inventory"
+            standard_root.mkdir(parents=True)
+            (root / "ROADMAP.md").write_text(
+                "| `com.lingkyn.inventory.ugui` | `0.1.0` | `candidate` | `none` |\n",
+                encoding="utf-8",
+            )
+            (standard_root / "README.md").write_text("UGUI correction", encoding="utf-8")
+            (standard_root / "inventory-standard.json").write_text(
+                json.dumps(
+                    {
+                        "package_family": [
+                            {
+                                "id": "com.lingkyn.inventory.ugui",
+                                "implementation_status": "implemented_incubating",
+                                "earliest_failed_gate": "immutable_git_url_functional_consumer",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "package-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "id": "com.lingkyn.inventory.ugui",
+                                "version": "0.1.1",
+                                "maturity": "incubating",
+                                "promotion": {
+                                    "candidate_status": "blocked",
+                                    "earliest_failed_gate": "immutable_git_url_functional_consumer",
+                                    "satisfied": ["wired_shipped_prefabs_local"],
+                                    "pending": ["immutable_git_url_functional_consumer"],
+                                },
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "reference-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "artifacts": [
+                            {"id": "unity-inventory-ugui", "maturity": "incubating"},
+                            {"id": "inventory-package-family-standard", "maturity": "incubating"},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_inventory_projection_coherence(root)
+            self.assertTrue(any("stale or missing projection row" in error for error in errors))
+
     def test_consumer_project_marker_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

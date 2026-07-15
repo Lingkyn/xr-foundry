@@ -57,6 +57,19 @@ namespace Lingkyn.Inventory.UGUI
         void Render(InventoryViewModel model);
     }
 
+    public readonly struct InventorySlotIntent
+    {
+        public InventorySlotIntent(SlotAddress address, int displayIndex)
+        {
+            if (displayIndex < 0) throw new ArgumentOutOfRangeException(nameof(displayIndex));
+            Address = address;
+            DisplayIndex = displayIndex;
+        }
+
+        public SlotAddress Address { get; }
+        public int DisplayIndex { get; }
+    }
+
     public sealed class InventoryPresenter : IDisposable
     {
         private readonly InventoryAggregate _inventory;
@@ -80,7 +93,7 @@ namespace Lingkyn.Inventory.UGUI
             if (_disabled)
             {
                 Render(InventoryUiState.Disabled, "Inventory interaction is disabled.");
-                return null;
+                throw new InvalidOperationException("InventoryPresenter cannot execute mutations while interaction is disabled.");
             }
 
             var result = _inventory.Execute(request);
@@ -93,6 +106,7 @@ namespace Lingkyn.Inventory.UGUI
 
         public void Select(SlotAddress address)
         {
+            EnsureInteractionEnabled("select slots");
             _inventory.GetSnapshot().Get(address);
             _selected = address;
             Render(InventoryUiState.Selected);
@@ -105,10 +119,20 @@ namespace Lingkyn.Inventory.UGUI
             else Refresh();
         }
 
-        public void Replay(InventoryUiState state, string message = "") => Render(state, message);
+        public void Replay(InventoryUiState state, string message = "")
+        {
+            EnsureInteractionEnabled("replay presentation states");
+            Render(state, message);
+        }
 
         public void Refresh()
         {
+            if (_disabled)
+            {
+                Render(InventoryUiState.Disabled, "Inventory interaction is disabled.");
+                return;
+            }
+
             var snapshot = _inventory.GetSnapshot();
             var slots = BuildSlots(snapshot).ToArray();
             var occupied = slots.Count(slot => slot.DefinitionId.HasValue);
@@ -145,6 +169,13 @@ namespace Lingkyn.Inventory.UGUI
             var snapshot = _inventory.GetSnapshot();
             Current = new InventoryViewModel(snapshot.Revision, state, BuildSlots(snapshot), message);
             _view.Render(Current);
+        }
+
+        private void EnsureInteractionEnabled(string operation)
+        {
+            if (!_disabled) return;
+            Render(InventoryUiState.Disabled, "Inventory interaction is disabled.");
+            throw new InvalidOperationException($"InventoryPresenter cannot {operation} while interaction is disabled.");
         }
 
         private void OnChanged(InventoryEvent _) => Refresh();

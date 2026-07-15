@@ -19,6 +19,73 @@ class RepositoryContractTests(unittest.TestCase):
     def test_current_repository_passes(self) -> None:
         self.assertEqual([], MODULE.validate_repository(ROOT))
 
+    def test_current_inventory_projections_are_coherent(self) -> None:
+        self.assertEqual([], MODULE.validate_inventory_projection_coherence(ROOT))
+
+    def test_inventory_projection_rejects_stale_unadmitted_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            standard_root = root / "docs" / "standards" / "inventory"
+            standard_root.mkdir(parents=True)
+            (root / "ROADMAP.md").write_text(
+                "Implementation remains unadmitted until later.", encoding="utf-8"
+            )
+            (standard_root / "README.md").write_text("Core status", encoding="utf-8")
+            (standard_root / "inventory-standard.json").write_text(
+                json.dumps(
+                    {
+                        "core_implementation_admitted": True,
+                        "package_family": [
+                            {
+                                "id": "com.lingkyn.inventory.core",
+                                "implementation_status": "implemented_incubating",
+                                "earliest_failed_gate": "persistence_round_trip_and_migration",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "package-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "id": "com.lingkyn.inventory.core",
+                                "maturity": "incubating",
+                                "promotion": {
+                                    "candidate_status": "blocked",
+                                    "earliest_failed_gate": "persistence_round_trip_and_migration",
+                                    "satisfied": ["architecture_gate"],
+                                    "pending": ["persistence_round_trip_and_migration"],
+                                },
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "reference-catalog.json").write_text(
+                json.dumps(
+                    {
+                        "artifacts": [
+                            {
+                                "id": "unity-inventory-core",
+                                "maturity": "incubating",
+                            },
+                            {
+                                "id": "inventory-package-family-standard",
+                                "maturity": "incubating",
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_inventory_projection_coherence(root)
+            self.assertTrue(any("stale Inventory implementation claim" in error for error in errors))
+
     def test_consumer_project_marker_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

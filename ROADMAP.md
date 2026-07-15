@@ -8,7 +8,7 @@ thin.
 ## Candidate gate
 
 - Repository validator and Python contract tests pass.
-- Both packages resolve and compile in a fresh Unity 6000.3 project.
+- Every promoted package resolves and compiles in a fresh Unity 6000.3 project.
 - EditMode package tests pass.
 - Installation and migration evidence names an immutable commit.
 
@@ -22,8 +22,12 @@ thin.
 
 Inventory is now an incubating system standard with a positive-external-source-only
 manifest, package-family architecture, nested presentation composition, and a
-verification contract. Implementation remains unadmitted until the architecture
-gate and core invariant-test plan are frozen. A standard is not a stable package.
+verification contract. The independently authored Core implementation is admitted
+at `incubating` maturity and has passed local and immutable Git URL clean-consumer
+tests. Candidate promotion remains blocked on persistence round-trip and migration
+coverage, API/compatibility review, and a second clean-consumer release comparison.
+Unity authoring, UGUI, and XR packages are not implemented yet. A tested Core is
+not evidence that the complete Inventory family or its VR experience is finished.
 
 ## Reference-library evolution
 

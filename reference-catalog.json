@@ -47,7 +47,8 @@
       ],
       "non_claims": [
         "No Unity authoring, UI, equipment, persistence provider, networking, or XR adapter is included",
-        "Public API compatibility is not promised"
+        "Public API compatibility is not promised",
+        "Clean-consumer Core evidence does not prove the complete Inventory product family"
       ]
     },
     {
@@ -64,7 +65,7 @@
         "docs/standards/inventory/verification-contract.md"
       ],
       "non_claims": [
-        "No Inventory implementation is admitted yet",
+        "Only the Core implementation is currently admitted at incubating maturity; Unity authoring, UGUI, and XR remain pending",
         "No community Inventory repository is an admitted code seed",
         "No XR runtime behavior is claimed"
       ]

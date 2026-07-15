@@ -60,7 +60,6 @@ namespace Lingkyn.Inventory.UGUI.Tests
         [Test]
         public void NestedPrefabRolesAndVariantRetainIndependentSourceLinks()
         {
-            InventoryPrefabFactory.Rebuild();
             var shell = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/InventoryShell.prefab");
             var panel = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/InventoryPanel.prefab");
             var grid = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/InventoryGrid.prefab");
@@ -82,7 +81,6 @@ namespace Lingkyn.Inventory.UGUI.Tests
         [Test]
         public void SlotVariantCanReplaceNestedSlotWithoutChangingGridAsset()
         {
-            InventoryPrefabFactory.Rebuild();
             var grid = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/InventoryGrid.prefab");
             var variant = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/InventorySlotCompact.prefab");
             var originalSource = SourceOf(grid.transform.GetChild(0).gameObject);

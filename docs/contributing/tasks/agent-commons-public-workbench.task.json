@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 2,
+  "revision": 3,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -45,7 +45,7 @@
       "non_goals": [
         "No package source, Device Lab artifact implementation, repository permission, or workflow change"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -96,18 +96,26 @@
         { "id": "WB01-V1", "procedure": "Validate the Task Hall authority, task example, continuation example, registry, and registered live task against their declared JSON Schemas.", "expected": "Every declared instance passes at the published contract commit; repository-validator integration is delegated to WB-01V.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "WB01-E1",
+          "kind": "design",
+          "location": "https://github.com/Lingkyn/xr-foundry/commit/6e9ef554442a91ac8065b5156be3f1fda6f5353e",
+          "commit": "6e9ef554442a91ac8065b5156be3f1fda6f5353e",
+          "summary": "The exact public commit passed five JSON Schema/instance checks, a bounded-path audit, a package-diff check, and a public leakage scan in a clean detached worktree."
+        }
+      ],
       "waiting": null,
       "claim": {
-        "status": "active",
+        "status": "released",
         "adoptable": false,
         "github_identity": "Lingkyn",
         "previous_github_identity": null,
         "claimed_at": "2026-07-15T16:30:00Z",
         "expires_at": "2026-07-22T16:30:00Z",
-        "ended_at": null,
+        "ended_at": "2026-07-15T18:02:58Z",
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": null
+        "transition_reason": "The WB-01 contract boundary was published and independently revalidated from its exact clean commit; validator integration continues as WB-01V."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": {
@@ -116,12 +124,12 @@
         "branch": "codex/agent-commons-v1",
         "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
         "base_commit": "3a2626cea1448c8d8e0c6379f1524b823ec7536b",
-        "head_commit": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
-        "published_at": "2026-07-15T17:12:18Z"
+        "head_commit": "6e9ef554442a91ac8065b5156be3f1fda6f5353e",
+        "published_at": "2026-07-15T18:02:58Z"
       },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Publish the WB-01 contract and live-registry commit, attach schema evidence to Issue #39, then admit WB-01V from that exact public revision.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-15T18:02:58Z"
     },
     {
       "id": "WB-01V",
@@ -130,7 +138,7 @@
       "non_goals": [
         "No contract-document, package, Device Lab, workflow, permission, WB-02 recognition, or WB-04 remote-evidence change"
       ],
-      "status": "draft",
+      "status": "ready",
       "depends_on": ["WB-01"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -177,7 +185,7 @@
       "waiting": null,
       "claim": {
         "status": "unclaimed",
-        "adoptable": false,
+        "adoptable": true,
         "github_identity": null,
         "previous_github_identity": null,
         "claimed_at": null,
@@ -189,7 +197,7 @@
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Wait for WB-01 to publish, then admit a Cursor lease and public execution anchor from that exact commit.",
+      "exact_next_action": "Claim WB-01V, publish an isolated Cursor branch from the exact WB-01 public boundary, and implement only the two allowed validator files.",
       "completed_at": null
     },
     {

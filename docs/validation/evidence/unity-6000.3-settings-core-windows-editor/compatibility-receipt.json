@@ -1,0 +1,64 @@
+{
+  "$schema": "docs/validation/compatibility-evidence.schema.json",
+  "schema": "xr-foundry.compatibility_evidence.v1",
+  "kind": "editor_automated",
+  "profile_id": "unity-6000.3-settings-core-windows-editor",
+  "commit_sha": "7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+  "target": {
+    "engine": { "id": "unity", "version": "6000.3.19f1" },
+    "editor": { "id": "unity-editor", "version": "6000.3.19f1" },
+    "renderer": { "id": "not_applicable", "version": "not_applicable" },
+    "requested_dependencies": { "com.unity.test-framework": "1.6.0" },
+    "resolved_dependencies": {
+      "com.unity.ext.nunit": "2.0.5",
+      "com.unity.modules.imgui": "1.0.0",
+      "com.unity.modules.jsonserialize": "1.0.0",
+      "com.unity.test-framework": "1.6.0"
+    },
+    "build_target": "WindowsEditor",
+    "graphics_api": "Null",
+    "scripting_backend": "Mono",
+    "architecture": "x86_64",
+    "xr_provider": { "id": "not_applicable", "version": "not_applicable" },
+    "runtime": { "id": "not_applicable", "version": "not_applicable" },
+    "input_routes": ["not_applicable"],
+    "device": { "id": "windows-editor-host", "version": "10.0.26200" }
+  },
+  "package_versions": {
+    "com.lingkyn.settings.core": "0.1.0"
+  },
+  "resolved_dependencies": {
+    "com.unity.ext.nunit": "2.0.5",
+    "com.unity.modules.imgui": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "manifest": {
+    "path": "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/consumer-manifest.json",
+    "sha256": "ff0f21a0655603191991f050990a5952ba591c7b0f7af1733da2e6d5360daf55"
+  },
+  "lock": {
+    "path": "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/consumer-packages-lock.json",
+    "sha256": "95681579fbe4764a2ae747916a611ba7df0efb0b7f645e784ca8cfd96afd4a26"
+  },
+  "checks": [
+    {
+      "id": "editor_compile",
+      "status": "pass",
+      "evidence_refs": [{
+        "kind": "compile_result",
+        "ref": "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/compile-result.json",
+        "sha256": "6329967e82561a0ebc5804d732561e26bd07261cd70debb14cd5f0934e570877"
+      }]
+    },
+    {
+      "id": "editmode_tests",
+      "status": "pass",
+      "evidence_refs": [{
+        "kind": "nunit_result",
+        "ref": "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/editmode-results.xml",
+        "sha256": "a526e3ef805ba3316863286ee0e2f85cfe82c24116526867d16f3a7b5bc12691"
+      }]
+    }
+  ]
+}

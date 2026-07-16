@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.Settings.Unity",
+  "rootNamespace": "Lingkyn.Settings.Unity",
+  "references": [
+    "Lingkyn.Settings.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "admitted",
+  "package": {
+    "id": "com.lingkyn.interaction.core",
+    "display_name": "Lingkyn Interaction Core",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Engine-light semantic intents, contexts, routes, advisory binding suggestions, typed source signals, capability-aware deterministic routing, policy snapshots, diagnostics, and handler outcomes.",
+    "category": "system",
+    "family": "interaction",
+    "target_path": "packages/unity/systems/interaction/com.lingkyn.interaction.core",
+    "root_namespace": "Lingkyn.Interaction.Core",
+    "dependencies": {}
+  },
+  "admission": {
+    "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/57",
+    "system_admission_record": "docs/foundry/admissions/interaction.v1.json",
+    "source_manifest": "docs/standards/interaction/source-manifest.json",
+    "positive_sources": [
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#input",
+      "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/Actions.html",
+      "https://dev.epicgames.com/documentation/unreal-engine/enhanced-input-in-unreal-engine?lang=en-US",
+      "https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107",
+      "https://developer.apple.com/design/human-interface-guidelines/gestures"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "SemanticRouting",
+    "sample_description": "Renderer- and device-neutral intents routed from ordered, typed source frames with explicit contexts, policies, diagnostics, cancellation, and outcomes."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}

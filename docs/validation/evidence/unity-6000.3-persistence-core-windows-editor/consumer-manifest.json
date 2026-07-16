@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.lingkyn.persistence.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/persistence/com.lingkyn.persistence.core#469f69a6899508e0978f9bb7bcccf7e74878429e",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.lingkyn.persistence.core"
+  ]
+}

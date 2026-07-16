@@ -1,0 +1,22 @@
+{
+  "name": "com.lingkyn.settings.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Settings Unity",
+  "description": "Unity ScriptableObject authoring, deterministic Core conversion, validation, and explicit consumer-provided applicator registration.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.settings.core": "0.1.0"
+  },
+  "samples": [
+    {
+      "displayName": "SettingsAuthoring",
+      "description": "ScriptableObject definitions and profiles converted into an immutable Core registry with explicit applicator wiring.",
+      "path": "Samples~/SettingsAuthoring"
+    }
+  ]
+}

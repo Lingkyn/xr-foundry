@@ -1,0 +1,35 @@
+{
+  "schema": "xr-foundry.settings_standard.v1",
+  "maturity": "admitted_blueprint",
+  "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/55",
+  "derivation_manifest": "docs/standards/settings/source-manifest.json",
+  "coverage_matrix": "docs/standards/settings/coverage-matrix.md",
+  "independent_source_review": "https://github.com/Lingkyn/xr-foundry/pull/61#issuecomment-4995402618",
+  "admitted_blueprints": [
+    "docs/foundry/blueprints/settings-core.v1.json",
+    "docs/foundry/blueprints/settings-unity.v1.json"
+  ],
+  "planned_boundaries": [
+    {
+      "role": "engine_light_core",
+      "owns": ["typed definitions", "constraints", "profiles", "transactions", "rollback", "snapshots", "persistence port", "accessibility discoverability metadata"],
+      "excludes": ["Unity", "file formats", "input bindings", "UI renderers", "platform SDKs", "device claims", "compliance claims"]
+    },
+    {
+      "role": "unity_adapter",
+      "owns": ["ScriptableObject authoring", "Core conversion", "validation", "explicit applicator wiring"],
+      "excludes": ["runtime choices in assets", "scene search", "UGUI", "UI Toolkit", "concrete product policy", "device claims"]
+    }
+  ],
+  "promotion_order": [
+    "source_gate",
+    "independent_source_review",
+    "admitted_blueprint",
+    "core_transaction_tests",
+    "unity_authoring_tests",
+    "repository_contract",
+    "exact_consumer",
+    "independent_implementation_review",
+    "batch_release"
+  ]
+}

@@ -8,44 +8,17 @@
   },
   "candidates": [
     {
-      "id": "NEXT-PERSISTENCE",
-      "title": "Save and persistence family",
-      "state": "source_gate",
-      "objective": "Qualify a reusable persistence boundary for versioned saves, migration, atomic writes, recovery, and provider adapters.",
-      "source_requirements": [
-        "Official engine serialization and platform-storage guidance",
-        "Maintained professional implementations with explicit migration, corruption, and rollback behavior",
-        "License, maintenance, test, security, and independent-consumer review"
-      ],
-      "package_ids": [],
-      "exact_next_action": "Open one research checkpoint that compares positive public sources and proposes engine-neutral data and Unity adapter boundaries."
-    },
-    {
-      "id": "NEXT-SETTINGS",
-      "title": "Player settings and accessibility family",
+      "id": "NEXT-LOCALIZATION",
+      "title": "Localization content and runtime family",
       "state": "proposal",
-      "objective": "Define reusable settings semantics for audio, graphics, controls, comfort, localization, and accessibility without coupling them to one UI renderer.",
+      "objective": "Define engine-light localized-message identity, locale fallback, formatting inputs, content validation, and a thin Unity Localization adapter without coupling domain code to one renderer or engine.",
       "source_requirements": [
-        "Official platform and engine settings guidance",
-        "Accessibility guidance from shipped-game or industry authorities",
-        "Renderer, persistence, input, and XR comfort boundary review"
+        "Unicode locale, CLDR, ICU or MessageFormat standards and compatibility boundaries",
+        "Official Unity Localization documentation plus shipped-engine localization guidance",
+        "Plural, gender, fallback, bidirectional-text, font, accessibility, and content-pipeline evidence boundaries"
       ],
       "package_ids": [],
-      "exact_next_action": "Resolve overlap with persistence and input families before admitting a source gate."
-    },
-    {
-      "id": "NEXT-INTERACTION",
-      "title": "Semantic interaction family",
-      "state": "proposal",
-      "objective": "Define engine-light interaction intents and replaceable desktop, controller, tracked-ray, hand, and gaze adapters without transferring evidence across modalities.",
-      "source_requirements": [
-        "Official OpenXR and engine interaction guidance",
-        "Shipped platform interaction principles for controller, hand, and gaze",
-        "Capability, accessibility, comfort, and named-device evidence boundaries"
-      ],
-      "package_ids": [],
-      "exact_next_action": "Decide whether the common semantic core is sufficiently stable to justify a cross-device source gate."
+      "exact_next_action": "Run the positive-source gate and decide whether message identity, locale fallback, formatting, and renderer boundaries are stable enough to admit a Core and Unity blueprint."
     }
   ]
 }
-

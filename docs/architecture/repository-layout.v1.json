@@ -26,6 +26,30 @@
         "com.lingkyn.inventory.xr.ugui",
         "com.lingkyn.inventory.xr.uitoolkit"
       ]
+    },
+    {
+      "id": "unity-system-persistence",
+      "path": "packages/unity/systems/persistence",
+      "packages": [
+        "com.lingkyn.persistence.core",
+        "com.lingkyn.persistence.unity"
+      ]
+    },
+    {
+      "id": "unity-system-settings",
+      "path": "packages/unity/systems/settings",
+      "packages": [
+        "com.lingkyn.settings.core",
+        "com.lingkyn.settings.unity"
+      ]
+    },
+    {
+      "id": "unity-system-interaction",
+      "path": "packages/unity/systems/interaction",
+      "packages": [
+        "com.lingkyn.interaction.core",
+        "com.lingkyn.interaction.unity"
+      ]
     }
   ],
   "invariants": {

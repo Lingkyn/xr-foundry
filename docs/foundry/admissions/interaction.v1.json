@@ -1,0 +1,59 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "interaction",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "standard_system",
+  "reviewed_on": "2026-07-16",
+  "source_manifest": "docs/standards/interaction/source-manifest.json",
+  "reference_alignment": [
+    {
+      "url": "https://github.com/Lingkyn/game-system-reference-standards/blob/main/entries/blueprints/input-mapping.md",
+      "entry_id": "REF-SYS-input-mapping",
+      "admission": "Standard"
+    },
+    {
+      "url": "https://github.com/Lingkyn/game-system-reference-standards/blob/main/entries/blueprints/xr-interaction-system.md",
+      "entry_id": "REF-SYS-xr-interaction-system",
+      "admission": "Candidate"
+    }
+  ],
+  "consumer_contexts": [
+    "keyboard, mouse, gamepad, touch, gaze, hand, and controller input translation",
+    "gameplay, UI, tools, accessibility routes, and spatial interaction contexts"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#input",
+      "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/Actions.html"
+    ],
+    "independent_professional_sources": [
+      "https://dev.epicgames.com/documentation/unreal-engine/enhanced-input-in-unreal-engine?lang=en-US",
+      "https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107"
+    ]
+  },
+  "common_kernel": [
+    "semantic intent, context, route, lifecycle, capability, and typed observation contracts",
+    "deterministic admission, collision resolution, policy evaluation, state transition, and diagnostics",
+    "engine and provider adapters that preserve semantic and identity boundaries"
+  ],
+  "configurable_variation": [
+    "bindings, interaction profiles, thresholds, hold and toggle policies, contexts, renderers, devices, and product handlers"
+  ],
+  "excluded_project_specific": [
+    "one game's commands, locomotion, grab rules, scene objects, interaction affordance art, and control layout",
+    "hard-coded vendor paths, device names, renderer components, singletons, scene search, and private assemblies"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Action and intent mapping, context, routing, lifecycle, and rebinding recur across engines and input modalities; concrete gameplay commands, UI, XR techniques, renderers, and devices remain adapters or consumers.",
+  "non_claims": [
+    "Admission does not prove a live input modality, XRI or OpenXR integration, accessibility outcome, comfort, renderer, vendor runtime, or device behavior."
+  ]
+}

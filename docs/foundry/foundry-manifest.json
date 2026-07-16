@@ -1,8 +1,9 @@
 {
   "schema": "xr-foundry.production_line.v1",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "lifecycle": [
     "proposal",
+    "system_scope_gate",
     "source_gate",
     "admitted_blueprint",
     "scaffold",
@@ -38,7 +39,9 @@
   ],
   "surfaces": {
     "first_batch": "docs/foundry/batches/unity-first-batch.v1.json",
+    "batch_registry": "docs/foundry/batches/batch-registry.v1.json",
     "next_queue": "docs/foundry/queue/next-batch.json",
+    "system_admission_schema": "docs/foundry/system-admission.schema.json",
     "blueprint_schema": "docs/foundry/unity-package-blueprint.schema.json",
     "source_manifest": "docs/foundry/source-manifest.json",
     "release_policy": "docs/foundry/release-policy.md"
@@ -50,4 +53,3 @@
     "automated_evidence_grants_device_claim": false
   }
 }
-

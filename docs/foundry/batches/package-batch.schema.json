@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/foundry/batches/package-batch.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "batch_id", "engine", "status", "release", "packages", "claim_boundary", "authority"],
+  "properties": {
+    "schema": { "const": "xr-foundry.package_batch.v1" },
+    "batch_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "engine": { "const": "Unity" },
+    "status": { "enum": ["building", "approved_for_release", "released"] },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "commit_binding", "immutable_history"],
+      "properties": {
+        "tag": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "commit_binding": { "const": "release_tag_exact_commit" },
+        "immutable_history": { "const": true }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path", "version", "maturity", "compatibility_profile", "device_evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^com\\.lingkyn\\." },
+          "path": { "type": "string", "pattern": "^packages/unity/" },
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "maturity": { "enum": ["incubating", "candidate", "stable", "deprecated"] },
+          "compatibility_profile": { "type": "string", "minLength": 1 },
+          "device_evidence": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "claim_boundary": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batch_inclusion_promotes_maturity", "batch_release_grants_device_claim", "agent_may_release"],
+      "properties": {
+        "batch_inclusion_promotes_maturity": { "const": false },
+        "batch_release_grants_device_claim": { "const": false },
+        "agent_may_release": { "const": false }
+      }
+    }
+  }
+}

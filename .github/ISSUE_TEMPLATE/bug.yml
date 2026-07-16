@@ -17,6 +17,12 @@ body:
         - com.lingkyn.inventory.uitoolkit
         - com.lingkyn.inventory.xr.ugui
         - com.lingkyn.inventory.xr.uitoolkit
+        - com.lingkyn.persistence.core
+        - com.lingkyn.persistence.unity
+        - com.lingkyn.settings.core
+        - com.lingkyn.settings.unity
+        - com.lingkyn.interaction.core
+        - com.lingkyn.interaction.unity
         - Repository tooling
     validations:
       required: true

@@ -1,0 +1,48 @@
+{
+  "dependencies": {
+    "com.lingkyn.settings.core": {
+      "version": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/settings/com.lingkyn.settings.core#7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9"
+    },
+    "com.lingkyn.settings.unity": {
+      "version": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/settings/com.lingkyn.settings.unity#7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.lingkyn.settings.core": "0.1.0"
+      },
+      "hash": "7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9"
+    },
+    "com.unity.ext.nunit": {
+      "version": "2.0.5",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.test-framework": {
+      "version": "1.6.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.ext.nunit": "2.0.3",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      }
+    },
+    "com.unity.modules.imgui": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.jsonserialize": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    }
+  }
+}

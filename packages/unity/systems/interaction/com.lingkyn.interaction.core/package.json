@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.interaction.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Interaction Core",
+  "description": "Engine-light semantic intents, contexts, routes, advisory binding suggestions, typed source signals, capability-aware deterministic routing, policy snapshots, diagnostics, and handler outcomes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "SemanticRouting",
+      "description": "Renderer- and device-neutral intents routed from ordered, typed source frames with explicit contexts, policies, diagnostics, cancellation, and outcomes.",
+      "path": "Samples~/SemanticRouting"
+    }
+  ]
+}

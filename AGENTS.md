@@ -57,6 +57,10 @@ Before moving a checkpoint to `in_progress`, publish its branch or draft-PR anch
 checkpoint ID, and base revision. Keep work inside the checkpoint's allowed paths.
 Publish the reachable commit, evidence, and Task Hall update for one checkpoint
 before beginning a sibling, and reserve enough execution budget for that closeout.
+Follow the branch and fan-in lifecycle in `docs/contributing/task-hall.md`:
+checkpoint branches merge into their declared integration branch, the validated
+integration branch merges into the default branch through a pull request, and
+merged temporary branches/worktrees are removed after reachability checks.
 Preserve completed checkpoints and publish the structured continuation receipt
 before pausing, releasing,
 transferring, or abandoning work. The receipt binds the current branch/PR/commit,

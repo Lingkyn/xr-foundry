@@ -1,0 +1,167 @@
+{
+  "schema": "xr-foundry.settings_source_manifest.v1",
+  "scope": "Renderer-neutral player settings and accessibility metadata with a thin Unity authoring/application adapter",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "sources": [
+    {
+      "id": "microsoft-xag-v3.2",
+      "kind": "official_industry_guidance",
+      "authority": "Microsoft Gaming",
+      "url": "https://learn.microsoft.com/en-us/xbox/accessibility/guidelines",
+      "license_or_terms": "Microsoft Learn terms; facts and coverage vocabulary only",
+      "maintenance_evidence": "Current Xbox Accessibility Guidelines index reviewed 2026-07-16",
+      "admitted_role": "Game accessibility coverage and non-compliance boundary",
+      "admitted_claims": [
+        "Game accessibility settings span text, contrast, multimodal cues, captions, audio, input, difficulty, navigation, motion, photosensitivity and discoverability",
+        "Guidelines are design, development and test guidance rather than legal-compliance certification",
+        "A game should scope applicable barriers instead of assuming every guideline applies identically"
+      ],
+      "excluded_uses": [
+        "No checklist item becomes a mandatory Core setting",
+        "No metadata tag proves implementation, usability, certification or legal compliance"
+      ]
+    },
+    {
+      "id": "microsoft-xag-input-107",
+      "kind": "official_industry_guidance",
+      "authority": "Microsoft Gaming",
+      "url": "https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107",
+      "license_or_terms": "Microsoft Learn terms; facts only",
+      "maintenance_evidence": "Current XAG 107 reviewed 2026-07-16",
+      "admitted_role": "Input-setting boundary",
+      "admitted_claims": [
+        "Player choice across input mechanisms reduces barriers created by fixed physical-control assumptions",
+        "Settings semantics should refer to player intent and policy rather than one hardware control"
+      ],
+      "excluded_uses": [
+        "The Settings family does not implement rebinding or device layouts",
+        "Input guidance does not prove support for a controller, hand, gaze, voice or switch device"
+      ]
+    },
+    {
+      "id": "microsoft-xag-motion-117",
+      "kind": "official_industry_guidance",
+      "authority": "Microsoft Gaming",
+      "url": "https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/117",
+      "license_or_terms": "Microsoft Learn terms; facts only",
+      "maintenance_evidence": "Current XAG 117 and version history reviewed 2026-07-16",
+      "admitted_role": "Motion and comfort discoverability coverage",
+      "admitted_claims": [
+        "Motion-related settings can expose control over camera shake, camera bob, field of view, sensitivity and moving or auto-updating content",
+        "Relevant choices should be discoverable without requiring gameplay exposure first"
+      ],
+      "excluded_uses": [
+        "No medical outcome, XR comfort threshold or device behavior is inferred",
+        "The Core does not implement camera or locomotion effects"
+      ]
+    },
+    {
+      "id": "microsoft-accessibility-feature-tags-2.0.1",
+      "kind": "official_platform_metadata_guidance",
+      "authority": "Microsoft Gaming",
+      "url": "https://learn.microsoft.com/en-us/xbox/accessibility/accessibility-feature-tags",
+      "license_or_terms": "Microsoft Learn terms; facts only",
+      "maintenance_evidence": "Feature Tags version 2.0.1 page reviewed 2026-07-16",
+      "admitted_role": "Discoverability metadata and verification separation",
+      "admitted_claims": [
+        "Accessibility features need discoverable player-facing descriptions",
+        "A platform feature tag has criteria and validation beyond merely exposing a similarly named option"
+      ],
+      "excluded_uses": [
+        "XR Foundry metadata is not an Xbox or Accessible Games Initiative store tag",
+        "No platform listing claim is generated automatically"
+      ]
+    },
+    {
+      "id": "unity-6000.3-scriptableobject",
+      "kind": "official_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6.3 LTS documentation",
+      "admitted_role": "Unity immutable authoring boundary",
+      "admitted_claims": [
+        "ScriptableObjects are project data containers independent of GameObject instances",
+        "Shared authored definitions and presets can be referenced without duplicating configuration"
+      ],
+      "excluded_uses": [
+        "Authored assets are not mutable player-setting storage",
+        "ScriptableObject authoring does not prescribe a UI renderer or concrete game policy"
+      ]
+    },
+    {
+      "id": "epic-lyra-game-settings",
+      "kind": "official_shipped_sample_documentation",
+      "authority": "Epic Games",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/lyra-sample-game-settings-in-unreal-engine?lang=en-US",
+      "license_or_terms": "Epic Developer Community documentation terms; architecture facts only, no copied implementation",
+      "maintenance_evidence": "Current Unreal Engine 5.7 Lyra Game Settings documentation reviewed 2026-07-16",
+      "admitted_role": "Professional settings registry, identity, data-source and presentation separation",
+      "admitted_claims": [
+        "A shipped sample uses a settings registry with unique developer-facing identities, typed setting variants, defaults, descriptions, edit dependencies and conditions",
+        "Runtime getters/setters and data sources are separate from visual presentation rules",
+        "Platform traits and contextual conditions can hide, disable or explain unavailable settings without hard-coding one platform into setting identity"
+      ],
+      "excluded_uses": [
+        "No Unreal source code, macro system, UMG renderer, dynamic reflection path or class hierarchy is copied",
+        "The documentation does not prove XR Foundry transaction, rollback, persistence or Unity behavior"
+      ]
+    },
+    {
+      "id": "osu-framework-configuration",
+      "kind": "maintained_shipped_open_source_framework",
+      "authority": "ppy Pty Ltd",
+      "url": "https://github.com/ppy/osu-framework",
+      "immutable_review_ref": "3612e9e594667a2d25de156c14178feb0cc8c27a",
+      "reviewed_paths": [
+        "osu.Framework/Configuration/ConfigManager.cs",
+        "osu.Framework/Bindables/Bindable.cs",
+        "osu.Framework/Bindables/BindableNumber.cs",
+        "osu.Framework.Tests/Configuration/FrameworkConfigManagerTest.cs"
+      ],
+      "license_or_terms": "MIT",
+      "maintenance_evidence": "1,985 GitHub stars at review; active on 2026-07-16; published releases and tests; framework used by the shipped osu! game",
+      "admitted_role": "Strongly adopted evidence for typed configuration, defaults, ranges, change notification and replaceable storage",
+      "admitted_claims": [
+        "Typed configuration entries can carry defaults and numeric bounds while exposing old/new value change events",
+        "Configuration lookup, typed values and storage implementation can be separated",
+        "Configuration logging needs an explicit boundary for private values"
+      ],
+      "excluded_uses": [
+        "No source code or API shape is copied",
+        "Its enum lookup, bindable graph and INI provider are not imposed on consumers",
+        "It is not admitted as evidence for transactional multi-setting rollback"
+      ]
+    },
+    {
+      "id": "apple-hig-motion-visionos",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/motion",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current HIG Motion guidance reviewed 2026-07-16",
+      "admitted_role": "Immersive motion choice and non-universal comfort boundary",
+      "admitted_claims": [
+        "Motion should be purposeful, optional where possible, and not the only communication channel",
+        "visionOS guidance treats peripheral, full-field, world-rotation and sustained motion as platform-specific comfort considerations"
+      ],
+      "excluded_uses": [
+        "Apple guidance is not universal device support or a Unity implementation prescription",
+        "No numeric comfort threshold, medical claim or named-headset result is transferred"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "game-accessibility-guidelines-full-list",
+      "url": "https://gameaccessibilityguidelines.com/full-list/",
+      "reason": "Useful cross-check for barrier vocabulary, but Microsoft first-party guidance is the load-bearing derivation source"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, compliance, medical, platform or device authority",
+    "The first implementation is a reusable semantic and authoring substrate, not a complete product settings experience",
+    "Popularity or official ownership never substitutes for exact repository and consumer verification"
+  ]
+}

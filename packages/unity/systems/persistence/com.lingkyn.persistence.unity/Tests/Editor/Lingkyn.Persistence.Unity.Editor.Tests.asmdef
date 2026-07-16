@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.Persistence.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.Persistence.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.Persistence.Core",
+    "Lingkyn.Persistence.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

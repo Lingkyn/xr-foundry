@@ -1,0 +1,90 @@
+{
+  "$schema": "docs/validation/compatibility-evidence.schema.json",
+  "schema": "xr-foundry.compatibility_evidence.v1",
+  "kind": "editor_automated",
+  "profile_id": "unity-6000.3-persistence-core-windows-editor",
+  "commit_sha": "469f69a6899508e0978f9bb7bcccf7e74878429e",
+  "target": {
+    "engine": {
+      "id": "unity",
+      "version": "6000.3.19f1"
+    },
+    "editor": {
+      "id": "unity-editor",
+      "version": "6000.3.19f1"
+    },
+    "renderer": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "requested_dependencies": {
+      "com.unity.test-framework": "1.6.0"
+    },
+    "resolved_dependencies": {
+      "com.unity.ext.nunit": "2.0.5",
+      "com.unity.modules.imgui": "1.0.0",
+      "com.unity.modules.jsonserialize": "1.0.0",
+      "com.unity.test-framework": "1.6.0"
+    },
+    "build_target": "WindowsEditor",
+    "graphics_api": "Null",
+    "scripting_backend": "Mono",
+    "architecture": "x86_64",
+    "xr_provider": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "runtime": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "input_routes": [
+      "not_applicable"
+    ],
+    "device": {
+      "id": "windows-editor-host",
+      "version": "10.0.26200"
+    }
+  },
+  "package_versions": {
+    "com.lingkyn.persistence.core": "0.1.0"
+  },
+  "resolved_dependencies": {
+    "com.unity.ext.nunit": "2.0.5",
+    "com.unity.modules.imgui": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "manifest": {
+    "path": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/consumer-manifest.json",
+    "sha256": "01c58590b8e997bcd3a5df9826444432af8dd10b8c955c6d7738695299ecd068"
+  },
+  "lock": {
+    "path": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/consumer-packages-lock.json",
+    "sha256": "b4a3499593a990018d0005e83fadec6c6f9bbcf071c6b58b601ece31020f517a"
+  },
+  "checks": [
+    {
+      "id": "editor_compile",
+      "status": "pass",
+      "evidence_refs": [
+        {
+          "kind": "compile_result",
+          "ref": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/compile-result.json",
+          "sha256": "95ba98de5a55ee693ad376c9888561796a8cd84f77e9fafd58878f50dcb9d4ad"
+        }
+      ]
+    },
+    {
+      "id": "editmode_tests",
+      "status": "pass",
+      "evidence_refs": [
+        {
+          "kind": "nunit_result",
+          "ref": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/editmode-results.xml",
+          "sha256": "bf33832af8ac1b875f65ddc3a74e247ac87679ce4f9cc4ec84c2f4603afca1f5"
+        }
+      ]
+    }
+  ]
+}

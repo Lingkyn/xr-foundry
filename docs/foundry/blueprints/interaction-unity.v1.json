@@ -1,0 +1,41 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "admitted",
+  "package": {
+    "id": "com.lingkyn.interaction.unity",
+    "display_name": "Lingkyn Interaction Unity",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Unity ScriptableObject authoring and thin Input System conversion for semantic interaction Core, with explicit binding display, suggestion, override, and validation seams.",
+    "category": "system",
+    "family": "interaction",
+    "target_path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity",
+    "root_namespace": "Lingkyn.Interaction.Unity",
+    "dependencies": {
+      "com.lingkyn.interaction.core": "0.1.0",
+      "com.unity.inputsystem": "1.14.2"
+    }
+  },
+  "admission": {
+    "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/57",
+    "system_admission_record": "docs/foundry/admissions/interaction.v1.json",
+    "source_manifest": "docs/standards/interaction/source-manifest.json",
+    "positive_sources": [
+      "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/Actions.html",
+      "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/ActionBindings.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.0/manual/general-setup.html",
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#interaction-profiles"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "InputSystemRouting",
+    "sample_description": "ScriptableObject-authored semantic definitions and explicit InputActionReference conversion into ordered Core source frames without XRI, OpenXR, renderer, scene-search, or device assumptions."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}

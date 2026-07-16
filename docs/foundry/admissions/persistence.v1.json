@@ -1,0 +1,52 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "persistence",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "standard_system",
+  "reviewed_on": "2026-07-16",
+  "source_manifest": "docs/standards/persistence/source-manifest.json",
+  "reference_alignment": [{
+    "url": "https://github.com/Lingkyn/game-system-reference-standards/blob/main/entries/blueprints/save-load-system.md",
+    "entry_id": "REF-SYS-save-load-system",
+    "admission": "Standard"
+  }],
+  "consumer_contexts": [
+    "single-player local save slots with schema evolution and recovery",
+    "reusable settings, inventory, progression, and authored-state repositories"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Application-persistentDataPath.html",
+      "https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/OpenTTD/OpenTTD",
+      "https://github.com/Interkarma/daggerfall-unity"
+    ]
+  },
+  "common_kernel": [
+    "versioned envelopes and explicit serialization boundaries",
+    "staged writes, commit, recovery candidates, and prior-record preservation",
+    "provider-neutral repository and migration ports"
+  ],
+  "configurable_variation": [
+    "serialization format, storage provider, slot policy, compression, encryption, cloud sync, and retention"
+  ],
+  "excluded_project_specific": [
+    "one game's save DTOs, progression model, slot names, screen flow, and content taxonomy",
+    "consumer credentials, account services, private cloud endpoints, and machine-local paths"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Reliable save, recovery, versioning, and provider boundaries recur across games and reusable subsystems; consumer state schemas and storage services remain outside the shared mechanics.",
+  "non_claims": [
+    "Admission does not claim crash durability, security, cloud synchronization, or filesystem behavior beyond a separately verified exact profile."
+  ]
+}

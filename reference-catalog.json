@@ -200,6 +200,137 @@
       ]
     },
     {
+      "id": "unity-persistence-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.core",
+      "package_id": "com.lingkyn.persistence.core",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Engine-light save envelopes, deterministic migration, typed commit results, integrity verification, and fail-closed primary/backup recovery contracts.",
+      "evidence": [
+        "docs/standards/persistence/source-manifest.json",
+        "docs/standards/persistence/architecture-contract.md",
+        "docs/standards/persistence/verification-contract.md",
+        "packages/unity/systems/persistence/com.lingkyn.persistence.core/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No filesystem or UnityEngine provider is included",
+        "No crash-durability, authentication, encryption, cloud, mobile, console, or device claim is made",
+        "Release upgrade/rollback and public API compatibility review remain pending"
+      ]
+    },
+    {
+      "id": "unity-persistence-adapter",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity",
+      "package_id": "com.lingkyn.persistence.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Unity ScriptableObject configuration, JsonUtility plain-DTO codec, persistent-data root binding, staged local-file commits, recovery inspection, and injected fault verification.",
+      "evidence": [
+        "docs/standards/persistence/source-manifest.json",
+        "docs/standards/persistence/architecture-contract.md",
+        "docs/standards/persistence/verification-contract.md",
+        "packages/unity/systems/persistence/com.lingkyn.persistence.unity/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No authentication, encryption, cloud, console, or named-device behavior is included",
+        "Windows Editor evidence does not prove another operating system or crash-durability boundary",
+        "Candidate promotion waits for public API, release upgrade/rollback, and additional filesystem profile review"
+      ]
+    },
+    {
+      "id": "unity-settings-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/settings/com.lingkyn.settings.core",
+      "package_id": "com.lingkyn.settings.core",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Engine-light typed settings, constraints, profiles, scoped transactions, deterministic change sets, reverse rollback, persistence seams, and accessibility discoverability metadata.",
+      "evidence": [
+        "docs/standards/settings/source-manifest.json",
+        "docs/standards/settings/architecture-contract.md",
+        "docs/standards/settings/verification-contract.md",
+        "packages/unity/systems/settings/com.lingkyn.settings.core/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No renderer, file format, PlayerPrefs, concrete graphics/audio/input policy, or compliance claim is included",
+        "Accessibility metadata describes discoverability and does not prove feature support or certification",
+        "Candidate promotion waits for public API and release upgrade/rollback review"
+      ]
+    },
+    {
+      "id": "unity-settings-adapter",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/settings/com.lingkyn.settings.unity",
+      "package_id": "com.lingkyn.settings.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Unity ScriptableObject settings authoring, deterministic Core conversion, asset-specific validation, and explicit consumer-provided applicator and persistence wiring.",
+      "evidence": [
+        "docs/standards/settings/source-manifest.json",
+        "docs/standards/settings/architecture-contract.md",
+        "docs/standards/settings/verification-contract.md",
+        "packages/unity/systems/settings/com.lingkyn.settings.unity/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-settings-unity-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No settings screen, renderer, scene search, PlayerPrefs, or product-specific applicator is included",
+        "Windows Editor evidence does not prove another operating system, device, renderer, or accessibility outcome",
+        "Candidate promotion waits for public API and release upgrade/rollback review"
+      ]
+    },
+    {
+      "id": "unity-interaction-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/interaction/com.lingkyn.interaction.core",
+      "package_id": "com.lingkyn.interaction.core",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Engine-light semantic intents, contexts, routes, typed observations, explicit routing state, deterministic policy evaluation, advisory binding suggestions, diagnostics, and handler outcomes.",
+      "evidence": [
+        "docs/standards/interaction/source-manifest.json",
+        "docs/standards/interaction/architecture-contract.md",
+        "docs/standards/interaction/verification-contract.md",
+        "packages/unity/systems/interaction/com.lingkyn.interaction.core/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-interaction-core-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No Unity Input System, XRI, OpenXR, renderer, device binding, concrete rebinding UI, or product command is included",
+        "Binding suggestions are advisory data and never activate a route",
+        "Windows Editor evidence does not prove another operating system, device, input provider, or accessibility outcome"
+      ]
+    },
+    {
+      "id": "unity-interaction-adapter",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity",
+      "package_id": "com.lingkyn.interaction.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Unity Input System authoring, callback capture, stable GUID identity, explicit observation ordering, binding display, suggestions, and override persistence for the engine-light Interaction Core.",
+      "evidence": [
+        "docs/standards/interaction/architecture-contract.md",
+        "docs/standards/interaction/unity-adapter-agent-review.json",
+        "packages/unity/systems/interaction/com.lingkyn.interaction.unity/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-interaction-unity-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No XRI, OpenXR, renderer, vendor runtime, device binding, scene search, or product command is included",
+        "Binding suggestions remain advisory and override records apply only after whole-snapshot validation",
+        "Windows Editor Input System evidence does not prove a live modality, XR runtime, device, accessibility, or comfort outcome"
+      ]
+    },
+    {
       "id": "repository-information-architecture",
       "kind": "repository_standard",
       "engine": "multi-engine_with_Unity_implemented",

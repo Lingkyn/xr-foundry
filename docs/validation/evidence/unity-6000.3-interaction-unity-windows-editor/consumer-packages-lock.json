@@ -1,0 +1,88 @@
+{
+  "dependencies": {
+    "com.lingkyn.interaction.core": {
+      "version": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/interaction/com.lingkyn.interaction.core#5c948b13e166de4b1882e2c0d5b4a857670ffdff",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "5c948b13e166de4b1882e2c0d5b4a857670ffdff"
+    },
+    "com.lingkyn.interaction.unity": {
+      "version": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/interaction/com.lingkyn.interaction.unity#5c948b13e166de4b1882e2c0d5b4a857670ffdff",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.lingkyn.interaction.core": "0.1.0",
+        "com.unity.inputsystem": "1.14.2"
+      },
+      "hash": "5c948b13e166de4b1882e2c0d5b4a857670ffdff"
+    },
+    "com.unity.ext.nunit": {
+      "version": "2.0.5",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.inputsystem": {
+      "version": "1.14.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.test-framework": {
+      "version": "1.6.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.ext.nunit": "2.0.3",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      }
+    },
+    "com.unity.modules.hierarchycore": {
+      "version": "1.0.0",
+      "depth": 2,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.imgui": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.jsonserialize": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.physics": {
+      "version": "1.0.0",
+      "depth": 2,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.ui": {
+      "version": "1.0.0",
+      "depth": 2,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.uielements": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.hierarchycore": "1.0.0",
+        "com.unity.modules.physics": "1.0.0"
+      }
+    }
+  }
+}

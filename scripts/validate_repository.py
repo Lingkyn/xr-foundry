@@ -138,6 +138,8 @@ REQUIRED_AGENT_COMMONS_FILES = {
 REQUIRED_FOUNDRY_FILES = {
     "docs/foundry/README.md",
     "docs/foundry/release-policy.md",
+    "docs/foundry/system-admission.md",
+    "docs/foundry/system-admission.schema.json",
     "docs/foundry/source-manifest.json",
     "docs/foundry/foundry-manifest.json",
     "docs/foundry/foundry-manifest.schema.json",
@@ -145,6 +147,10 @@ REQUIRED_FOUNDRY_FILES = {
     "docs/foundry/unity-package-blueprint.schema.json",
     "docs/foundry/batches/unity-first-batch.v1.json",
     "docs/foundry/batches/unity-first-batch.schema.json",
+    "docs/foundry/batches/batch-registry.v1.json",
+    "docs/foundry/batches/batch-registry.schema.json",
+    "docs/foundry/batches/package-batch.schema.json",
+    "docs/foundry/batches/unity-next-systems.v1.json",
     "docs/foundry/queue/next-batch.json",
     "docs/foundry/queue/next-batch.schema.json",
     "docs/rfcs/0003-foundry-production-line.md",
@@ -691,6 +697,18 @@ def validate_readme_git_install_matrix(
                     f"{package_id} requires {dependency_id}"
                 )
     return errors
+
+
+def source_has_valid_namespace_contract(source_name: str, text: str) -> bool:
+    namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)
+    is_assembly_info = (
+        source_name == "AssemblyInfo.cs"
+        and re.search(r"\[\s*assembly\s*:", text) is not None
+        and re.search(r"\b(class|struct|interface|enum|record|delegate)\b", text) is None
+    )
+    return (bool(namespaces) or is_assembly_info) and all(
+        value.startswith("Lingkyn.") for value in namespaces
+    )
 
 
 def validate_internal_namespace_links(
@@ -2361,6 +2379,16 @@ def validate_foundry_contract(root: Path) -> list[str]:
             "Foundry first batch",
         ),
         (
+            "docs/foundry/batches/batch-registry.v1.json",
+            "docs/foundry/batches/batch-registry.schema.json",
+            "Foundry batch registry",
+        ),
+        (
+            "docs/foundry/batches/unity-next-systems.v1.json",
+            "docs/foundry/batches/package-batch.schema.json",
+            "Foundry next systems batch",
+        ),
+        (
             "docs/foundry/queue/next-batch.json",
             "docs/foundry/queue/next-batch.schema.json",
             "Foundry next-batch queue",
@@ -2373,6 +2401,67 @@ def validate_foundry_contract(root: Path) -> list[str]:
             errors.extend(
                 validate_json_schema_instance(load_json(instance_path), schema_path, label)
             )
+
+    admission_schema_path = root / "docs" / "foundry" / "system-admission.schema.json"
+    admission_root = root / "docs" / "foundry" / "admissions"
+    admissions_by_family: dict[str, dict[str, Any]] = {}
+    if admission_root.exists():
+        for admission_path in sorted(admission_root.glob("*.json")):
+            payload = load_json(admission_path)
+            errors.extend(
+                validate_json_schema_instance(
+                    payload,
+                    admission_schema_path,
+                    f"Foundry system admission {admission_path.name}",
+                )
+            )
+            family = str(payload.get("family", "")) if isinstance(payload, dict) else ""
+            if family in admissions_by_family:
+                errors.append(f"Foundry system admission family is duplicated: {family}")
+            elif family:
+                admissions_by_family[family] = payload
+
+    admitted_blueprint_root = root / "docs" / "foundry" / "blueprints"
+    blueprint_schema_path = root / "docs" / "foundry" / "unity-package-blueprint.schema.json"
+    if admitted_blueprint_root.exists():
+        for admitted_path in sorted(admitted_blueprint_root.glob("*.json")):
+            payload = load_json(admitted_path)
+            errors.extend(
+                validate_json_schema_instance(
+                    payload,
+                    blueprint_schema_path,
+                    f"Foundry admitted blueprint {admitted_path.name}",
+                )
+            )
+            package = payload.get("package", {}) if isinstance(payload, dict) else {}
+            admission = payload.get("admission", {}) if isinstance(payload, dict) else {}
+            family = str(package.get("family", "")) if isinstance(package, dict) else ""
+            admission_rel = (
+                str(admission.get("system_admission_record", ""))
+                if isinstance(admission, dict)
+                else ""
+            )
+            admission_path = root / admission_rel
+            if not admission_rel or not admission_path.exists():
+                errors.append(
+                    f"Foundry admitted blueprint {admitted_path.name}: system admission record is missing"
+                )
+                continue
+            referenced_admission = load_json(admission_path)
+            family_record = admissions_by_family.get(family)
+            if (
+                family_record is None
+                or not isinstance(referenced_admission, dict)
+                or referenced_admission.get("family") != family
+            ):
+                errors.append(
+                    f"Foundry admitted blueprint {admitted_path.name}: family admission binding is invalid"
+                )
+            else:
+                if family_record.get("source_manifest") != admission.get("source_manifest"):
+                    errors.append(
+                        f"Foundry admitted blueprint {admitted_path.name}: source manifest must match family admission"
+                    )
 
     blueprint_path = root / "docs" / "foundry" / "unity-package-blueprint.example.json"
     if blueprint_path.exists():
@@ -2414,11 +2503,11 @@ def validate_foundry_contract(root: Path) -> list[str]:
                 if not isinstance(claims, list) or not claims:
                     errors.append("Foundry source entries require admitted claims")
 
-    batch_path = root / "docs" / "foundry" / "batches" / "unity-first-batch.v1.json"
+    batch_registry_path = root / "docs" / "foundry" / "batches" / "batch-registry.v1.json"
     catalog_path = root / "package-catalog.json"
     profiles_path = root / "compatibility-profiles.json"
-    if batch_path.exists() and catalog_path.exists() and profiles_path.exists():
-        batch = load_json(batch_path)
+    if batch_registry_path.exists() and catalog_path.exists() and profiles_path.exists():
+        registry = load_json(batch_registry_path)
         catalog = load_json(catalog_path)
         profiles = load_json(profiles_path)
         catalog_by_id = {
@@ -2426,59 +2515,113 @@ def validate_foundry_contract(root: Path) -> list[str]:
             for item in catalog.get("packages", [])
             if isinstance(item, dict)
         }
+        catalog_system_families = {
+            PurePosixPath(str(item.get("path", ""))).parts[3]
+            for item in catalog.get("packages", [])
+            if isinstance(item, dict)
+            and len(PurePosixPath(str(item.get("path", ""))).parts) >= 5
+            and PurePosixPath(str(item.get("path", ""))).parts[:3]
+            == ("packages", "unity", "systems")
+        }
+        if catalog_system_families != set(admissions_by_family):
+            errors.append(
+                "Foundry system admissions must cover every live system family exactly once"
+            )
         profile_by_id = {
             str(item.get("id", "")): item
             for item in profiles.get("profiles", [])
             if isinstance(item, dict)
         }
-        batch_items = batch.get("packages")
-        if not isinstance(batch_items, list):
-            batch_items = []
-        batch_ids = [
+        registry_items = registry.get("batches")
+        if not isinstance(registry_items, list):
+            registry_items = []
+        registry_ids = [
             str(item.get("id", ""))
-            for item in batch_items
+            for item in registry_items
             if isinstance(item, dict)
         ]
-        if len(batch_ids) != len(set(batch_ids)):
-            errors.append("Foundry first batch contains duplicate package ids")
-        if set(batch_ids) != set(catalog_by_id):
+        if len(registry_ids) != len(set(registry_ids)):
+            errors.append("Foundry batch registry contains duplicate batch ids")
+
+        all_batch_ids: list[str] = []
+        for registration in registry_items:
+            if not isinstance(registration, dict):
+                errors.append("Foundry batch registry entries must be objects")
+                continue
+            batch_id = str(registration.get("id", ""))
+            relative_batch_path = str(registration.get("path", ""))
+            batch_path = root / relative_batch_path
+            if not batch_path.exists():
+                errors.append(f"Foundry batch registry path is missing: {relative_batch_path}")
+                continue
+            batch = load_json(batch_path)
+            if batch.get("schema") != "xr-foundry.package_batch.v1":
+                errors.append(f"Foundry batch {batch_id}: schema is invalid")
+            if batch.get("batch_id") != batch_id:
+                errors.append(f"Foundry batch {batch_id}: registered id does not match batch file")
+            expected_state = registration.get("state")
+            actual_state = batch.get("status")
+            if expected_state == "released":
+                actual_state = "released" if actual_state == "approved_for_release" else actual_state
+            if actual_state != expected_state:
+                errors.append(f"Foundry batch {batch_id}: registry/file state mismatch")
+            registered_tag = registration.get("release_tag")
+            if registered_tag != batch.get("release", {}).get("tag"):
+                errors.append(f"Foundry batch {batch_id}: registry/file release tag mismatch")
+
+            batch_items = batch.get("packages")
+            if not isinstance(batch_items, list):
+                batch_items = []
+            local_ids = [
+                str(item.get("id", ""))
+                for item in batch_items
+                if isinstance(item, dict)
+            ]
+            if len(local_ids) != len(set(local_ids)):
+                errors.append(f"Foundry batch {batch_id} contains duplicate package ids")
+            all_batch_ids.extend(local_ids)
+
+            for item in batch_items:
+                if not isinstance(item, dict):
+                    errors.append(f"Foundry batch {batch_id} package entries must be objects")
+                    continue
+                package_id = str(item.get("id", ""))
+                catalog_item = catalog_by_id.get(package_id)
+                if not isinstance(catalog_item, dict):
+                    continue
+                for field in ("path", "version", "maturity", "device_evidence"):
+                    if item.get(field) != catalog_item.get(field):
+                        errors.append(
+                            f"Foundry batch {batch_id} {package_id}: {field} must match package catalog"
+                        )
+                manifest_path = root / str(item.get("path", "")) / "package.json"
+                if manifest_path.exists():
+                    manifest = load_json(manifest_path)
+                    if manifest.get("name") != package_id or manifest.get("version") != item.get("version"):
+                        errors.append(
+                            f"Foundry batch {batch_id} {package_id}: package manifest identity/version drift"
+                        )
+                profile_id = str(item.get("compatibility_profile", ""))
+                profile = profile_by_id.get(profile_id)
+                if not isinstance(profile, dict) or profile.get("state") != "verified":
+                    errors.append(
+                        f"Foundry batch {batch_id} {package_id}: compatibility profile must exist and be verified"
+                    )
+                elif (
+                    profile.get("install_artifact") != package_id
+                    or profile.get("package_versions", {}).get(package_id)
+                    != item.get("version")
+                ):
+                    errors.append(
+                        f"Foundry batch {batch_id} {package_id}: compatibility profile identity/version mismatch"
+                    )
+
+        if len(all_batch_ids) != len(set(all_batch_ids)):
+            errors.append("Foundry batch registry assigns a package to more than one batch")
+        if set(all_batch_ids) != set(catalog_by_id):
             errors.append(
-                "Foundry first batch must cover every live catalog package exactly once"
+                "Foundry registered batches must cover every live catalog package exactly once"
             )
-        for item in batch_items:
-            if not isinstance(item, dict):
-                errors.append("Foundry first-batch package entries must be objects")
-                continue
-            package_id = str(item.get("id", ""))
-            catalog_item = catalog_by_id.get(package_id)
-            if not isinstance(catalog_item, dict):
-                continue
-            for field in ("path", "version", "maturity", "device_evidence"):
-                if item.get(field) != catalog_item.get(field):
-                    errors.append(
-                        f"Foundry first batch {package_id}: {field} must match package catalog"
-                    )
-            manifest_path = root / str(item.get("path", "")) / "package.json"
-            if manifest_path.exists():
-                manifest = load_json(manifest_path)
-                if manifest.get("name") != package_id or manifest.get("version") != item.get("version"):
-                    errors.append(
-                        f"Foundry first batch {package_id}: package manifest identity/version drift"
-                    )
-            profile_id = str(item.get("compatibility_profile", ""))
-            profile = profile_by_id.get(profile_id)
-            if not isinstance(profile, dict) or profile.get("state") != "verified":
-                errors.append(
-                    f"Foundry first batch {package_id}: compatibility profile must exist and be verified"
-                )
-            elif (
-                profile.get("install_artifact") != package_id
-                or profile.get("package_versions", {}).get(package_id)
-                != item.get("version")
-            ):
-                errors.append(
-                    f"Foundry first batch {package_id}: compatibility profile identity/version mismatch"
-                )
 
     queue_path = root / "docs" / "foundry" / "queue" / "next-batch.json"
     if queue_path.exists():
@@ -6539,8 +6682,7 @@ def validate_repository(root: Path) -> list[str]:
         errors.extend(validate_unity_asset_path_literals(package_root, set(declared_package_roots)))
         for source in package_root.rglob("*.cs"):
             text = source.read_text(encoding="utf-8")
-            namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)
-            if not namespaces or any(not value.startswith("Lingkyn.") for value in namespaces):
+            if not source_has_valid_namespace_contract(source.name, text):
                 errors.append(f"{source.relative_to(root)}: namespace must start with Lingkyn.")
             if not source.with_name(source.name + ".meta").exists():
                 errors.append(f"{source.relative_to(root)}: missing .meta")

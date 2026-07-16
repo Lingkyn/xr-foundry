@@ -1,0 +1,196 @@
+{
+  "schema": "xr-foundry.persistence_source_manifest.v1",
+  "scope": "Engine-light persistence contracts and a Unity local-file adapter",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "sources": [
+    {
+      "id": "unity-6000.3-persistent-data-path",
+      "kind": "official_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Application-persistentDataPath.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6.3 LTS documentation built 2026-07-15",
+      "admitted_role": "Unity path-provider boundary",
+      "admitted_claims": [
+        "persistentDataPath is the Unity-provided per-application location for data retained between runs",
+        "the location and support behavior vary by platform and tvOS returns an empty path",
+        "a stable bundle identifier is material to retaining the same mobile path across updates"
+      ],
+      "excluded_uses": [
+        "No durability, atomicity, privacy, backup, cloud, or security guarantee is inferred",
+        "No platform is declared supported without exact-consumer evidence"
+      ]
+    },
+    {
+      "id": "unity-6000.3-json-utility",
+      "kind": "official_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/JsonUtility.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6.3 LTS documentation built 2026-07-15",
+      "admitted_role": "Concrete Unity DTO codec constraints",
+      "admitted_claims": [
+        "JsonUtility converts custom object DTOs to and from JSON using Unity serialization rules",
+        "top-level primitive and collection payloads require wrapper DTOs",
+        "a codec is a replaceable adapter rather than the persistence architecture"
+      ],
+      "excluded_uses": [
+        "JsonUtility does not define schema migration, integrity, atomic commit, or storage recovery",
+        "Live UnityEngine.Object graphs are not admitted as save-domain snapshots"
+      ]
+    },
+    {
+      "id": "unity-6000.3-serialization-rules",
+      "kind": "official_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/script-serialization-rules.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6.3 LTS documentation built 2026-07-15",
+      "admitted_role": "Unity DTO and authoring constraint",
+      "admitted_claims": [
+        "Unity serializes fields under Unity-specific supported-type rules",
+        "nested containers, dictionaries, object identity, cycles and polymorphism require explicit handling",
+        "authored Unity assets and runtime save state require an explicit conversion boundary"
+      ],
+      "excluded_uses": [
+        "Unity serialization support is not a reason to persist arbitrary scene or asset objects"
+      ]
+    },
+    {
+      "id": "dotnet-file-replace",
+      "kind": "official_documentation",
+      "authority": "Microsoft .NET",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace",
+      "license_or_terms": "Microsoft documentation terms; API contract only",
+      "maintenance_evidence": "Current .NET API documentation",
+      "admitted_role": "Replace-with-backup file-provider operation",
+      "admitted_claims": [
+        "File.Replace replaces one file with another and can create a backup of the replaced file",
+        "the operation has explicit platform and exception boundaries that a provider must expose"
+      ],
+      "excluded_uses": [
+        "Availability on one runtime does not prove availability or crash durability on every Unity target",
+        "Fallback copy/delete/move sequences are not relabeled atomic"
+      ]
+    },
+    {
+      "id": "dotnet-file-stream-flush",
+      "kind": "official_documentation",
+      "authority": "Microsoft .NET",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.flush",
+      "license_or_terms": "Microsoft documentation terms; API contract only",
+      "maintenance_evidence": "Current .NET API documentation",
+      "admitted_role": "Staged-write durability boundary",
+      "admitted_claims": [
+        "FileStream exposes buffered flush behavior and a flush-to-disk overload on supported runtimes",
+        "provider results must distinguish serialization, write, flush and commit failures"
+      ],
+      "excluded_uses": [
+        "A successful flush is not a universal power-loss or filesystem guarantee"
+      ]
+    },
+    {
+      "id": "dotnet-sha256",
+      "kind": "official_documentation",
+      "authority": "Microsoft .NET",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.sha256",
+      "license_or_terms": "Microsoft documentation terms; API contract only",
+      "maintenance_evidence": "Current .NET API documentation",
+      "admitted_role": "Payload corruption detection",
+      "admitted_claims": [
+        "SHA-256 produces a fixed-size digest suitable for detecting payload changes"
+      ],
+      "excluded_uses": [
+        "An unkeyed checksum does not authenticate a save or provide encryption/tamper resistance"
+      ]
+    },
+    {
+      "id": "bayat-save-game-free",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Bayat Games",
+      "url": "https://github.com/BayatGames/SaveGameFree",
+      "immutable_review_ref": "1a1a4c4e9873667272a5fc889b27429e4c09cdd7",
+      "license_or_terms": "MIT",
+      "maintenance_evidence": "663 GitHub stars at review; tests present; latest reviewed commit dated 2025-10-06; Unity 6 compatibility documented",
+      "admitted_role": "Professional ecosystem evidence for replaceable serializers, path resolution, async APIs and tests",
+      "admitted_claims": [
+        "A Unity save library benefits from explicit serializer and path seams",
+        "Cross-platform behavior and asynchronous operations require dedicated adapters and tests"
+      ],
+      "excluded_uses": [
+        "No source code is copied",
+        "Its direct File.WriteAllText/File.Create path is not admitted as atomic-write or recovery evidence",
+        "Its encoding option is not admitted as a security standard",
+        "Its static facade is not imposed on the XR Foundry architecture"
+      ]
+    },
+    {
+      "id": "daggerfall-unity-save-versioning",
+      "kind": "shipped_open_source_game_implementation",
+      "authority": "Daggerfall Workshop",
+      "url": "https://github.com/Interkarma/daggerfall-unity",
+      "immutable_review_ref": "81e89e90c27bc3c1a7a61871e545fad129174dec",
+      "reviewed_paths": [
+        "Assets/Scripts/Game/Serialization/SaveLoadManager.cs",
+        "Assets/Scripts/Game/Serialization/SerializableGameObject.cs"
+      ],
+      "license_or_terms": "MIT",
+      "maintenance_evidence": "3,436 GitHub stars at review; latest reviewed commit dated 2026-06-30; publicly shipped Daggerfall Unity game implementation",
+      "admitted_role": "Shipped Unity evidence for explicit save metadata, version-named DTOs, bounded data conversion and backup preservation",
+      "admitted_claims": [
+        "Save metadata records a save-format version separately from the game build version",
+        "Persisted DTO shapes are version-named and an explicit v1-to-v2 constructor performs a bounded data conversion",
+        "Unexpected data is preserved through a backup path instead of being silently discarded"
+      ],
+      "excluded_uses": [
+        "No source code is copied",
+        "Its multi-file JSON layout is not adopted as the XR Foundry storage format",
+        "A single observed v1-to-v2 conversion does not by itself prove a complete migration graph",
+        "Its backup-on-delete behavior is not relabeled transactional save commit or crash recovery"
+      ]
+    },
+    {
+      "id": "openttd-saveload-evolution",
+      "kind": "shipped_long_running_open_source_game_implementation",
+      "authority": "OpenTTD",
+      "url": "https://github.com/OpenTTD/OpenTTD",
+      "immutable_review_ref": "5b9f18d8fd0a16f5022c0351b5e3590852d24745",
+      "reviewed_paths": [
+        "src/saveload/saveload.h",
+        "src/saveload/saveload.cpp",
+        "src/saveload/afterload.cpp"
+      ],
+      "license_or_terms": "GPL-2.0",
+      "maintenance_evidence": "8,081 GitHub stars at review; active project with a reviewed 2026-07-16 commit and a save-version history spanning released game versions",
+      "admitted_role": "Long-running shipped-game evidence for ordered format versions, version-gated conversion, and fail-closed load validation",
+      "admitted_claims": [
+        "Save-format versions are explicit, ordered and written into the persisted header",
+        "Version-specific conversion logic is applied in a defined order and the version history is not reordered",
+        "Future save versions, corrupt structures and missing required conversion handling terminate loading with an explicit error instead of continuing with ambiguous state"
+      ],
+      "excluded_uses": [
+        "No GPL source code, tables or implementation structure is copied",
+        "OpenTTD's binary chunk format and global conversion pipeline are not imposed on Unity consumers",
+        "Its project longevity does not prove the future XR Foundry implementation until repository and consumer tests pass"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "unity-open-project-1-save-system",
+      "url": "https://github.com/UnityTechnologies/open-project-1/tree/608eac98df29cd97821a6115cd52dfb9027345b1/UOP1_Project/Assets/Scripts/SaveSystem",
+      "reason": "Official and popular Apache-2.0 sample, but explicitly legacy since 2021 and its direct write helper does not cover migrations, integrity, atomic commit or recovery"
+    },
+    {
+      "id": "game-system-reference-standards-save-navigation",
+      "url": "https://github.com/Lingkyn/game-system-reference-standards/blob/main/entries/blueprints/save-load-system.md",
+      "reason": "Useful navigation and coverage vocabulary, but its reference section is pending and it is not an external authoritative derivation source"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants XR Foundry maturity, release, package admission or device authority",
+    "No source proves cloud, console, WebGL, mobile, XR device, security or crash-durability behavior for the future implementation",
+    "Popularity is corroborating adoption evidence only and never substitutes for scoped architecture and test review"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.lingkyn.settings.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/settings/com.lingkyn.settings.core#7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.lingkyn.settings.core"
+  ]
+}

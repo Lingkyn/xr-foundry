@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import copy
 import hashlib
 import json
 import os
@@ -735,24 +736,26 @@ class RepositoryContractTests(unittest.TestCase):
     def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
         self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
         self.assertEqual([], MODULE.validate_fast_structure(ROOT))
-        batch = json.loads(
-            (
-                ROOT
-                / "docs"
-                / "foundry"
-                / "batches"
-                / "unity-first-batch.v1.json"
-            ).read_text(encoding="utf-8")
+        registry = json.loads(
+            (ROOT / "docs" / "foundry" / "batches" / "batch-registry.v1.json").read_text(
+                encoding="utf-8"
+            )
         )
+        batches = [
+            json.loads((ROOT / item["path"]).read_text(encoding="utf-8"))
+            for item in registry["batches"]
+        ]
+        batch_packages = [item for batch in batches for item in batch["packages"]]
         catalog = current_compatibility_profiles()
         package_catalog = json.loads((ROOT / "package-catalog.json").read_text(encoding="utf-8"))
         self.assertEqual(
             {item["id"] for item in package_catalog["packages"]},
-            {item["id"] for item in batch["packages"]},
+            {item["id"] for item in batch_packages},
         )
+        self.assertEqual(len(batch_packages), len({item["id"] for item in batch_packages}))
         self.assertEqual(
             {item["id"] for item in catalog["profiles"]},
-            {item["compatibility_profile"] for item in batch["packages"]},
+            {item["compatibility_profile"] for item in batch_packages},
         )
 
     def test_foundry_first_batch_rejects_membership_and_version_drift(self) -> None:
@@ -803,6 +806,36 @@ class RepositoryContractTests(unittest.TestCase):
             any("compatibility profile identity/version mismatch" in error for error in errors)
         )
 
+    def test_foundry_batch_registry_rejects_cross_batch_package_duplication(self) -> None:
+        first_batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-first-batch.v1.json"
+        )
+        next_batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-next-systems.v1.json"
+        )
+        original_loader = MODULE.load_json
+        first_batch = json.loads(first_batch_path.read_text(encoding="utf-8"))
+        duplicated = json.loads(next_batch_path.read_text(encoding="utf-8"))
+        duplicated["packages"].append(copy.deepcopy(first_batch["packages"][0]))
+
+        def load_with_duplicate(path: Path) -> dict:
+            return duplicated if Path(path) == next_batch_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_duplicate):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(
+            any("assigns a package to more than one batch" in error for error in errors)
+        )
+
     def test_foundry_scaffolder_is_deterministic_dry_run_first_and_collision_safe(self) -> None:
         example_path = (
             ROOT / "docs" / "foundry" / "unity-package-blueprint.example.json"
@@ -846,11 +879,18 @@ class RepositoryContractTests(unittest.TestCase):
             admitted["admission"]["implementation_issue"] = (
                 "https://github.com/Lingkyn/xr-foundry/issues/52"
             )
+            admitted["package"]["family"] = "interaction"
+            admitted["package"]["target_path"] = (
+                "packages/unity/systems/interaction/com.lingkyn.example-system"
+            )
+            admitted["admission"]["system_admission_record"] = (
+                "docs/foundry/admissions/interaction.v1.json"
+            )
             admitted["admission"]["source_manifest"] = (
-                "docs/foundry/source-manifest.json"
+                "docs/standards/interaction/source-manifest.json"
             )
             admitted["admission"]["positive_sources"] = [
-                "https://docs.unity3d.com/6000.0/Documentation/Manual/CustomPackages.html"
+                "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#input"
             ]
             self.assertEqual([], SCAFFOLD_MODULE.validate_blueprint(admitted))
             admitted_plan = SCAFFOLD_MODULE.build_scaffold_plan(
@@ -888,8 +928,15 @@ class RepositoryContractTests(unittest.TestCase):
         blueprint["admission"]["implementation_issue"] = (
             "https://github.com/Lingkyn/xr-foundry/issues/52"
         )
+        blueprint["package"]["family"] = "interaction"
+        blueprint["package"]["target_path"] = (
+            "packages/unity/systems/interaction/com.lingkyn.example-system"
+        )
+        blueprint["admission"]["system_admission_record"] = (
+            "docs/foundry/admissions/interaction.v1.json"
+        )
         blueprint["admission"]["source_manifest"] = (
-            "docs/foundry/source-manifest.json"
+            "docs/standards/interaction/source-manifest.json"
         )
         blueprint["admission"]["positive_sources"] = [
             "https://example.invalid/unadmitted-source"
@@ -899,6 +946,22 @@ class RepositoryContractTests(unittest.TestCase):
 
         self.assertTrue(
             any("positive_sources must be admitted by source_manifest" in error for error in errors)
+        )
+
+    def test_foundry_admitted_blueprint_requires_matching_system_admission(self) -> None:
+        blueprint = json.loads(
+            (
+                ROOT / "docs" / "foundry" / "blueprints" / "interaction-core.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        blueprint["admission"]["system_admission_record"] = (
+            "docs/foundry/admissions/settings.v1.json"
+        )
+
+        errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
+
+        self.assertTrue(
+            any("family must match" in error for error in errors)
         )
 
     def test_foundry_next_batch_rejects_placeholder_actions(self) -> None:
@@ -993,7 +1056,10 @@ class RepositoryContractTests(unittest.TestCase):
             {item["id"] for item in MODULE.load_json(ROOT / "package-catalog.json")["packages"]},
             {profile["install_artifact"] for profile in payload["profiles"]},
         )
-        self.assertEqual(9, len(payload["profiles"]))
+        self.assertEqual(
+            len(payload["profiles"]),
+            len({profile["install_artifact"] for profile in payload["profiles"]}),
+        )
         for profile in payload["profiles"]:
             self.assertEqual("verified", profile["state"])
             self.assertEqual("6000.3.19f1", profile["target"]["engine"]["version"])
@@ -4198,6 +4264,30 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertTrue(
                 any("undecodable controlled text file: undecodable.md" in error for error in errors)
             )
+
+    def test_namespace_contract_admits_attribute_only_assembly_info(self) -> None:
+        source = (
+            "using System.Runtime.CompilerServices;\n\n"
+            '[assembly: InternalsVisibleTo("Lingkyn.Example.Editor.Tests")]\n'
+        )
+
+        self.assertTrue(
+            MODULE.source_has_valid_namespace_contract("AssemblyInfo.cs", source)
+        )
+        self.assertFalse(
+            MODULE.source_has_valid_namespace_contract("Other.cs", source)
+        )
+
+    def test_namespace_contract_rejects_types_hidden_in_assembly_info(self) -> None:
+        source = (
+            "using System.Runtime.CompilerServices;\n"
+            '[assembly: InternalsVisibleTo("Lingkyn.Example.Editor.Tests")]\n'
+            "internal sealed class HiddenType {}\n"
+        )
+
+        self.assertFalse(
+            MODULE.source_has_valid_namespace_contract("AssemblyInfo.cs", source)
+        )
 
 
 if __name__ == "__main__":

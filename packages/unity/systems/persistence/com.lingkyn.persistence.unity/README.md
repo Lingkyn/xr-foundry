@@ -26,6 +26,6 @@ It does **not** claim crash durability, mobile/device behavior, cloud sync, auth
 - `AtomicReplace` is advertised only when the configured strategy uses supported `File.Replace` semantics with backup preconditions on replacement commits.
 - Initial create commits use staged move semantics. `AtomicReplace` fails closed when no primary exists yet.
 - Required commit capabilities are a minimum gate; the configured strategy selects the commit algorithm.
-- `RecoverableReplace` and `BestEffortWrite` are separate, conservative claims. Preservation is verified from actual primary/backup bytes after failure.
+- `RecoverableReplace` and `BestEffortWrite` are separate, conservative claims. Preservation is verified when expected prior-primary bytes survive in either the primary or backup path after failure.
 
 See `Samples~/LocalFilePersistence` for a minimal DTO snapshot and coordinator wiring example.

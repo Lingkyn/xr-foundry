@@ -65,8 +65,8 @@ GitHub identity owns the contribution.
 | From | To | Required evidence |
 | --- | --- | --- |
 | `open` | `resolved` | Options and trade-offs are recorded; synthesis names remaining uncertainty; a maintainer records a bounded decision, reopen conditions, and a separate execution checkpoint. |
-| `open` | `rejected` | The rejection rationale and evidence are public; no execution is ready. |
-| `resolved` | `superseded` | A newer immutable decision record is linked. Existing history is retained. |
+| `open` | `rejected` | The rejection rationale and evidence are public; `decision` stays null and execution is `not_ready` with no task. |
+| `resolved` | `superseded` | A newer immutable decision record is linked; existing history is retained and execution becomes `superseded`, never `ready`. |
 | `resolved` | `open` | Do not mutate history in place. Create a successor record when a reopen condition fires. |
 
 The machine contract is

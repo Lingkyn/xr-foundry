@@ -177,6 +177,32 @@
           }
         }
       }
+    },
+    {
+      "if": { "properties": { "status": { "const": "rejected" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "decision": { "type": "null" },
+          "execution": {
+            "properties": {
+              "readiness": { "const": "not_ready" },
+              "task": { "type": "null" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "superseded" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "readiness": { "const": "superseded" }
+            }
+          }
+        }
+      }
     }
   ]
 }

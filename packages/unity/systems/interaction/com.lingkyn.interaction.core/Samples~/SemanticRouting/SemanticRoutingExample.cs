@@ -33,7 +33,7 @@ namespace Lingkyn.Interaction.Samples
                 new[] { context },
                 new[] { confirmRoute }).Value;
 
-            var frame = InteractionFrame.Create(new[]
+            var started = InteractionFrame.Create(new[]
             {
                 new SourceSignal(
                     confirmRoute.Id,
@@ -43,7 +43,12 @@ namespace Lingkyn.Interaction.Samples
                     InteractionValue.FromButton(true),
                     InteractionPhase.Started,
                     1,
+                    0,
                     0),
+            }).Value;
+
+            var performed = InteractionFrame.Create(new[]
+            {
                 new SourceSignal(
                     confirmRoute.Id,
                     MustSourceId("source.keyboard.space"),
@@ -52,7 +57,8 @@ namespace Lingkyn.Interaction.Samples
                     InteractionValue.FromButton(true),
                     InteractionPhase.Performed,
                     2,
-                    1),
+                    0,
+                    0),
             }).Value;
 
             var coordinator = new InteractionCoordinator(
@@ -60,7 +66,8 @@ namespace Lingkyn.Interaction.Samples
                 new[] { MustContextId("context.ui") },
                 InteractionPolicySnapshot.Empty);
 
-            return coordinator.RouteFrame(frame, _ => InteractionHandlerOutcome.Accepted);
+            coordinator.RouteFrame(started);
+            return coordinator.RouteFrame(performed, _ => InteractionHandlerOutcome.Accepted);
         }
 
         private static IntentId MustIntentId(string value) => IntentId.TryCreate(value).Value;

@@ -172,6 +172,13 @@ namespace Lingkyn.Interaction.Core
 
         public static InteractionResult<InteractionValue> Validate(InteractionValueKind expectedKind, InteractionValue value)
         {
+            if (!Enum.IsDefined(typeof(InteractionValueKind), expectedKind)
+                || !Enum.IsDefined(typeof(InteractionValueKind), value.Kind))
+            {
+                return InteractionResult<InteractionValue>.Fail(
+                    InteractionValidationCode.KindMismatch,
+                    "Value kind must be defined.");
+            }
             if (value.Kind != expectedKind)
             {
                 return InteractionResult<InteractionValue>.Fail(

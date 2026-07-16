@@ -21,7 +21,7 @@ namespace Lingkyn.Interaction.Core
         public IntentId IntentId { get; }
         public RouteId RouteId { get; }
         public string AdapterKind { get; }
-        public IReadOnlyList<byte> OpaqueAdapterRouteToken => _opaqueAdapterRouteToken;
+        public IReadOnlyList<byte> OpaqueAdapterRouteToken => System.Array.AsReadOnly(_opaqueAdapterRouteToken);
 
         public static InteractionResult<BindingOverride> Create(
             IntentId intentId,
@@ -29,7 +29,8 @@ namespace Lingkyn.Interaction.Core
             string adapterKind,
             byte[] opaqueAdapterRouteToken)
         {
-            if (string.IsNullOrWhiteSpace(adapterKind))
+            if (string.IsNullOrEmpty(intentId.Value) || string.IsNullOrEmpty(routeId.Value)
+                || string.IsNullOrWhiteSpace(adapterKind))
             {
                 return InteractionResult<BindingOverride>.Fail(
                     InteractionValidationCode.InvalidDefinition,

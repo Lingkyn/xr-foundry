@@ -12,8 +12,7 @@ namespace Lingkyn.Interaction.Core
         private readonly BindingSuggestion[] _bindingSuggestions;
         private readonly Dictionary<string, IntentDefinition> _intentLookup;
         private readonly Dictionary<string, InteractionContextDefinition> _contextLookup;
-        private readonly Dictionary<string, List<InteractionRoute>> _routesByRouteId;
-        private readonly Dictionary<string, InteractionRoute> _routeInstanceLookup;
+        private readonly Dictionary<string, InteractionRoute> _routeLookup;
         private readonly Dictionary<string, BindingSuggestion> _bindingSuggestionLookup;
 
         private InteractionRegistry(
@@ -36,8 +35,7 @@ namespace Lingkyn.Interaction.Core
 
             _intentLookup = BuildLookup(_intents, intent => intent.Id.Value);
             _contextLookup = BuildLookup(_contexts, context => context.Id.Value);
-            _routesByRouteId = BuildRouteGroups(_routes);
-            _routeInstanceLookup = BuildRouteInstanceLookup(_routes);
+            _routeLookup = BuildLookup(_routes, route => route.Id.Value);
             _bindingSuggestionLookup = BuildLookup(_bindingSuggestions, suggestion => suggestion.Id.Value);
         }
 
@@ -52,20 +50,8 @@ namespace Lingkyn.Interaction.Core
         public bool TryGetContext(ContextId contextId, out InteractionContextDefinition definition) =>
             _contextLookup.TryGetValue(contextId.Value ?? string.Empty, out definition);
 
-        public bool TryGetRoute(ContextId contextId, RouteId routeId, out InteractionRoute route) =>
-            _routeInstanceLookup.TryGetValue(BuildRouteInstanceKey(contextId, routeId), out route);
-
-        public bool TryGetRoutes(RouteId routeId, out IReadOnlyList<InteractionRoute> routes)
-        {
-            if (_routesByRouteId.TryGetValue(routeId.Value ?? string.Empty, out var list))
-            {
-                routes = list;
-                return true;
-            }
-
-            routes = Array.Empty<InteractionRoute>();
-            return false;
-        }
+        public bool TryGetRoute(RouteId routeId, out InteractionRoute route) =>
+            _routeLookup.TryGetValue(routeId.Value ?? string.Empty, out route);
 
         public bool TryGetBindingSuggestion(BindingSuggestionId suggestionId, out BindingSuggestion suggestion) =>
             _bindingSuggestionLookup.TryGetValue(suggestionId.Value ?? string.Empty, out suggestion);
@@ -106,7 +92,7 @@ namespace Lingkyn.Interaction.Core
             }
 
             var routeList = new List<InteractionRoute>();
-            var routeInstanceSeen = new HashSet<string>(StringComparer.Ordinal);
+            var routeSeen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var route in routes)
             {
                 if (route == null)
@@ -116,12 +102,11 @@ namespace Lingkyn.Interaction.Core
                         "Route must not be null.");
                 }
 
-                var instanceKey = BuildRouteInstanceKey(route.ContextId, route.Id);
-                if (!routeInstanceSeen.Add(instanceKey))
+                if (string.IsNullOrEmpty(route.Id.Value) || !routeSeen.Add(route.Id.Value))
                 {
                     return InteractionResult<InteractionRegistry>.Fail(
                         InteractionValidationCode.DuplicateIdentity,
-                        $"Duplicate route instance '{route.Id.Value}' in context '{route.ContextId.Value}'.",
+                        $"Duplicate route identity '{route.Id.Value}'.",
                         route.Id.Value);
                 }
 
@@ -157,7 +142,7 @@ namespace Lingkyn.Interaction.Core
 
                 foreach (var routeId in context.RouteIds)
                 {
-                    if (!routeInstanceSeen.Contains(BuildRouteInstanceKey(context.Id, routeId)))
+                    if (!routeSeen.Contains(routeId.Value))
                     {
                         return InteractionResult<InteractionRegistry>.Fail(
                             InteractionValidationCode.InvalidDefinition,
@@ -235,9 +220,6 @@ namespace Lingkyn.Interaction.Core
                 new InteractionRegistry(intentList, contextList, routeList, suggestionList));
         }
 
-        internal static string BuildRouteInstanceKey(ContextId contextId, RouteId routeId) =>
-            InteractionRoutingSession.BuildRouteInstanceKey(contextId, routeId);
-
         private static bool TryContextContainsRoute(IEnumerable<InteractionContextDefinition> contexts, InteractionRoute route)
         {
             foreach (var context in contexts)
@@ -264,44 +246,5 @@ namespace Lingkyn.Interaction.Core
             return lookup;
         }
 
-        private static Dictionary<string, List<InteractionRoute>> BuildRouteGroups(IEnumerable<InteractionRoute> routes)
-        {
-            var groups = new Dictionary<string, List<InteractionRoute>>(StringComparer.Ordinal);
-            foreach (var route in routes)
-            {
-                var key = route.Id.Value ?? string.Empty;
-                if (!groups.TryGetValue(key, out var list))
-                {
-                    list = new List<InteractionRoute>();
-                    groups[key] = list;
-                }
-
-                list.Add(route);
-            }
-
-            foreach (var pair in groups)
-            {
-                pair.Value.Sort((left, right) =>
-                {
-                    var contextCompare = Comparer<ContextId>.Default.Compare(left.ContextId, right.ContextId);
-                    return contextCompare != 0
-                        ? contextCompare
-                        : Comparer<RouteId>.Default.Compare(left.Id, right.Id);
-                });
-            }
-
-            return groups;
-        }
-
-        private static Dictionary<string, InteractionRoute> BuildRouteInstanceLookup(IEnumerable<InteractionRoute> routes)
-        {
-            var lookup = new Dictionary<string, InteractionRoute>(StringComparer.Ordinal);
-            foreach (var route in routes)
-            {
-                lookup[BuildRouteInstanceKey(route.ContextId, route.Id)] = route;
-            }
-
-            return lookup;
-        }
     }
 }

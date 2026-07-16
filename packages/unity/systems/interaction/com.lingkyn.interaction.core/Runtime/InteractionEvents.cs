@@ -173,18 +173,21 @@ namespace Lingkyn.Interaction.Core
             IReadOnlyList<InteractionDispatchResult> dispatches,
             IReadOnlyList<InteractionDiagnostic> diagnostics,
             IReadOnlyList<SemanticInteractionEvent> events,
-            ActiveContextSnapshot activeContexts)
+            ActiveContextSnapshot activeContexts,
+            InteractionRoutingState nextState)
         {
             Dispatches = dispatches ?? Array.Empty<InteractionDispatchResult>();
             Diagnostics = diagnostics ?? Array.Empty<InteractionDiagnostic>();
             Events = events ?? Array.Empty<SemanticInteractionEvent>();
             ActiveContexts = activeContexts ?? new ActiveContextSnapshot(Array.Empty<ContextId>());
+            NextState = nextState ?? InteractionRoutingState.Empty;
         }
 
         public IReadOnlyList<InteractionDispatchResult> Dispatches { get; }
         public IReadOnlyList<InteractionDiagnostic> Diagnostics { get; }
         public IReadOnlyList<SemanticInteractionEvent> Events { get; }
         public ActiveContextSnapshot ActiveContexts { get; }
+        public InteractionRoutingState NextState { get; }
     }
 
     public delegate InteractionHandlerOutcome InteractionIntentHandler(SemanticInteractionEvent semanticEvent);

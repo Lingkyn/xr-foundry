@@ -35,7 +35,8 @@ namespace Lingkyn.Interaction.Core
             int dispatchOrder,
             IEnumerable<string> metadataKeys = null)
         {
-            if (dispatchOrder < 0)
+            if (string.IsNullOrEmpty(id.Value) || !Enum.IsDefined(typeof(InteractionValueKind), valueKind)
+                || !InteractionFrame.KnownCapabilities(requiredCapabilities) || dispatchOrder < 0)
             {
                 return InteractionResult<IntentDefinition>.Fail(
                     InteractionValidationCode.InvalidDefinition,
@@ -122,7 +123,7 @@ namespace Lingkyn.Interaction.Core
         public InteractionModality SourceModality { get; }
         public InteractionCapability SourceCapabilities { get; }
         public int RouteOrder { get; }
-        public IReadOnlyList<byte> OpaqueBindingDescriptor => _opaqueBindingDescriptor;
+        public IReadOnlyList<byte> OpaqueBindingDescriptor => Array.AsReadOnly(_opaqueBindingDescriptor);
 
         public static InteractionResult<InteractionRoute> Create(
             RouteId id,
@@ -134,7 +135,10 @@ namespace Lingkyn.Interaction.Core
             byte[] opaqueBindingDescriptor,
             int routeOrder)
         {
-            if (routeOrder < 0)
+            if (string.IsNullOrEmpty(id.Value) || string.IsNullOrEmpty(contextId.Value)
+                || string.IsNullOrEmpty(intentId.Value) || string.IsNullOrEmpty(sourceSelector.Value)
+                || !Enum.IsDefined(typeof(InteractionModality), sourceModality)
+                || !InteractionFrame.KnownCapabilities(sourceCapabilities) || routeOrder < 0)
             {
                 return InteractionResult<InteractionRoute>.Fail(
                     InteractionValidationCode.InvalidDefinition,
@@ -175,12 +179,14 @@ namespace Lingkyn.Interaction.Core
             int priority,
             IEnumerable<RouteId> routeIds)
         {
+            if (string.IsNullOrEmpty(id.Value))
+                return InteractionResult<InteractionContextDefinition>.Fail(InteractionValidationCode.InvalidDefinition, "Context identity is required.");
             var list = new List<RouteId>();
             if (routeIds != null)
             {
                 foreach (var routeId in routeIds)
                 {
-                    if (list.Any(existing => existing.Equals(routeId)))
+                    if (string.IsNullOrEmpty(routeId.Value) || list.Any(existing => existing.Equals(routeId)))
                     {
                         return InteractionResult<InteractionContextDefinition>.Fail(
                             InteractionValidationCode.DuplicateDefinition,
@@ -219,7 +225,7 @@ namespace Lingkyn.Interaction.Core
         public IntentId IntentId { get; }
         public RouteId RouteId { get; }
         public string AdapterKind { get; }
-        public IReadOnlyList<byte> OpaqueProposedBinding => _opaqueProposedBinding;
+        public IReadOnlyList<byte> OpaqueProposedBinding => Array.AsReadOnly(_opaqueProposedBinding);
 
         public static InteractionResult<BindingSuggestion> Create(
             BindingSuggestionId id,
@@ -228,7 +234,8 @@ namespace Lingkyn.Interaction.Core
             string adapterKind,
             byte[] opaqueProposedBinding)
         {
-            if (string.IsNullOrWhiteSpace(adapterKind))
+            if (string.IsNullOrEmpty(id.Value) || string.IsNullOrEmpty(intentId.Value)
+                || string.IsNullOrEmpty(routeId.Value) || string.IsNullOrWhiteSpace(adapterKind))
             {
                 return InteractionResult<BindingSuggestion>.Fail(
                     InteractionValidationCode.InvalidBindingSuggestion,

@@ -1,0 +1,67 @@
+{
+  "schema": "xr-foundry.foundry_source_manifest.v1",
+  "scope": "Foundry V1 Unity package production and GitHub validation pipeline",
+  "derivation_policy": "official_positive_public_sources_only",
+  "sources": [
+    {
+      "id": "unity-6-custom-packages",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.0/Documentation/Manual/CustomPackages.html",
+      "admitted_claims": [
+        "UPM is Unity's official reusable package system",
+        "Shared packages require manifests, assembly definitions when code is present, tests, documentation, changelog, and licensing"
+      ]
+    },
+    {
+      "id": "unity-6-package-layout",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.0/Documentation/Manual/cus-layout.html",
+      "admitted_claims": [
+        "Recommended custom-package layout includes package.json, README, CHANGELOG, LICENSE, Editor, Runtime, Tests, Samples~, and Documentation~ as applicable",
+        "Editor, Runtime, Tests, and their imported contents require meta files"
+      ]
+    },
+    {
+      "id": "unity-6-package-manifest",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.0/Documentation/Manual/upm-manifestPkg.html",
+      "admitted_claims": [
+        "Package name and semantic version are required manifest properties",
+        "Dependencies use exact versions and samples declare displayName, description, and Samples~ path"
+      ]
+    },
+    {
+      "id": "unity-6-package-tests",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.0/Documentation/Manual/cus-tests.html",
+      "admitted_claims": [
+        "Package tests live under Tests with test assembly definitions",
+        "Editor and Runtime test evidence remain distinct"
+      ]
+    },
+    {
+      "id": "unity-6-git-dependencies",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html",
+      "admitted_claims": [
+        "Git package installs can select a repository subfolder and revision",
+        "A full commit hash provides an exact immutable package input"
+      ]
+    },
+    {
+      "id": "github-actions-secure-use",
+      "authority": "GitHub",
+      "url": "https://docs.github.com/en/actions/reference/security/secure-use",
+      "admitted_claims": [
+        "Workflows should use least privilege and treat untrusted contribution input cautiously",
+        "A full-length action commit SHA is the immutable action reference"
+      ]
+    }
+  ],
+  "non_claims": [
+    "The sources do not define XR Foundry's maturity names or grant repository authority",
+    "The sources do not prove any XR device, renderer, runtime, input, or comfort behavior",
+    "A generated scaffold is not a Unity package implementation or release"
+  ]
+}
+

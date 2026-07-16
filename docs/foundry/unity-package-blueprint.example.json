@@ -1,0 +1,32 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "example",
+  "package": {
+    "id": "com.lingkyn.example-system",
+    "display_name": "XR Foundry Example System",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Example-only package blueprint that cannot write or enter the catalog.",
+    "category": "system",
+    "family": "example-system",
+    "target_path": "packages/unity/systems/example-system/com.lingkyn.example-system",
+    "root_namespace": "Lingkyn.ExampleSystem",
+    "dependencies": {}
+  },
+  "admission": {
+    "implementation_issue": null,
+    "positive_sources": [],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "GettingStarted",
+    "sample_description": "Example sample placeholder that requires implementation."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}
+

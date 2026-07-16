@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/foundry/unity-package-blueprint.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "record_status", "package", "admission", "scaffold", "authority"],
+  "properties": {
+    "schema": { "const": "xr-foundry.unity_package_blueprint.v1" },
+    "record_status": { "enum": ["example", "admitted"] },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "display_name", "version", "unity", "description", "category", "family", "target_path", "root_namespace", "dependencies"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9_.-]+$", "maxLength": 50 },
+        "display_name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+        "unity": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]+$" },
+        "description": { "type": "string", "minLength": 20, "maxLength": 300 },
+        "category": { "enum": ["foundation", "system", "adapter"] },
+        "family": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "target_path": { "type": "string", "pattern": "^packages/unity/(foundations|systems/[a-z0-9-]+|adapters/[a-z0-9-]+)/com\\.lingkyn\\.[a-z0-9_.-]+$" },
+        "root_namespace": { "type": "string", "pattern": "^Lingkyn(\\.[A-Za-z][A-Za-z0-9]*)+$" },
+        "dependencies": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9][a-z0-9_.-]+$" },
+          "additionalProperties": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" }
+        }
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation_issue", "positive_sources", "intended_maturity"],
+      "properties": {
+        "implementation_issue": { "type": ["string", "null"], "format": "uri", "pattern": "^https://github\\.com/Lingkyn/xr-foundry/issues/[1-9][0-9]*$" },
+        "positive_sources": { "type": "array", "items": { "type": "string", "format": "uri" }, "uniqueItems": true },
+        "intended_maturity": { "const": "incubating" }
+      }
+    },
+    "scaffold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_name", "sample_description"],
+      "properties": {
+        "sample_name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]+$" },
+        "sample_description": { "type": "string", "minLength": 10, "maxLength": 200 }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grants_catalog_admission", "grants_maturity", "grants_release", "grants_device_claim"],
+      "properties": {
+        "grants_catalog_admission": { "const": false },
+        "grants_maturity": { "const": false },
+        "grants_release": { "const": false },
+        "grants_device_claim": { "const": false }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "record_status": { "const": "admitted" } }, "required": ["record_status"] },
+      "then": {
+        "properties": {
+          "admission": {
+            "properties": {
+              "implementation_issue": { "type": "string" },
+              "positive_sources": { "minItems": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "record_status": { "const": "example" } }, "required": ["record_status"] },
+      "then": {
+        "properties": {
+          "admission": {
+            "properties": {
+              "implementation_issue": { "type": "null" },
+              "positive_sources": { "maxItems": 0 }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+

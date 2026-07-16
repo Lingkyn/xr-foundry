@@ -3,6 +3,13 @@
 Use this repository as a versioned package source and an evidence-backed reference
 library. Do not treat it as a bag of code to copy wholesale.
 
+Before proposing or creating a reusable package family, read
+`docs/foundry/README.md`, `docs/foundry/foundry-manifest.json`, the first batch,
+and the next source-gate queue. Do not create a package ID or directory before a
+positive-source gate and public implementation task are admitted. A generated
+scaffold contains a deliberate failing test and grants no catalog, maturity,
+release, or device status.
+
 ## Operating sequence
 
 1. Read `reference-catalog.json` to select the smallest relevant artifact.

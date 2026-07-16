@@ -34,6 +34,14 @@
         "com.lingkyn.persistence.core",
         "com.lingkyn.persistence.unity"
       ]
+    },
+    {
+      "id": "unity-system-settings",
+      "path": "packages/unity/systems/settings",
+      "packages": [
+        "com.lingkyn.settings.core",
+        "com.lingkyn.settings.unity"
+      ]
     }
   ],
   "invariants": {

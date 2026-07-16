@@ -1,0 +1,19 @@
+{
+  "$schema": "docs/validation/unity-compile-result.schema.json",
+  "schema": "xr-foundry.unity_compile_result.v1",
+  "profile_id": "unity-6000.3-settings-core-windows-editor",
+  "commit_sha": "7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+  "unity_version": "6000.3.19f1",
+  "build_target": "WindowsEditor",
+  "graphics_api": "Null",
+  "scripting_backend": "Mono",
+  "architecture": "x86_64",
+  "manifest_sha256": "ff0f21a0655603191991f050990a5952ba591c7b0f7af1733da2e6d5360daf55",
+  "lock_sha256": "95681579fbe4764a2ae747916a611ba7df0efb0b7f645e784ca8cfd96afd4a26",
+  "batchmode": true,
+  "result": "pass",
+  "error_count": 0,
+  "warning_count": 0,
+  "started_at": "2026-07-16T19:29:13Z",
+  "completed_at": "2026-07-16T19:29:14Z"
+}

@@ -262,6 +262,65 @@
           "candidate_release_review"
         ]
       }
+    },
+    {
+      "id": "com.lingkyn.settings.core",
+      "path": "packages/unity/systems/settings/com.lingkyn.settings.core",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "verified_exact_profile",
+      "git_url_install": "verified_immutable_commit",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "public_api_compatibility_review",
+        "satisfied": [
+          "positive_source_gate",
+          "architecture_gate",
+          "typed_definition_and_value_contracts",
+          "whole_snapshot_validation",
+          "transaction_and_reverse_rollback_contracts",
+          "profile_scope_and_unknown_value_contracts",
+          "persistence_port_contract",
+          "immutable_git_url_clean_consumer",
+          "unity_6000_3_editor_compile",
+          "unity_6000_3_editmode_tests"
+        ],
+        "pending": [
+          "public_api_compatibility_review",
+          "upgrade_and_rollback_across_a_release",
+          "candidate_release_review"
+        ]
+      }
+    },
+    {
+      "id": "com.lingkyn.settings.unity",
+      "path": "packages/unity/systems/settings/com.lingkyn.settings.unity",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "verified_exact_profile",
+      "git_url_install": "verified_immutable_commit",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "public_api_compatibility_review",
+        "satisfied": [
+          "scriptableobject_authoring",
+          "deterministic_core_conversion",
+          "actionable_asset_validation",
+          "explicit_applicator_registration",
+          "source_asset_immutability",
+          "repository_load_failure_policy",
+          "immutable_git_url_clean_consumer",
+          "unity_6000_3_editor_compile",
+          "unity_6000_3_editmode_tests"
+        ],
+        "pending": [
+          "public_api_compatibility_review",
+          "upgrade_and_rollback_across_a_release",
+          "candidate_release_review"
+        ]
+      }
     }
   ]
 }

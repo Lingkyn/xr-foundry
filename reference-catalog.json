@@ -244,6 +244,50 @@
       ]
     },
     {
+      "id": "unity-settings-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/settings/com.lingkyn.settings.core",
+      "package_id": "com.lingkyn.settings.core",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Engine-light typed settings, constraints, profiles, scoped transactions, deterministic change sets, reverse rollback, persistence seams, and accessibility discoverability metadata.",
+      "evidence": [
+        "docs/standards/settings/source-manifest.json",
+        "docs/standards/settings/architecture-contract.md",
+        "docs/standards/settings/verification-contract.md",
+        "packages/unity/systems/settings/com.lingkyn.settings.core/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No renderer, file format, PlayerPrefs, concrete graphics/audio/input policy, or compliance claim is included",
+        "Accessibility metadata describes discoverability and does not prove feature support or certification",
+        "Candidate promotion waits for public API and release upgrade/rollback review"
+      ]
+    },
+    {
+      "id": "unity-settings-adapter",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/settings/com.lingkyn.settings.unity",
+      "package_id": "com.lingkyn.settings.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Unity ScriptableObject settings authoring, deterministic Core conversion, asset-specific validation, and explicit consumer-provided applicator and persistence wiring.",
+      "evidence": [
+        "docs/standards/settings/source-manifest.json",
+        "docs/standards/settings/architecture-contract.md",
+        "docs/standards/settings/verification-contract.md",
+        "packages/unity/systems/settings/com.lingkyn.settings.unity/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-settings-unity-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No settings screen, renderer, scene search, PlayerPrefs, or product-specific applicator is included",
+        "Windows Editor evidence does not prove another operating system, device, renderer, or accessibility outcome",
+        "Candidate promotion waits for public API and release upgrade/rollback review"
+      ]
+    },
+    {
       "id": "repository-information-architecture",
       "kind": "repository_standard",
       "engine": "multi-engine_with_Unity_implemented",

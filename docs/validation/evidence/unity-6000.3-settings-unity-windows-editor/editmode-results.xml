@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="31" result="Passed" total="31" passed="31" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.1114813">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-settings-7753de2" fullname="xr-foundry-settings-7753de2" runstate="Runnable" testcasecount="31" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.111481" total="31" passed="31" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1027" name="Lingkyn.Settings.Core.Editor.Tests.dll" fullname="consumer-project/Library/ScriptAssemblies/Lingkyn.Settings.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.085877" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="308276" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1028" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.085253" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1029" name="Settings" fullname="Lingkyn.Settings" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.085162" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1030" name="Core" fullname="Lingkyn.Settings.Core" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.085024" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1031" name="Editor" fullname="Lingkyn.Settings.Core.Editor" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.084901" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestSuite" id="1032" name="Tests" fullname="Lingkyn.Settings.Core.Editor.Tests" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.084675" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-suite type="TestFixture" id="1001" name="SettingsCoreContractTests" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" testcasecount="25" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.082169" total="25" passed="25" failed="0" inconclusive="0" skipped="0" asserts="0">
+                  <properties />
+                  <test-case id="1026" name="AccessibilityMetadataRoundTripsWithoutComplianceClaims" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.AccessibilityMetadataRoundTripsWithoutComplianceClaims" methodname="AccessibilityMetadataRoundTripsWithoutComplianceClaims" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="620183502" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.014764" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1021" name="ApplicatorFailureAfterIntermediateApplicatorRollsBackPriorEffectsInReverseOrder" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ApplicatorFailureAfterIntermediateApplicatorRollsBackPriorEffectsInReverseOrder" methodname="ApplicatorFailureAfterIntermediateApplicatorRollsBackPriorEffectsInReverseOrder" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="24093861" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.019741" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1020" name="ApplicatorFailureBeforeFirstApplicatorRollsBackNothing" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ApplicatorFailureBeforeFirstApplicatorRollsBackNothing" methodname="ApplicatorFailureBeforeFirstApplicatorRollsBackNothing" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="179844483" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000713" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1008" name="ApplyRejectsStaleTransactionAfterCommittedRevisionAdvances" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ApplyRejectsStaleTransactionAfterCommittedRevisionAdvances" methodname="ApplyRejectsStaleTransactionAfterCommittedRevisionAdvances" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="816345779" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000660" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1018" name="ChangeSetIsDeterministicallyKeySorted" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ChangeSetIsDeterministicallyKeySorted" methodname="ChangeSetIsDeterministicallyKeySorted" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="158766799" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001752" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1017" name="CrossSettingConstraintValidatesCompleteSnapshot" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.CrossSettingConstraintValidatesCompleteSnapshot" methodname="CrossSettingConstraintValidatesCompleteSnapshot" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="330893800" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001312" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1014" name="DefinitionAndOptionConstraintRejectDefaultIdentities" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.DefinitionAndOptionConstraintRejectDefaultIdentities" methodname="DefinitionAndOptionConstraintRejectDefaultIdentities" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="572891867" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.003395" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1004" name="DefinitionRejectsKindMismatchInvalidDefaultsAndNonFiniteConstraints" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.DefinitionRejectsKindMismatchInvalidDefaultsAndNonFiniteConstraints" methodname="DefinitionRejectsKindMismatchInvalidDefaultsAndNonFiniteConstraints" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="34750398" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000489" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1015" name="FreezeListCopiesCallerOwnedArrays" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.FreezeListCopiesCallerOwnedArrays" methodname="FreezeListCopiesCallerOwnedArrays" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="496350293" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000452" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1012" name="InvalidScopeIsRejectedForResetAndLoadedSnapshots" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.InvalidScopeIsRejectedForResetAndLoadedSnapshots" methodname="InvalidScopeIsRejectedForResetAndLoadedSnapshots" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="859536617" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000875" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1025" name="LoadedSnapshotRejectsUnregisteredKnownKeysWhilePreservingUnknownBucket" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.LoadedSnapshotRejectsUnregisteredKnownKeysWhilePreservingUnknownBucket" methodname="LoadedSnapshotRejectsUnregisteredKnownKeysWhilePreservingUnknownBucket" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="602625285" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000985" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1019" name="NoOpAndFailedApplyDoNotNotify" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.NoOpAndFailedApplyDoNotNotify" methodname="NoOpAndFailedApplyDoNotNotify" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1148569004" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000680" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1023" name="PersistenceSuccessAbsenceAppliedNotPersistedAndLoadValidation" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.PersistenceSuccessAbsenceAppliedNotPersistedAndLoadValidation" methodname="PersistenceSuccessAbsenceAppliedNotPersistedAndLoadValidation" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1251842165" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001164" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1007" name="ProfileLayerAndProfileRejectNullAndDuplicateLayerIds" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ProfileLayerAndProfileRejectNullAndDuplicateLayerIds" methodname="ProfileLayerAndProfileRejectNullAndDuplicateLayerIds" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1221562730" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.002553" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1016" name="ProfileLayeringAppliesOrderedOverridesAndRejectsConstraintViolations" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ProfileLayeringAppliesOrderedOverridesAndRejectsConstraintViolations" methodname="ProfileLayeringAppliesOrderedOverridesAndRejectsConstraintViolations" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="696328536" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001768" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1006" name="PublicCollectionsAreImmutableAgainstMutation" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.PublicCollectionsAreImmutableAgainstMutation" methodname="PublicCollectionsAreImmutableAgainstMutation" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1620704798" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001720" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1013" name="RegistryLookupRejectsInvalidKeysWithoutThrowing" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.RegistryLookupRejectsInvalidKeysWithoutThrowing" methodname="RegistryLookupRejectsInvalidKeysWithoutThrowing" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="754822313" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000254" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1003" name="RegistryRejectsDuplicateDefinitions" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.RegistryRejectsDuplicateDefinitions" methodname="RegistryRejectsDuplicateDefinitions" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1500900082" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000213" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1010" name="ResetScopeChangeSetReportsRemovedFalseBooleanOverride" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ResetScopeChangeSetReportsRemovedFalseBooleanOverride" methodname="ResetScopeChangeSetReportsRemovedFalseBooleanOverride" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1536248124" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001669" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1011" name="ResetScopeChangeSetReportsRemovedNonBooleanOverride" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ResetScopeChangeSetReportsRemovedNonBooleanOverride" methodname="ResetScopeChangeSetReportsRemovedNonBooleanOverride" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1104509351" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001037" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1009" name="ResetScopeClearsScopedOverridesAndRestoresDefaultsWithoutTouchingOtherScopesOrUnknownValues" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ResetScopeClearsScopedOverridesAndRestoresDefaultsWithoutTouchingOtherScopesOrUnknownValues" methodname="ResetScopeClearsScopedOverridesAndRestoresDefaultsWithoutTouchingOtherScopesOrUnknownValues" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1366688038" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001305" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1022" name="RollbackFailureOnPreviouslyAppliedApplicatorReturnsRollbackDiagnostics" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.RollbackFailureOnPreviouslyAppliedApplicatorReturnsRollbackDiagnostics" methodname="RollbackFailureOnPreviouslyAppliedApplicatorReturnsRollbackDiagnostics" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="541262835" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001098" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1002" name="SettingKeyRejectsInvalidInputs" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.SettingKeyRejectsInvalidInputs" methodname="SettingKeyRejectsInvalidInputs" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1821045567" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000258" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1024" name="UnknownStoredKeysArePreservedButNotRegistered" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.UnknownStoredKeysArePreservedButNotRegistered" methodname="UnknownStoredKeysArePreservedButNotRegistered" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="1296308230" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.000895" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1005" name="ValueValidationRejectsRangeStepOptionAndStringBounds" fullname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests.ValueValidationRejectsRangeStepOptionAndStringBounds" methodname="ValueValidationRejectsRangeStepOptionAndStringBounds" classname="Lingkyn.Settings.Core.Editor.Tests.SettingsCoreContractTests" runstate="Runnable" seed="954824992" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001682" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                </test-suite>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1040" name="Lingkyn.Settings.Unity.Editor.Tests.dll" fullname="consumer-project/Library/ScriptAssemblies/Lingkyn.Settings.Unity.Editor.Tests.dll" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.017045" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="308276" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1041" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.016479" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1042" name="Settings" fullname="Lingkyn.Settings" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.016372" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1043" name="Unity" fullname="Lingkyn.Settings.Unity" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.016276" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1044" name="Editor" fullname="Lingkyn.Settings.Unity.Editor" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.016217" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestSuite" id="1045" name="Tests" fullname="Lingkyn.Settings.Unity.Editor.Tests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.016064" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-suite type="TestFixture" id="1033" name="SettingsUnityContractTests" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.015857" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+                  <properties />
+                  <test-case id="1039" name="AccessibilityMetadataConvertsWithoutComplianceClaims" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests.AccessibilityMetadataConvertsWithoutComplianceClaims" methodname="AccessibilityMetadataConvertsWithoutComplianceClaims" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" seed="1180296008" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.002423" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1034" name="CatalogConvertsDeterministicallyToCoreRegistry" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests.CatalogConvertsDeterministicallyToCoreRegistry" methodname="CatalogConvertsDeterministicallyToCoreRegistry" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" seed="1307800063" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001866" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1037" name="FactoryPropagatesRepositoryLoadFailureByDefaultAndSupportsOptInFallback" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests.FactoryPropagatesRepositoryLoadFailureByDefaultAndSupportsOptInFallback" methodname="FactoryPropagatesRepositoryLoadFailureByDefaultAndSupportsOptInFallback" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" seed="2020977213" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001237" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1038" name="FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests.FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets" methodname="FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" seed="1854230505" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.001319" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1036" name="ProfileConversionRejectsNullRegistryDuplicateLayersAndConstraintViolations" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests.ProfileConversionRejectsNullRegistryDuplicateLayersAndConstraintViolations" methodname="ProfileConversionRejectsNullRegistryDuplicateLayersAndConstraintViolations" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" seed="537267279" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.002307" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1035" name="ValidationReportsAssetIndexAndKeySpecificErrors" fullname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests.ValidationReportsAssetIndexAndKeySpecificErrors" methodname="ValidationReportsAssetIndexAndKeySpecificErrors" classname="Lingkyn.Settings.Unity.Editor.Tests.SettingsUnityContractTests" runstate="Runnable" seed="912616945" result="Passed" start-time="2026-07-16 19:27:06Z" end-time="2026-07-16 19:27:06Z" duration="0.002570" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                    <output><![CDATA[Saving results to: consumer-project\editmode-results-7753de2.xml
+]]></output>
+                  </test-case>
+                </test-suite>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

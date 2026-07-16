@@ -53,6 +53,26 @@ namespace Lingkyn.Inventory.Core.Tests
         }
 
         [Test]
+        public void UnresolvedDefinitionAddIsRejectedWithoutMutation()
+        {
+            var inventory = CreateInventory(bagCapacity: 2);
+            var seed = inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 1), BagId));
+            Assert.That(seed.Succeeded, Is.True);
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+            var unknownId = new ItemDefinitionId("unknown-item");
+
+            var result = inventory.Execute(MutationRequest.Add(new ItemStack(unknownId, 1), BagId));
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Failure, Is.EqualTo(MutationFailure.UnknownDefinition));
+            Assert.That(result.RevisionBefore, Is.EqualTo(revisionBefore));
+            Assert.That(result.RevisionAfter, Is.EqualTo(revisionBefore));
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
         public void SplitAndMergeConserveQuantity()
         {
             var inventory = CreateInventory(bagCapacity: 2);

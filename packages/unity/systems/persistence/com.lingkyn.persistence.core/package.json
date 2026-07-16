@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.persistence.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Persistence Core",
+  "description": "Engine-light save envelopes, integrity and migration contracts, storage capabilities, orchestration, and structured results.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "BasicPersistence",
+      "description": "Domain-only save, load, migration, integrity, and failure-result example.",
+      "path": "Samples~/BasicPersistence"
+    }
+  ]
+}

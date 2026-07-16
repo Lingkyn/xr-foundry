@@ -1,0 +1,1134 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading;
+using NUnit.Framework;
+#if !UNITY_INCLUDE_TESTS
+using NUnit.Framework.Legacy;
+#endif
+
+namespace Lingkyn.Persistence.Core.Editor.Tests
+{
+    public sealed class PersistenceCoreContractTests
+    {
+        [Test]
+        public void SaveSlotIdRejectsInvalidInputs()
+        {
+            var empty = SaveSlotId.TryCreate(string.Empty);
+            var whitespace = SaveSlotId.TryCreate(" ");
+            var separator = SaveSlotId.TryCreate("profile/main");
+            var valid = SaveSlotId.TryCreate("slot_main_01");
+
+            Assert.That(empty.Succeeded, Is.False);
+            Assert.That(whitespace.Succeeded, Is.False);
+            Assert.That(separator.Succeeded, Is.False);
+            Assert.That(valid.Succeeded, Is.True);
+        }
+
+        [Test]
+        public void EnvelopeCodecRejectsMalformedAndFutureFormats()
+        {
+            var malformed = SaveEnvelopeBinaryCodec.Decode(new byte[] { 0x01, 0x02, 0x03 });
+            Assert.That(malformed.Succeeded, Is.False);
+            Assert.That(malformed.Error.Stage, Is.EqualTo(SaveStage.Envelope));
+
+            var valid = BuildEnvelope("state-v1", 1);
+            var encoded = SaveEnvelopeBinaryCodec.Encode(valid);
+            Assert.That(encoded.Succeeded, Is.True);
+
+            var future = (byte[])encoded.Value.Clone();
+            future[4] = SaveEnvelopeBinaryCodec.FormatVersion + 1;
+            var futureDecode = SaveEnvelopeBinaryCodec.Decode(future);
+            Assert.That(futureDecode.Succeeded, Is.False);
+            Assert.That(futureDecode.Error.Code, Is.EqualTo(SaveErrorCode.FutureSchema));
+        }
+
+        [Test]
+        public void EnvelopeCodecRejectsMalformedUtf8Metadata()
+        {
+            var valid = BuildEnvelope("state-v1", 1);
+            var encoded = SaveEnvelopeBinaryCodec.Encode(valid);
+            Assert.That(encoded.Succeeded, Is.True);
+
+            var malformed = (byte[])encoded.Value.Clone();
+            malformed[7] = 0xFF; // First schema-id byte with invalid UTF-8.
+
+            var decoded = SaveEnvelopeBinaryCodec.Decode(malformed);
+            Assert.That(decoded.Succeeded, Is.False);
+            Assert.That(decoded.Error.Stage, Is.EqualTo(SaveStage.Envelope));
+            Assert.That(decoded.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
+        public void CoordinatorRejectsChecksumCorruptionBeforeDecode()
+        {
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec();
+            var migrations = new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>());
+            var coordinator = CreateCoordinator(store, codec, migrations);
+            var slot = MustSlot("slot_main");
+
+            var save = coordinator.Save(slot, "state-v1");
+            Assert.That(save.Committed, Is.True);
+
+            var corrupted = (byte[])store.Bytes.Clone();
+            corrupted[corrupted.Length - 1] ^= 0x40;
+            store.Bytes = corrupted;
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Verify));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.CorruptPayload));
+            Assert.That(codec.DecodeCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void PrimaryWinsWhenBackupIsAlsoPresent()
+        {
+            var store = new MultiCandidateStore();
+            var codec = new Utf8StringCodec();
+            var coordinator = CreateCoordinator(store, codec, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_primary_wins");
+
+            var primary = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("primary-state", 0)).Value;
+            var backup = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), primary);
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), backup);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.True);
+            Assert.That(loaded.Value.State, Is.EqualTo("primary-state"));
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Primary));
+            Assert.That(loaded.Value.SelectedCandidateId.Value, Is.EqualTo("primary"));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.False);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Null);
+        }
+
+        [Test]
+        public void ExplicitRecoveryPolicySelectsValidBackupAndReportsRecovery()
+        {
+            var store = new MultiCandidateStore();
+            var codec = new Utf8StringCodec();
+            var coordinator = CreateCoordinator(
+                store,
+                codec,
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                recoveryPolicy: SaveRecoveryPolicy.PrimaryThenBackup);
+            var slot = MustSlot("slot_recovery");
+
+            var primary = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("primary-state", 0)).Value;
+            var backup = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            primary[primary.Length - 1] ^= 0x40;
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), primary);
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), backup);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.True);
+            Assert.That(loaded.Value.State, Is.EqualTo("backup-state"));
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Backup));
+            Assert.That(loaded.Value.SelectedCandidateId.Value, Is.EqualTo("backup"));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.True);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Not.Null);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Stage, Is.EqualTo(SaveStage.Verify));
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Code, Is.EqualTo(SaveErrorCode.CorruptPayload));
+        }
+
+        [Test]
+        public void PrimaryOnlyPolicyDoesNotFallBackToBackup()
+        {
+            var store = new MultiCandidateStore();
+            var codec = new Utf8StringCodec();
+            var coordinator = CreateCoordinator(store, codec, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_primary_only");
+
+            var primary = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("primary-state", 0)).Value;
+            var backup = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            primary[primary.Length - 1] ^= 0x40;
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), primary);
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), backup);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Verify));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.CorruptPayload));
+            Assert.That(codec.DecodeCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void StagingOnlyCandidateSetIsRejected()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_staging_only");
+            var staging = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("staging-state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Staging, MustCandidateId("staging"), staging);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.NotFound));
+        }
+
+        [Test]
+        public void ValidStagingIsNeverSelectedWhenPrimaryExists()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_ignore_staging");
+
+            var primary = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("primary-state", 0)).Value;
+            var staging = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("staging-state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), primary);
+            store.SetCandidate(SaveCandidateKind.Staging, MustCandidateId("staging"), staging);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.True);
+            Assert.That(loaded.Value.State, Is.EqualTo("primary-state"));
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Primary));
+        }
+
+        [Test]
+        public void DuplicatePrimaryCandidatesAreRejected()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_dup_primary");
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary-a"), bytes);
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary-b"), bytes);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("duplicate primary", loaded.Error.Message);
+        }
+
+        [Test]
+        public void DuplicateBackupCandidatesAreRejected()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_dup_backup");
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup-a"), bytes);
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup-b"), bytes);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("duplicate backup", loaded.Error.Message);
+        }
+
+        [Test]
+        public void InvalidBackupDoesNotMaskPrimaryFailure()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                recoveryPolicy: SaveRecoveryPolicy.PrimaryThenBackup);
+            var slot = MustSlot("slot_masking");
+
+            var primary = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("primary-state", 0)).Value;
+            var backup = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            primary[primary.Length - 1] ^= 0x40;
+            backup[backup.Length - 1] ^= 0x20;
+            store.SetCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), primary);
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), backup);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Verify));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.CorruptPayload));
+            StringAssert.Contains("checksum", loaded.Error.Message.ToLowerInvariant());
+        }
+
+        [Test]
+        public void SaveReadCandidateBytesRemainImmutableBeforeValidation()
+        {
+            var source = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("immutable", 0)).Value;
+            var candidate = new SaveReadCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), source);
+            source[source.Length - 1] ^= 0x10;
+
+            var decoded = SaveEnvelopeBinaryCodec.Decode(candidate.Bytes.Span);
+            Assert.That(decoded.Succeeded, Is.True);
+            Assert.That(candidate.Bytes.Span[candidate.Bytes.Length - 1], Is.Not.EqualTo(source[source.Length - 1]));
+        }
+
+        [Test]
+        public void BackupOnlyRecoveryReportsPrimaryMissingDiagnostic()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                recoveryPolicy: SaveRecoveryPolicy.PrimaryThenBackup);
+            var slot = MustSlot("slot_backup_only");
+            var backup = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), backup);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.True);
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Backup));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.True);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Not.Null);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Code, Is.EqualTo(SaveErrorCode.NotFound));
+        }
+
+        [Test]
+        public void DefaultCandidateSetDoesNotThrowSelector()
+        {
+            var selected = SaveRecoveryCandidateSelector.Select(
+                default(SaveReadCandidateSet),
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.NotFound));
+        }
+
+        [Test]
+        public void SaveReadCandidateRejectsDefaultCandidateId()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            Assert.Throws<ArgumentException>(() => new SaveReadCandidate(SaveCandidateKind.Primary, default, bytes));
+        }
+
+        [Test]
+        public void SaveReadCandidateRejectsUndefinedCandidateKind()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            Assert.Throws<ArgumentException>(() => new SaveReadCandidate((SaveCandidateKind)99, MustCandidateId("primary"), bytes));
+        }
+
+        [Test]
+        public void SelectorRejectsUndefinedRecoveryPolicy()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var candidateSet = new SaveReadCandidateSet(new[]
+            {
+                new SaveReadCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), bytes)
+            });
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                candidateSet,
+                (SaveRecoveryPolicy)99,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("undefined", selected.Error.Message.ToLowerInvariant());
+        }
+
+        [Test]
+        public void SelectorRejectsUndefinedCandidateKindInSet()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var invalidCandidate = CreateUninitializedCandidate((SaveCandidateKind)99, MustCandidateId("primary"), bytes);
+            var candidateSet = new SaveReadCandidateSet(new[] { invalidCandidate });
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                candidateSet,
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("undefined", selected.Error.Message.ToLowerInvariant());
+        }
+
+        [Test]
+        public void SelectorRejectsEmptyCandidateIdInSet()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var invalidCandidate = CreateUninitializedCandidate(SaveCandidateKind.Primary, default, bytes);
+            var candidateSet = new SaveReadCandidateSet(new[] { invalidCandidate });
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                candidateSet,
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.InvalidSlot));
+        }
+
+        [Test]
+        public void SaveReadCandidateSetSnapshotsMembershipAndOrder()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var primary = new SaveReadCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), bytes);
+            var backup = new SaveReadCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), bytes);
+            var source = new List<SaveReadCandidate> { primary, backup };
+            var candidateSet = new SaveReadCandidateSet(source);
+
+            Assert.That(candidateSet.Candidates.Count, Is.EqualTo(2));
+            Assert.That(candidateSet.Candidates[0].Id.Value, Is.EqualTo("primary"));
+            Assert.That(candidateSet.Candidates[1].Id.Value, Is.EqualTo("backup"));
+
+            source.Reverse();
+            source.Clear();
+            source.Add(new SaveReadCandidate(SaveCandidateKind.Staging, MustCandidateId("staging"), bytes));
+
+            Assert.That(candidateSet.Candidates.Count, Is.EqualTo(2));
+            Assert.That(candidateSet.Candidates[0].Id.Value, Is.EqualTo("primary"));
+            Assert.That(candidateSet.Candidates[1].Id.Value, Is.EqualTo("backup"));
+        }
+
+        [Test]
+        public void DeferredApplySemanticsRemainIntactAfterRecoverySelection()
+        {
+            var store = new MultiCandidateStore();
+            var codec = new Utf8StringCodec();
+            var coordinator = CreateCoordinator(store, codec, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_deferred_apply");
+            store.SetCandidate(
+                SaveCandidateKind.Primary,
+                MustCandidateId("primary"),
+                SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("candidate", 0)).Value);
+
+            var applyCalls = 0;
+            var result = coordinator.LoadAndApply(
+                slot,
+                _ => SaveResult.Fail(SaveStage.Validate, SaveErrorCode.ValidateRejected, "validator rejected"),
+                _ =>
+                {
+                    applyCalls++;
+                    return SaveResult.Success();
+                });
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Validate));
+            Assert.That(applyCalls, Is.EqualTo(0));
+            Assert.That(codec.DecodeCallCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void MigrationPipelineAppliesDeterministicPath()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(1, 2, state => state + "|m12")
+            });
+
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.Value, Is.EqualTo("seed|m01|m12"));
+        }
+
+        [Test]
+        public void MigrationPipelineRejectsMissingPath()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01")
+            });
+
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.MissingMigration));
+        }
+
+        [Test]
+        public void MigrationPipelineRejectsAmbiguousGraph()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(0, 2, state => state + "|m02")
+            });
+
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.AmbiguousMigration));
+        }
+
+        [Test]
+        public void MigrationPipelineTreatsBackEdgeAsNonMonotonic()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(1, 0, state => state + "|m10")
+            });
+
+            var result = migrations.Apply(0, 1, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+        }
+
+        [Test]
+        public void MigrationPipelinePrefersNonMonotonicOverAmbiguous()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(0, 2, state => state + "|m02"),
+                new DelegateMigration(3, 2, state => state + "|m32")
+            });
+
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+        }
+
+        [Test]
+        public void MigrationPipelineRejectsNonMonotonicGraph()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(2, 1, state => state)
+            });
+
+            var result = migrations.Apply(0, 1, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+        }
+
+        [Test]
+        public void MigrationPipelineRejectsFutureStoredVersion()
+        {
+            var migrations = new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>());
+            var result = migrations.Apply(5, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.FutureSchema));
+        }
+
+        [Test]
+        public void MigrationPipelineRejectsOvershootEdge()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 3, state => state + "|m03")
+            });
+
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.OvershootMigration));
+        }
+
+        [Test]
+        public void MigrationPipelineConvertsMigrationThrowsToStableResult()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, _ => throw new InvalidOperationException("boom"))
+            });
+
+            var result = migrations.Apply(0, 1, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Migrate));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorStopsBeforeApplyWhenValidationFails()
+        {
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec();
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|migrated")
+            });
+            var coordinator = CreateCoordinator(store, codec, migrations, currentSchemaVersion: 1);
+            var slot = MustSlot("slot_gate");
+
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("candidate", 0)).Value;
+            var applyCalls = 0;
+            var result = coordinator.LoadAndApply(
+                slot,
+                _ => SaveResult.Fail(SaveStage.Validate, SaveErrorCode.ValidateRejected, "validator rejected"),
+                _ =>
+                {
+                    applyCalls++;
+                    return SaveResult.Success();
+                });
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Validate));
+            Assert.That(applyCalls, Is.EqualTo(0));
+            Assert.That(codec.DecodeCallCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void CoordinatorPassesStoredSchemaVersionToCodecDecode()
+        {
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec();
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(2, 3, state => state)
+            });
+            var coordinator = CreateCoordinator(store, codec, migrations, currentSchemaVersion: 3);
+            var slot = MustSlot("slot_schema_decode");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("payload", 2)).Value;
+
+            var result = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.Value.State, Is.EqualTo("payload"));
+            Assert.That(codec.LastDecodeSchemaVersion, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SaveErrorDefaultHashCodeIsSafe()
+        {
+            Assert.DoesNotThrow(() => _ = default(SaveError).GetHashCode());
+            Assert.That(default(SaveError).GetHashCode(), Is.EqualTo(default(SaveError).GetHashCode()));
+        }
+
+        [Test]
+        public void CoordinatorRejectsIntegrityAlgorithmMismatch()
+        {
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec();
+            var migrations = new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>());
+            var coordinator = new SaveCoordinator<string>(
+                "lingkyn.state",
+                0,
+                "bc59960",
+                codec,
+                new FixedDigestIntegrityProvider("sha-512"),
+                migrations,
+                store,
+                SaveCommitCapabilities.BestEffortWrite);
+            var slot = MustSlot("slot_algo");
+
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state-v1", 0)).Value;
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Verify));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
+        public void SaveEnvelopeOwnsImmutableByteCopies()
+        {
+            var digest = new byte[] { 0x01, 0x02, 0x03 };
+            var payload = Encoding.UTF8.GetBytes("snapshot");
+            var envelope = new SaveEnvelope("lingkyn.state", 1, "bc59960", DateTime.UtcNow.Ticks, "sha-256", digest, payload);
+
+            digest[0] = 0x7F;
+            payload[0] = 0x00;
+
+            Assert.That(envelope.IntegrityDigest.Span[0], Is.EqualTo(0x01));
+            Assert.That(envelope.Payload.Span[0], Is.EqualTo((byte)'s'));
+        }
+
+        [Test]
+        public void CoordinatorConvertsCodecEncodeThrowsToStableResult()
+        {
+            var coordinator = CreateCoordinator(new InMemoryStore(), new Utf8StringCodec { ThrowOnEncode = true }, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var result = coordinator.Save(MustSlot("slot_encode_throw"), "payload");
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Encode));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorConvertsCodecDecodeThrowsToStableResult()
+        {
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec { ThrowOnDecode = true };
+            var coordinator = CreateCoordinator(store, codec, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_decode_throw");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("payload", 0)).Value;
+
+            var result = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Decode));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorConvertsStoreReadThrowsToStableResult()
+        {
+            var store = new InMemoryStore { ThrowOnRead = true };
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var result = coordinator.LoadValidated(MustSlot("slot_read_throw"), _ => SaveResult.Success());
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorConvertsStoreCommitThrowsToStableResult()
+        {
+            var store = new InMemoryStore { ThrowOnCommit = true };
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var result = coordinator.Save(MustSlot("slot_commit_throw"), "payload");
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorConvertsValidatorThrowsToStableResult()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_validator_throw");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("payload", 0)).Value;
+
+            var result = coordinator.LoadValidated(slot, _ => throw new InvalidOperationException("validator boom"));
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Validate));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorConvertsApplyThrowsToStableResult()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_apply_throw");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("payload", 0)).Value;
+
+            var result = coordinator.LoadAndApply(slot, _ => SaveResult.Success(), _ => throw new InvalidOperationException("apply boom"));
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Apply));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+        }
+
+        [Test]
+        public void CoordinatorReportsCapabilityMismatchBeforeCommit()
+        {
+            var store = new InMemoryStore { Capabilities = SaveCommitCapabilities.BestEffortWrite };
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                requiredCapabilities: SaveCommitCapabilities.AtomicReplace);
+
+            var result = coordinator.Save(MustSlot("slot_commit"), "payload");
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedCommitCapability));
+            Assert.That(store.CommitCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void CoordinatorChecksCancellationImmediatelyBeforeCommit()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            SaveCommitResult result;
+            using (var source = new CancellationTokenSource())
+            {
+                source.Cancel();
+                result = coordinator.Save(MustSlot("slot_cancel"), "payload", source.Token);
+            }
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.PriorCommittedRecordPreserved, Is.True);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.Cancelled));
+            Assert.That(store.CommitCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void FailedCommitPreservesPriorBytesAndSurfacesPreservation()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_preserve");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("stable-prior", 0)).Value;
+            var priorBytes = (byte[])store.Bytes.Clone();
+            store.ForcedCommitResult = SaveCommitResult.NotCommitted(
+                SaveStage.Commit,
+                SaveErrorCode.IoDenied,
+                "stage file denied",
+                true);
+
+            var result = coordinator.Save(slot, "new-state");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.PriorCommittedRecordPreserved, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.IoDenied));
+            Assert.That(store.Bytes, Is.EqualTo(priorBytes));
+        }
+
+        [Test]
+        public void CoordinatorRejectsContradictoryProviderOutcome()
+        {
+            var store = new InMemoryStore
+            {
+                ForcedCommitResult = (SaveCommitResult?)default(SaveCommitResult)
+            };
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+
+            var result = coordinator.Save(MustSlot("slot_contradict"), "payload");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("contradictory commit outcome", result.Error.Message);
+        }
+
+        [Test]
+        public void ObserversRunInOrderOnlyAfterDurableCommit()
+        {
+            var store = new InMemoryStore();
+            var order = new List<string>();
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                postCommitObservers: new ISaveCommitObserver<string>[]
+                {
+                    new DelegateObserver(_ =>
+                    {
+                        Assert.That(store.IsInsideCommit, Is.False);
+                        Assert.That(store.CommitCompleted, Is.True);
+                        order.Add("observer-1");
+                    }),
+                    new DelegateObserver(_ =>
+                    {
+                        Assert.That(store.IsInsideCommit, Is.False);
+                        Assert.That(store.CommitCompleted, Is.True);
+                        order.Add("observer-2");
+                    })
+                });
+
+            var result = coordinator.Save(MustSlot("slot_observers"), "payload");
+
+            Assert.That(result.Committed, Is.True);
+            Assert.That(order, Is.EqualTo(new[] { "observer-1", "observer-2" }));
+        }
+
+        [Test]
+        public void ObserverExceptionProducesWarningDiagnosticsWithoutChangingCommittedState()
+        {
+            var store = new InMemoryStore();
+            var observerCalls = 0;
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                postCommitObservers: new ISaveCommitObserver<string>[]
+                {
+                    new DelegateObserver(_ =>
+                    {
+                        observerCalls++;
+                        throw new InvalidOperationException("observer boom");
+                    })
+                });
+
+            var result = coordinator.Save(MustSlot("slot_observer_warning"), "payload");
+
+            Assert.That(result.Committed, Is.True);
+            Assert.That(observerCalls, Is.EqualTo(1));
+            Assert.That(result.Diagnostics.Count, Is.EqualTo(1));
+            Assert.That(result.Diagnostics[0].Severity, Is.EqualTo(SaveDiagnosticSeverity.Warning));
+            Assert.That(result.Diagnostics[0].Stage, Is.EqualTo(SaveStage.Commit));
+        }
+
+        [Test]
+        public void FailedCommitDoesNotInvokeObservers()
+        {
+            var store = new InMemoryStore
+            {
+                ForcedCommitResult = SaveCommitResult.NotCommitted(
+                    SaveStage.Commit,
+                    SaveErrorCode.IoDenied,
+                    "disk denied",
+                    true)
+            };
+            var observerCalls = 0;
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                postCommitObservers: new ISaveCommitObserver<string>[]
+                {
+                    new DelegateObserver(_ => observerCalls++)
+                });
+
+            var result = coordinator.Save(MustSlot("slot_no_observer_on_failure"), "payload");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(observerCalls, Is.EqualTo(0));
+        }
+
+        private static SaveCoordinator<string> CreateCoordinator(
+            ISaveStore store,
+            Utf8StringCodec codec,
+            MigrationPipeline<string> migrations,
+            int currentSchemaVersion = 0,
+            SaveCommitCapabilities requiredCapabilities = SaveCommitCapabilities.BestEffortWrite,
+            IEnumerable<ISaveCommitObserver<string>> postCommitObservers = null,
+            SaveRecoveryPolicy recoveryPolicy = SaveRecoveryPolicy.PrimaryOnly)
+        {
+            return new SaveCoordinator<string>(
+                "lingkyn.state",
+                currentSchemaVersion,
+                "bc59960",
+                codec,
+                new Sha256IntegrityProvider(),
+                migrations,
+                store,
+                requiredCapabilities,
+                postCommitObservers,
+                recoveryPolicy);
+        }
+
+        private static SaveEnvelope BuildEnvelope(string payloadText, int schemaVersion)
+        {
+            var payload = Encoding.UTF8.GetBytes(payloadText);
+            var digest = new Sha256IntegrityProvider().ComputeDigest(payload).Value;
+            return new SaveEnvelope(
+                "lingkyn.state",
+                schemaVersion,
+                "bc59960",
+                DateTime.UtcNow.Ticks,
+                "sha-256",
+                digest,
+                payload);
+        }
+
+        private static SaveCandidateId MustCandidateId(string value)
+        {
+            var candidate = SaveCandidateId.TryCreate(value);
+            Assert.That(candidate.Succeeded, Is.True);
+            return candidate.Value;
+        }
+
+        private static SaveSlotId MustSlot(string value)
+        {
+            var candidate = SaveSlotId.TryCreate(value);
+            Assert.That(candidate.Succeeded, Is.True);
+            return candidate.Value;
+        }
+
+        private static SaveReadCandidate CreateUninitializedCandidate(
+            SaveCandidateKind kind,
+            SaveCandidateId id,
+            byte[] bytes)
+        {
+            var candidate = (SaveReadCandidate)RuntimeHelpers.GetUninitializedObject(typeof(SaveReadCandidate));
+            var bytesCopy = (byte[])bytes.Clone();
+            SetAutoPropertyBackingField(candidate, "Kind", kind);
+            SetAutoPropertyBackingField(candidate, "Id", id);
+            typeof(SaveReadCandidate)
+                .GetField("_bytes", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(candidate, bytesCopy);
+            typeof(SaveReadCandidate)
+                .GetField("<Bytes>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(candidate, new ReadOnlyMemory<byte>(bytesCopy));
+            return candidate;
+        }
+
+        private static void SetAutoPropertyBackingField<T>(SaveReadCandidate target, string propertyName, T value)
+        {
+            var field = typeof(SaveReadCandidate).GetField($"<{propertyName}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"Missing backing field for {propertyName}.");
+            field.SetValue(target, value);
+        }
+
+        private sealed class Utf8StringCodec : ISaveCodec<string>
+        {
+            public int DecodeCallCount { get; private set; }
+
+            public bool ThrowOnEncode { get; set; }
+            public bool ThrowOnDecode { get; set; }
+            public int LastDecodeSchemaVersion { get; private set; }
+
+            public SaveResult<string> Decode(int schemaVersion, ReadOnlySpan<byte> bytes)
+            {
+                if (ThrowOnDecode)
+                {
+                    throw new InvalidOperationException("decode boom");
+                }
+
+                DecodeCallCount++;
+                LastDecodeSchemaVersion = schemaVersion;
+                return SaveResult<string>.Success(Encoding.UTF8.GetString(bytes));
+            }
+
+            public SaveResult<byte[]> Encode(string snapshot)
+            {
+                if (ThrowOnEncode)
+                {
+                    throw new InvalidOperationException("encode boom");
+                }
+
+                return SaveResult<byte[]>.Success(Encoding.UTF8.GetBytes(snapshot ?? string.Empty));
+            }
+        }
+
+        private sealed class DelegateMigration : ISaveMigration<string>
+        {
+            private readonly Func<string, string> _apply;
+
+            public DelegateMigration(int fromVersion, int toVersion, Func<string, string> apply)
+            {
+                FromVersion = fromVersion;
+                ToVersion = toVersion;
+                _apply = apply;
+            }
+
+            public int FromVersion { get; }
+            public int ToVersion { get; }
+
+            public string Migrate(string state) => _apply(state);
+        }
+
+        private sealed class MultiCandidateStore : ISaveStore
+        {
+            private readonly List<SaveReadCandidate> _candidates = new List<SaveReadCandidate>();
+
+            public SaveCommitCapabilities Capabilities { get; set; } = SaveCommitCapabilities.BestEffortWrite;
+
+            public void SetCandidate(SaveCandidateKind kind, SaveCandidateId id, byte[] bytes)
+            {
+                _candidates.Add(new SaveReadCandidate(kind, id, bytes));
+            }
+
+            public SaveResult<SaveReadCandidateSet> ReadCandidates(SaveSlotId slotId)
+            {
+                if (_candidates.Count == 0)
+                {
+                    return SaveResult<SaveReadCandidateSet>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No save exists.");
+                }
+
+                return SaveResult<SaveReadCandidateSet>.Success(new SaveReadCandidateSet(_candidates.ToArray()));
+            }
+
+            public SaveCommitResult Commit(
+                SaveSlotId slotId,
+                ReadOnlyMemory<byte> envelopeBytes,
+                SaveCommitCapabilities requiredCapabilities)
+            {
+                _candidates.Clear();
+                _candidates.Add(new SaveReadCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), envelopeBytes.Span));
+                return SaveCommitResult.Success();
+            }
+        }
+
+        private sealed class InMemoryStore : ISaveStore
+        {
+            public byte[] Bytes { get; set; } = Array.Empty<byte>();
+            public SaveCommitCapabilities Capabilities { get; set; } = SaveCommitCapabilities.BestEffortWrite;
+            public int CommitCallCount { get; private set; }
+            public bool ThrowOnRead { get; set; }
+            public bool ThrowOnCommit { get; set; }
+            public SaveCommitResult? ForcedCommitResult { get; set; }
+            public bool IsInsideCommit { get; private set; }
+            public bool CommitCompleted { get; private set; }
+
+            public SaveResult<SaveReadCandidateSet> ReadCandidates(SaveSlotId slotId)
+            {
+                if (ThrowOnRead)
+                {
+                    throw new InvalidOperationException("read boom");
+                }
+
+                if (Bytes.Length == 0)
+                {
+                    return SaveResult<SaveReadCandidateSet>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No save exists.");
+                }
+
+                var candidate = new SaveReadCandidate(
+                    SaveCandidateKind.Primary,
+                    MustCandidateId("primary"),
+                    Bytes);
+                return SaveResult<SaveReadCandidateSet>.Success(new SaveReadCandidateSet(new[] { candidate }));
+            }
+
+            public SaveCommitResult Commit(
+                SaveSlotId slotId,
+                ReadOnlyMemory<byte> envelopeBytes,
+                SaveCommitCapabilities requiredCapabilities)
+            {
+                if (ThrowOnCommit)
+                {
+                    throw new InvalidOperationException("commit boom");
+                }
+
+                CommitCallCount++;
+                IsInsideCommit = true;
+                CommitCompleted = false;
+                try
+                {
+                    if (ForcedCommitResult.HasValue)
+                    {
+                        var forced = ForcedCommitResult.Value;
+                        if (forced.Committed)
+                        {
+                            Bytes = envelopeBytes.ToArray();
+                        }
+
+                        return forced;
+                    }
+
+                    Bytes = envelopeBytes.ToArray();
+                    return SaveCommitResult.Success();
+                }
+                finally
+                {
+                    IsInsideCommit = false;
+                    CommitCompleted = true;
+                }
+            }
+        }
+
+        private sealed class DelegateObserver : ISaveCommitObserver<string>
+        {
+            private readonly Action<SaveCommitNotification<string>> _onCommitted;
+
+            public DelegateObserver(Action<SaveCommitNotification<string>> onCommitted)
+            {
+                _onCommitted = onCommitted ?? throw new ArgumentNullException(nameof(onCommitted));
+            }
+
+            public void OnCommitted(SaveCommitNotification<string> notification)
+            {
+                _onCommitted(notification);
+            }
+        }
+
+        private sealed class FixedDigestIntegrityProvider : IIntegrityProvider
+        {
+            private readonly byte[] _digest = new byte[] { 0xAA };
+
+            public FixedDigestIntegrityProvider(string algorithmName)
+            {
+                AlgorithmName = algorithmName;
+            }
+
+            public string AlgorithmName { get; }
+
+            public SaveResult<byte[]> ComputeDigest(ReadOnlySpan<byte> payload) => SaveResult<byte[]>.Success((byte[])_digest.Clone());
+
+            public SaveResult Verify(ReadOnlySpan<byte> payload, ReadOnlySpan<byte> expectedDigest)
+            {
+                return SaveResult.Success();
+            }
+        }
+    }
+}

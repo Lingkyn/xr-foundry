@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 6,
+  "revision": 7,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -223,7 +223,7 @@
       "non_goals": [
         "No points, total score, Agent/model ranking, or automatic role promotion"
       ],
-      "status": "waiting_on_review",
+      "status": "completed",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -277,24 +277,27 @@
           "kind": "design",
           "location": "https://github.com/Lingkyn/xr-foundry/commit/01174c08c9d13fb7da51449cee294d47d47ac200",
           "commit": "01174c08c9d13fb7da51449cee294d47d47ac200",
-          "summary": "The public-workbench RFC, admitted-source manifest, non-ranking recognition policy, and fail-closed contribution-credit contract are published and pass repository validation; required maintainer review remains outstanding."
+          "summary": "The public-workbench RFC, admitted-source manifest, non-ranking recognition policy, and fail-closed contribution-credit contract are published and pass repository validation."
+        },
+        {
+          "id": "WB02-E2",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991035393",
+          "commit": "b9a6860a4e76408a887e49d9698a56b62846aff0",
+          "summary": "The repository maintainer approved the public source-fact, recognition, authority, and continuation boundary while preserving WB-04 validation and deferred device gates."
         }
       ],
-      "waiting": {
-        "reason": "The candidate governance and recognition boundary has machine evidence but requires the declared maintainer review before completion.",
-        "owner": "Lingkyn repository maintainer",
-        "resumes_when": "The maintainer approves the WB-02 source-fact, inference, recognition, and authority boundary or records requested changes."
-      },
+      "waiting": null,
       "claim": {
-        "status": "active",
+        "status": "released",
         "adoptable": false,
         "github_identity": "Lingkyn",
         "previous_github_identity": null,
         "claimed_at": "2026-07-15T16:30:00Z",
         "expires_at": "2026-07-22T16:30:00Z",
-        "ended_at": null,
+        "ended_at": "2026-07-16T10:56:13Z",
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": null
+        "transition_reason": "The maintainer approved the reviewed WB-02 boundary and released the completed checkpoint to WB-03 and WB-04 fan-in."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": {
@@ -307,8 +310,8 @@
         "published_at": "2026-07-16T09:56:52Z"
       },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "The repository maintainer reviews the WB-02 files and either approves completion or records bounded requested changes on Issue #40 or PR #46.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-16T10:56:13Z"
     },
     {
       "id": "WB-03",
@@ -317,7 +320,7 @@
       "non_goals": [
         "No package, workflow-permission, secret, or automatic external Agent authority change"
       ],
-      "status": "draft",
+      "status": "completed",
       "depends_on": ["WB-01", "WB-02"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -360,7 +363,22 @@
         { "id": "WB03-V1", "procedure": "Audit every entry link and compare Issue, Project, and registered task projections.", "expected": "All links resolve and projection roles are consistent.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "WB03-E1",
+          "kind": "implementation",
+          "location": "https://github.com/Lingkyn/xr-foundry/commit/435a5aa953d459b67cc47222e4faf16e8b942106",
+          "commit": "435a5aa953d459b67cc47222e4faf16e8b942106",
+          "summary": "The repository guide, contributor route, Agent entry, Issue/PR templates, and GitHub playbook expose one public checkpoint-to-handoff path without private session state."
+        },
+        {
+          "id": "WB03-E2",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991035393",
+          "commit": "b9a6860a4e76408a887e49d9698a56b62846aff0",
+          "summary": "The repository maintainer approved the public newcomer and Agent entry boundary after WB-02 completion, without granting external write or merge authority."
+        }
+      ],
       "waiting": null,
       "claim": {
         "status": "released",
@@ -374,10 +392,18 @@
         "transition_reason": "The lease was admitted before WB-01 and WB-02 completed and was released to restore the dependency gate."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
-      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "codex/agent-commons-v1",
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
+        "base_commit": "01174c08c9d13fb7da51449cee294d47d47ac200",
+        "head_commit": "435a5aa953d459b67cc47222e4faf16e8b942106",
+        "published_at": "2026-07-16T09:57:26Z"
+      },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Wait until WB-01 and WB-02 are completed, then request a new checkpoint lease and publish a fresh execution anchor.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-16T10:56:13Z"
     },
     {
       "id": "WB-05",
@@ -386,7 +412,7 @@
       "non_goals": [
         "No Agent/model scoring, private session transcript, or automatic execution authority"
       ],
-      "status": "waiting_on_review",
+      "status": "completed",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -440,24 +466,27 @@
           "kind": "review",
           "location": "https://github.com/Lingkyn/xr-foundry/issues/43#issuecomment-4990767183",
           "commit": "7fc906f0b9cb6cb309e7c0dc1c0c01f1ab60cffc",
-          "summary": "Open and resolved records pass Draft 2020-12 validation; four contradictory terminal-state fixtures fail closed; an independent Cursor advisory review found and the follow-up commit closed rejected-ready and superseded-ready gaps. Required maintainer review remains outstanding."
+          "summary": "Open and resolved records pass Draft 2020-12 validation; four contradictory terminal-state fixtures fail closed; an independent Cursor advisory review found and the follow-up commit closed rejected-ready and superseded-ready gaps."
+        },
+        {
+          "id": "WB05-E2",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991035393",
+          "commit": "b9a6860a4e76408a887e49d9698a56b62846aff0",
+          "summary": "The repository maintainer approved the separation of deliberation, synthesis, decision, execution, and authority while retaining versioned adoption and WB-04 adversarial validation."
         }
       ],
-      "waiting": {
-        "reason": "The deliberation and versioned self-improvement contract has machine and independent Agent advisory evidence but requires the declared maintainer review before completion.",
-        "owner": "Lingkyn repository maintainer",
-        "resumes_when": "The maintainer approves the WB-05 separation of deliberation, synthesis, decision, execution, and authority or records requested changes."
-      },
+      "waiting": null,
       "claim": {
-        "status": "active",
+        "status": "released",
         "adoptable": false,
         "github_identity": "Lingkyn",
         "previous_github_identity": null,
         "claimed_at": "2026-07-16T10:07:49Z",
         "expires_at": "2026-07-23T10:07:49Z",
-        "ended_at": null,
+        "ended_at": "2026-07-16T10:56:13Z",
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": null
+        "transition_reason": "The maintainer approved the reviewed WB-05 deliberation boundary and released the completed checkpoint to WB-04 fan-in."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": {
@@ -470,8 +499,8 @@
         "published_at": "2026-07-16T10:23:21Z"
       },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "The repository maintainer reviews the WB-05 protocol, schema, examples, and advisory-review correction and either approves completion or records bounded requested changes on Issue #43 or PR #46.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-16T10:56:13Z"
     },
     {
       "id": "WB-04",
@@ -480,7 +509,7 @@
       "non_goals": [
         "No package implementation, repository permission, secret, or self-acceptance change"
       ],
-      "status": "draft",
+      "status": "ready",
       "depends_on": ["WB-01", "WB-01V", "WB-02", "WB-03", "WB-05"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -523,7 +552,7 @@
       "waiting": null,
       "claim": {
         "status": "unclaimed",
-        "adoptable": false,
+        "adoptable": true,
         "github_identity": null,
         "previous_github_identity": null,
         "claimed_at": null,
@@ -535,7 +564,7 @@
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Wait until WB-01, WB-01V, WB-02, WB-03, and WB-05 are completed, then claim WB-04 and bind fan-in enforcement to their exact public revisions.",
+      "exact_next_action": "Claim WB-04, publish its execution anchor, and bind fan-in enforcement to the exact completed checkpoint revisions.",
       "completed_at": null
     }
   ],

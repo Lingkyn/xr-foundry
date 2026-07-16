@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 5,
+  "revision": 6,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -138,7 +138,7 @@
       "non_goals": [
         "No contract-document, package, Device Lab, workflow, permission, WB-02 recognition, or WB-04 remote-evidence change"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "depends_on": ["WB-01"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -181,32 +181,40 @@
         { "id": "WB01V-V1", "procedure": "Run focused registry/projection/routing tests, the full repository contract suite, the repository validator, and an exact write-boundary audit.", "expected": "All positive and negative checks pass with changes limited to the two allowed files.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "WB01V-E1",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/pull/50",
+          "commit": "e7f7b11e73a0d1b530e03c2f95467675debe9334",
+          "summary": "Six independent adversarial review rounds closed registry, routing, path-containment, portable ownership-key, and fail-closed resolution gaps. The exact head passed the repository validator, 102 contract tests with one Windows symlink-capability skip, and GitHub Actions before merge as ccbc5bd0a1457b0c6b6def56b5100832672a8509."
+        }
+      ],
       "waiting": null,
       "claim": {
-        "status": "active",
+        "status": "released",
         "adoptable": false,
         "github_identity": "Lingkyn",
         "previous_github_identity": null,
         "claimed_at": "2026-07-15T18:05:12Z",
         "expires_at": "2026-07-22T18:05:12Z",
-        "ended_at": null,
+        "ended_at": "2026-07-16T09:08:34Z",
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": null
+        "transition_reason": "The independently reviewed validator head was merged into the Agent Commons integration branch and the merged-tree readback passed."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": {
         "status": "public",
         "repository": "https://github.com/Lingkyn/xr-foundry",
         "branch": "codex/cursor-wb01-validator",
-        "pull_request": null,
-        "base_commit": "6c15f232339115224037fb53596347d760d0dc15",
-        "head_commit": "6c15f232339115224037fb53596347d760d0dc15",
-        "published_at": "2026-07-15T18:05:12Z"
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/50",
+        "base_commit": "e7951ba0d44a10f4209873eeb0013f9e6bc08a37",
+        "head_commit": "e7f7b11e73a0d1b530e03c2f95467675debe9334",
+        "published_at": "2026-07-16T09:07:48Z"
       },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Cursor implements only the two allowed validator files from the public branch; Codex then reproduces tests, audits the boundary, and reviews the diff independently.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-16T09:08:34Z"
     },
     {
       "id": "WB-02",
@@ -215,7 +223,7 @@
       "non_goals": [
         "No points, total score, Agent/model ranking, or automatic role promotion"
       ],
-      "status": "claimed",
+      "status": "waiting_on_review",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -263,8 +271,20 @@
         { "id": "WB02-V1", "procedure": "Run source-manifest, credit-contract, privacy, and repository validation plus independent source-boundary review.", "expected": "All references resolve and no recognition record grants authority.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
-      "waiting": null,
+      "evidence": [
+        {
+          "id": "WB02-E1",
+          "kind": "design",
+          "location": "https://github.com/Lingkyn/xr-foundry/commit/01174c08c9d13fb7da51449cee294d47d47ac200",
+          "commit": "01174c08c9d13fb7da51449cee294d47d47ac200",
+          "summary": "The public-workbench RFC, admitted-source manifest, non-ranking recognition policy, and fail-closed contribution-credit contract are published and pass repository validation; required maintainer review remains outstanding."
+        }
+      ],
+      "waiting": {
+        "reason": "The candidate governance and recognition boundary has machine evidence but requires the declared maintainer review before completion.",
+        "owner": "Lingkyn repository maintainer",
+        "resumes_when": "The maintainer approves the WB-02 source-fact, inference, recognition, and authority boundary or records requested changes."
+      },
       "claim": {
         "status": "active",
         "adoptable": false,
@@ -283,11 +303,11 @@
         "branch": "codex/agent-commons-v1",
         "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
         "base_commit": "3a2626cea1448c8d8e0c6379f1524b823ec7536b",
-        "head_commit": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
-        "published_at": "2026-07-15T17:12:18Z"
+        "head_commit": "01174c08c9d13fb7da51449cee294d47d47ac200",
+        "published_at": "2026-07-16T09:56:52Z"
       },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Wait for WB-01 closure, then publish the RFC, source, recognition, and credit contract as the next independently validated checkpoint.",
+      "exact_next_action": "The repository maintainer reviews the WB-02 files and either approves completion or records bounded requested changes on Issue #40 or PR #46.",
       "completed_at": null
     },
     {
@@ -366,7 +386,7 @@
       "non_goals": [
         "No Agent/model scoring, private session transcript, or automatic execution authority"
       ],
-      "status": "ready",
+      "status": "waiting_on_review",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -414,23 +434,43 @@
         { "id": "WB05-V1", "procedure": "Validate both examples against the schema and review them from a fresh context.", "expected": "The resolved example is executable, the unresolved example remains non-executable, and neither contains model ranking fields.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
-      "waiting": null,
+      "evidence": [
+        {
+          "id": "WB05-E1",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/issues/43#issuecomment-4990767183",
+          "commit": "7fc906f0b9cb6cb309e7c0dc1c0c01f1ab60cffc",
+          "summary": "Open and resolved records pass Draft 2020-12 validation; four contradictory terminal-state fixtures fail closed; an independent Cursor advisory review found and the follow-up commit closed rejected-ready and superseded-ready gaps. Required maintainer review remains outstanding."
+        }
+      ],
+      "waiting": {
+        "reason": "The deliberation and versioned self-improvement contract has machine and independent Agent advisory evidence but requires the declared maintainer review before completion.",
+        "owner": "Lingkyn repository maintainer",
+        "resumes_when": "The maintainer approves the WB-05 separation of deliberation, synthesis, decision, execution, and authority or records requested changes."
+      },
       "claim": {
-        "status": "unclaimed",
-        "adoptable": true,
-        "github_identity": null,
+        "status": "active",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
         "previous_github_identity": null,
-        "claimed_at": null,
-        "expires_at": null,
+        "claimed_at": "2026-07-16T10:07:49Z",
+        "expires_at": "2026-07-23T10:07:49Z",
         "ended_at": null,
-        "confirmed_by_maintainer": null,
+        "confirmed_by_maintainer": "Lingkyn",
         "transition_reason": null
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
-      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "codex/agent-commons-v1",
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
+        "base_commit": "0e408b537cf42a5ab45082282992fa06cbc78455",
+        "head_commit": "7fc906f0b9cb6cb309e7c0dc1c0c01f1ab60cffc",
+        "published_at": "2026-07-16T10:23:21Z"
+      },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Claim WB-05 and publish only the four isolated deliberation contract files before any Task Hall or RFC integration change.",
+      "exact_next_action": "The repository maintainer reviews the WB-05 protocol, schema, examples, and advisory-review correction and either approves completion or records bounded requested changes on Issue #43 or PR #46.",
       "completed_at": null
     },
     {

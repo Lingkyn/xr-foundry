@@ -25,6 +25,7 @@ evidence remain explicit gates.
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
 | Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | Find or claim bounded public work | [`Public Task Hall V1`](docs/contributing/task-hall.md) and the [live Project](https://github.com/users/Lingkyn/projects/2) |
+| Build the next reusable package family | [`Foundry V1 production line`](docs/foundry/README.md), [first batch](docs/foundry/batches/unity-first-batch.v1.json), and [next source-gate queue](docs/foundry/queue/next-batch.json) |
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
 | Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
 | See how contributions are recognized | [`Recognition policy`](docs/contributing/recognition-policy.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md) |
@@ -65,6 +66,13 @@ Each current package graph needs its own
 consumer evidence, and each XR renderer/device tuple needs its own real-device
 receipt. No old package path or renderer-ambiguous XR compatibility layer is part
 of the active repository surface.
+
+These nine packages form the
+[`Unity first batch`](docs/foundry/batches/unity-first-batch.v1.json). A batch
+release is an immutable discovery/install surface; it does not promote package
+maturity or inherit device claims. The
+[`Foundry V1 production line`](docs/foundry/README.md) governs how later package
+families move from positive-source proposal to independently reviewed release.
 The exact named-device handoff uses the generic
 [`Public Device Lab V1`](docs/device-lab/README.md), its
 [`Inventory world-space UI plan`](docs/device-lab/test-plans/inventory-world-space-ui-v1.json),
@@ -131,12 +139,12 @@ concrete manifest and may claim only its own verified profile. See the
 [`Version-Adaptive Reference Model`](docs/architecture/version-adaptive-reference-model.md)
 and [`compatibility-profiles.json`](compatibility-profiles.json).
 
-The first immutable validation target is one concrete profile: Unity
+The first immutable automated validation target is one concrete profile: Unity
 `6000.3.19f1`, URP `17.3.0`, Input System `1.19.0`, UGUI `2.0.0`, XRI `3.5.1`,
-XR Plug-in Management `4.5.3`, and OpenXR `1.16.0`. It remains pending until the
-current package tree is committed and that exact resolved tuple is recorded in a
-machine-readable receipt. `compatibility-profiles.json` is authoritative for the
-live state and evidence.
+XR Plug-in Management `4.5.3`, and OpenXR `1.16.0`. Machine-readable receipts now
+verify the named automated profiles at their exact evidence commit. Later package
+or release commits do not inherit those results; `compatibility-profiles.json` is
+authoritative for the exact state, tuple, revision, and evidence.
 
 That tuple is a reproducibility boundary, not a minimum-version declaration or a
 claim that other versions cannot be generated. Unlisted tuples begin as adaptation
@@ -160,9 +168,13 @@ Run the local checks:
 
 ```powershell
 python -m pip install -r scripts/contract-requirements.txt
-python scripts/validate_repository.py --json
-python -m unittest discover -s tests -p "test_*.py"
+python scripts/validate_repository.py --json --fast-structure
+python scripts/validate_repository.py --json --run-contract-tests
 ```
+
+The fast structure command is iteration feedback and cannot support promotion or
+release. The full command runs repository validation first and skips the test
+suite if that first stage fails.
 
 Unity package tests run from a Unity consumer through the Test Framework.
 

@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added Foundry V1: a public lifecycle, official-source manifest, machine-readable
+  first Unity batch, next source-gate queue, release policy, and deterministic
+  dry-run-first Unity package scaffolder.
+- Added fast structure feedback separately from the full repository contract and
+  preserved exact-consumer and named-device evidence as stronger independent gates.
+- Registered all nine implemented Unity packages in the first incubating batch
+  without promoting maturity or inventing device claims.
 - Established the canonical renderer-neutral Inventory package graph:
   `com.lingkyn.inventory.presentation`, peer UGUI and UI Toolkit renderers, and
   renderer-explicit XR compositions without a speculative shared XR-core package.

@@ -1,0 +1,53 @@
+{
+  "schema": "xr-foundry.production_line.v1",
+  "version": "1.0.0",
+  "lifecycle": [
+    "proposal",
+    "source_gate",
+    "admitted_blueprint",
+    "scaffold",
+    "build",
+    "fast_validation",
+    "exact_consumer_validation",
+    "independent_review",
+    "maturity_promotion",
+    "release",
+    "observation"
+  ],
+  "validation_levels": [
+    {
+      "id": "fast_structure",
+      "claim_ceiling": "Local structure feedback only; no promotion, release, compatibility, or device claim",
+      "required_for": ["scaffold", "build"]
+    },
+    {
+      "id": "repository_contract",
+      "claim_ceiling": "Repository integration evidence only",
+      "required_for": ["independent_review", "release"]
+    },
+    {
+      "id": "exact_consumer",
+      "claim_ceiling": "Only the recorded engine, package, dependency, build, and automated-test tuple",
+      "required_for": ["maturity_promotion", "release"]
+    },
+    {
+      "id": "named_device",
+      "claim_ceiling": "Only the exact Device Lab artifact, runtime, renderer, input, posture, duration, and device tuple",
+      "required_for": ["device_claim"]
+    }
+  ],
+  "surfaces": {
+    "first_batch": "docs/foundry/batches/unity-first-batch.v1.json",
+    "next_queue": "docs/foundry/queue/next-batch.json",
+    "blueprint_schema": "docs/foundry/unity-package-blueprint.schema.json",
+    "source_manifest": "docs/foundry/source-manifest.json",
+    "release_policy": "docs/foundry/release-policy.md"
+  },
+  "authority": {
+    "scaffold_grants_catalog_admission": false,
+    "automation_grants_maturity": false,
+    "agent_grants_release": false,
+    "automated_evidence_grants_device_claim": false
+  }
+}
+

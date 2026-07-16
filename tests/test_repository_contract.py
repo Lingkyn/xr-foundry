@@ -22,6 +22,14 @@ assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
+SCAFFOLD_SCRIPT = ROOT / "scripts" / "scaffold_unity_package.py"
+SCAFFOLD_SPEC = importlib.util.spec_from_file_location(
+    "scaffold_unity_package", SCAFFOLD_SCRIPT
+)
+assert SCAFFOLD_SPEC and SCAFFOLD_SPEC.loader
+SCAFFOLD_MODULE = importlib.util.module_from_spec(SCAFFOLD_SPEC)
+SCAFFOLD_SPEC.loader.exec_module(SCAFFOLD_MODULE)
+
 
 def current_device_profiles() -> dict[str, dict]:
     return {
@@ -723,6 +731,202 @@ def attach_device_runtime_receipt(
 
 
 class RepositoryContractTests(unittest.TestCase):
+
+    def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
+        self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
+        self.assertEqual([], MODULE.validate_fast_structure(ROOT))
+        batch = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "foundry"
+                / "batches"
+                / "unity-first-batch.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        catalog = current_compatibility_profiles()
+        package_catalog = json.loads((ROOT / "package-catalog.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {item["id"] for item in package_catalog["packages"]},
+            {item["id"] for item in batch["packages"]},
+        )
+        self.assertEqual(
+            {item["id"] for item in catalog["profiles"]},
+            {item["compatibility_profile"] for item in batch["packages"]},
+        )
+
+    def test_foundry_first_batch_rejects_membership_and_version_drift(self) -> None:
+        batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-first-batch.v1.json"
+        )
+        original_loader = MODULE.load_json
+        drifted = json.loads(batch_path.read_text(encoding="utf-8"))
+        drifted["packages"][0]["version"] = "9.9.9"
+        drifted["packages"].pop()
+
+        def load_with_drift(path: Path) -> dict:
+            return drifted if Path(path) == batch_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_drift):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(any("cover every live catalog package" in error for error in errors))
+        self.assertTrue(any("version must match package catalog" in error for error in errors))
+
+    def test_foundry_first_batch_rejects_compatibility_profile_swap(self) -> None:
+        batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-first-batch.v1.json"
+        )
+        original_loader = MODULE.load_json
+        swapped = json.loads(batch_path.read_text(encoding="utf-8"))
+        first_profile = swapped["packages"][0]["compatibility_profile"]
+        swapped["packages"][0]["compatibility_profile"] = swapped["packages"][1][
+            "compatibility_profile"
+        ]
+        swapped["packages"][1]["compatibility_profile"] = first_profile
+
+        def load_with_swap(path: Path) -> dict:
+            return swapped if Path(path) == batch_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_swap):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(
+            any("compatibility profile identity/version mismatch" in error for error in errors)
+        )
+
+    def test_foundry_scaffolder_is_deterministic_dry_run_first_and_collision_safe(self) -> None:
+        example_path = (
+            ROOT / "docs" / "foundry" / "unity-package-blueprint.example.json"
+        )
+        example = json.loads(example_path.read_text(encoding="utf-8"))
+        self.assertEqual([], SCAFFOLD_MODULE.validate_blueprint(example))
+        first_plan = SCAFFOLD_MODULE.build_scaffold_plan(
+            example, (ROOT / "LICENSE").read_text(encoding="utf-8")
+        )
+        second_plan = SCAFFOLD_MODULE.build_scaffold_plan(
+            example, (ROOT / "LICENSE").read_text(encoding="utf-8")
+        )
+        self.assertEqual(first_plan, second_plan)
+        self.assertIn("Assert.Fail", first_plan["Tests/Editor/FoundryScaffoldContractTests.cs"])
+        self.assertFalse(json.loads(first_plan[".foundry-scaffold.json"])["catalog_admission"])
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCAFFOLD_SCRIPT),
+                    str(example_path),
+                    "--output-root",
+                    directory,
+                    "--write",
+                    "--json",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            report = json.loads(result.stdout)
+            self.assertNotEqual(0, result.returncode)
+            self.assertEqual("fail", report["status"])
+            self.assertTrue(any("Only an admitted blueprint" in error for error in report["errors"]))
+            self.assertFalse((Path(directory) / example["package"]["target_path"]).exists())
+
+            admitted = json.loads(json.dumps(example))
+            admitted["record_status"] = "admitted"
+            admitted["admission"]["implementation_issue"] = (
+                "https://github.com/Lingkyn/xr-foundry/issues/52"
+            )
+            admitted["admission"]["source_manifest"] = (
+                "docs/foundry/source-manifest.json"
+            )
+            admitted["admission"]["positive_sources"] = [
+                "https://docs.unity3d.com/6000.0/Documentation/Manual/CustomPackages.html"
+            ]
+            self.assertEqual([], SCAFFOLD_MODULE.validate_blueprint(admitted))
+            admitted_plan = SCAFFOLD_MODULE.build_scaffold_plan(
+                admitted, (ROOT / "LICENSE").read_text(encoding="utf-8")
+            )
+            target = SCAFFOLD_MODULE.resolve_target(
+                Path(directory), admitted["package"]["target_path"]
+            )
+            SCAFFOLD_MODULE.write_scaffold(target, admitted_plan)
+            self.assertTrue((target / ".foundry-scaffold.json").exists())
+            with self.assertRaises(FileExistsError):
+                SCAFFOLD_MODULE.write_scaffold(target, admitted_plan)
+
+            failed_target = target.parent / "com.lingkyn.atomic-failure"
+            with mock.patch.object(
+                SCAFFOLD_MODULE,
+                "write_plan_to_directory",
+                side_effect=OSError("simulated write failure"),
+            ):
+                with self.assertRaises(OSError):
+                    SCAFFOLD_MODULE.write_scaffold(failed_target, admitted_plan)
+            self.assertFalse(failed_target.exists())
+            self.assertEqual(
+                [],
+                list(failed_target.parent.glob(f".{failed_target.name}.foundry-*")),
+            )
+
+    def test_foundry_admitted_blueprint_rejects_unadmitted_positive_source(self) -> None:
+        blueprint = json.loads(
+            (
+                ROOT / "docs" / "foundry" / "unity-package-blueprint.example.json"
+            ).read_text(encoding="utf-8")
+        )
+        blueprint["record_status"] = "admitted"
+        blueprint["admission"]["implementation_issue"] = (
+            "https://github.com/Lingkyn/xr-foundry/issues/52"
+        )
+        blueprint["admission"]["source_manifest"] = (
+            "docs/foundry/source-manifest.json"
+        )
+        blueprint["admission"]["positive_sources"] = [
+            "https://example.invalid/unadmitted-source"
+        ]
+
+        errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
+
+        self.assertTrue(
+            any("positive_sources must be admitted by source_manifest" in error for error in errors)
+        )
+
+    def test_foundry_next_batch_rejects_placeholder_actions(self) -> None:
+        queue_path = ROOT / "docs" / "foundry" / "queue" / "next-batch.json"
+        original_loader = MODULE.load_json
+        queue = json.loads(queue_path.read_text(encoding="utf-8"))
+        queue["candidates"][0]["exact_next_action"] = "<placeholder>"
+
+        def load_with_placeholder(path: Path) -> dict:
+            return queue if Path(path) == queue_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_placeholder):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(any("placeholder text is prohibited" in error for error in errors))
+
+    def test_foundry_blueprint_rejects_unsafe_or_mismatched_target(self) -> None:
+        blueprint = json.loads(
+            (
+                ROOT / "docs" / "foundry" / "unity-package-blueprint.example.json"
+            ).read_text(encoding="utf-8")
+        )
+        blueprint["package"]["target_path"] = (
+            "packages/unity/systems/example-system/com.lingkyn.different"
+        )
+        errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
+        self.assertTrue(any("target_path leaf must equal package.id" in error for error in errors))
+
     def test_current_repository_passes(self) -> None:
         self.assertEqual([], MODULE.validate_repository(ROOT))
 
@@ -3983,6 +4187,17 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertEqual(len(suffixes), len(leak_paths))
             self.assertFalse(any("binary.asset" in error for error in errors))
             self.assertFalse(any(".git" in error for error in errors))
+
+    def test_public_leakage_scan_rejects_undecodable_controlled_text(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "undecodable.md").write_bytes(b"public contract \x96 invalid utf-8")
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertTrue(
+                any("undecodable controlled text file: undecodable.md" in error for error in errors)
+            )
 
 
 if __name__ == "__main__":

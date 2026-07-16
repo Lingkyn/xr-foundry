@@ -5,6 +5,17 @@ folders. Unity is the implemented foundation. Agent guidance and machine-readabl
 reference selection are part of the product, while model-specific adapters remain
 thin.
 
+## Foundry production line
+
+Foundry V1 registers the first nine implemented Unity packages as one incubating
+batch and publishes a dry-run-first package blueprint/scaffolder. New systems enter
+through the public source-gate queue; no package directory or package ID is created
+before admission. See [`docs/foundry`](docs/foundry/README.md).
+
+The next source-gate priority is a save/persistence family. Settings/accessibility
+and semantic interaction remain proposals until their overlaps and professional
+source boundaries are resolved.
+
 ## Candidate gate
 
 - Repository validator and Python contract tests pass.
@@ -24,9 +35,10 @@ thin.
 Inventory is an incubating system standard with a positive-external-source-only
 manifest, package-family architecture, nested presentation composition, and a
 verification contract. Core, Unity authoring, Presentation, UGUI, UI Toolkit, XR
-UGUI, and XR UI Toolkit form the implemented renderer-neutral graph. The current
-package tree still needs fresh immutable Git-consumer evidence before any layer can
-advance to its later review, renderer, Android, or named-device gates; evidence
+UGUI, and XR UI Toolkit form the implemented renderer-neutral graph. Exact
+automated profiles exist at their recorded evidence commits. The first-batch
+release commit still needs its own immutable Git-consumer evidence before any layer
+can advance to later promotion, renderer, Android, or named-device gates; evidence
 from an earlier package or dependency tuple is not inherited.
 
 Unity `6000.3.19f1` is the first automated implementation profile, not the

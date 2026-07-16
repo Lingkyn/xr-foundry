@@ -61,6 +61,11 @@ TEXT_SUFFIXES = {
     ".yaml",
     ".yml",
 }
+STRICT_TEXT_SUFFIXES = TEXT_SUFFIXES - {".asset"}
+PLACEHOLDER_PATTERN = re.compile(
+    r"(?:\bTBD\b|\bTODO\b|<placeholder>|replace[ _-]?me|lorem ipsum)",
+    re.IGNORECASE,
+)
 COMPATIBILITY_PROFILES = Path("compatibility-profiles.json")
 COMPATIBILITY_PROFILES_SCHEMA = (
     Path("docs") / "architecture" / "compatibility-profiles.schema.json"
@@ -129,6 +134,21 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/validation/independent-review-receipt.example.json",
     "docs/validation/independent-review-receipt.schema.json",
     "scripts/contract-requirements.txt",
+}
+REQUIRED_FOUNDRY_FILES = {
+    "docs/foundry/README.md",
+    "docs/foundry/release-policy.md",
+    "docs/foundry/source-manifest.json",
+    "docs/foundry/foundry-manifest.json",
+    "docs/foundry/foundry-manifest.schema.json",
+    "docs/foundry/unity-package-blueprint.example.json",
+    "docs/foundry/unity-package-blueprint.schema.json",
+    "docs/foundry/batches/unity-first-batch.v1.json",
+    "docs/foundry/batches/unity-first-batch.schema.json",
+    "docs/foundry/queue/next-batch.json",
+    "docs/foundry/queue/next-batch.schema.json",
+    "docs/rfcs/0003-foundry-production-line.md",
+    "scripts/scaffold_unity_package.py",
 }
 PUBLIC_REPOSITORY = "https://github.com/Lingkyn/xr-foundry"
 FULL_SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
@@ -503,6 +523,10 @@ def scan_text_safety(root: Path) -> list[str]:
             continue
         text = decode_text_file(path)
         if text is None:
+            if path.suffix.lower() in STRICT_TEXT_SUFFIXES:
+                errors.append(
+                    f"undecodable controlled text file: {path.relative_to(root)}"
+                )
             continue
         lowered = text.casefold()
         for marker in forbidden_public_markers():
@@ -2311,6 +2335,184 @@ def validate_task_hall_contract(root: Path) -> list[str]:
             errors.append("Task Hall label contract contains duplicate names")
         if missing := required_labels - set(names):
             errors.append(f"Task Hall label contract lacks required labels: {sorted(missing)}")
+    return errors
+
+
+def validate_foundry_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_FOUNDRY_FILES):
+        if not (root / relative).exists():
+            errors.append(f"Foundry V1 is missing {relative}")
+
+    bindings = (
+        (
+            "docs/foundry/foundry-manifest.json",
+            "docs/foundry/foundry-manifest.schema.json",
+            "Foundry production-line manifest",
+        ),
+        (
+            "docs/foundry/unity-package-blueprint.example.json",
+            "docs/foundry/unity-package-blueprint.schema.json",
+            "Foundry Unity blueprint example",
+        ),
+        (
+            "docs/foundry/batches/unity-first-batch.v1.json",
+            "docs/foundry/batches/unity-first-batch.schema.json",
+            "Foundry first batch",
+        ),
+        (
+            "docs/foundry/queue/next-batch.json",
+            "docs/foundry/queue/next-batch.schema.json",
+            "Foundry next-batch queue",
+        ),
+    )
+    for instance_rel, schema_rel, label in bindings:
+        instance_path = root / instance_rel
+        schema_path = root / schema_rel
+        if instance_path.exists():
+            errors.extend(
+                validate_json_schema_instance(load_json(instance_path), schema_path, label)
+            )
+
+    blueprint_path = root / "docs" / "foundry" / "unity-package-blueprint.example.json"
+    if blueprint_path.exists():
+        blueprint = load_json(blueprint_path)
+        if blueprint.get("record_status") != "example":
+            errors.append("Foundry blueprint example must not masquerade as admitted")
+        package = blueprint.get("package")
+        if isinstance(package, dict):
+            package_id = package.get("id")
+            target_path = package.get("target_path")
+            if isinstance(package_id, str) and isinstance(target_path, str):
+                if PurePosixPath(target_path).name != package_id:
+                    errors.append("Foundry blueprint target leaf must equal package id")
+
+    source_path = root / "docs" / "foundry" / "source-manifest.json"
+    if source_path.exists():
+        source = load_json(source_path)
+        if source.get("schema") != "xr-foundry.foundry_source_manifest.v1":
+            errors.append("Foundry source manifest schema is invalid")
+        sources = source.get("sources")
+        if not isinstance(sources, list) or not sources:
+            errors.append("Foundry source manifest requires positive public sources")
+        else:
+            ids = [str(item.get("id", "")) for item in sources if isinstance(item, dict)]
+            if len(ids) != len(set(ids)):
+                errors.append("Foundry source manifest contains duplicate source ids")
+            allowed_prefixes = (
+                "https://docs.unity3d.com/",
+                "https://docs.github.com/",
+            )
+            for item in sources:
+                if not isinstance(item, dict):
+                    errors.append("Foundry source entries must be objects")
+                    continue
+                url = item.get("url")
+                claims = item.get("admitted_claims")
+                if not isinstance(url, str) or not url.startswith(allowed_prefixes):
+                    errors.append("Foundry V1 sources must use admitted official domains")
+                if not isinstance(claims, list) or not claims:
+                    errors.append("Foundry source entries require admitted claims")
+
+    batch_path = root / "docs" / "foundry" / "batches" / "unity-first-batch.v1.json"
+    catalog_path = root / "package-catalog.json"
+    profiles_path = root / "compatibility-profiles.json"
+    if batch_path.exists() and catalog_path.exists() and profiles_path.exists():
+        batch = load_json(batch_path)
+        catalog = load_json(catalog_path)
+        profiles = load_json(profiles_path)
+        catalog_by_id = {
+            str(item.get("id", "")): item
+            for item in catalog.get("packages", [])
+            if isinstance(item, dict)
+        }
+        profile_by_id = {
+            str(item.get("id", "")): item
+            for item in profiles.get("profiles", [])
+            if isinstance(item, dict)
+        }
+        batch_items = batch.get("packages")
+        if not isinstance(batch_items, list):
+            batch_items = []
+        batch_ids = [
+            str(item.get("id", ""))
+            for item in batch_items
+            if isinstance(item, dict)
+        ]
+        if len(batch_ids) != len(set(batch_ids)):
+            errors.append("Foundry first batch contains duplicate package ids")
+        if set(batch_ids) != set(catalog_by_id):
+            errors.append(
+                "Foundry first batch must cover every live catalog package exactly once"
+            )
+        for item in batch_items:
+            if not isinstance(item, dict):
+                errors.append("Foundry first-batch package entries must be objects")
+                continue
+            package_id = str(item.get("id", ""))
+            catalog_item = catalog_by_id.get(package_id)
+            if not isinstance(catalog_item, dict):
+                continue
+            for field in ("path", "version", "maturity", "device_evidence"):
+                if item.get(field) != catalog_item.get(field):
+                    errors.append(
+                        f"Foundry first batch {package_id}: {field} must match package catalog"
+                    )
+            manifest_path = root / str(item.get("path", "")) / "package.json"
+            if manifest_path.exists():
+                manifest = load_json(manifest_path)
+                if manifest.get("name") != package_id or manifest.get("version") != item.get("version"):
+                    errors.append(
+                        f"Foundry first batch {package_id}: package manifest identity/version drift"
+                    )
+            profile_id = str(item.get("compatibility_profile", ""))
+            profile = profile_by_id.get(profile_id)
+            if not isinstance(profile, dict) or profile.get("state") != "verified":
+                errors.append(
+                    f"Foundry first batch {package_id}: compatibility profile must exist and be verified"
+                )
+            elif (
+                profile.get("install_artifact") != package_id
+                or profile.get("package_versions", {}).get(package_id)
+                != item.get("version")
+            ):
+                errors.append(
+                    f"Foundry first batch {package_id}: compatibility profile identity/version mismatch"
+                )
+
+    queue_path = root / "docs" / "foundry" / "queue" / "next-batch.json"
+    if queue_path.exists():
+        queue = load_json(queue_path)
+        candidates = queue.get("candidates")
+        if isinstance(candidates, list):
+            ids = [str(item.get("id", "")) for item in candidates if isinstance(item, dict)]
+            if len(ids) != len(set(ids)):
+                errors.append("Foundry next-batch queue contains duplicate candidate ids")
+            if any(item.get("package_ids") for item in candidates if isinstance(item, dict)):
+                errors.append("Foundry proposal/source-gate queue must not reserve package ids")
+            for item in candidates:
+                if not isinstance(item, dict):
+                    continue
+                controlled_text = [
+                    item.get("title"),
+                    item.get("objective"),
+                    item.get("exact_next_action"),
+                    *(item.get("source_requirements") or []),
+                ]
+                if any(
+                    isinstance(value, str) and PLACEHOLDER_PATTERN.search(value)
+                    for value in controlled_text
+                ):
+                    errors.append(
+                        f"Foundry next-batch {item.get('id')}: placeholder text is prohibited"
+                    )
+
+    packages_root = root / "packages"
+    if packages_root.exists():
+        for marker in packages_root.rglob(".foundry-scaffold.json"):
+            errors.append(
+                f"Foundry staging scaffold cannot enter live packages: {marker.relative_to(root)}"
+            )
     return errors
 
 
@@ -6238,6 +6440,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_active_repository_path_references(root))
     errors.extend(validate_agent_guide_source_boundary(root))
     errors.extend(validate_task_hall_contract(root))
+    errors.extend(validate_foundry_contract(root))
     errors.extend(validate_device_lab_contract(root))
     errors.extend(validate_workflow_security(root))
     errors.extend(validate_inventory_standard(root))
@@ -6345,6 +6548,41 @@ def validate_repository(root: Path) -> list[str]:
     return errors
 
 
+def validate_fast_structure(root: Path) -> list[str]:
+    errors: list[str] = scan_text_safety(root)
+    errors.extend(validate_ignore_scope(root))
+    errors.extend(validate_foundry_contract(root))
+    for name in sorted(REQUIRED_ROOT_FILES):
+        if not (root / name).exists():
+            errors.append(f"missing root community/product file: {name}")
+    catalog_path = root / "package-catalog.json"
+    if not catalog_path.exists():
+        errors.append("package catalog is missing")
+        return errors
+    catalog = load_json(catalog_path)
+    errors.extend(validate_repository_layout(root, catalog))
+    declared_paths = {
+        str(item.get("path", ""))
+        for item in catalog.get("packages", [])
+        if isinstance(item, dict)
+    }
+    if discover_lingkyn_package_paths(root) != declared_paths:
+        errors.append("fast structure: catalog/live package paths must agree")
+    for item in catalog.get("packages", []):
+        if not isinstance(item, dict):
+            errors.append("fast structure: package catalog entries must be objects")
+            continue
+        package_id = str(item.get("id", ""))
+        manifest_path = root / str(item.get("path", "")) / "package.json"
+        if not manifest_path.exists():
+            errors.append(f"fast structure: {package_id} package.json is missing")
+            continue
+        manifest = load_json(manifest_path)
+        if manifest.get("name") != package_id or manifest.get("version") != item.get("version"):
+            errors.append(f"fast structure: {package_id} catalog/manifest drift")
+    return errors
+
+
 def run_contract_test_gate(root: Path, repository_errors: list[str]) -> dict[str, Any]:
     if repository_errors:
         return {
@@ -6386,6 +6624,11 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--json", action="store_true")
     parser.add_argument(
+        "--fast-structure",
+        action="store_true",
+        help="run the non-promoting Foundry structure feedback gate",
+    )
+    parser.add_argument(
         "--run-contract-tests",
         action="store_true",
         help="run the complete contract suite only after repository validation passes",
@@ -6396,8 +6639,10 @@ def main() -> int:
         help="also validate one completed generic Device Lab execution receipt",
     )
     args = parser.parse_args()
+    if args.fast_structure and (args.run_contract_tests or args.device_lab_receipt is not None):
+        parser.error("--fast-structure cannot be combined with full tests or Device Lab receipt validation")
     root = args.root.resolve()
-    errors = validate_repository(root)
+    errors = validate_fast_structure(root) if args.fast_structure else validate_repository(root)
     device_lab_receipt_path: Path | None = None
     if args.device_lab_receipt is not None:
         device_lab_receipt_path = args.device_lab_receipt
@@ -6436,6 +6681,7 @@ def main() -> int:
     report = {
         "schema": "xr-foundry.repository_validation.v1",
         "root": str(root),
+        "mode": "fast_structure" if args.fast_structure else "repository_contract",
         "status": "pass" if not errors else "fail",
         "errors": errors,
     }

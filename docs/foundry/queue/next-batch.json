@@ -1,0 +1,51 @@
+{
+  "schema": "xr-foundry.next_batch_queue.v1",
+  "version": "1.0.0",
+  "policy": {
+    "package_directories_before_admission": false,
+    "consumer_material_allowed": false,
+    "positive_source_gate_required": true
+  },
+  "candidates": [
+    {
+      "id": "NEXT-PERSISTENCE",
+      "title": "Save and persistence family",
+      "state": "source_gate",
+      "objective": "Qualify a reusable persistence boundary for versioned saves, migration, atomic writes, recovery, and provider adapters.",
+      "source_requirements": [
+        "Official engine serialization and platform-storage guidance",
+        "Maintained professional implementations with explicit migration, corruption, and rollback behavior",
+        "License, maintenance, test, security, and independent-consumer review"
+      ],
+      "package_ids": [],
+      "exact_next_action": "Open one research checkpoint that compares positive public sources and proposes engine-neutral data and Unity adapter boundaries."
+    },
+    {
+      "id": "NEXT-SETTINGS",
+      "title": "Player settings and accessibility family",
+      "state": "proposal",
+      "objective": "Define reusable settings semantics for audio, graphics, controls, comfort, localization, and accessibility without coupling them to one UI renderer.",
+      "source_requirements": [
+        "Official platform and engine settings guidance",
+        "Accessibility guidance from shipped-game or industry authorities",
+        "Renderer, persistence, input, and XR comfort boundary review"
+      ],
+      "package_ids": [],
+      "exact_next_action": "Resolve overlap with persistence and input families before admitting a source gate."
+    },
+    {
+      "id": "NEXT-INTERACTION",
+      "title": "Semantic interaction family",
+      "state": "proposal",
+      "objective": "Define engine-light interaction intents and replaceable desktop, controller, tracked-ray, hand, and gaze adapters without transferring evidence across modalities.",
+      "source_requirements": [
+        "Official OpenXR and engine interaction guidance",
+        "Shipped platform interaction principles for controller, hand, and gaze",
+        "Capability, accessibility, comfort, and named-device evidence boundaries"
+      ],
+      "package_ids": [],
+      "exact_next_action": "Decide whether the common semantic core is sufficiently stable to justify a cross-device source gate."
+    }
+  ]
+}
+

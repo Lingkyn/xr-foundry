@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/foundry/queue/next-batch.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "policy", "candidates"],
+  "properties": {
+    "schema": { "const": "xr-foundry.next_batch_queue.v1" },
+    "version": { "const": "1.0.0" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package_directories_before_admission", "consumer_material_allowed", "positive_source_gate_required"],
+      "properties": {
+        "package_directories_before_admission": { "const": false },
+        "consumer_material_allowed": { "const": false },
+        "positive_source_gate_required": { "const": true }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "state", "objective", "source_requirements", "package_ids", "exact_next_action"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^NEXT-[A-Z0-9-]+$" },
+          "title": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["proposal", "source_gate"] },
+          "objective": { "type": "string", "minLength": 20 },
+          "source_requirements": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "package_ids": { "const": [] },
+          "exact_next_action": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
+

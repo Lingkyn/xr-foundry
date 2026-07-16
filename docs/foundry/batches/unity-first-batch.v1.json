@@ -1,0 +1,96 @@
+{
+  "schema": "xr-foundry.package_batch.v1",
+  "batch_id": "unity-first-batch",
+  "engine": "Unity",
+  "status": "approved_for_release",
+  "release": {
+    "tag": "unity-first-batch-v0.1.0",
+    "commit_binding": "release_tag_exact_commit",
+    "immutable_history": true
+  },
+  "packages": [
+    {
+      "id": "com.lingkyn.project-initializer",
+      "path": "packages/unity/foundations/com.lingkyn.project-initializer",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-project-initializer-windows-editor",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.xr-baseline",
+      "path": "packages/unity/foundations/com.lingkyn.xr-baseline",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-xr-baseline-openxr-windows-editor",
+      "device_evidence": "pending_for_device_claims"
+    },
+    {
+      "id": "com.lingkyn.inventory.core",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.core",
+      "version": "0.1.1",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-core-windows-editor",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.inventory.unity",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.unity",
+      "version": "0.1.1",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-authoring-windows-editor",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.inventory.presentation",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.presentation",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-presentation-windows-editor",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.inventory.ugui",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui",
+      "version": "0.2.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-ugui-non-xr-windows-editor",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.inventory.uitoolkit",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-uitoolkit-non-xr-windows-editor",
+      "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.ugui",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-xr-ugui-openxr-windows-editor",
+      "device_evidence": "pending_renderer_scoped_named_device_evidence"
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.uitoolkit",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-inventory-xr-uitoolkit-openxr-windows-editor",
+      "device_evidence": "pending_renderer_scoped_named_device_evidence"
+    }
+  ],
+  "claim_boundary": [
+    "The release publishes the recorded package inputs and reference material at incubating maturity.",
+    "Compatibility evidence applies only to each named exact profile and evidence commit.",
+    "No batch inclusion, automated test, or Editor result proves a headset, controller, comfort, runtime-device, or cross-version claim."
+  ],
+  "authority": {
+    "batch_inclusion_promotes_maturity": false,
+    "batch_release_grants_device_claim": false,
+    "agent_may_release": false
+  }
+}
+

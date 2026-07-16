@@ -41,7 +41,8 @@ namespace Lingkyn.Persistence.Core
         OutOfSpace,
         Cancelled,
         ValidateRejected,
-        ProviderFailure
+        ProviderFailure,
+        OvershootMigration
     }
 
     public readonly struct SaveError : IEquatable<SaveError>
@@ -149,6 +150,9 @@ namespace Lingkyn.Persistence.Core
 
     public sealed class SaveEnvelope
     {
+        private readonly byte[] _integrityDigest;
+        private readonly byte[] _payload;
+
         public SaveEnvelope(
             string schemaId,
             int schemaVersion,
@@ -188,13 +192,15 @@ namespace Lingkyn.Persistence.Core
                 throw new ArgumentNullException(nameof(payload));
             }
 
+            _integrityDigest = CopyBytes(integrityDigest);
+            _payload = CopyBytes(payload);
             SchemaId = schemaId;
             SchemaVersion = schemaVersion;
             CommitId = commitId;
             TimestampUtcTicks = timestampUtcTicks;
             IntegrityAlgorithm = integrityAlgorithm;
-            IntegrityDigest = integrityDigest;
-            Payload = payload;
+            IntegrityDigest = _integrityDigest;
+            Payload = _payload;
         }
 
         public string SchemaId { get; }
@@ -202,13 +208,21 @@ namespace Lingkyn.Persistence.Core
         public string CommitId { get; }
         public long TimestampUtcTicks { get; }
         public string IntegrityAlgorithm { get; }
-        public byte[] IntegrityDigest { get; }
-        public byte[] Payload { get; }
+        public ReadOnlyMemory<byte> IntegrityDigest { get; }
+        public ReadOnlyMemory<byte> Payload { get; }
+
+        private static byte[] CopyBytes(byte[] source)
+        {
+            var copy = new byte[source.Length];
+            Buffer.BlockCopy(source, 0, copy, 0, source.Length);
+            return copy;
+        }
     }
 
     public static class SaveEnvelopeBinaryCodec
     {
         private static readonly byte[] Magic = { (byte)'L', (byte)'P', (byte)'S', (byte)'C' };
+        private static readonly Encoding StrictUtf8 = new UTF8Encoding(false, true);
         public const byte FormatVersion = 1;
         public const int MaxSchemaIdBytes = 128;
         public const int MaxCommitIdBytes = 128;
@@ -223,11 +237,11 @@ namespace Lingkyn.Persistence.Core
                 return SaveResult<byte[]>.Fail(SaveStage.Envelope, SaveErrorCode.UnsupportedFormat, "Envelope is required.");
             }
 
-            var schemaBytes = Encoding.UTF8.GetBytes(envelope.SchemaId);
-            var commitBytes = Encoding.UTF8.GetBytes(envelope.CommitId);
-            var algorithmBytes = Encoding.UTF8.GetBytes(envelope.IntegrityAlgorithm);
-            var digestBytes = envelope.IntegrityDigest;
-            var payloadBytes = envelope.Payload;
+            var schemaBytes = StrictUtf8.GetBytes(envelope.SchemaId);
+            var commitBytes = StrictUtf8.GetBytes(envelope.CommitId);
+            var algorithmBytes = StrictUtf8.GetBytes(envelope.IntegrityAlgorithm);
+            var digestBytes = envelope.IntegrityDigest.ToArray();
+            var payloadBytes = envelope.Payload.ToArray();
 
             if (schemaBytes.Length == 0 || schemaBytes.Length > MaxSchemaIdBytes
                 || commitBytes.Length == 0 || commitBytes.Length > MaxCommitIdBytes
@@ -239,7 +253,7 @@ namespace Lingkyn.Persistence.Core
             }
 
             using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            using (var writer = new BinaryWriter(stream, StrictUtf8, true))
             {
                 writer.Write(Magic);
                 writer.Write(FormatVersion);
@@ -433,8 +447,16 @@ namespace Lingkyn.Persistence.Core
                 return false;
             }
 
-            value = Encoding.UTF8.GetString(slice);
-            return !string.IsNullOrWhiteSpace(value);
+            try
+            {
+                value = StrictUtf8.GetString(slice.ToArray());
+                return !string.IsNullOrWhiteSpace(value);
+            }
+            catch (DecoderFallbackException)
+            {
+                value = null;
+                return false;
+            }
         }
 
         private static bool TryReadBytes(ReadOnlySpan<byte> source, ref int cursor, int length, out byte[] bytes)
@@ -462,7 +484,7 @@ namespace Lingkyn.Persistence.Core
     public interface ISaveCodec<TState>
     {
         SaveResult<byte[]> Encode(TState snapshot);
-        SaveResult<TState> Decode(ReadOnlySpan<byte> bytes);
+        SaveResult<TState> Decode(int schemaVersion, ReadOnlySpan<byte> bytes);
     }
 
     public interface IIntegrityProvider
@@ -590,7 +612,20 @@ namespace Lingkyn.Persistence.Core
                     return SaveResult<TState>.Fail(SaveStage.Migrate, SaveErrorCode.NonMonotonicMigration, "Migration edge is non-monotonic.");
                 }
 
-                currentState = edge.Migrate(currentState);
+                if (edge.ToVersion > targetVersion)
+                {
+                    return SaveResult<TState>.Fail(SaveStage.Migrate, SaveErrorCode.OvershootMigration, "Migration edge overshoots target schema version.");
+                }
+
+                try
+                {
+                    currentState = edge.Migrate(currentState);
+                }
+                catch (Exception exception)
+                {
+                    return SaveResult<TState>.Fail(SaveStage.Migrate, SaveErrorCode.ProviderFailure, $"Migration threw exception: {exception.Message}");
+                }
+
                 currentVersion = edge.ToVersion;
             }
 
@@ -636,13 +671,31 @@ namespace Lingkyn.Persistence.Core
                 return SaveResult.Fail(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.");
             }
 
-            var encoded = _codec.Encode(snapshot);
+            SaveResult<byte[]> encoded;
+            try
+            {
+                encoded = _codec.Encode(snapshot);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult.Fail(SaveStage.Encode, SaveErrorCode.ProviderFailure, $"Codec encode threw exception: {exception.Message}");
+            }
+
             if (!encoded.Succeeded)
             {
                 return SaveResult.Fail(encoded.Error.Stage, encoded.Error.Code, encoded.Error.Message);
             }
 
-            var digest = _integrityProvider.ComputeDigest(encoded.Value);
+            SaveResult<byte[]> digest;
+            try
+            {
+                digest = _integrityProvider.ComputeDigest(encoded.Value);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult.Fail(SaveStage.Integrity, SaveErrorCode.ProviderFailure, $"Integrity provider threw exception: {exception.Message}");
+            }
+
             if (!digest.Succeeded)
             {
                 return SaveResult.Fail(digest.Error.Stage, digest.Error.Code, digest.Error.Message);
@@ -670,7 +723,16 @@ namespace Lingkyn.Persistence.Core
                     $"Store capabilities {_store.Capabilities} do not satisfy required {_requiredCapabilities}.");
             }
 
-            var committed = _store.Commit(slotId, serializedEnvelope.Value, _requiredCapabilities);
+            SaveResult committed;
+            try
+            {
+                committed = _store.Commit(slotId, serializedEnvelope.Value, _requiredCapabilities);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult.Fail(SaveStage.Commit, SaveErrorCode.ProviderFailure, $"Store commit threw exception: {exception.Message}");
+            }
+
             if (!committed.Succeeded)
             {
                 return committed;
@@ -683,7 +745,7 @@ namespace Lingkyn.Persistence.Core
         {
             if (validator == null)
             {
-                throw new ArgumentNullException(nameof(validator));
+                return SaveResult<TState>.Fail(SaveStage.Validate, SaveErrorCode.ProviderFailure, "Validator delegate is required.");
             }
 
             if (string.IsNullOrEmpty(slotId.Value))
@@ -691,7 +753,16 @@ namespace Lingkyn.Persistence.Core
                 return SaveResult<TState>.Fail(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.");
             }
 
-            var read = _store.Read(slotId);
+            SaveResult<byte[]> read;
+            try
+            {
+                read = _store.Read(slotId);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult<TState>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, $"Store read threw exception: {exception.Message}");
+            }
+
             if (!read.Succeeded)
             {
                 return SaveResult<TState>.Fail(read.Error.Stage, read.Error.Code, read.Error.Message);
@@ -714,13 +785,36 @@ namespace Lingkyn.Persistence.Core
                 return SaveResult<TState>.Fail(SaveStage.Migrate, SaveErrorCode.FutureSchema, "Stored schema is newer than supported schema.");
             }
 
-            var verified = _integrityProvider.Verify(envelope.Payload, envelope.IntegrityDigest);
+            if (!string.Equals(envelope.IntegrityAlgorithm, _integrityProvider.AlgorithmName, StringComparison.Ordinal))
+            {
+                return SaveResult<TState>.Fail(SaveStage.Verify, SaveErrorCode.UnsupportedFormat, "Envelope integrity algorithm does not match configured provider.");
+            }
+
+            SaveResult verified;
+            try
+            {
+                verified = _integrityProvider.Verify(envelope.Payload.Span, envelope.IntegrityDigest.Span);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult<TState>.Fail(SaveStage.Verify, SaveErrorCode.ProviderFailure, $"Integrity verify threw exception: {exception.Message}");
+            }
+
             if (!verified.Succeeded)
             {
                 return SaveResult<TState>.Fail(verified.Error.Stage, verified.Error.Code, verified.Error.Message);
             }
 
-            var decodedState = _codec.Decode(envelope.Payload);
+            SaveResult<TState> decodedState;
+            try
+            {
+                decodedState = _codec.Decode(envelope.SchemaVersion, envelope.Payload.Span);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult<TState>.Fail(SaveStage.Decode, SaveErrorCode.ProviderFailure, $"Codec decode threw exception: {exception.Message}");
+            }
+
             if (!decodedState.Succeeded)
             {
                 return SaveResult<TState>.Fail(decodedState.Error.Stage, decodedState.Error.Code, decodedState.Error.Message);
@@ -732,7 +826,16 @@ namespace Lingkyn.Persistence.Core
                 return SaveResult<TState>.Fail(migrated.Error.Stage, migrated.Error.Code, migrated.Error.Message);
             }
 
-            var validated = validator(migrated.Value);
+            SaveResult validated;
+            try
+            {
+                validated = validator(migrated.Value);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult<TState>.Fail(SaveStage.Validate, SaveErrorCode.ProviderFailure, $"Validator delegate threw exception: {exception.Message}");
+            }
+
             if (!validated.Succeeded)
             {
                 return SaveResult<TState>.Fail(
@@ -751,7 +854,7 @@ namespace Lingkyn.Persistence.Core
         {
             if (apply == null)
             {
-                throw new ArgumentNullException(nameof(apply));
+                return SaveResult.Fail(SaveStage.Apply, SaveErrorCode.ProviderFailure, "Apply delegate is required.");
             }
 
             var loaded = LoadValidated(slotId, validator);
@@ -760,7 +863,16 @@ namespace Lingkyn.Persistence.Core
                 return SaveResult.Fail(loaded.Error.Stage, loaded.Error.Code, loaded.Error.Message);
             }
 
-            var applied = apply(loaded.Value);
+            SaveResult applied;
+            try
+            {
+                applied = apply(loaded.Value);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult.Fail(SaveStage.Apply, SaveErrorCode.ProviderFailure, $"Apply delegate threw exception: {exception.Message}");
+            }
+
             if (!applied.Succeeded)
             {
                 return SaveResult.Fail(SaveStage.Apply, applied.Error.Code, applied.Error.Message);

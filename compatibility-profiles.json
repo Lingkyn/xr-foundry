@@ -48,7 +48,9 @@
     "unity-6000.3-inventory-xr-ugui-openxr-windows-editor",
     "unity-6000.3-inventory-xr-uitoolkit-openxr-windows-editor",
     "unity-6000.3-persistence-core-windows-editor",
-    "unity-6000.3-persistence-unity-windows-editor"
+    "unity-6000.3-persistence-unity-windows-editor",
+    "unity-6000.3-settings-core-windows-editor",
+    "unity-6000.3-settings-unity-windows-editor"
   ],
   "profiles": [
     {
@@ -905,6 +907,87 @@
             "editor_compile",
             "editmode_tests"
           ]
+        }
+      ]
+    },
+    {
+      "id": "unity-6000.3-settings-core-windows-editor",
+      "state": "verified",
+      "install_artifact": "com.lingkyn.settings.core",
+      "target": {
+        "engine": { "id": "unity", "version": "6000.3.19f1" },
+        "editor": { "id": "unity-editor", "version": "6000.3.19f1" },
+        "renderer": { "id": "not_applicable", "version": "not_applicable" },
+        "requested_dependencies": { "com.unity.test-framework": "1.6.0" },
+        "resolved_dependencies": {
+          "com.unity.ext.nunit": "2.0.5",
+          "com.unity.modules.imgui": "1.0.0",
+          "com.unity.modules.jsonserialize": "1.0.0",
+          "com.unity.test-framework": "1.6.0"
+        },
+        "build_target": "WindowsEditor",
+        "graphics_api": "Null",
+        "scripting_backend": "Mono",
+        "architecture": "x86_64",
+        "xr_provider": { "id": "not_applicable", "version": "not_applicable" },
+        "runtime": { "id": "not_applicable", "version": "not_applicable" },
+        "input_routes": ["not_applicable"],
+        "device": { "id": "windows-editor-host", "version": "10.0.26200" }
+      },
+      "package_versions": {
+        "com.lingkyn.settings.core": "0.1.0"
+      },
+      "verified_claims": ["editor_compile", "editmode_tests"],
+      "evidence": [
+        {
+          "kind": "editor_automated",
+          "profile_id": "unity-6000.3-settings-core-windows-editor",
+          "commit_sha": "7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+          "receipt_path": "docs/validation/evidence/unity-6000.3-settings-core-windows-editor/compatibility-receipt.json",
+          "manifest_sha256": "ff0f21a0655603191991f050990a5952ba591c7b0f7af1733da2e6d5360daf55",
+          "lock_sha256": "95681579fbe4764a2ae747916a611ba7df0efb0b7f645e784ca8cfd96afd4a26",
+          "checks": ["editor_compile", "editmode_tests"]
+        }
+      ]
+    },
+    {
+      "id": "unity-6000.3-settings-unity-windows-editor",
+      "state": "verified",
+      "install_artifact": "com.lingkyn.settings.unity",
+      "target": {
+        "engine": { "id": "unity", "version": "6000.3.19f1" },
+        "editor": { "id": "unity-editor", "version": "6000.3.19f1" },
+        "renderer": { "id": "not_applicable", "version": "not_applicable" },
+        "requested_dependencies": { "com.unity.test-framework": "1.6.0" },
+        "resolved_dependencies": {
+          "com.unity.ext.nunit": "2.0.5",
+          "com.unity.modules.imgui": "1.0.0",
+          "com.unity.modules.jsonserialize": "1.0.0",
+          "com.unity.test-framework": "1.6.0"
+        },
+        "build_target": "WindowsEditor",
+        "graphics_api": "Null",
+        "scripting_backend": "Mono",
+        "architecture": "x86_64",
+        "xr_provider": { "id": "not_applicable", "version": "not_applicable" },
+        "runtime": { "id": "not_applicable", "version": "not_applicable" },
+        "input_routes": ["not_applicable"],
+        "device": { "id": "windows-editor-host", "version": "10.0.26200" }
+      },
+      "package_versions": {
+        "com.lingkyn.settings.core": "0.1.0",
+        "com.lingkyn.settings.unity": "0.1.0"
+      },
+      "verified_claims": ["editor_compile", "editmode_tests"],
+      "evidence": [
+        {
+          "kind": "editor_automated",
+          "profile_id": "unity-6000.3-settings-unity-windows-editor",
+          "commit_sha": "7753de2bb10eb6376bc0f1df48bfd74ee3bf1ed9",
+          "receipt_path": "docs/validation/evidence/unity-6000.3-settings-unity-windows-editor/compatibility-receipt.json",
+          "manifest_sha256": "3d61b1d1ae596dae145a5e54242e27bfdfb8993fbc0114f8c45c5a20459d0db8",
+          "lock_sha256": "59f329bbf20a66eebccc8e8fd637aeb6492dc01c8e1fe42165fcdd0ed65a490b",
+          "checks": ["editor_compile", "editmode_tests"]
         }
       ]
     }

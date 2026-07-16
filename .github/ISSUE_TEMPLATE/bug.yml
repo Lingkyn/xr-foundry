@@ -19,6 +19,8 @@ body:
         - com.lingkyn.inventory.xr.uitoolkit
         - com.lingkyn.persistence.core
         - com.lingkyn.persistence.unity
+        - com.lingkyn.settings.core
+        - com.lingkyn.settings.unity
         - Repository tooling
     validations:
       required: true

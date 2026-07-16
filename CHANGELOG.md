@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the renderer-neutral Settings family: typed definitions and values,
+  profiles, scoped transactions, whole-snapshot constraints, deterministic
+  apply/reverse rollback, persistence seams, accessibility discoverability
+  metadata, and a ScriptableObject Unity authoring adapter.
+- Verified Settings Core (25 tests) and the combined Core/Unity graph (31 tests)
+  from immutable Git UPM pins in clean Unity 6000.3.19f1 Windows Editor consumers.
 - Added Foundry V1: a public lifecycle, official-source manifest, machine-readable
   first Unity batch, next source-gate queue, release policy, and deterministic
   dry-run-first Unity package scaffolder.

@@ -27,6 +27,9 @@ packages/
       persistence/
         com.lingkyn.persistence.core/
         com.lingkyn.persistence.unity/
+      settings/
+        com.lingkyn.settings.core/
+        com.lingkyn.settings.unity/
 docs/
   architecture/
   standards/

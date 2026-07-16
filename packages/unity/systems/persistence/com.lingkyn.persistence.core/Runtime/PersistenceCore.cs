@@ -33,8 +33,8 @@ namespace Lingkyn.Persistence.Core
         FutureSchema,
         MissingMigration,
         AmbiguousMigration,
-        CyclicMigration,
-        NonMonotonicMigration,
+        CyclicMigration, // Defensive fallback when traversal revisits a version.
+        NonMonotonicMigration, // Graph contains a back-edge or stagnant edge; takes precedence during graph validation.
         CorruptPayload,
         UnsupportedCommitCapability,
         IoDenied,
@@ -66,7 +66,11 @@ namespace Lingkyn.Persistence.Core
         }
 
         public override bool Equals(object obj) => obj is SaveError other && Equals(other);
-        public override int GetHashCode() => ((int)Stage * 397) ^ (int)Code ^ StringComparer.Ordinal.GetHashCode(Message);
+        public override int GetHashCode()
+        {
+            var message = Message ?? string.Empty;
+            return ((int)Stage * 397) ^ (int)Code ^ StringComparer.Ordinal.GetHashCode(message);
+        }
         public override string ToString() => $"{Stage}:{Code} {Message}";
     }
 
@@ -566,13 +570,13 @@ namespace Lingkyn.Persistence.Core
 
                 if (migration.ToVersion <= migration.FromVersion)
                 {
-                    _graphError = SaveErrorCode.NonMonotonicMigration;
+                    SetGraphError(SaveErrorCode.NonMonotonicMigration);
                     continue;
                 }
 
                 if (_edgeByFromVersion.ContainsKey(migration.FromVersion))
                 {
-                    _graphError = SaveErrorCode.AmbiguousMigration;
+                    SetGraphError(SaveErrorCode.AmbiguousMigration);
                     continue;
                 }
 
@@ -630,6 +634,29 @@ namespace Lingkyn.Persistence.Core
             }
 
             return SaveResult<TState>.Success(currentState);
+        }
+
+        private void SetGraphError(SaveErrorCode candidate)
+        {
+            if (!_graphError.HasValue || GetGraphErrorPriority(candidate) > GetGraphErrorPriority(_graphError.Value))
+            {
+                _graphError = candidate;
+            }
+        }
+
+        private static int GetGraphErrorPriority(SaveErrorCode code)
+        {
+            switch (code)
+            {
+                case SaveErrorCode.NonMonotonicMigration:
+                    return 2;
+                case SaveErrorCode.AmbiguousMigration:
+                    return 1;
+                case SaveErrorCode.CyclicMigration:
+                    return 0;
+                default:
+                    return -1;
+            }
         }
     }
 

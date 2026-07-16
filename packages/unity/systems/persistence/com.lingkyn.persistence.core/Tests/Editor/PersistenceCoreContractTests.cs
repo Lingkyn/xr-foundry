@@ -119,7 +119,7 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
         }
 
         [Test]
-        public void MigrationPipelineRejectsCyclicGraph()
+        public void MigrationPipelineTreatsBackEdgeAsNonMonotonic()
         {
             var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
             {
@@ -128,6 +128,21 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             });
 
             var result = migrations.Apply(0, 1, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+        }
+
+        [Test]
+        public void MigrationPipelinePrefersNonMonotonicOverAmbiguous()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(0, 2, state => state + "|m02"),
+                new DelegateMigration(3, 2, state => state + "|m32")
+            });
+
+            var result = migrations.Apply(0, 2, "seed");
             Assert.That(result.Succeeded, Is.False);
             Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
         }
@@ -215,13 +230,24 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
         {
             var store = new InMemoryStore();
             var codec = new Utf8StringCodec();
-            var coordinator = CreateCoordinator(store, codec, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()), currentSchemaVersion: 3);
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(2, 3, state => state)
+            });
+            var coordinator = CreateCoordinator(store, codec, migrations, currentSchemaVersion: 3);
             var slot = MustSlot("slot_schema_decode");
             store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("payload", 2)).Value;
 
             var result = coordinator.LoadValidated(slot, _ => SaveResult.Success());
             Assert.That(result.Succeeded, Is.True);
             Assert.That(codec.LastDecodeSchemaVersion, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SaveErrorDefaultHashCodeIsSafe()
+        {
+            Assert.DoesNotThrow(() => _ = default(SaveError).GetHashCode());
+            Assert.That(default(SaveError).GetHashCode(), Is.EqualTo(default(SaveError).GetHashCode()));
         }
 
         [Test]

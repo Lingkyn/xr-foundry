@@ -1,5 +1,5 @@
-# BasicPersistence
+# Basic Persistence sample
 
-Domain-only save, load, migration, integrity, and failure-result example.
-
-This sample cannot be accepted until the package implementation and tests exist.
+`BasicPersistenceExample.cs` provides a minimal domain-only round trip:
+save a text state into an in-memory store, then load it through schema migration
+and validation. The sample does not require a scene or any `UnityEngine` API.

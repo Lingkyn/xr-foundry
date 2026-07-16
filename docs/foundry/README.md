@@ -35,11 +35,12 @@ GitHub state, or maturity. Its output is staging material, not a finished packag
 
 [`batches/batch-registry.v1.json`](batches/batch-registry.v1.json) is the current
 batch index. It keeps the released
-[`unity-first-batch`](batches/unity-first-batch.v1.json) immutable while the
-independently closable Persistence, Settings, and Interaction checkpoints enter
-[`unity-next-systems`](batches/unity-next-systems.v1.json). Repository validation
-requires the registered batch union to cover every live package exactly once and
-rejects cross-batch duplication. A building batch is not a release.
+[`unity-first-batch`](batches/unity-first-batch.v1.json) and independently
+validated Persistence, Settings, and Interaction
+[`unity-next-systems`](batches/unity-next-systems.v1.json) immutable. Repository
+validation requires the registered batch union to cover every live package
+exactly once and rejects cross-batch duplication. A future building batch is not
+a release.
 
 The landing page groups packages by capability family; machine catalogs and batch
 files keep each installable package separate because dependencies, versions,

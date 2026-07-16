@@ -132,24 +132,19 @@ namespace Lingkyn.Persistence.Unity
             var paths = pathsResult.Value;
             var primaryExisted = _fileOperations.FileExists(paths.PrimaryPath);
             byte[] priorPrimaryBytes = null;
-            byte[] priorBackupBytes = null;
 
             if (primaryExisted)
             {
                 try
                 {
                     priorPrimaryBytes = _fileOperations.ReadAllBytes(paths.PrimaryPath);
-                    if (_fileOperations.FileExists(paths.BackupPath))
-                    {
-                        priorBackupBytes = _fileOperations.ReadAllBytes(paths.BackupPath);
-                    }
                 }
                 catch (Exception exception)
                 {
                     return FileIoErrorMapper.MapCommitFailure(
                         exception,
                         SaveStage.Read,
-                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes));
                 }
             }
 
@@ -161,7 +156,7 @@ namespace Lingkyn.Persistence.Unity
                     stagingPathResult.Error.Stage,
                     stagingPathResult.Error.Code,
                     stagingPathResult.Error.Message,
-                    ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                    ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes));
             }
 
             var stagingPath = stagingPathResult.Value;
@@ -193,15 +188,14 @@ namespace Lingkyn.Persistence.Unity
                     stagingPath,
                     primaryExisted,
                     requiredCapabilities,
-                    priorPrimaryBytes,
-                    priorBackupBytes);
+                    priorPrimaryBytes);
             }
             catch (Exception exception)
             {
                 return FileIoErrorMapper.MapCommitFailure(
                     exception,
                     failureStage,
-                    ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                    ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes));
             }
             finally
             {
@@ -289,8 +283,7 @@ namespace Lingkyn.Persistence.Unity
             string stagingPath,
             bool primaryExisted,
             SaveCommitCapabilities requiredCapabilities,
-            byte[] priorPrimaryBytes,
-            byte[] priorBackupBytes)
+            byte[] priorPrimaryBytes)
         {
             if (!primaryExisted)
             {
@@ -301,7 +294,7 @@ namespace Lingkyn.Persistence.Unity
                         SaveStage.Commit,
                         SaveErrorCode.UnsupportedCommitCapability,
                         "AtomicReplace requires an existing primary record.",
-                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes));
                 }
 
                 _fileOperations.MoveFile(stagingPath, paths.PrimaryPath, overwrite: false);
@@ -325,7 +318,7 @@ namespace Lingkyn.Persistence.Unity
                         SaveStage.Commit,
                         SaveErrorCode.UnsupportedCommitCapability,
                         "Commit strategy is undefined.",
-                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes));
             }
         }
 
@@ -381,8 +374,7 @@ namespace Lingkyn.Persistence.Unity
 
         private bool ComputePriorCommittedRecordPreserved(
             SlotPaths paths,
-            byte[] expectedPrimaryBytes,
-            byte[] expectedBackupBytes)
+            byte[] expectedPrimaryBytes)
         {
             if (expectedPrimaryBytes == null)
             {
@@ -391,37 +383,28 @@ namespace Lingkyn.Persistence.Unity
 
             try
             {
-                if (!_fileOperations.FileExists(paths.PrimaryPath))
+                if (PathBytesEqual(paths.PrimaryPath, expectedPrimaryBytes))
                 {
-                    return false;
+                    return true;
                 }
 
-                var actualPrimary = _fileOperations.ReadAllBytes(paths.PrimaryPath);
-                if (!ByteArraysEqual(actualPrimary, expectedPrimaryBytes))
-                {
-                    return false;
-                }
-
-                if (expectedBackupBytes != null)
-                {
-                    if (!_fileOperations.FileExists(paths.BackupPath))
-                    {
-                        return false;
-                    }
-
-                    var actualBackup = _fileOperations.ReadAllBytes(paths.BackupPath);
-                    if (!ByteArraysEqual(actualBackup, expectedBackupBytes))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
+                return PathBytesEqual(paths.BackupPath, expectedPrimaryBytes);
             }
             catch
             {
                 return false;
             }
+        }
+
+        private bool PathBytesEqual(string path, byte[] expectedBytes)
+        {
+            if (!_fileOperations.FileExists(path))
+            {
+                return false;
+            }
+
+            var actualBytes = _fileOperations.ReadAllBytes(path);
+            return ByteArraysEqual(actualBytes, expectedBytes);
         }
 
         private static SaveResult ValidateSlot(SaveSlotId slotId)

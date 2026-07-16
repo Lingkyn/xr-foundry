@@ -83,7 +83,8 @@ namespace Lingkyn.Persistence.Unity
         {
             if (overwrite)
             {
-                File.Move(sourcePath, destinationPath, overwrite: true);
+                File.Copy(sourcePath, destinationPath, overwrite: true);
+                File.Delete(sourcePath);
                 return;
             }
 
@@ -103,6 +104,14 @@ namespace Lingkyn.Persistence.Unity
         public void EnsureDirectory(string directoryPath)
         {
             Directory.CreateDirectory(directoryPath);
+        }
+    }
+
+    internal sealed class InjectedOutOfSpaceException : IOException
+    {
+        public InjectedOutOfSpaceException(string message)
+            : base(message)
+        {
         }
     }
 
@@ -197,7 +206,7 @@ namespace Lingkyn.Persistence.Unity
                 case SaveErrorCode.IoDenied:
                     throw new UnauthorizedAccessException(_faultMessage);
                 case SaveErrorCode.OutOfSpace:
-                    throw new IOException(_faultMessage) { HResult = unchecked((int)0x80070070) };
+                    throw new InjectedOutOfSpaceException(_faultMessage);
                 default:
                     throw new IOException(_faultMessage);
             }
@@ -228,6 +237,11 @@ namespace Lingkyn.Persistence.Unity
             if (exception is UnauthorizedAccessException)
             {
                 return SaveErrorCode.IoDenied;
+            }
+
+            if (exception is InjectedOutOfSpaceException)
+            {
+                return SaveErrorCode.OutOfSpace;
             }
 
             if (exception is IOException ioException)

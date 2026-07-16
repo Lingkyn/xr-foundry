@@ -32,7 +32,7 @@ Initial create commits use staged move into an empty primary path. `AtomicReplac
 
 Required commit capabilities are a minimum gate only; the configured strategy always selects the commit algorithm.
 
-`PriorCommittedRecordPreserved` is derived from verified post-failure primary and backup bytes. When verification cannot be established, the adapter reports `false`.
+`PriorCommittedRecordPreserved` is true when the expected prior-primary bytes are present in either the primary or backup path after failure. Previous backup contents are not part of the preservation contract.
 
 ## Recovery inspection
 

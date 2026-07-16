@@ -12,9 +12,10 @@ batch and publishes a dry-run-first package blueprint/scaffolder. New systems en
 through the public source-gate queue; no package directory or package ID is created
 before admission. See [`docs/foundry`](docs/foundry/README.md).
 
-The next source-gate priority is a save/persistence family. Settings/accessibility
-and semantic interaction remain proposals until their overlaps and professional
-source boundaries are resolved.
+Persistence and Settings/Accessibility have completed their first independently
+validated Core and Unity checkpoints. Semantic Interaction has completed its
+professional source gate and its engine-light Core checkpoint; the Unity Input
+System adapter remains the next independently closable implementation checkpoint.
 
 ## Candidate gate
 

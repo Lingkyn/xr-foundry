@@ -40,6 +40,14 @@
       "maturity": "incubating",
       "compatibility_profile": "unity-6000.3-settings-unity-windows-editor",
       "device_evidence": "not_applicable"
+    },
+    {
+      "id": "com.lingkyn.interaction.core",
+      "path": "packages/unity/systems/interaction/com.lingkyn.interaction.core",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-interaction-core-windows-editor",
+      "device_evidence": "not_applicable"
     }
   ],
   "claim_boundary": [

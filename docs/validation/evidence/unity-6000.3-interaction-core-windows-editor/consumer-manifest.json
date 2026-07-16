@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.lingkyn.interaction.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/interaction/com.lingkyn.interaction.core#8b869bc045161f1b5353da5be779df46a362a29e",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.lingkyn.interaction.core"
+  ]
+}

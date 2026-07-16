@@ -21,6 +21,7 @@ body:
         - com.lingkyn.persistence.unity
         - com.lingkyn.settings.core
         - com.lingkyn.settings.unity
+        - com.lingkyn.interaction.core
         - Repository tooling
     validations:
       required: true

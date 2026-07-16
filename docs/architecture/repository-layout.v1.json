@@ -42,6 +42,13 @@
         "com.lingkyn.settings.core",
         "com.lingkyn.settings.unity"
       ]
+    },
+    {
+      "id": "unity-system-interaction",
+      "path": "packages/unity/systems/interaction",
+      "packages": [
+        "com.lingkyn.interaction.core"
+      ]
     }
   ],
   "invariants": {

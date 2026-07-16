@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="11" result="Passed" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-16 21:07:20Z" end-time="2026-07-16 21:07:20Z" duration="0.1641929">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-interaction-core-8b869bc" fullname="xr-foundry-interaction-core-8b869bc" runstate="Runnable" testcasecount="11" result="Passed" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1013" name="Lingkyn.Interaction.Core.Editor.Tests.dll" fullname="consumer-project/Library/ScriptAssemblies/Lingkyn.Interaction.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="11" result="Passed" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-case id="1002" name="RegistryRejectsDuplicateRouteAndMismatchedMembership" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.RegistryRejectsDuplicateRouteAndMismatchedMembership" result="Passed" />
+      <test-case id="1003" name="FrameEnforcesObservationAndIngressContract" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.FrameEnforcesObservationAndIngressContract" result="Passed" />
+      <test-case id="1004" name="PriorityAndCollisionApplyOnlyWithinOneObservation" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.PriorityAndCollisionApplyOnlyWithinOneObservation" result="Passed" />
+      <test-case id="1005" name="RouterIsDeterministicAndDoesNotMutatePriorState" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.RouterIsDeterministicAndDoesNotMutatePriorState" result="Passed" />
+      <test-case id="1006" name="PerformedAndCanceledRequireExplicitStartedState" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.PerformedAndCanceledRequireExplicitStartedState" result="Passed" />
+      <test-case id="1007" name="HoldAndThresholdPoliciesAreAppliedFromExplicitState" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.HoldAndThresholdPoliciesAreAppliedFromExplicitState" result="Passed" />
+      <test-case id="1008" name="ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice" result="Passed" />
+      <test-case id="1009" name="FullCapabilityAndModalityMustMatch" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.FullCapabilityAndModalityMustMatch" result="Passed" />
+      <test-case id="1010" name="PostTransformOverflowFailsClosed" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.PostTransformOverflowFailsClosed" result="Passed" />
+      <test-case id="1011" name="PolicyValidationRejectsInvalidIdsEnumsAndRanges" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.PolicyValidationRejectsInvalidIdsEnumsAndRanges" result="Passed" />
+      <test-case id="1012" name="BindingSuggestionIsImmutableAndNeverActivatesRoute" fullname="Lingkyn.Interaction.Core.Editor.Tests.InteractionCoreTests.BindingSuggestionIsImmutableAndNeverActivatesRoute" result="Passed" />
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -288,6 +288,28 @@
       ]
     },
     {
+      "id": "unity-interaction-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/interaction/com.lingkyn.interaction.core",
+      "package_id": "com.lingkyn.interaction.core",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Engine-light semantic intents, contexts, routes, typed observations, explicit routing state, deterministic policy evaluation, advisory binding suggestions, diagnostics, and handler outcomes.",
+      "evidence": [
+        "docs/standards/interaction/source-manifest.json",
+        "docs/standards/interaction/architecture-contract.md",
+        "docs/standards/interaction/verification-contract.md",
+        "packages/unity/systems/interaction/com.lingkyn.interaction.core/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-interaction-core-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No Unity Input System, XRI, OpenXR, renderer, device binding, concrete rebinding UI, or product command is included",
+        "Binding suggestions are advisory data and never activate a route",
+        "Windows Editor evidence does not prove another operating system, device, input provider, or accessibility outcome"
+      ]
+    },
+    {
       "id": "repository-information-architecture",
       "kind": "repository_standard",
       "engine": "multi-engine_with_Unity_implemented",

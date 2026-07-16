@@ -429,7 +429,7 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
         {
             var store = new InMemoryStore
             {
-                ForcedCommitResult = default
+                ForcedCommitResult = (SaveCommitResult?)default(SaveCommitResult)
             };
             var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
 

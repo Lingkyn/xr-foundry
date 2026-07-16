@@ -9,17 +9,19 @@
    route may translate that signal into a semantic intent event.
 3. Intent definitions declare value kind and required capabilities. A route with
    an incompatible value or capability fails closed before dispatch.
-4. Contexts are explicit, independently activated, and priority ordered. A route
-   shadowed by a higher-priority context cannot also dispatch from a lower one.
-5. Equal-priority collisions for the same source route are ambiguous and produce
-   diagnostics rather than arbitrary winner selection.
+4. `RouteId` is globally unique and one route belongs to exactly one context.
+   Contexts are explicit, independently activated, and priority ordered.
+5. One physical observation may nominate multiple route candidates. A
+   higher-priority active context shadows lower-priority candidates only inside
+   that observation; equal-priority candidates fail closed as ambiguous.
 6. Phases are neutral lifecycle facts: `started`, `performed`, and `canceled`.
    Adapter-specific phases may map into them but cannot silently add a performed
    outcome or erase cancellation.
 7. One submitted frame is immutable. Given the same registry, active contexts,
-   policy snapshot, and ordered ingress signals, routing and diagnostics are
-   deterministic. Core does not invent an order for events an adapter did not
-   order.
+   policy snapshot, prior routing-state snapshot, and ordered observations,
+   routing, diagnostics, and next routing state are deterministic. Core does not
+   invent an order for events an adapter did not order or hide mutable state in
+   the router.
 8. Per-player binding overrides refer to stable intent and adapter route IDs.
    Adapter-specific control paths remain opaque adapter data and are never Core
    action identity.
@@ -47,6 +49,7 @@
 | `ContextId` | Stable identity for an independently activated action context. |
 | `RouteId` | Stable adapter-owned route identity used for admission, conflicts, and persisted overrides. |
 | `SourceId` | One observed source instance without assuming a vendor or device class. |
+| `ObservationSequence` | Non-negative frame-local identity grouping route candidates derived from one physical observation. |
 | `BindingSuggestionId` | Stable identity for one advisory default-binding proposal. |
 | `InteractionModality` | Declared class such as keyboard/mouse, gamepad, touch, tracked controller, articulated hand, gaze, voice, assistive, simulated, or unknown. |
 | `InteractionCapability` | Small composable facts such as digital, scalar, vector2, vector3, pose, pointing, haptic-output, or text. |
@@ -59,24 +62,27 @@
 | `InteractionPolicySnapshot` | Immutable per-intent activation alternatives and route availability supplied by a consumer. |
 | `SourceSignal` | Adapter-provided route, source, value, phase, timestamp, and ingress sequence. |
 | `InteractionFrame` | Immutable ordered source signals submitted for one routing boundary. |
+| `InteractionRoutingState` | Immutable pending-phase timestamps and toggle facts supplied as prior state and returned as next state. |
 | `SemanticInteractionEvent` | Validated intent event delivered to a consumer handler. |
 | `InteractionDispatchResult` | Routed, canceled, shadowed, rejected, ambiguous, or handler outcome with diagnostics. |
 
 ## Context and conflict flow
 
-1. Freeze the registry, active-context set, and policy snapshot.
+1. Freeze the registry, active-context set, policy snapshot, prior routing state,
+   and ordered frame.
 2. Validate source, route, phase, value kind, capabilities, and monotonic ingress
-   sequence for every signal.
-3. Resolve only routes in active contexts.
-4. For a source route claimed by multiple active contexts, retain the highest
-   priority. If more than one claimant remains at that priority, reject the
-   collision as ambiguous.
-5. Preserve the adapter's ingress sequence, then use declared intent order and
-   stable IDs only as deterministic tie breakers.
+   and observation sequence for every signal. Signals sharing one observation
+   must carry identical physical facts.
+3. Resolve only globally unique routes in active contexts.
+4. Within one observation, retain the highest-priority route candidate. If more
+   than one candidate remains at that priority, reject the observation as
+   ambiguous. Never compare candidates from different observations.
+5. Preserve observation and ingress sequence, then use declared order and stable
+   IDs only as deterministic tie breakers.
 6. Emit `started` and `canceled` lifecycle events without treating them as a
    completed action. Dispatch `performed` to the matching handler.
 7. Record the handler's accepted, rejected, deferred, or failed outcome without
-   rewriting the input history.
+   rewriting the input history, and return the immutable next routing state.
 
 OpenXR action sets and Unreal mapping contexts establish useful context and
 priority patterns, but the Core does not copy either runtime's suppression rules.
@@ -110,6 +116,12 @@ binding override through public ports. Interaction validates and applies the
 policy. Neither family owns a rebinding UI, localized prompts, platform assistive
 technology, or device certification.
 
+Hold duration and activation threshold are explicit, validated policy values.
+Toggle state is explicit routing state: the first admitted activation dispatches
+the new value, and cancellation clears only its pending phase rather than an
+existing toggle choice. Every subsequent admitted activation follows the same
+dispatch rule and emits the newly toggled value.
+
 ## Unity adapter
 
 The first Unity adapter may provide ScriptableObject intent/context/route
@@ -123,3 +135,7 @@ code one control layout, depend on XRI/OpenXR/vendor SDKs, or infer support for 
 modality from a control path string. XRI, OpenXR interaction profiles, tracked
 ray, hand, and gaze remain separately installable and separately evidenced future
 adapters.
+
+The adapter assigns observation sequence and verifies that all route candidates
+in one observation carry identical source, modality, capability, value, phase,
+and timestamp facts before Core routing.

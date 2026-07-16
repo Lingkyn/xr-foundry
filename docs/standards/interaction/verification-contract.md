@@ -19,15 +19,21 @@ Deterministic tests cover:
 - inactive context rejection, higher-priority shadowing, and equal-priority
   collision diagnostics;
 - ordered ingress validation and stable routing/diagnostic order;
+- observation grouping, globally unique route identity, no cross-observation
+  shadowing, and fail-closed inconsistent observation facts;
 - started, performed, canceled, duplicate, and invalid phase transitions;
 - multi-route and multi-modal sources without transferring evidence;
 - immutable registry, frame, policy, route, event, and diagnostic collections;
+- immutable prior/next routing state and repeated-call determinism without hidden
+  router mutation;
 - cancellation before completion and explicit handler accepted/rejected/deferred/
   failed outcomes;
 - rebinding-compatible stable identity using opaque adapter route tokens; and
 - inert binding suggestions that cannot activate routes, override user choices,
   or grant device evidence; and
-- policy alternatives such as momentary/toggle/hold without rewriting intent IDs.
+- policy alternatives such as momentary/toggle/hold without rewriting intent IDs;
+- validated hold duration and activation thresholds, first-toggle dispatch,
+  cancellation-preserved toggle choice, and non-finite post-policy rejection.
 
 Tests must assert emitted events, suppressed events, outcomes, diagnostics, active
 context snapshot, handler calls, and sequence values independently. One boolean

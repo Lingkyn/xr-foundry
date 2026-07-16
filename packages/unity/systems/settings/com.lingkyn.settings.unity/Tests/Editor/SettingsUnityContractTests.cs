@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Lingkyn.Settings.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -37,9 +38,9 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
 
             var issues = SettingsUnityValidator.ValidateCatalog(catalog);
             Assert.That(issues.Count, Is.GreaterThanOrEqualTo(3));
-            Assert.That(issues.Exists(i => i.Index == 1 && i.Key == "audio.mute"));
-            Assert.That(issues.Exists(i => i.Index == 2 && i.Key == "audio.volume"));
-            Assert.That(issues.Exists(i => i.Index == 3 && i.Key == "audio.scope"));
+            Assert.That(issues.Any(i => i.Index == 1 && i.Key == "audio.mute"));
+            Assert.That(issues.Any(i => i.Index == 2 && i.Key == "audio.volume"));
+            Assert.That(issues.Any(i => i.Index == 3 && i.Key == "audio.scope"));
         }
 
         [Test]

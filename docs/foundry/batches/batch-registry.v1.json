@@ -10,8 +10,8 @@
     {
       "id": "unity-next-systems",
       "path": "docs/foundry/batches/unity-next-systems.v1.json",
-      "state": "building",
-      "release_tag": null
+      "state": "released",
+      "release_tag": "unity-next-systems-v0.1.0"
     }
   ]
 }

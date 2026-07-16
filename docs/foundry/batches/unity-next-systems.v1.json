@@ -2,9 +2,9 @@
   "schema": "xr-foundry.package_batch.v1",
   "batch_id": "unity-next-systems",
   "engine": "Unity",
-  "status": "building",
+  "status": "approved_for_release",
   "release": {
-    "tag": null,
+    "tag": "unity-next-systems-v0.1.0",
     "commit_binding": "release_tag_exact_commit",
     "immutable_history": true
   },
@@ -59,7 +59,7 @@
     }
   ],
   "claim_boundary": [
-    "This building batch may grow only through independently admitted and validated package checkpoints.",
+    "The release publishes the recorded Persistence, Settings, and Interaction package inputs and reference material at incubating maturity.",
     "Compatibility evidence applies only to each named exact profile and immutable evidence commit.",
     "No batch membership or Editor test proves runtime-device, cross-version, security, cloud, or crash-durability behavior."
   ],

@@ -10,6 +10,7 @@ import re
 import stat
 import struct
 import subprocess
+import sys
 import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
@@ -101,6 +102,10 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/contributing/agent-contribution-protocol.md",
     "docs/contributing/contribution-credit.example.json",
     "docs/contributing/contribution-credit.schema.json",
+    "docs/contributing/deliberation-protocol.md",
+    "docs/contributing/deliberation-record.open.example.json",
+    "docs/contributing/deliberation-record.resolved.example.json",
+    "docs/contributing/deliberation-record.schema.json",
     "docs/contributing/recognition-policy.md",
     "docs/contributing/task-hall.md",
     "docs/contributing/task-hall.v1.json",
@@ -119,6 +124,10 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/device-lab/device-receipt.template.json",
     "docs/device-lab/receipts/README.md",
     "docs/device-lab/test-plans/inventory-world-space-ui-v1.json",
+    "docs/rfcs/0002-public-workbench.md",
+    "docs/validation/fail-fast-validation.md",
+    "docs/validation/independent-review-receipt.example.json",
+    "docs/validation/independent-review-receipt.schema.json",
     "scripts/contract-requirements.txt",
 }
 PUBLIC_REPOSITORY = "https://github.com/Lingkyn/xr-foundry"
@@ -1503,6 +1512,22 @@ def validate_checkpoint_routing(
             errors.append(
                 f"{label}: unqualified high-risk execution requires independent review"
             )
+        if status == "completed":
+            evidence_items = evidence if isinstance(evidence, list) else []
+            review_evidence = [
+                item
+                for item in evidence_items
+                if isinstance(item, dict)
+                and item.get("kind") == "review"
+                and isinstance(item.get("location"), str)
+                and bool(item.get("location"))
+                and isinstance(item.get("commit"), str)
+                and FULL_SHA_PATTERN.fullmatch(item.get("commit", "")) is not None
+            ]
+            if not review_evidence:
+                errors.append(
+                    f"{label}: completed high-risk checkpoint requires immutable review evidence"
+                )
     if review == "required_device":
         required_devices = routing.get("required_devices")
         if not isinstance(required_devices, list) or not required_devices:
@@ -1545,6 +1570,46 @@ def validate_checkpoint_routing(
                         )
                         break
     errors.extend(validate_device_evidence_references(device, evidence, label))
+    return errors
+
+
+def validate_independent_review_receipt(
+    payload: Any,
+    label: str,
+    *,
+    root: Path | None = None,
+) -> list[str]:
+    schema_path = (
+        (root or ROOT)
+        / "docs"
+        / "validation"
+        / "independent-review-receipt.schema.json"
+    )
+    errors = validate_json_schema_instance(payload, schema_path, label)
+    if not isinstance(payload, dict) or payload.get("record_status") != "accepted":
+        return errors
+
+    executor = payload.get("executor")
+    reviewer = payload.get("independent_review")
+    executor_agents = {
+        str(value)
+        for value in executor.get("assisted_by", [])
+    } if isinstance(executor, dict) else set()
+    reviewer_agents = {
+        str(value)
+        for value in reviewer.get("assisted_by", [])
+    } if isinstance(reviewer, dict) else set()
+    if not executor_agents or not reviewer_agents or executor_agents & reviewer_agents:
+        errors.append(
+            f"{label}: accepted review requires disjoint executor and reviewer assistance"
+        )
+
+    reviewed_commit = payload.get("reviewed_commit")
+    if root is not None and isinstance(reviewed_commit, str):
+        if not commit_is_public_origin_reachable(root, reviewed_commit):
+            errors.append(
+                f"{label}: reviewed_commit must be reachable from a public origin ref"
+            )
     return errors
 
 
@@ -2061,6 +2126,11 @@ def validate_task_hall_contract(root: Path) -> list[str]:
     continuation_example_path = root / "docs" / "contributing" / "work-continuation.example.json"
     credit_schema_path = root / "docs" / "contributing" / "contribution-credit.schema.json"
     credit_example_path = root / "docs" / "contributing" / "contribution-credit.example.json"
+    deliberation_schema_path = root / "docs" / "contributing" / "deliberation-record.schema.json"
+    deliberation_open_path = root / "docs" / "contributing" / "deliberation-record.open.example.json"
+    deliberation_resolved_path = root / "docs" / "contributing" / "deliberation-record.resolved.example.json"
+    review_schema_path = root / "docs" / "validation" / "independent-review-receipt.schema.json"
+    review_example_path = root / "docs" / "validation" / "independent-review-receipt.example.json"
     registry_path = root / TASK_HALL_REGISTRY_PATH
     registry_schema_path = root / "docs" / "contributing" / "tasks" / "task-registry.schema.json"
     labels_path = root / "docs" / "contributing" / "label-contract.json"
@@ -2151,6 +2221,48 @@ def validate_task_hall_contract(root: Path) -> list[str]:
         )
         if credit_example.get("record_status") != "example":
             errors.append("Contribution credit example must not masquerade as accepted credit")
+    for path, label, expected_status in (
+        (deliberation_open_path, "Open deliberation example", "open"),
+        (deliberation_resolved_path, "Resolved deliberation example", "resolved"),
+    ):
+        if path.exists():
+            deliberation = load_json(path)
+            errors.extend(
+                validate_json_schema_instance(deliberation, deliberation_schema_path, label)
+            )
+            if deliberation.get("status") != expected_status:
+                errors.append(f"{label}: status must remain {expected_status}")
+    if review_schema_path.exists():
+        try:
+            Draft202012Validator.check_schema(load_json(review_schema_path))
+        except Exception as error:
+            errors.append(f"Independent review JSON Schema is invalid: {error}")
+    if review_example_path.exists():
+        review_example = load_json(review_example_path)
+        errors.extend(
+            validate_independent_review_receipt(
+                review_example,
+                "Independent review example",
+                root=root,
+            )
+        )
+        if review_example.get("record_status") != "example":
+            errors.append("Independent review example must not masquerade as accepted review")
+    review_records_root = root / "docs" / "validation" / "reviews"
+    if review_records_root.exists():
+        for path in sorted(review_records_root.glob("*.json")):
+            review = load_json(path)
+            errors.extend(
+                validate_independent_review_receipt(
+                    review,
+                    f"Independent review receipt {path.name}",
+                    root=root,
+                )
+            )
+            if review.get("record_status") != "accepted":
+                errors.append(
+                    f"Independent review receipt {path.name}: live receipts must be accepted"
+                )
     if registry_path.exists():
         registry_payload = load_json(registry_path)
         errors.extend(validate_task_registry(root, registry_payload, "Task Hall registry"))
@@ -6226,10 +6338,51 @@ def validate_repository(root: Path) -> list[str]:
     return errors
 
 
+def run_contract_test_gate(root: Path, repository_errors: list[str]) -> dict[str, Any]:
+    if repository_errors:
+        return {
+            "status": "skipped",
+            "reason": "repository_validation_failed",
+        }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_*.py",
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        repository_errors.append(
+            "Contract test suite failed; no commit or push may proceed"
+        )
+    report: dict[str, Any] = {
+        "status": "pass" if result.returncode == 0 else "fail",
+        "returncode": result.returncode,
+    }
+    if result.returncode != 0:
+        report["stdout_tail"] = result.stdout[-4000:]
+        report["stderr_tail"] = result.stderr[-4000:]
+    return report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--run-contract-tests",
+        action="store_true",
+        help="run the complete contract suite only after repository validation passes",
+    )
     parser.add_argument(
         "--device-lab-receipt",
         type=Path,
@@ -6270,6 +6423,9 @@ def main() -> int:
                         "Device Lab CLI receipt",
                     )
                 )
+    contract_tests: dict[str, Any] | None = None
+    if args.run_contract_tests:
+        contract_tests = run_contract_test_gate(root, errors)
     report = {
         "schema": "xr-foundry.repository_validation.v1",
         "root": str(root),
@@ -6278,6 +6434,8 @@ def main() -> int:
     }
     if device_lab_receipt_path is not None:
         report["device_lab_receipt"] = str(device_lab_receipt_path)
+    if contract_tests is not None:
+        report["contract_tests"] = contract_tests
     print(json.dumps(report, indent=2))
     return 0 if not errors else 1
 

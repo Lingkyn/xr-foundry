@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 8,
+  "revision": 9,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -103,6 +103,13 @@
           "location": "https://github.com/Lingkyn/xr-foundry/commit/6e9ef554442a91ac8065b5156be3f1fda6f5353e",
           "commit": "6e9ef554442a91ac8065b5156be3f1fda6f5353e",
           "summary": "The exact public commit passed five JSON Schema/instance checks, a bounded-path audit, a package-diff check, and a public leakage scan in a clean detached worktree."
+        },
+        {
+          "id": "WB01-E2",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/issues/39#issuecomment-4983793310",
+          "commit": "6e9ef554442a91ac8065b5156be3f1fda6f5353e",
+          "summary": "The maintainer accepted the exact public checkpoint only after clean-commit validation evidence was posted; validator integration remained delegated to the independently reviewed WB-01V checkpoint."
         }
       ],
       "waiting": null,

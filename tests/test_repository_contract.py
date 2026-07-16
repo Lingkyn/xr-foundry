@@ -2136,6 +2136,124 @@ class RepositoryContractTests(unittest.TestCase):
             ),
         )
 
+    def test_deliberation_terminal_states_fail_closed(self) -> None:
+        schema = ROOT / "docs" / "contributing" / "deliberation-record.schema.json"
+        open_record = json.loads(
+            (ROOT / "docs" / "contributing" / "deliberation-record.open.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        resolved_record = json.loads(
+            (ROOT / "docs" / "contributing" / "deliberation-record.resolved.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            [], MODULE.validate_json_schema_instance(open_record, schema, "open deliberation")
+        )
+        self.assertEqual(
+            [], MODULE.validate_json_schema_instance(resolved_record, schema, "resolved deliberation")
+        )
+
+        unsafe_open = json.loads(json.dumps(open_record))
+        unsafe_open["execution"]["readiness"] = "ready"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(unsafe_open, schema, "unsafe open deliberation")
+        )
+        missing_decision = json.loads(json.dumps(resolved_record))
+        missing_decision["decision"] = None
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(missing_decision, schema, "missing decision")
+        )
+        rejected_ready = json.loads(json.dumps(resolved_record))
+        rejected_ready["status"] = "rejected"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(rejected_ready, schema, "rejected ready")
+        )
+        superseded_ready = json.loads(json.dumps(resolved_record))
+        superseded_ready["status"] = "superseded"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(superseded_ready, schema, "superseded ready")
+        )
+
+    def test_independent_review_receipt_requires_distinct_agents_and_closed_findings(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "validation" / "independent-review-receipt.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            [], MODULE.validate_independent_review_receipt(payload, "review example", root=ROOT)
+        )
+        accepted = json.loads(json.dumps(payload))
+        accepted["record_status"] = "accepted"
+        accepted["reviewed_commit"] = public_fixture_commit()
+        accepted["maintainer_decision"]["decision"] = "approved"
+        accepted["checks"][0]["status"] = "pass"
+        accepted["findings"][0]["status"] = "resolved"
+        accepted["conclusion"] = "pass"
+        accepted["independent_review"]["assisted_by"] = accepted["executor"]["assisted_by"]
+        same_agent_errors = MODULE.validate_independent_review_receipt(
+            accepted, "same-agent review", root=ROOT
+        )
+        self.assertTrue(any("disjoint executor and reviewer" in error for error in same_agent_errors))
+
+        unsafe_finding = json.loads(json.dumps(accepted))
+        unsafe_finding["independent_review"]["assisted_by"] = ["Independent Review Agent"]
+        unsafe_finding["findings"][0]["status"] = "open"
+        finding_errors = MODULE.validate_independent_review_receipt(
+            unsafe_finding, "open-finding review", root=ROOT
+        )
+        self.assertTrue(any("JSON Schema violation" in error for error in finding_errors))
+
+    def test_completed_high_risk_checkpoint_requires_immutable_review_evidence(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        checkpoint = payload["checkpoints"][2]
+        evidence = [
+            {
+                "id": "E-DESIGN-ONLY",
+                "kind": "design",
+                "location": "docs/example.md",
+                "commit": "0" * 40,
+                "summary": "Implementation evidence is not independent review evidence.",
+            }
+        ]
+        errors = MODULE.validate_checkpoint_routing(
+            checkpoint["routing"],
+            "high-risk without review",
+            device=checkpoint["device"],
+            evidence=evidence,
+            status="completed",
+        )
+        self.assertTrue(
+            any("completed high-risk checkpoint requires immutable review evidence" in error for error in errors)
+        )
+
+    def test_contract_test_gate_is_fail_fast_and_propagates_test_failure(self) -> None:
+        repository_errors = ["repository contract failed"]
+        with mock.patch.object(MODULE.subprocess, "run") as runner:
+            skipped = MODULE.run_contract_test_gate(ROOT, repository_errors)
+        runner.assert_not_called()
+        self.assertEqual("skipped", skipped["status"])
+
+        test_errors: list[str] = []
+        failed_process = subprocess.CompletedProcess([], 1, stdout="failed", stderr="boom")
+        with mock.patch.object(MODULE.subprocess, "run", return_value=failed_process):
+            failed = MODULE.run_contract_test_gate(ROOT, test_errors)
+        self.assertEqual("fail", failed["status"])
+        self.assertTrue(any("Contract test suite failed" in error for error in test_errors))
+
+        clean_errors: list[str] = []
+        passed_process = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
+        with mock.patch.object(MODULE.subprocess, "run", return_value=passed_process):
+            passed = MODULE.run_contract_test_gate(ROOT, clean_errors)
+        self.assertEqual("pass", passed["status"])
+        self.assertEqual([], clean_errors)
+
     def test_task_contract_rejects_competing_umbrella_lifecycle(self) -> None:
         payload = json.loads(
             (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(

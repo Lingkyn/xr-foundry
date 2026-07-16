@@ -37,7 +37,15 @@
     },
     {
       "capability": "xr_world_space_interaction",
-      "source_ids": ["unity-xri", "unity-xri-examples"]
+      "source_ids": [
+        "unity-xri",
+        "unity-xri-examples",
+        "pico-unity-project-validation",
+        "pico-unity-controller-ray-canvas",
+        "pico-unity-build-run",
+        "pico-unity-input-mapping",
+        "pico-unity-openxr-release-notes"
+      ]
     }
   ],
   "package_family": [
@@ -66,8 +74,8 @@
       "id": "com.lingkyn.inventory.xr",
       "responsibility": "optional world-space UI, tracked-controller interaction, and XR validation samples",
       "required_dependencies": ["com.lingkyn.inventory.ugui", "com.unity.xr.interaction.toolkit"],
-      "implementation_status": "not_implemented",
-      "earliest_failed_gate": "xr_adapter_tests"
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "android_build_install_open"
     }
   ],
   "required_domain_types": [

@@ -72,9 +72,21 @@ operation sequences.
   by default.
 - A real headset test records readability, scale, angle, reach, occlusion, stable
   left/center/right targeting, interaction states, and comfort.
+- The receipt identifies the exact package revision, APK SHA-256, Unity/XRI/XR
+  provider versions, named device and firmware, controller/input mode, tester,
+  date, posture, sample, and duration.
+- The `pico_tracked_controller_v1` profile exercises both controllers against
+  left/center/right targets, verifies target isolation and disabled-state
+  immutability, checks world anchoring through head turns and lateral lean, and
+  runs for at least two minutes.
+- A completed receipt passes
+  [`inventory-xr-device-receipt-template.md`](../../validation/inventory-xr-device-receipt-template.md)
+  and the repository validator's `--device-receipt` gate.
 
 No headset, controller, world-space usability, or comfort claim may be promoted
-without the final device evidence.
+without the final device evidence. `partial`, `fail`, and `not_tested` all block
+promotion. Direct poke remains a separate optional device claim even when its
+automated PlayMode route passes.
 
 ## Current evidence ledger
 
@@ -86,7 +98,7 @@ be prepared, but they cannot promote a package around an earlier failure.
 | Core | Source/architecture gates; atomic mutation/invariant tests; transactional persistence/migration; typed mutable instance state; immutable prerelease/candidate clean consumers; public API review; upgrade and rollback | None for Core candidate | Candidate Core only; not the complete Inventory family |
 | Unity authoring | ScriptableObject assets; stable IDs; deterministic conversion; actionable diagnostics; asset immutability; local and immutable Git URL clean-consumer EditMode tests | None for Unity authoring candidate | Candidate Unity authoring only; no presentation or XR claim |
 | UGUI | Presenter boundary; independent nested prefab roles/variant; slot replacement; wired neutral visuals; prefab-backed state, GraphicRaycaster, pointer, keyboard, and disabled-state tests; immutable Git functional consumer; Input System-only sample; `0.1.0 -> 0.1.1 -> 0.1.0 -> 0.1.1` consumer-variant exercise | None for UGUI candidate | Candidate UGUI only; no world-space or headset claim |
-| XR | World-space/device contract defined | XR implementation, automated configuration checks, and Pico evidence | Architecture reference only; no headset claim |
+| XR | Provider-neutral world-space/nested prefab; fail-closed scene validation; non-head-locked placement; tracked-ray left/center/right and real XRI poke PlayMode routes; local and immutable-Git independent-consumer EditMode/PlayMode; Package Manager sample import/compile/setup | Android build/install/open | Incubating XR adapter only; no headset usability claim |
 
 Candidate promotion updates this ledger, `inventory-standard.json`,
 `package-catalog.json`, `reference-catalog.json`, package documentation, and the

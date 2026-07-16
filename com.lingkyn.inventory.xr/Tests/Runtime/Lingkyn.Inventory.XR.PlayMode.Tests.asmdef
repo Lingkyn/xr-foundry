@@ -1,0 +1,21 @@
+{
+  "name": "Lingkyn.Inventory.XR.PlayMode.Tests",
+  "rootNamespace": "Lingkyn.Inventory.XR.Tests",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.UGUI",
+    "Lingkyn.Inventory.XR",
+    "UnityEngine.UI",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": ["TestAssemblies"]
+}

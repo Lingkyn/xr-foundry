@@ -1,0 +1,24 @@
+{
+  "name": "com.lingkyn.inventory.xr",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Inventory XR",
+  "description": "Provider-neutral world-space and XRI UI adapter for Lingkyn Inventory UGUI.",
+  "unity": "6000.0",
+  "author": {
+    "name": "Lingkyn",
+    "url": "https://github.com/Lingkyn"
+  },
+  "license": "MIT",
+  "keywords": ["inventory", "xr", "vr", "world-space", "xri"],
+  "samples": [
+    {
+      "displayName": "World-Space Inventory",
+      "description": "Provider-neutral scene setup and replayable Inventory UI states without an XR Origin or platform SDK.",
+      "path": "Samples~/WorldSpaceInventory"
+    }
+  ],
+  "dependencies": {
+    "com.lingkyn.inventory.ugui": "0.1.1",
+    "com.unity.xr.interaction.toolkit": "3.3.2"
+  }
+}

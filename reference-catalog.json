@@ -68,9 +68,9 @@
         "docs/standards/inventory/verification-contract.md"
       ],
       "non_claims": [
-        "Core, Unity authoring, and UGUI are candidate; XR remains pending",
+        "Core, Unity authoring, and UGUI are candidate; XR is implemented but remains incubating until Android and Pico gates pass",
         "No community Inventory repository is an admitted code seed",
-        "No XR runtime behavior is claimed"
+        "No headset usability or comfort is claimed before a recorded device receipt"
       ]
     },
     {
@@ -116,6 +116,29 @@
         "No XR Interaction Toolkit dependency or world-space comfort claim",
         "No product styling, scene, localization catalog, or item database",
         "Candidate presentation evidence does not prove world-space or headset usability"
+      ]
+    },
+    {
+      "id": "unity-inventory-xr",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "com.lingkyn.inventory.xr",
+      "package_id": "com.lingkyn.inventory.xr",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only"],
+      "purpose": "Provider-neutral world-space Inventory UGUI composition, strict XR input validation, tracked-ray and poke interaction routes, and a device-evidence-ready validation sample.",
+      "evidence": [
+        "docs/standards/inventory/architecture-contract.md",
+        "com.lingkyn.inventory.xr/Runtime/Prefabs",
+        "com.lingkyn.inventory.xr/Tests",
+        "com.lingkyn.inventory.xr/Samples~/WorldSpaceInventory",
+        "docs/validation/2026-07-15-inventory-xr-local-consumer.md",
+        "docs/validation/2026-07-15-inventory-xr-git-consumer.md"
+      ],
+      "non_claims": [
+        "No XR Origin, EventSystem, OpenXR provider, or vendor SDK is bundled",
+        "Local Editor and PlayMode evidence does not prove headset readability, scale, angle, reach, occlusion, targeting, or comfort",
+        "Candidate promotion remains blocked on Android build/install/open and real Pico evidence"
       ]
     },
     {

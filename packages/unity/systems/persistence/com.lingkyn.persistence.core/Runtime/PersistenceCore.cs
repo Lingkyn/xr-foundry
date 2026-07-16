@@ -682,6 +682,18 @@ namespace Lingkyn.Persistence.Core
 
         public SaveReadCandidate(SaveCandidateKind kind, SaveCandidateId id, ReadOnlySpan<byte> bytes)
         {
+            if (kind != SaveCandidateKind.Primary
+                && kind != SaveCandidateKind.Backup
+                && kind != SaveCandidateKind.Staging)
+            {
+                throw new ArgumentException("Candidate kind is undefined.", nameof(kind));
+            }
+
+            if (string.IsNullOrEmpty(id.Value))
+            {
+                throw new ArgumentException("Candidate id cannot be empty.", nameof(id));
+            }
+
             if (bytes.Length == 0)
             {
                 throw new ArgumentException("Candidate bytes cannot be empty.", nameof(bytes));
@@ -708,13 +720,26 @@ namespace Lingkyn.Persistence.Core
     public readonly struct SaveReadCandidateSet
     {
         private static readonly SaveReadCandidate[] EmptyCandidates = Array.Empty<SaveReadCandidate>();
+        private readonly SaveReadCandidate[] _candidates;
 
         public SaveReadCandidateSet(IReadOnlyList<SaveReadCandidate> candidates)
         {
-            Candidates = candidates ?? EmptyCandidates;
+            if (candidates == null || candidates.Count == 0)
+            {
+                _candidates = EmptyCandidates;
+                return;
+            }
+
+            var snapshot = new SaveReadCandidate[candidates.Count];
+            for (var index = 0; index < candidates.Count; index++)
+            {
+                snapshot[index] = candidates[index];
+            }
+
+            _candidates = snapshot;
         }
 
-        public IReadOnlyList<SaveReadCandidate> Candidates { get; }
+        public IReadOnlyList<SaveReadCandidate> Candidates => _candidates ?? EmptyCandidates;
 
         public static SaveReadCandidateSet Empty => new SaveReadCandidateSet(EmptyCandidates);
     }
@@ -893,6 +918,12 @@ namespace Lingkyn.Persistence.Core
 
     public static class SaveRecoveryCandidateSelector
     {
+        private static readonly SaveDiagnostic PrimaryMissingDiagnostic = new SaveDiagnostic(
+            SaveDiagnosticSeverity.Error,
+            SaveStage.Read,
+            SaveErrorCode.NotFound,
+            "Primary candidate is missing.");
+
         public static bool IsEligiblePrimaryFailureForBackup(SaveError error)
         {
             if (error.Code == SaveErrorCode.NotFound)
@@ -927,6 +958,11 @@ namespace Lingkyn.Persistence.Core
             if (string.IsNullOrWhiteSpace(expectedSchemaId))
             {
                 return SaveResult<SaveRecoverySelection>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, "Schema id is required.");
+            }
+
+            if (!IsDefinedRecoveryPolicy(recoveryPolicy))
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, "Recovery policy is undefined.");
             }
 
             var structure = ValidateCandidateStructure(candidateSet);
@@ -1002,7 +1038,20 @@ namespace Lingkyn.Persistence.Core
             }
 
             return SaveResult<SaveRecoverySelection>.Success(
-                new SaveRecoverySelection(backup, true, null));
+                new SaveRecoverySelection(backup, true, PrimaryMissingDiagnostic));
+        }
+
+        private static bool IsDefinedCandidateKind(SaveCandidateKind kind)
+        {
+            return kind == SaveCandidateKind.Primary
+                || kind == SaveCandidateKind.Backup
+                || kind == SaveCandidateKind.Staging;
+        }
+
+        private static bool IsDefinedRecoveryPolicy(SaveRecoveryPolicy recoveryPolicy)
+        {
+            return recoveryPolicy == SaveRecoveryPolicy.PrimaryOnly
+                || recoveryPolicy == SaveRecoveryPolicy.PrimaryThenBackup;
         }
 
         private static SaveResult<(SaveReadCandidate Primary, SaveReadCandidate Backup)> ValidateCandidateStructure(SaveReadCandidateSet candidateSet)
@@ -1022,12 +1071,28 @@ namespace Lingkyn.Persistence.Core
                         "Candidate set contains a null entry.");
                 }
 
+                if (string.IsNullOrEmpty(candidate.Id.Value))
+                {
+                    return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                        SaveStage.Read,
+                        SaveErrorCode.InvalidSlot,
+                        "Candidate set contains an empty candidate id.");
+                }
+
                 if (!seenIds.Add(candidate.Id.Value))
                 {
                     return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
                         SaveStage.Read,
                         SaveErrorCode.ProviderFailure,
                         "Candidate set contains duplicate candidate ids.");
+                }
+
+                if (!IsDefinedCandidateKind(candidate.Kind))
+                {
+                    return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                        SaveStage.Read,
+                        SaveErrorCode.ProviderFailure,
+                        "Candidate set contains an undefined candidate kind.");
                 }
 
                 switch (candidate.Kind)
@@ -1054,6 +1119,13 @@ namespace Lingkyn.Persistence.Core
 
                         backup = candidate;
                         break;
+                    case SaveCandidateKind.Staging:
+                        break;
+                    default:
+                        return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                            SaveStage.Read,
+                            SaveErrorCode.ProviderFailure,
+                            "Candidate set contains an undefined candidate kind.");
                 }
             }
 

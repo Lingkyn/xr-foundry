@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using NUnit.Framework;
+#if !UNITY_INCLUDE_TESTS
+using NUnit.Framework.Legacy;
+#endif
 
 namespace Lingkyn.Persistence.Core.Editor.Tests
 {
@@ -261,6 +266,137 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             var decoded = SaveEnvelopeBinaryCodec.Decode(candidate.Bytes.Span);
             Assert.That(decoded.Succeeded, Is.True);
             Assert.That(candidate.Bytes.Span[candidate.Bytes.Length - 1], Is.Not.EqualTo(source[source.Length - 1]));
+        }
+
+        [Test]
+        public void BackupOnlyRecoveryReportsPrimaryMissingDiagnostic()
+        {
+            var store = new MultiCandidateStore();
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                recoveryPolicy: SaveRecoveryPolicy.PrimaryThenBackup);
+            var slot = MustSlot("slot_backup_only");
+            var backup = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            store.SetCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), backup);
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+
+            Assert.That(loaded.Succeeded, Is.True);
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Backup));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.True);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Not.Null);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Code, Is.EqualTo(SaveErrorCode.NotFound));
+        }
+
+        [Test]
+        public void DefaultCandidateSetDoesNotThrowSelector()
+        {
+            var selected = SaveRecoveryCandidateSelector.Select(
+                default(SaveReadCandidateSet),
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.NotFound));
+        }
+
+        [Test]
+        public void SaveReadCandidateRejectsDefaultCandidateId()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            Assert.Throws<ArgumentException>(() => new SaveReadCandidate(SaveCandidateKind.Primary, default, bytes));
+        }
+
+        [Test]
+        public void SaveReadCandidateRejectsUndefinedCandidateKind()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            Assert.Throws<ArgumentException>(() => new SaveReadCandidate((SaveCandidateKind)99, MustCandidateId("primary"), bytes));
+        }
+
+        [Test]
+        public void SelectorRejectsUndefinedRecoveryPolicy()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var candidateSet = new SaveReadCandidateSet(new[]
+            {
+                new SaveReadCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), bytes)
+            });
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                candidateSet,
+                (SaveRecoveryPolicy)99,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("undefined", selected.Error.Message.ToLowerInvariant());
+        }
+
+        [Test]
+        public void SelectorRejectsUndefinedCandidateKindInSet()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var invalidCandidate = CreateUninitializedCandidate((SaveCandidateKind)99, MustCandidateId("primary"), bytes);
+            var candidateSet = new SaveReadCandidateSet(new[] { invalidCandidate });
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                candidateSet,
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("undefined", selected.Error.Message.ToLowerInvariant());
+        }
+
+        [Test]
+        public void SelectorRejectsEmptyCandidateIdInSet()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var invalidCandidate = CreateUninitializedCandidate(SaveCandidateKind.Primary, default, bytes);
+            var candidateSet = new SaveReadCandidateSet(new[] { invalidCandidate });
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                candidateSet,
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.InvalidSlot));
+        }
+
+        [Test]
+        public void SaveReadCandidateSetSnapshotsMembershipAndOrder()
+        {
+            var bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("state", 0)).Value;
+            var primary = new SaveReadCandidate(SaveCandidateKind.Primary, MustCandidateId("primary"), bytes);
+            var backup = new SaveReadCandidate(SaveCandidateKind.Backup, MustCandidateId("backup"), bytes);
+            var source = new List<SaveReadCandidate> { primary, backup };
+            var candidateSet = new SaveReadCandidateSet(source);
+
+            Assert.That(candidateSet.Candidates.Count, Is.EqualTo(2));
+            Assert.That(candidateSet.Candidates[0].Id.Value, Is.EqualTo("primary"));
+            Assert.That(candidateSet.Candidates[1].Id.Value, Is.EqualTo("backup"));
+
+            source.Reverse();
+            source.Clear();
+            source.Add(new SaveReadCandidate(SaveCandidateKind.Staging, MustCandidateId("staging"), bytes));
+
+            Assert.That(candidateSet.Candidates.Count, Is.EqualTo(2));
+            Assert.That(candidateSet.Candidates[0].Id.Value, Is.EqualTo("primary"));
+            Assert.That(candidateSet.Candidates[1].Id.Value, Is.EqualTo("backup"));
         }
 
         [Test]
@@ -787,6 +923,31 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             var candidate = SaveSlotId.TryCreate(value);
             Assert.That(candidate.Succeeded, Is.True);
             return candidate.Value;
+        }
+
+        private static SaveReadCandidate CreateUninitializedCandidate(
+            SaveCandidateKind kind,
+            SaveCandidateId id,
+            byte[] bytes)
+        {
+            var candidate = (SaveReadCandidate)RuntimeHelpers.GetUninitializedObject(typeof(SaveReadCandidate));
+            var bytesCopy = (byte[])bytes.Clone();
+            SetAutoPropertyBackingField(candidate, "Kind", kind);
+            SetAutoPropertyBackingField(candidate, "Id", id);
+            typeof(SaveReadCandidate)
+                .GetField("_bytes", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(candidate, bytesCopy);
+            typeof(SaveReadCandidate)
+                .GetField("<Bytes>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(candidate, new ReadOnlyMemory<byte>(bytesCopy));
+            return candidate;
+        }
+
+        private static void SetAutoPropertyBackingField<T>(SaveReadCandidate target, string propertyName, T value)
+        {
+            var field = typeof(SaveReadCandidate).GetField($"<{propertyName}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"Missing backing field for {propertyName}.");
+            field.SetValue(target, value);
         }
 
         private sealed class Utf8StringCodec : ISaveCodec<string>

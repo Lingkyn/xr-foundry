@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/deliberation-record.schema.json",
+  "title": "XR Foundry public deliberation record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "id", "title", "status", "objective",
+    "current_question", "assumptions", "options", "deltas", "synthesis",
+    "decision", "execution", "reopen_conditions", "authority"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.deliberation.v1" },
+    "version": { "const": "0.1.0" },
+    "id": { "type": "string", "pattern": "^DLB-[A-Z0-9][A-Z0-9-]*$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "status": { "enum": ["open", "resolved", "rejected", "superseded"] },
+    "objective": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "current_question": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "assumptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" },
+      "uniqueItems": true
+    },
+    "options": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/option" }
+    },
+    "deltas": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/delta" }
+    },
+    "synthesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agreements", "disagreements", "missing_evidence", "updated_at"],
+      "properties": {
+        "agreements": { "$ref": "#/$defs/nonEmptyStrings" },
+        "disagreements": { "$ref": "#/$defs/strings" },
+        "missing_evidence": { "$ref": "#/$defs/strings" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "decision": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/decision" }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readiness", "task", "scope", "non_goals", "exact_next_action"],
+      "properties": {
+        "readiness": { "enum": ["not_ready", "ready", "superseded"] },
+        "task": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^https://github\\.com/Lingkyn/xr-foundry/issues/[1-9][0-9]*$" }
+          ]
+        },
+        "scope": { "$ref": "#/$defs/strings" },
+        "non_goals": { "$ref": "#/$defs/nonEmptyStrings" },
+        "exact_next_action": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "reopen_conditions": { "$ref": "#/$defs/nonEmptyStrings" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grants_repository_permission", "grants_execution_authority",
+        "grants_review_authority", "grants_merge_authority",
+        "agent_or_model_ranking", "private_chain_of_thought_required"
+      ],
+      "properties": {
+        "grants_repository_permission": { "const": false },
+        "grants_execution_authority": { "const": false },
+        "grants_review_authority": { "const": false },
+        "grants_merge_authority": { "const": false },
+        "agent_or_model_ranking": { "const": false },
+        "private_chain_of_thought_required": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "strings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "nonEmptyStrings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "uriStrings": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "uniqueItems": true
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statement", "evidence"],
+      "properties": {
+        "statement": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "#/$defs/uriStrings" }
+      }
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "summary", "trade_offs", "evidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^OPT-[A-Z0-9][A-Z0-9-]*$" },
+        "summary": { "type": "string", "minLength": 1 },
+        "trade_offs": { "$ref": "#/$defs/nonEmptyStrings" },
+        "evidence": { "$ref": "#/$defs/uriStrings" }
+      }
+    },
+    "delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "github_identity", "summary", "evidence", "created_at"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^DELTA-[A-Z0-9][A-Z0-9-]*$" },
+        "kind": { "enum": ["evidence", "counterexample", "alternative", "risk", "correction"] },
+        "github_identity": { "type": "string", "pattern": "^@[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$" },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "evidence": { "$ref": "#/$defs/uriStrings" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["option_id", "summary", "rationale", "decided_by", "decided_at"],
+      "properties": {
+        "option_id": { "type": "string", "pattern": "^OPT-[A-Z0-9][A-Z0-9-]*$" },
+        "summary": { "type": "string", "minLength": 1 },
+        "rationale": { "$ref": "#/$defs/nonEmptyStrings" },
+        "decided_by": { "type": "string", "pattern": "^@[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$" },
+        "decided_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "resolved" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "decision": { "$ref": "#/$defs/decision" },
+          "execution": {
+            "properties": {
+              "readiness": { "const": "ready" },
+              "task": { "type": "string" },
+              "scope": { "minItems": 1 },
+              "exact_next_action": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      },
+      "else": {
+        "if": { "properties": { "status": { "const": "open" } }, "required": ["status"] },
+        "then": {
+          "properties": {
+            "decision": { "type": "null" },
+            "execution": {
+              "properties": {
+                "readiness": { "const": "not_ready" },
+                "task": { "type": "null" }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

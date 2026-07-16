@@ -1,0 +1,68 @@
+{
+  "schema": "xr-foundry.deliberation.v1",
+  "version": "0.1.0",
+  "id": "DLB-EXAMPLE-RESOLVED",
+  "title": "Example resolved collaboration-mechanism experiment",
+  "status": "resolved",
+  "objective": "Permit the public workbench to improve itself without allowing running tasks to rewrite their authority.",
+  "current_question": "How should a collaboration-mechanism change move from discussion to adoption?",
+  "assumptions": [
+    {
+      "statement": "Non-trivial process changes benefit from a structured, searchable proposal and explicit implementation readiness.",
+      "evidence": ["https://github.com/kubernetes/enhancements/blob/master/keps/README.md"]
+    }
+  ],
+  "options": [
+    {
+      "id": "OPT-VERSIONED",
+      "summary": "Separate stable kernel, isolated experiment, and tool adapters; adopt changes only through a versioned contract update.",
+      "trade_offs": ["Adds a review checkpoint", "Prevents experiments from silently changing active-task authority"],
+      "evidence": ["https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0002-public-workbench.md"]
+    },
+    {
+      "id": "OPT-IN-PLACE",
+      "summary": "Let each executor update collaboration rules while performing ordinary tasks.",
+      "trade_offs": ["Lower initial ceremony", "Running work can become irreproducible or self-authorizing"],
+      "evidence": []
+    }
+  ],
+  "deltas": [
+    {
+      "id": "DELTA-AUTHORITY",
+      "kind": "risk",
+      "github_identity": "@Lingkyn",
+      "summary": "In-place mutation lets an executor weaken the rules used to accept its own output.",
+      "evidence": ["https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0002-public-workbench.md"],
+      "created_at": "2026-07-16T10:00:00Z"
+    }
+  ],
+  "synthesis": {
+    "agreements": ["The collaboration mechanism is valid contribution work.", "Running-task authority must not change silently."],
+    "disagreements": [],
+    "missing_evidence": ["The first external-contributor mechanism experiment has not yet run."],
+    "updated_at": "2026-07-16T10:15:00Z"
+  },
+  "decision": {
+    "option_id": "OPT-VERSIONED",
+    "summary": "Use versioned adoption after an isolated mechanism experiment and independent review.",
+    "rationale": ["It permits self-improvement while preserving reproducible authority.", "It keeps provider adapters replaceable and public state durable."],
+    "decided_by": "@Lingkyn",
+    "decided_at": "2026-07-16T10:15:00Z"
+  },
+  "execution": {
+    "readiness": "ready",
+    "task": "https://github.com/Lingkyn/xr-foundry/issues/43",
+    "scope": ["Publish the isolated deliberation protocol, schema, and examples."],
+    "non_goals": ["No automatic repository permission or running-task rule mutation."],
+    "exact_next_action": "Validate both examples, then integrate the contract through the separate enforcement checkpoint."
+  },
+  "reopen_conditions": ["The contract prevents a legitimate low-risk change from proceeding.", "A public experiment demonstrates a safer lower-cost adoption path."],
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_execution_authority": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "agent_or_model_ranking": false,
+    "private_chain_of_thought_required": false
+  }
+}

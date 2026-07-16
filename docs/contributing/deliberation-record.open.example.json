@@ -1,0 +1,47 @@
+{
+  "schema": "xr-foundry.deliberation.v1",
+  "version": "0.1.0",
+  "id": "DLB-EXAMPLE-OPEN",
+  "title": "Example unresolved renderer-adapter question",
+  "status": "open",
+  "objective": "Choose a reusable renderer boundary without transferring evidence between renderers.",
+  "current_question": "Does the proposed adapter own renderer-specific XR validation or delegate it to a sibling composition?",
+  "assumptions": [
+    {
+      "statement": "Renderer-specific behavior requires renderer-specific validation.",
+      "evidence": ["https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/inventory/renderer-neutral-architecture.md"]
+    }
+  ],
+  "options": [
+    {
+      "id": "OPT-SIBLING",
+      "summary": "Keep renderer and renderer-specific XR composition as sibling packages.",
+      "trade_offs": ["More explicit package selection", "No evidence transfer between renderer routes"],
+      "evidence": ["https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/inventory/renderer-neutral-architecture.md"]
+    }
+  ],
+  "deltas": [],
+  "synthesis": {
+    "agreements": ["No renderer route may inherit another renderer's device evidence."],
+    "disagreements": ["The minimum adapter ownership boundary is unresolved."],
+    "missing_evidence": ["A second viable option and its migration cost are not yet documented."],
+    "updated_at": "2026-07-16T10:00:00Z"
+  },
+  "decision": null,
+  "execution": {
+    "readiness": "not_ready",
+    "task": null,
+    "scope": [],
+    "non_goals": ["No package implementation while the decision remains open."],
+    "exact_next_action": "Add a materially different option with evidence and compare its ownership and migration costs."
+  },
+  "reopen_conditions": ["A new renderer API invalidates the current package boundary."],
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_execution_authority": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "agent_or_model_ranking": false,
+    "private_chain_of_thought_required": false
+  }
+}

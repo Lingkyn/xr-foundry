@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 7,
+  "revision": 8,
   "title": "Build the Agent Commons public workbench",
   "state": "active",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
@@ -509,7 +509,7 @@
       "non_goals": [
         "No package implementation, repository permission, secret, or self-acceptance change"
       ],
-      "status": "ready",
+      "status": "in_progress",
       "depends_on": ["WB-01", "WB-01V", "WB-02", "WB-03", "WB-05"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -551,26 +551,34 @@
       "evidence": [],
       "waiting": null,
       "claim": {
-        "status": "unclaimed",
-        "adoptable": true,
-        "github_identity": null,
+        "status": "active",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
         "previous_github_identity": null,
-        "claimed_at": null,
-        "expires_at": null,
+        "claimed_at": "2026-07-16T10:58:50Z",
+        "expires_at": "2026-07-23T10:58:50Z",
         "ended_at": null,
-        "confirmed_by_maintainer": null,
+        "confirmed_by_maintainer": "Lingkyn",
         "transition_reason": null
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
-      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "codex/agent-commons-v1",
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
+        "base_commit": "d589bce07c76fe98352a1ad33848bb8f4b2fd843",
+        "head_commit": "d589bce07c76fe98352a1ad33848bb8f4b2fd843",
+        "published_at": "2026-07-16T10:58:50Z"
+      },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Claim WB-04, publish its execution anchor, and bind fan-in enforcement to the exact completed checkpoint revisions.",
+      "exact_next_action": "Bind fan-in validation and structured independent-review evidence to the exact completed checkpoint revisions, run the complete adversarial suite, and resolve every high-risk finding before integration.",
       "completed_at": null
     }
   ],
   "integration": {
     "checkpoint_id": "WB-04",
-    "fan_in_owner": null,
+    "fan_in_owner": "Lingkyn",
     "strategy": "An independent reviewer reproduces all checkpoint evidence, and the maintainer decides whether PR #46 can merge."
   },
   "authority": {

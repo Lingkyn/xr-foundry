@@ -35,7 +35,13 @@ namespace Lingkyn.Persistence.Samples
                 return SaveResult<string>.Fail(save.Error.Stage, save.Error.Code, save.Error.Message);
             }
 
-            return coordinator.LoadValidated(slotCandidate.Value, _ => SaveResult.Success());
+            var loaded = coordinator.LoadValidated(slotCandidate.Value, _ => SaveResult.Success());
+            if (!loaded.Succeeded)
+            {
+                return SaveResult<string>.Fail(loaded.Error.Stage, loaded.Error.Code, loaded.Error.Message);
+            }
+
+            return SaveResult<string>.Success(loaded.Value.State);
         }
 
         private sealed class Utf8StringCodec : ISaveCodec<string>
@@ -77,14 +83,21 @@ namespace Lingkyn.Persistence.Samples
 
             public SaveCommitCapabilities Capabilities => SaveCommitCapabilities.BestEffortWrite;
 
-            public SaveResult<byte[]> Read(SaveSlotId slotId)
+            public SaveResult<SaveReadCandidateSet> ReadCandidates(SaveSlotId slotId)
             {
                 if (_bytes.Length == 0)
                 {
-                    return SaveResult<byte[]>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No save exists.");
+                    return SaveResult<SaveReadCandidateSet>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No save exists.");
                 }
 
-                return SaveResult<byte[]>.Success(_bytes);
+                var candidateId = SaveCandidateId.TryCreate("primary");
+                if (!candidateId.Succeeded)
+                {
+                    return SaveResult<SaveReadCandidateSet>.Fail(candidateId.Error.Stage, candidateId.Error.Code, candidateId.Error.Message);
+                }
+
+                var candidate = new SaveReadCandidate(SaveCandidateKind.Primary, candidateId.Value, _bytes);
+                return SaveResult<SaveReadCandidateSet>.Success(new SaveReadCandidateSet(new[] { candidate }));
             }
 
             public SaveCommitResult Commit(

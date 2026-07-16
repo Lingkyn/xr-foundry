@@ -625,10 +625,133 @@ namespace Lingkyn.Persistence.Core
         TState Migrate(TState state);
     }
 
+    public enum SaveCandidateKind
+    {
+        Primary = 0,
+        Backup = 1,
+        Staging = 2
+    }
+
+    public readonly struct SaveCandidateId : IEquatable<SaveCandidateId>
+    {
+        private const int MaxLength = 64;
+        private readonly string _value;
+
+        private SaveCandidateId(string value)
+        {
+            _value = value;
+        }
+
+        public string Value => _value ?? string.Empty;
+
+        public static SaveResult<SaveCandidateId> TryCreate(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return SaveResult<SaveCandidateId>.Fail(SaveStage.Read, SaveErrorCode.InvalidSlot, "Candidate id cannot be empty.");
+            }
+
+            if (value.Length > MaxLength)
+            {
+                return SaveResult<SaveCandidateId>.Fail(SaveStage.Read, SaveErrorCode.InvalidSlot, "Candidate id exceeds max length.");
+            }
+
+            for (var index = 0; index < value.Length; index++)
+            {
+                var current = value[index];
+                if (!(char.IsLetterOrDigit(current) || current == '-' || current == '_'))
+                {
+                    return SaveResult<SaveCandidateId>.Fail(SaveStage.Read, SaveErrorCode.InvalidSlot, "Candidate id contains unsupported characters.");
+                }
+            }
+
+            return SaveResult<SaveCandidateId>.Success(new SaveCandidateId(value));
+        }
+
+        public bool Equals(SaveCandidateId other) => string.Equals(_value, other._value, StringComparison.Ordinal);
+        public override bool Equals(object obj) => obj is SaveCandidateId other && Equals(other);
+        public override int GetHashCode() => _value == null ? 0 : StringComparer.Ordinal.GetHashCode(_value);
+        public override string ToString() => Value;
+        public static bool operator ==(SaveCandidateId left, SaveCandidateId right) => left.Equals(right);
+        public static bool operator !=(SaveCandidateId left, SaveCandidateId right) => !left.Equals(right);
+    }
+
+    public sealed class SaveReadCandidate
+    {
+        private readonly byte[] _bytes;
+
+        public SaveReadCandidate(SaveCandidateKind kind, SaveCandidateId id, ReadOnlySpan<byte> bytes)
+        {
+            if (bytes.Length == 0)
+            {
+                throw new ArgumentException("Candidate bytes cannot be empty.", nameof(bytes));
+            }
+
+            Kind = kind;
+            Id = id;
+            _bytes = CopyCandidateBytes(bytes);
+            Bytes = _bytes;
+        }
+
+        public SaveCandidateKind Kind { get; }
+        public SaveCandidateId Id { get; }
+        public ReadOnlyMemory<byte> Bytes { get; }
+
+        private static byte[] CopyCandidateBytes(ReadOnlySpan<byte> source)
+        {
+            var copy = new byte[source.Length];
+            source.CopyTo(copy);
+            return copy;
+        }
+    }
+
+    public readonly struct SaveReadCandidateSet
+    {
+        private static readonly SaveReadCandidate[] EmptyCandidates = Array.Empty<SaveReadCandidate>();
+
+        public SaveReadCandidateSet(IReadOnlyList<SaveReadCandidate> candidates)
+        {
+            Candidates = candidates ?? EmptyCandidates;
+        }
+
+        public IReadOnlyList<SaveReadCandidate> Candidates { get; }
+
+        public static SaveReadCandidateSet Empty => new SaveReadCandidateSet(EmptyCandidates);
+    }
+
+    public enum SaveRecoveryPolicy
+    {
+        PrimaryOnly = 0,
+        PrimaryThenBackup = 1
+    }
+
+    public readonly struct SaveLoadReceipt<TState>
+    {
+        public SaveLoadReceipt(
+            TState state,
+            SaveCandidateKind selectedCandidateKind,
+            SaveCandidateId selectedCandidateId,
+            bool recoveryOccurred,
+            SaveDiagnostic? primaryFailureDiagnostic = null)
+        {
+            State = state;
+            SelectedCandidateKind = selectedCandidateKind;
+            SelectedCandidateId = selectedCandidateId;
+            RecoveryOccurred = recoveryOccurred;
+            PrimaryFailureDiagnostic = primaryFailureDiagnostic;
+        }
+
+        public TState State { get; }
+        public SaveCandidateKind SelectedCandidateKind { get; }
+        public SaveCandidateId SelectedCandidateId { get; }
+        public bool RecoveryOccurred { get; }
+        public SaveDiagnostic? PrimaryFailureDiagnostic { get; }
+    }
+
     public interface ISaveStore
     {
         SaveCommitCapabilities Capabilities { get; }
-        SaveResult<byte[]> Read(SaveSlotId slotId);
+        SaveResult<SaveReadCandidateSet> ReadCandidates(SaveSlotId slotId);
         SaveCommitResult Commit(SaveSlotId slotId, ReadOnlyMemory<byte> envelopeBytes, SaveCommitCapabilities requiredCapabilities);
     }
 
@@ -768,6 +891,230 @@ namespace Lingkyn.Persistence.Core
         }
     }
 
+    public static class SaveRecoveryCandidateSelector
+    {
+        public static bool IsEligiblePrimaryFailureForBackup(SaveError error)
+        {
+            if (error.Code == SaveErrorCode.NotFound)
+            {
+                return true;
+            }
+
+            if (error.Stage == SaveStage.Envelope && error.Code == SaveErrorCode.UnsupportedFormat)
+            {
+                return true;
+            }
+
+            if (error.Stage == SaveStage.Verify && error.Code == SaveErrorCode.CorruptPayload)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static SaveResult<SaveRecoverySelection> Select(
+            SaveReadCandidateSet candidateSet,
+            SaveRecoveryPolicy recoveryPolicy,
+            string expectedSchemaId,
+            IIntegrityProvider integrityProvider)
+        {
+            if (integrityProvider == null)
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, "Integrity provider is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(expectedSchemaId))
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, "Schema id is required.");
+            }
+
+            var structure = ValidateCandidateStructure(candidateSet);
+            if (!structure.Succeeded)
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(structure.Error.Stage, structure.Error.Code, structure.Error.Message);
+            }
+
+            var primary = structure.Value.Primary;
+            var backup = structure.Value.Backup;
+
+            if (primary == null && backup == null)
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No selectable save candidates exist.");
+            }
+
+            if (primary != null)
+            {
+                var primaryAccepted = TryAcceptCandidateEnvelope(primary, expectedSchemaId, integrityProvider);
+                if (primaryAccepted.Succeeded)
+                {
+                    return SaveResult<SaveRecoverySelection>.Success(
+                        new SaveRecoverySelection(primary, false, null));
+                }
+
+                if (recoveryPolicy == SaveRecoveryPolicy.PrimaryOnly || backup == null)
+                {
+                    return SaveResult<SaveRecoverySelection>.Fail(
+                        primaryAccepted.Error.Stage,
+                        primaryAccepted.Error.Code,
+                        primaryAccepted.Error.Message);
+                }
+
+                if (!IsEligiblePrimaryFailureForBackup(primaryAccepted.Error))
+                {
+                    return SaveResult<SaveRecoverySelection>.Fail(
+                        primaryAccepted.Error.Stage,
+                        primaryAccepted.Error.Code,
+                        primaryAccepted.Error.Message);
+                }
+
+                var primaryDiagnostic = new SaveDiagnostic(
+                    SaveDiagnosticSeverity.Error,
+                    primaryAccepted.Error.Stage,
+                    primaryAccepted.Error.Code,
+                    primaryAccepted.Error.Message);
+
+                var backupAccepted = TryAcceptCandidateEnvelope(backup, expectedSchemaId, integrityProvider);
+                if (!backupAccepted.Succeeded)
+                {
+                    return SaveResult<SaveRecoverySelection>.Fail(
+                        primaryAccepted.Error.Stage,
+                        primaryAccepted.Error.Code,
+                        primaryAccepted.Error.Message);
+                }
+
+                return SaveResult<SaveRecoverySelection>.Success(
+                    new SaveRecoverySelection(backup, true, primaryDiagnostic));
+            }
+
+            if (recoveryPolicy == SaveRecoveryPolicy.PrimaryOnly)
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "Primary candidate is required.");
+            }
+
+            var backupOnlyAccepted = TryAcceptCandidateEnvelope(backup, expectedSchemaId, integrityProvider);
+            if (!backupOnlyAccepted.Succeeded)
+            {
+                return SaveResult<SaveRecoverySelection>.Fail(
+                    backupOnlyAccepted.Error.Stage,
+                    backupOnlyAccepted.Error.Code,
+                    backupOnlyAccepted.Error.Message);
+            }
+
+            return SaveResult<SaveRecoverySelection>.Success(
+                new SaveRecoverySelection(backup, true, null));
+        }
+
+        private static SaveResult<(SaveReadCandidate Primary, SaveReadCandidate Backup)> ValidateCandidateStructure(SaveReadCandidateSet candidateSet)
+        {
+            SaveReadCandidate primary = null;
+            SaveReadCandidate backup = null;
+            var seenIds = new HashSet<string>(StringComparer.Ordinal);
+
+            for (var index = 0; index < candidateSet.Candidates.Count; index++)
+            {
+                var candidate = candidateSet.Candidates[index];
+                if (candidate == null)
+                {
+                    return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                        SaveStage.Read,
+                        SaveErrorCode.ProviderFailure,
+                        "Candidate set contains a null entry.");
+                }
+
+                if (!seenIds.Add(candidate.Id.Value))
+                {
+                    return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                        SaveStage.Read,
+                        SaveErrorCode.ProviderFailure,
+                        "Candidate set contains duplicate candidate ids.");
+                }
+
+                switch (candidate.Kind)
+                {
+                    case SaveCandidateKind.Primary:
+                        if (primary != null)
+                        {
+                            return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                                SaveStage.Read,
+                                SaveErrorCode.ProviderFailure,
+                                "Candidate set contains duplicate primary candidates.");
+                        }
+
+                        primary = candidate;
+                        break;
+                    case SaveCandidateKind.Backup:
+                        if (backup != null)
+                        {
+                            return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Fail(
+                                SaveStage.Read,
+                                SaveErrorCode.ProviderFailure,
+                                "Candidate set contains duplicate backup candidates.");
+                        }
+
+                        backup = candidate;
+                        break;
+                }
+            }
+
+            return SaveResult<(SaveReadCandidate, SaveReadCandidate)>.Success((primary, backup));
+        }
+
+        private static SaveResult TryAcceptCandidateEnvelope(
+            SaveReadCandidate candidate,
+            string expectedSchemaId,
+            IIntegrityProvider integrityProvider)
+        {
+            var decodedEnvelope = SaveEnvelopeBinaryCodec.Decode(candidate.Bytes.Span);
+            if (!decodedEnvelope.Succeeded)
+            {
+                return SaveResult.Fail(decodedEnvelope.Error.Stage, decodedEnvelope.Error.Code, decodedEnvelope.Error.Message);
+            }
+
+            var envelope = decodedEnvelope.Value;
+            if (!string.Equals(envelope.SchemaId, expectedSchemaId, StringComparison.Ordinal))
+            {
+                return SaveResult.Fail(SaveStage.Envelope, SaveErrorCode.UnsupportedFormat, "Schema id mismatch.");
+            }
+
+            if (!string.Equals(envelope.IntegrityAlgorithm, integrityProvider.AlgorithmName, StringComparison.Ordinal))
+            {
+                return SaveResult.Fail(SaveStage.Verify, SaveErrorCode.UnsupportedFormat, "Envelope integrity algorithm does not match configured provider.");
+            }
+
+            SaveResult verified;
+            try
+            {
+                verified = integrityProvider.Verify(envelope.Payload.Span, envelope.IntegrityDigest.Span);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult.Fail(SaveStage.Verify, SaveErrorCode.ProviderFailure, $"Integrity verify threw exception: {exception.Message}");
+            }
+
+            if (!verified.Succeeded)
+            {
+                return SaveResult.Fail(verified.Error.Stage, verified.Error.Code, verified.Error.Message);
+            }
+
+            return SaveResult.Success();
+        }
+    }
+
+    public readonly struct SaveRecoverySelection
+    {
+        public SaveRecoverySelection(SaveReadCandidate selectedCandidate, bool recoveryOccurred, SaveDiagnostic? primaryFailureDiagnostic)
+        {
+            SelectedCandidate = selectedCandidate ?? throw new ArgumentNullException(nameof(selectedCandidate));
+            RecoveryOccurred = recoveryOccurred;
+            PrimaryFailureDiagnostic = primaryFailureDiagnostic;
+        }
+
+        public SaveReadCandidate SelectedCandidate { get; }
+        public bool RecoveryOccurred { get; }
+        public SaveDiagnostic? PrimaryFailureDiagnostic { get; }
+    }
+
     public sealed class SaveCoordinator<TState>
     {
         private readonly string _schemaId;
@@ -778,6 +1125,7 @@ namespace Lingkyn.Persistence.Core
         private readonly MigrationPipeline<TState> _migrationPipeline;
         private readonly ISaveStore _store;
         private readonly SaveCommitCapabilities _requiredCapabilities;
+        private readonly SaveRecoveryPolicy _recoveryPolicy;
         private readonly List<ISaveCommitObserver<TState>> _postCommitObservers;
 
         public SaveCoordinator(
@@ -789,7 +1137,8 @@ namespace Lingkyn.Persistence.Core
             MigrationPipeline<TState> migrationPipeline,
             ISaveStore store,
             SaveCommitCapabilities requiredCapabilities,
-            IEnumerable<ISaveCommitObserver<TState>> postCommitObservers = null)
+            IEnumerable<ISaveCommitObserver<TState>> postCommitObservers = null,
+            SaveRecoveryPolicy recoveryPolicy = SaveRecoveryPolicy.PrimaryOnly)
         {
             _schemaId = string.IsNullOrWhiteSpace(schemaId) ? throw new ArgumentException("Schema id is required.", nameof(schemaId)) : schemaId;
             _currentSchemaVersion = currentSchemaVersion >= 0 ? currentSchemaVersion : throw new ArgumentOutOfRangeException(nameof(currentSchemaVersion));
@@ -799,6 +1148,7 @@ namespace Lingkyn.Persistence.Core
             _migrationPipeline = migrationPipeline ?? throw new ArgumentNullException(nameof(migrationPipeline));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _requiredCapabilities = requiredCapabilities;
+            _recoveryPolicy = recoveryPolicy;
             _postCommitObservers = new List<ISaveCommitObserver<TState>>();
             if (postCommitObservers != null)
             {
@@ -955,68 +1305,62 @@ namespace Lingkyn.Persistence.Core
             return diagnostics == null ? committed : committed.WithDiagnostics(diagnostics.ToArray());
         }
 
-        public SaveResult<TState> LoadValidated(SaveSlotId slotId, Func<TState, SaveResult> validator)
+        public SaveResult<SaveLoadReceipt<TState>> LoadValidated(SaveSlotId slotId, Func<TState, SaveResult> validator)
         {
             if (validator == null)
             {
-                return SaveResult<TState>.Fail(SaveStage.Validate, SaveErrorCode.ProviderFailure, "Validator delegate is required.");
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Validate, SaveErrorCode.ProviderFailure, "Validator delegate is required.");
             }
 
             if (string.IsNullOrEmpty(slotId.Value))
             {
-                return SaveResult<TState>.Fail(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.");
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.");
             }
 
-            SaveResult<byte[]> read;
+            SaveResult<SaveReadCandidateSet> read;
             try
             {
-                read = _store.Read(slotId);
+                read = _store.ReadCandidates(slotId);
             }
             catch (Exception exception)
             {
-                return SaveResult<TState>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, $"Store read threw exception: {exception.Message}");
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, $"Store read threw exception: {exception.Message}");
             }
 
             if (!read.Succeeded)
             {
-                return SaveResult<TState>.Fail(read.Error.Stage, read.Error.Code, read.Error.Message);
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(read.Error.Stage, read.Error.Code, read.Error.Message);
             }
 
-            var decodedEnvelope = SaveEnvelopeBinaryCodec.Decode(read.Value);
-            if (!decodedEnvelope.Succeeded)
-            {
-                return SaveResult<TState>.Fail(decodedEnvelope.Error.Stage, decodedEnvelope.Error.Code, decodedEnvelope.Error.Message);
-            }
-
-            var envelope = decodedEnvelope.Value;
-            if (!string.Equals(envelope.SchemaId, _schemaId, StringComparison.Ordinal))
-            {
-                return SaveResult<TState>.Fail(SaveStage.Envelope, SaveErrorCode.UnsupportedFormat, "Schema id mismatch.");
-            }
-
-            if (envelope.SchemaVersion > _currentSchemaVersion)
-            {
-                return SaveResult<TState>.Fail(SaveStage.Migrate, SaveErrorCode.FutureSchema, "Stored schema is newer than supported schema.");
-            }
-
-            if (!string.Equals(envelope.IntegrityAlgorithm, _integrityProvider.AlgorithmName, StringComparison.Ordinal))
-            {
-                return SaveResult<TState>.Fail(SaveStage.Verify, SaveErrorCode.UnsupportedFormat, "Envelope integrity algorithm does not match configured provider.");
-            }
-
-            SaveResult verified;
+            SaveResult<SaveRecoverySelection> selected;
             try
             {
-                verified = _integrityProvider.Verify(envelope.Payload.Span, envelope.IntegrityDigest.Span);
+                selected = SaveRecoveryCandidateSelector.Select(
+                    read.Value,
+                    _recoveryPolicy,
+                    _schemaId,
+                    _integrityProvider);
             }
             catch (Exception exception)
             {
-                return SaveResult<TState>.Fail(SaveStage.Verify, SaveErrorCode.ProviderFailure, $"Integrity verify threw exception: {exception.Message}");
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Read, SaveErrorCode.ProviderFailure, $"Recovery selection threw exception: {exception.Message}");
             }
 
-            if (!verified.Succeeded)
+            if (!selected.Succeeded)
             {
-                return SaveResult<TState>.Fail(verified.Error.Stage, verified.Error.Code, verified.Error.Message);
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(selected.Error.Stage, selected.Error.Code, selected.Error.Message);
+            }
+
+            var decodedEnvelope = SaveEnvelopeBinaryCodec.Decode(selected.Value.SelectedCandidate.Bytes.Span);
+            if (!decodedEnvelope.Succeeded)
+            {
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(decodedEnvelope.Error.Stage, decodedEnvelope.Error.Code, decodedEnvelope.Error.Message);
+            }
+
+            var envelope = decodedEnvelope.Value;
+            if (envelope.SchemaVersion > _currentSchemaVersion)
+            {
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Migrate, SaveErrorCode.FutureSchema, "Stored schema is newer than supported schema.");
             }
 
             SaveResult<TState> decodedState;
@@ -1026,18 +1370,18 @@ namespace Lingkyn.Persistence.Core
             }
             catch (Exception exception)
             {
-                return SaveResult<TState>.Fail(SaveStage.Decode, SaveErrorCode.ProviderFailure, $"Codec decode threw exception: {exception.Message}");
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Decode, SaveErrorCode.ProviderFailure, $"Codec decode threw exception: {exception.Message}");
             }
 
             if (!decodedState.Succeeded)
             {
-                return SaveResult<TState>.Fail(decodedState.Error.Stage, decodedState.Error.Code, decodedState.Error.Message);
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(decodedState.Error.Stage, decodedState.Error.Code, decodedState.Error.Message);
             }
 
             var migrated = _migrationPipeline.Apply(envelope.SchemaVersion, _currentSchemaVersion, decodedState.Value);
             if (!migrated.Succeeded)
             {
-                return SaveResult<TState>.Fail(migrated.Error.Stage, migrated.Error.Code, migrated.Error.Message);
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(migrated.Error.Stage, migrated.Error.Code, migrated.Error.Message);
             }
 
             SaveResult validated;
@@ -1047,18 +1391,25 @@ namespace Lingkyn.Persistence.Core
             }
             catch (Exception exception)
             {
-                return SaveResult<TState>.Fail(SaveStage.Validate, SaveErrorCode.ProviderFailure, $"Validator delegate threw exception: {exception.Message}");
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(SaveStage.Validate, SaveErrorCode.ProviderFailure, $"Validator delegate threw exception: {exception.Message}");
             }
 
             if (!validated.Succeeded)
             {
-                return SaveResult<TState>.Fail(
+                return SaveResult<SaveLoadReceipt<TState>>.Fail(
                     SaveStage.Validate,
                     validated.Error.Code == SaveErrorCode.None ? SaveErrorCode.ValidateRejected : validated.Error.Code,
                     validated.Error.Message);
             }
 
-            return SaveResult<TState>.Success(migrated.Value);
+            var receipt = new SaveLoadReceipt<TState>(
+                migrated.Value,
+                selected.Value.SelectedCandidate.Kind,
+                selected.Value.SelectedCandidate.Id,
+                selected.Value.RecoveryOccurred,
+                selected.Value.PrimaryFailureDiagnostic);
+
+            return SaveResult<SaveLoadReceipt<TState>>.Success(receipt);
         }
 
         public SaveResult LoadAndApply(
@@ -1080,7 +1431,7 @@ namespace Lingkyn.Persistence.Core
             SaveResult applied;
             try
             {
-                applied = apply(loaded.Value);
+                applied = apply(loaded.Value.State);
             }
             catch (Exception exception)
             {

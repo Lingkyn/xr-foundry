@@ -1,0 +1,60 @@
+{
+  "schema": "xr-foundry.persistence_standard.v1",
+  "maturity": "source_gate_review",
+  "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/54",
+  "derivation_manifest": "docs/standards/persistence/source-manifest.json",
+  "required_concepts": [
+    "SaveSlotId",
+    "SaveEnvelope",
+    "ISaveCodec",
+    "IIntegrityProvider",
+    "ISaveMigration",
+    "MigrationPipeline",
+    "ISaveStore",
+    "SaveCoordinator",
+    "SaveResult"
+  ],
+  "required_stages": [
+    "snapshot",
+    "encode",
+    "integrity",
+    "stage_write",
+    "flush",
+    "commit",
+    "read",
+    "envelope",
+    "verify",
+    "decode",
+    "migrate",
+    "validate",
+    "apply"
+  ],
+  "commit_capabilities": [
+    "atomic_replace",
+    "recoverable_replace",
+    "best_effort_write"
+  ],
+  "planned_boundaries": [
+    {
+      "role": "engine_light_core",
+      "owns": ["envelopes", "codecs", "integrity contracts", "migrations", "storage contracts", "orchestration", "structured results"],
+      "excludes": ["Unity", "filesystem paths", "scenes", "UI", "cloud SDKs", "device claims"]
+    },
+    {
+      "role": "unity_adapter",
+      "owns": ["Unity DTO codec", "persistentDataPath policy", "local file provider", "authoring and validation"],
+      "excludes": ["game snapshot selection", "live-object serialization", "universal atomicity", "security claims"]
+    }
+  ],
+  "promotion_order": [
+    "source_gate",
+    "independent_source_review",
+    "admitted_blueprint",
+    "core_invariant_tests",
+    "unity_adapter_tests",
+    "repository_contract",
+    "exact_consumer",
+    "independent_implementation_review",
+    "batch_release"
+  ]
+}

@@ -554,7 +554,13 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
 
             public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
             {
-                if (_armed && overwrite && _inner.FileExists(destinationPath))
+                if (!_armed)
+                {
+                    _inner.MoveFile(sourcePath, destinationPath, overwrite);
+                    return;
+                }
+
+                if (overwrite && _inner.FileExists(destinationPath))
                 {
                     _inner.DeleteFile(destinationPath);
                 }

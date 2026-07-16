@@ -1,0 +1,37 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "admitted",
+  "package": {
+    "id": "com.lingkyn.settings.core",
+    "display_name": "Lingkyn Settings Core",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Engine-light typed settings, constraints, profiles, transactions, rollback, snapshots, persistence seams, and accessibility discoverability metadata.",
+    "category": "system",
+    "family": "settings",
+    "target_path": "packages/unity/systems/settings/com.lingkyn.settings.core",
+    "root_namespace": "Lingkyn.Settings.Core",
+    "dependencies": {}
+  },
+  "admission": {
+    "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/55",
+    "source_manifest": "docs/standards/settings/source-manifest.json",
+    "positive_sources": [
+      "https://learn.microsoft.com/en-us/xbox/accessibility/guidelines",
+      "https://dev.epicgames.com/documentation/unreal-engine/lyra-sample-game-settings-in-unreal-engine?lang=en-US",
+      "https://github.com/ppy/osu-framework",
+      "https://developer.apple.com/design/human-interface-guidelines/motion"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "TransactionalSettings",
+    "sample_description": "Typed settings, profile layering, staged apply/cancel/reset, rollback, and persistence-result handling without a renderer."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}

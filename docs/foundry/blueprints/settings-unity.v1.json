@@ -1,0 +1,38 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "admitted",
+  "package": {
+    "id": "com.lingkyn.settings.unity",
+    "display_name": "Lingkyn Settings Unity",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Unity ScriptableObject authoring, deterministic Core conversion, validation, and explicit consumer-provided applicator registration.",
+    "category": "system",
+    "family": "settings",
+    "target_path": "packages/unity/systems/settings/com.lingkyn.settings.unity",
+    "root_namespace": "Lingkyn.Settings.Unity",
+    "dependencies": {
+      "com.lingkyn.settings.core": "0.1.0"
+    }
+  },
+  "admission": {
+    "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/55",
+    "source_manifest": "docs/standards/settings/source-manifest.json",
+    "positive_sources": [
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html",
+      "https://dev.epicgames.com/documentation/unreal-engine/lyra-sample-game-settings-in-unreal-engine?lang=en-US",
+      "https://learn.microsoft.com/en-us/xbox/accessibility/guidelines"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "SettingsAuthoring",
+    "sample_description": "ScriptableObject definitions and profiles converted into an immutable Core registry with explicit applicator wiring."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}

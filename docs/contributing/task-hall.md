@@ -123,6 +123,34 @@ assumption about what the interrupted agent probably finished. This limits the
 possible loss to one bounded checkpoint and keeps every earlier checkpoint
 independently usable.
 
+## Branch and fan-in lifecycle
+
+Branches are temporary execution lanes, not parallel sources of truth. The
+durable public truth is the default branch. A branch is retained only while it
+owns active work, an unresolved review, or evidence that has not yet reached its
+declared fan-in point.
+
+Use this lifecycle:
+
+1. Create one checkpoint branch from the recorded base revision. Keep its writes
+   inside the checkpoint boundary and publish a reachable execution anchor.
+2. Merge a completed and reviewed checkpoint into its declared integration
+   branch. Do not merge an incomplete sibling merely to reduce the branch count.
+3. Revalidate the merged integration tree. A passing checkpoint in isolation is
+   not evidence that fan-in succeeded.
+4. Merge the completed integration branch into the default branch through a pull
+   request with the required checks and review. The default branch remains the
+   release and recovery authority.
+5. Delete merged checkpoint and integration branches, and remove their local
+   worktrees, after confirming that no open pull request uses them as a base and
+   the merged commit is reachable from the intended destination.
+
+An abandoned, superseded, or duplicate branch is closed with a continuation or
+disposition record before deletion. A branch with unique unmerged work is never
+deleted merely because it is old. Long-lived release or maintenance branches
+require an explicit repository policy; this repository does not create them by
+default.
+
 ## Lifecycle
 
 Umbrella task states summarize the graph:

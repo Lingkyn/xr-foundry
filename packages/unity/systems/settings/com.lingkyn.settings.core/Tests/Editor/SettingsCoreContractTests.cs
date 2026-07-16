@@ -83,7 +83,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             var intDef = MustDefinition(
                 "player.level",
                 SettingValueKind.Integer,
-                SettingValue.FromInteger(5),
+                SettingValue.FromInteger(4),
                 SettingScope.User,
                 numeric: new NumericConstraint(0, 10, 2));
             Assert.That(SettingDefinitionValidator.ValidateValue(intDef, SettingValue.FromInteger(11)).Error.Code, Is.EqualTo(SettingsValidationCode.OutOfRange));
@@ -477,7 +477,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
 
             var withoutRepo = CreateCoordinator(out _, repository: null);
             var tx2 = withoutRepo.BeginTransaction();
-            tx2.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(false));
+            tx2.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
             Assert.That(withoutRepo.Apply(tx2).Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
 
             var failRepo = new RecordingRepository(persistFail: true);

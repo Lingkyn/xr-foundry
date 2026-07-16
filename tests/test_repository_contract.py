@@ -943,7 +943,15 @@ class RepositoryContractTests(unittest.TestCase):
             ["git", "rev-parse", f"{public_commit}^{{tree}}"], cwd=ROOT, text=True
         ).strip()
         local_only = subprocess.check_output(
-            ["git", "commit-tree", tree],
+            [
+                "git",
+                "-c",
+                "user.name=XR Foundry Contract Test",
+                "-c",
+                "user.email=xr-foundry-contract-test@example.invalid",
+                "commit-tree",
+                tree,
+            ],
             cwd=ROOT,
             input="local-only evidence object\n",
             text=True,
@@ -3415,7 +3423,15 @@ class RepositoryContractTests(unittest.TestCase):
             ["git", "rev-parse", f"{public_commit}^{{tree}}"], cwd=ROOT, text=True
         ).strip()
         payload["revision"]["commit_sha"] = subprocess.check_output(
-            ["git", "commit-tree", tree],
+            [
+                "git",
+                "-c",
+                "user.name=XR Foundry Contract Test",
+                "-c",
+                "user.email=xr-foundry-contract-test@example.invalid",
+                "commit-tree",
+                tree,
+            ],
             cwd=ROOT,
             input="device local-only evidence object\n",
             text=True,

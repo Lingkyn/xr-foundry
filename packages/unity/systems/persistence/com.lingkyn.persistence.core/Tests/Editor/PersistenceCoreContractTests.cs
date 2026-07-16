@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using NUnit.Framework;
 
 namespace Lingkyn.Persistence.Core.Editor.Tests
@@ -64,7 +66,7 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             var slot = MustSlot("slot_main");
 
             var save = coordinator.Save(slot, "state-v1");
-            Assert.That(save.Succeeded, Is.True);
+            Assert.That(save.Committed, Is.True);
 
             var corrupted = (byte[])store.Bytes.Clone();
             corrupted[corrupted.Length - 1] ^= 0x40;
@@ -294,7 +296,7 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
         {
             var coordinator = CreateCoordinator(new InMemoryStore(), new Utf8StringCodec { ThrowOnEncode = true }, new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
             var result = coordinator.Save(MustSlot("slot_encode_throw"), "payload");
-            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Committed, Is.False);
             Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Encode));
             Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
         }
@@ -331,7 +333,7 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             var store = new InMemoryStore { ThrowOnCommit = true };
             var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
             var result = coordinator.Save(MustSlot("slot_commit_throw"), "payload");
-            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Committed, Is.False);
             Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
             Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
         }
@@ -375,10 +377,153 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
                 requiredCapabilities: SaveCommitCapabilities.AtomicReplace);
 
             var result = coordinator.Save(MustSlot("slot_commit"), "payload");
-            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Committed, Is.False);
             Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
             Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedCommitCapability));
             Assert.That(store.CommitCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void CoordinatorChecksCancellationImmediatelyBeforeCommit()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            SaveCommitResult result;
+            using (var source = new CancellationTokenSource())
+            {
+                source.Cancel();
+                result = coordinator.Save(MustSlot("slot_cancel"), "payload", source.Token);
+            }
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.PriorCommittedRecordPreserved, Is.True);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.Cancelled));
+            Assert.That(store.CommitCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void FailedCommitPreservesPriorBytesAndSurfacesPreservation()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_preserve");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("stable-prior", 0)).Value;
+            var priorBytes = (byte[])store.Bytes.Clone();
+            store.ForcedCommitResult = SaveCommitResult.NotCommitted(
+                SaveStage.Commit,
+                SaveErrorCode.IoDenied,
+                "stage file denied",
+                true);
+
+            var result = coordinator.Save(slot, "new-state");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.PriorCommittedRecordPreserved, Is.True);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.IoDenied));
+            Assert.That(store.Bytes, Is.EqualTo(priorBytes));
+        }
+
+        [Test]
+        public void CoordinatorRejectsContradictoryProviderOutcome()
+        {
+            var store = new InMemoryStore
+            {
+                ForcedCommitResult = default
+            };
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+
+            var result = coordinator.Save(MustSlot("slot_contradict"), "payload");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            StringAssert.Contains("contradictory commit outcome", result.Error.Message);
+        }
+
+        [Test]
+        public void ObserversRunInOrderOnlyAfterDurableCommit()
+        {
+            var store = new InMemoryStore();
+            var order = new List<string>();
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                postCommitObservers: new ISaveCommitObserver<string>[]
+                {
+                    new DelegateObserver(_ =>
+                    {
+                        Assert.That(store.IsInsideCommit, Is.False);
+                        Assert.That(store.CommitCompleted, Is.True);
+                        order.Add("observer-1");
+                    }),
+                    new DelegateObserver(_ =>
+                    {
+                        Assert.That(store.IsInsideCommit, Is.False);
+                        Assert.That(store.CommitCompleted, Is.True);
+                        order.Add("observer-2");
+                    })
+                });
+
+            var result = coordinator.Save(MustSlot("slot_observers"), "payload");
+
+            Assert.That(result.Committed, Is.True);
+            Assert.That(order, Is.EqualTo(new[] { "observer-1", "observer-2" }));
+        }
+
+        [Test]
+        public void ObserverExceptionProducesWarningDiagnosticsWithoutChangingCommittedState()
+        {
+            var store = new InMemoryStore();
+            var observerCalls = 0;
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                postCommitObservers: new ISaveCommitObserver<string>[]
+                {
+                    new DelegateObserver(_ =>
+                    {
+                        observerCalls++;
+                        throw new InvalidOperationException("observer boom");
+                    })
+                });
+
+            var result = coordinator.Save(MustSlot("slot_observer_warning"), "payload");
+
+            Assert.That(result.Committed, Is.True);
+            Assert.That(observerCalls, Is.EqualTo(1));
+            Assert.That(result.Diagnostics.Count, Is.EqualTo(1));
+            Assert.That(result.Diagnostics[0].Severity, Is.EqualTo(SaveDiagnosticSeverity.Warning));
+            Assert.That(result.Diagnostics[0].Stage, Is.EqualTo(SaveStage.Commit));
+        }
+
+        [Test]
+        public void FailedCommitDoesNotInvokeObservers()
+        {
+            var store = new InMemoryStore
+            {
+                ForcedCommitResult = SaveCommitResult.NotCommitted(
+                    SaveStage.Commit,
+                    SaveErrorCode.IoDenied,
+                    "disk denied",
+                    true)
+            };
+            var observerCalls = 0;
+            var coordinator = CreateCoordinator(
+                store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                postCommitObservers: new ISaveCommitObserver<string>[]
+                {
+                    new DelegateObserver(_ => observerCalls++)
+                });
+
+            var result = coordinator.Save(MustSlot("slot_no_observer_on_failure"), "payload");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(observerCalls, Is.EqualTo(0));
         }
 
         private static SaveCoordinator<string> CreateCoordinator(
@@ -386,7 +531,8 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             Utf8StringCodec codec,
             MigrationPipeline<string> migrations,
             int currentSchemaVersion = 0,
-            SaveCommitCapabilities requiredCapabilities = SaveCommitCapabilities.BestEffortWrite)
+            SaveCommitCapabilities requiredCapabilities = SaveCommitCapabilities.BestEffortWrite,
+            IEnumerable<ISaveCommitObserver<string>> postCommitObservers = null)
         {
             return new SaveCoordinator<string>(
                 "lingkyn.state",
@@ -396,7 +542,8 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
                 new Sha256IntegrityProvider(),
                 migrations,
                 store,
-                requiredCapabilities);
+                requiredCapabilities,
+                postCommitObservers);
         }
 
         private static SaveEnvelope BuildEnvelope(string payloadText, int schemaVersion)
@@ -475,6 +622,9 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             public int CommitCallCount { get; private set; }
             public bool ThrowOnRead { get; set; }
             public bool ThrowOnCommit { get; set; }
+            public SaveCommitResult? ForcedCommitResult { get; set; }
+            public bool IsInsideCommit { get; private set; }
+            public bool CommitCompleted { get; private set; }
 
             public SaveResult<byte[]> Read(SaveSlotId slotId)
             {
@@ -491,7 +641,7 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
                 return SaveResult<byte[]>.Success(Bytes);
             }
 
-            public SaveResult Commit(
+            public SaveCommitResult Commit(
                 SaveSlotId slotId,
                 ReadOnlyMemory<byte> envelopeBytes,
                 SaveCommitCapabilities requiredCapabilities)
@@ -502,8 +652,44 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
                 }
 
                 CommitCallCount++;
-                Bytes = envelopeBytes.ToArray();
-                return SaveResult.Success();
+                IsInsideCommit = true;
+                CommitCompleted = false;
+                try
+                {
+                    if (ForcedCommitResult.HasValue)
+                    {
+                        var forced = ForcedCommitResult.Value;
+                        if (forced.Committed)
+                        {
+                            Bytes = envelopeBytes.ToArray();
+                        }
+
+                        return forced;
+                    }
+
+                    Bytes = envelopeBytes.ToArray();
+                    return SaveCommitResult.Success();
+                }
+                finally
+                {
+                    IsInsideCommit = false;
+                    CommitCompleted = true;
+                }
+            }
+        }
+
+        private sealed class DelegateObserver : ISaveCommitObserver<string>
+        {
+            private readonly Action<SaveCommitNotification<string>> _onCommitted;
+
+            public DelegateObserver(Action<SaveCommitNotification<string>> onCommitted)
+            {
+                _onCommitted = onCommitted ?? throw new ArgumentNullException(nameof(onCommitted));
+            }
+
+            public void OnCommitted(SaveCommitNotification<string> notification)
+            {
+                _onCommitted(notification);
             }
         }
 

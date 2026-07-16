@@ -30,7 +30,7 @@ namespace Lingkyn.Persistence.Samples
                 SaveCommitCapabilities.BestEffortWrite);
 
             var save = coordinator.Save(slotCandidate.Value, "state-v0");
-            if (!save.Succeeded)
+            if (!save.Committed)
             {
                 return SaveResult<string>.Fail(save.Error.Stage, save.Error.Code, save.Error.Message);
             }
@@ -87,13 +87,13 @@ namespace Lingkyn.Persistence.Samples
                 return SaveResult<byte[]>.Success(_bytes);
             }
 
-            public SaveResult Commit(
+            public SaveCommitResult Commit(
                 SaveSlotId slotId,
                 ReadOnlyMemory<byte> envelopeBytes,
                 SaveCommitCapabilities requiredCapabilities)
             {
                 _bytes = envelopeBytes.ToArray();
-                return SaveResult.Success();
+                return SaveCommitResult.Success();
             }
         }
     }

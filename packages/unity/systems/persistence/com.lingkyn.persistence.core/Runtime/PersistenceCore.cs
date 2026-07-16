@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace Lingkyn.Persistence.Core
 {
@@ -106,6 +107,89 @@ namespace Lingkyn.Persistence.Core
         public static SaveResult<T> Success(T value) => new SaveResult<T>(true, value, default);
         public static SaveResult<T> Fail(SaveStage stage, SaveErrorCode code, string message)
             => new SaveResult<T>(false, default, new SaveError(stage, code, message));
+    }
+
+    public enum SaveDiagnosticSeverity
+    {
+        Info = 0,
+        Warning = 1,
+        Error = 2
+    }
+
+    public readonly struct SaveDiagnostic
+    {
+        public SaveDiagnostic(SaveDiagnosticSeverity severity, SaveStage stage, SaveErrorCode code, string message)
+        {
+            Severity = severity;
+            Stage = stage;
+            Code = code;
+            Message = message ?? string.Empty;
+        }
+
+        public SaveDiagnosticSeverity Severity { get; }
+        public SaveStage Stage { get; }
+        public SaveErrorCode Code { get; }
+        public string Message { get; }
+    }
+
+    public readonly struct SaveCommitResult
+    {
+        private static readonly SaveDiagnostic[] EmptyDiagnostics = Array.Empty<SaveDiagnostic>();
+
+        private SaveCommitResult(bool committed, bool priorCommittedRecordPreserved, SaveError error, IReadOnlyList<SaveDiagnostic> diagnostics)
+        {
+            Committed = committed;
+            PriorCommittedRecordPreserved = priorCommittedRecordPreserved;
+            Error = error;
+            Diagnostics = diagnostics ?? EmptyDiagnostics;
+        }
+
+        public bool Committed { get; }
+        public bool PriorCommittedRecordPreserved { get; }
+        public SaveError Error { get; }
+        public IReadOnlyList<SaveDiagnostic> Diagnostics { get; }
+
+        public static SaveCommitResult Success(IReadOnlyList<SaveDiagnostic> diagnostics = null)
+            => new SaveCommitResult(true, false, default, diagnostics);
+
+        public static SaveCommitResult NotCommitted(
+            SaveStage stage,
+            SaveErrorCode code,
+            string message,
+            bool priorCommittedRecordPreserved,
+            IReadOnlyList<SaveDiagnostic> diagnostics = null)
+            => new SaveCommitResult(
+                false,
+                priorCommittedRecordPreserved,
+                new SaveError(stage, code, message),
+                diagnostics);
+
+        public SaveCommitResult WithDiagnostics(IReadOnlyList<SaveDiagnostic> diagnostics)
+            => new SaveCommitResult(Committed, PriorCommittedRecordPreserved, Error, diagnostics);
+
+        public bool IsContradictory(out string reason)
+        {
+            if (Committed && Error.Code != SaveErrorCode.None)
+            {
+                reason = "committed=true cannot include an error payload.";
+                return true;
+            }
+
+            if (!Committed && Error.Code == SaveErrorCode.None)
+            {
+                reason = "committed=false must include an error payload.";
+                return true;
+            }
+
+            if (Committed && PriorCommittedRecordPreserved)
+            {
+                reason = "committed=true cannot report priorCommittedRecordPreserved=true.";
+                return true;
+            }
+
+            reason = null;
+            return false;
+        }
     }
 
     public readonly struct SaveSlotId : IEquatable<SaveSlotId>
@@ -545,7 +629,26 @@ namespace Lingkyn.Persistence.Core
     {
         SaveCommitCapabilities Capabilities { get; }
         SaveResult<byte[]> Read(SaveSlotId slotId);
-        SaveResult Commit(SaveSlotId slotId, ReadOnlyMemory<byte> envelopeBytes, SaveCommitCapabilities requiredCapabilities);
+        SaveCommitResult Commit(SaveSlotId slotId, ReadOnlyMemory<byte> envelopeBytes, SaveCommitCapabilities requiredCapabilities);
+    }
+
+    public readonly struct SaveCommitNotification<TState>
+    {
+        public SaveCommitNotification(SaveSlotId slotId, TState snapshot, ReadOnlyMemory<byte> envelopeBytes)
+        {
+            SlotId = slotId;
+            Snapshot = snapshot;
+            EnvelopeBytes = envelopeBytes;
+        }
+
+        public SaveSlotId SlotId { get; }
+        public TState Snapshot { get; }
+        public ReadOnlyMemory<byte> EnvelopeBytes { get; }
+    }
+
+    public interface ISaveCommitObserver<TState>
+    {
+        void OnCommitted(SaveCommitNotification<TState> notification);
     }
 
     public sealed class MigrationPipeline<TState>
@@ -675,6 +778,7 @@ namespace Lingkyn.Persistence.Core
         private readonly MigrationPipeline<TState> _migrationPipeline;
         private readonly ISaveStore _store;
         private readonly SaveCommitCapabilities _requiredCapabilities;
+        private readonly List<ISaveCommitObserver<TState>> _postCommitObservers;
 
         public SaveCoordinator(
             string schemaId,
@@ -684,7 +788,8 @@ namespace Lingkyn.Persistence.Core
             IIntegrityProvider integrityProvider,
             MigrationPipeline<TState> migrationPipeline,
             ISaveStore store,
-            SaveCommitCapabilities requiredCapabilities)
+            SaveCommitCapabilities requiredCapabilities,
+            IEnumerable<ISaveCommitObserver<TState>> postCommitObservers = null)
         {
             _schemaId = string.IsNullOrWhiteSpace(schemaId) ? throw new ArgumentException("Schema id is required.", nameof(schemaId)) : schemaId;
             _currentSchemaVersion = currentSchemaVersion >= 0 ? currentSchemaVersion : throw new ArgumentOutOfRangeException(nameof(currentSchemaVersion));
@@ -694,13 +799,34 @@ namespace Lingkyn.Persistence.Core
             _migrationPipeline = migrationPipeline ?? throw new ArgumentNullException(nameof(migrationPipeline));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _requiredCapabilities = requiredCapabilities;
+            _postCommitObservers = new List<ISaveCommitObserver<TState>>();
+            if (postCommitObservers != null)
+            {
+                foreach (var observer in postCommitObservers)
+                {
+                    if (observer != null)
+                    {
+                        _postCommitObservers.Add(observer);
+                    }
+                }
+            }
         }
 
-        public SaveResult Save(SaveSlotId slotId, TState snapshot)
+        public void RegisterPostCommitObserver(ISaveCommitObserver<TState> observer)
+        {
+            if (observer == null)
+            {
+                throw new ArgumentNullException(nameof(observer));
+            }
+
+            _postCommitObservers.Add(observer);
+        }
+
+        public SaveCommitResult Save(SaveSlotId slotId, TState snapshot, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(slotId.Value))
             {
-                return SaveResult.Fail(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.");
+                return SaveCommitResult.NotCommitted(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.", true);
             }
 
             SaveResult<byte[]> encoded;
@@ -710,12 +836,12 @@ namespace Lingkyn.Persistence.Core
             }
             catch (Exception exception)
             {
-                return SaveResult.Fail(SaveStage.Encode, SaveErrorCode.ProviderFailure, $"Codec encode threw exception: {exception.Message}");
+                return SaveCommitResult.NotCommitted(SaveStage.Encode, SaveErrorCode.ProviderFailure, $"Codec encode threw exception: {exception.Message}", true);
             }
 
             if (!encoded.Succeeded)
             {
-                return SaveResult.Fail(encoded.Error.Stage, encoded.Error.Code, encoded.Error.Message);
+                return SaveCommitResult.NotCommitted(encoded.Error.Stage, encoded.Error.Code, encoded.Error.Message, true);
             }
 
             SaveResult<byte[]> digest;
@@ -725,12 +851,12 @@ namespace Lingkyn.Persistence.Core
             }
             catch (Exception exception)
             {
-                return SaveResult.Fail(SaveStage.Integrity, SaveErrorCode.ProviderFailure, $"Integrity provider threw exception: {exception.Message}");
+                return SaveCommitResult.NotCommitted(SaveStage.Integrity, SaveErrorCode.ProviderFailure, $"Integrity provider threw exception: {exception.Message}", true);
             }
 
             if (!digest.Succeeded)
             {
-                return SaveResult.Fail(digest.Error.Stage, digest.Error.Code, digest.Error.Message);
+                return SaveCommitResult.NotCommitted(digest.Error.Stage, digest.Error.Code, digest.Error.Message, true);
             }
 
             var envelope = new SaveEnvelope(
@@ -744,33 +870,89 @@ namespace Lingkyn.Persistence.Core
             var serializedEnvelope = SaveEnvelopeBinaryCodec.Encode(envelope);
             if (!serializedEnvelope.Succeeded)
             {
-                return SaveResult.Fail(serializedEnvelope.Error.Stage, serializedEnvelope.Error.Code, serializedEnvelope.Error.Message);
+                return SaveCommitResult.NotCommitted(
+                    serializedEnvelope.Error.Stage,
+                    serializedEnvelope.Error.Code,
+                    serializedEnvelope.Error.Message,
+                    true);
             }
 
             if ((_store.Capabilities & _requiredCapabilities) != _requiredCapabilities)
             {
-                return SaveResult.Fail(
+                return SaveCommitResult.NotCommitted(
                     SaveStage.Commit,
                     SaveErrorCode.UnsupportedCommitCapability,
-                    $"Store capabilities {_store.Capabilities} do not satisfy required {_requiredCapabilities}.");
+                    $"Store capabilities {_store.Capabilities} do not satisfy required {_requiredCapabilities}.",
+                    true);
             }
 
-            SaveResult committed;
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return SaveCommitResult.NotCommitted(SaveStage.Commit, SaveErrorCode.Cancelled, "Save cancelled before commit.", true);
+            }
+
+            SaveCommitResult committed;
             try
             {
                 committed = _store.Commit(slotId, serializedEnvelope.Value, _requiredCapabilities);
             }
             catch (Exception exception)
             {
-                return SaveResult.Fail(SaveStage.Commit, SaveErrorCode.ProviderFailure, $"Store commit threw exception: {exception.Message}");
+                return SaveCommitResult.NotCommitted(
+                    SaveStage.Commit,
+                    SaveErrorCode.ProviderFailure,
+                    $"Store commit threw exception: {exception.Message}",
+                    false);
             }
 
-            if (!committed.Succeeded)
+            if (committed.IsContradictory(out var contradiction))
+            {
+                return SaveCommitResult.NotCommitted(
+                    SaveStage.Commit,
+                    SaveErrorCode.ProviderFailure,
+                    $"Store returned contradictory commit outcome: {contradiction}",
+                    false);
+            }
+
+            if (!committed.Committed)
             {
                 return committed;
             }
 
-            return SaveResult.Success();
+            List<SaveDiagnostic> diagnostics = null;
+            if (committed.Diagnostics.Count > 0)
+            {
+                diagnostics = new List<SaveDiagnostic>(committed.Diagnostics);
+            }
+
+            if (_postCommitObservers.Count > 0)
+            {
+                var notification = new SaveCommitNotification<TState>(slotId, snapshot, serializedEnvelope.Value);
+                for (var index = 0; index < _postCommitObservers.Count; index++)
+                {
+                    var observer = _postCommitObservers[index];
+                    try
+                    {
+                        observer.OnCommitted(notification);
+                    }
+                    catch (Exception exception)
+                    {
+                        if (diagnostics == null)
+                        {
+                            diagnostics = new List<SaveDiagnostic>();
+                        }
+
+                        diagnostics.Add(
+                            new SaveDiagnostic(
+                                SaveDiagnosticSeverity.Warning,
+                                SaveStage.Commit,
+                                SaveErrorCode.ProviderFailure,
+                                $"Post-commit observer[{index}] threw exception: {exception.Message}"));
+                    }
+                }
+            }
+
+            return diagnostics == null ? committed : committed.WithDiagnostics(diagnostics.ToArray());
         }
 
         public SaveResult<TState> LoadValidated(SaveSlotId slotId, Func<TState, SaveResult> validator)

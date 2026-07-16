@@ -124,6 +124,56 @@
         "Its encoding option is not admitted as a security standard",
         "Its static facade is not imposed on the XR Foundry architecture"
       ]
+    },
+    {
+      "id": "daggerfall-unity-save-versioning",
+      "kind": "shipped_open_source_game_implementation",
+      "authority": "Daggerfall Workshop",
+      "url": "https://github.com/Interkarma/daggerfall-unity",
+      "immutable_review_ref": "81e89e90c27bc3c1a7a61871e545fad129174dec",
+      "reviewed_paths": [
+        "Assets/Scripts/Game/Serialization/SaveLoadManager.cs",
+        "Assets/Scripts/Game/Serialization/SerializableGameObject.cs"
+      ],
+      "license_or_terms": "MIT",
+      "maintenance_evidence": "3,436 GitHub stars at review; latest reviewed commit dated 2026-06-30; publicly shipped Daggerfall Unity game implementation",
+      "admitted_role": "Shipped Unity evidence for explicit save metadata, version-named DTOs, bounded data conversion and backup preservation",
+      "admitted_claims": [
+        "Save metadata records a save-format version separately from the game build version",
+        "Persisted DTO shapes are version-named and an explicit v1-to-v2 constructor performs a bounded data conversion",
+        "Unexpected data is preserved through a backup path instead of being silently discarded"
+      ],
+      "excluded_uses": [
+        "No source code is copied",
+        "Its multi-file JSON layout is not adopted as the XR Foundry storage format",
+        "A single observed v1-to-v2 conversion does not by itself prove a complete migration graph",
+        "Its backup-on-delete behavior is not relabeled transactional save commit or crash recovery"
+      ]
+    },
+    {
+      "id": "openttd-saveload-evolution",
+      "kind": "shipped_long_running_open_source_game_implementation",
+      "authority": "OpenTTD",
+      "url": "https://github.com/OpenTTD/OpenTTD",
+      "immutable_review_ref": "5b9f18d8fd0a16f5022c0351b5e3590852d24745",
+      "reviewed_paths": [
+        "src/saveload/saveload.h",
+        "src/saveload/saveload.cpp",
+        "src/saveload/afterload.cpp"
+      ],
+      "license_or_terms": "GPL-2.0",
+      "maintenance_evidence": "8,081 GitHub stars at review; active project with a reviewed 2026-07-16 commit and a save-version history spanning released game versions",
+      "admitted_role": "Long-running shipped-game evidence for ordered format versions, version-gated conversion, and fail-closed load validation",
+      "admitted_claims": [
+        "Save-format versions are explicit, ordered and written into the persisted header",
+        "Version-specific conversion logic is applied in a defined order and the version history is not reordered",
+        "Future save versions, corrupt structures and missing required conversion handling terminate loading with an explicit error instead of continuing with ambiguous state"
+      ],
+      "excluded_uses": [
+        "No GPL source code, tables or implementation structure is copied",
+        "OpenTTD's binary chunk format and global conversion pipeline are not imposed on Unity consumers",
+        "Its project longevity does not prove the future XR Foundry implementation until repository and consumer tests pass"
+      ]
     }
   ],
   "context_only_not_derivation_inputs": [

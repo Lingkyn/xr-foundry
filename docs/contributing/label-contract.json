@@ -2,10 +2,17 @@
   "schema": "xr-foundry.task_hall_labels.v1",
   "labels": [
     { "name": "rfc", "purpose": "Public design proposal requiring discussion and maintainer decision" },
+    { "name": "help wanted", "purpose": "Maintainer-admitted work open to an external contribution" },
+    { "name": "good first issue", "purpose": "A help-wanted checkpoint with newcomer context, bounded scope, verification, and a named shepherd" },
     { "name": "task:ready", "purpose": "Scope, source, acceptance, and verification gates are actionable" },
     { "name": "task:claimed", "purpose": "A maintainer-confirmed, time-limited claim lease is active" },
     { "name": "task:review", "purpose": "Implementation or evidence awaits independent review" },
     { "name": "task:blocked", "purpose": "A concrete dependency, permission, decision, or device is missing" },
+    { "name": "task:waiting-on-author", "purpose": "A submitted checkpoint needs a response or revision from its author" },
+    { "name": "task:waiting-on-review", "purpose": "A checkpoint is ready for an eligible independent review" },
+    { "name": "task:waiting-on-device", "purpose": "Automated work is complete and the remaining gate needs a declared device profile" },
+    { "name": "task:available-for-adoption", "purpose": "A released, expired, or transferred checkpoint has a current continuation handoff" },
+    { "name": "task:salvageable", "purpose": "Useful partial work can continue from recorded evidence and a bounded next action" },
     { "name": "device-lab", "purpose": "Work produces or reviews a device profile or receipt" },
     { "name": "needs-device:pico", "purpose": "Requires evidence from the declared PICO profile" },
     { "name": "needs-device:quest", "purpose": "Requires evidence from the declared Meta Quest profile" },
@@ -16,6 +23,8 @@
     { "name": "role:build", "purpose": "Implementation and test duty" },
     { "name": "role:review", "purpose": "Independent review duty" },
     { "name": "role:device-test", "purpose": "Device procedure and receipt duty" },
+    { "name": "role:integration", "purpose": "Fan-in, migration, release-readiness, and closure duty" },
+    { "name": "role:documentation", "purpose": "Public guidance, examples, and knowledge-maintenance duty" },
     { "name": "security-boundary", "purpose": "Permission, workflow, secret, or untrusted-input review required" }
   ]
 }

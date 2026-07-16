@@ -1,31 +1,181 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/task-hall.v1.schema.json",
-  "title": "XR Foundry Task Hall V1 authority contract",
+  "title": "XR Foundry Task Hall V1 public workbench authority contract",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "version", "lifecycle", "authority", "claim_policy", "public_surfaces"],
+  "required": [
+    "schema",
+    "version",
+    "stability",
+    "compatibility",
+    "lifecycle",
+    "checkpoint_policy",
+    "durability_policy",
+    "registry_policy",
+    "routing_policy",
+    "authority",
+    "claim_policy",
+    "continuation_policy",
+    "project_field_contract",
+    "public_surfaces"
+  ],
   "properties": {
     "schema": { "const": "xr-foundry.task_hall.v1" },
-    "version": { "const": "1.0.0" },
+    "version": { "const": "0.3.0" },
+    "stability": { "const": "pre-stable" },
+    "compatibility": { "const": "no_backward_compatibility_guarantee" },
     "lifecycle": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ordered_states"],
+      "required": [
+        "umbrella_states",
+        "checkpoint_states",
+        "waiting_states",
+        "terminal_checkpoint_states"
+      ],
       "properties": {
-        "ordered_states": {
+        "umbrella_states": {
           "const": [
             "proposal",
             "source_gate",
             "ready",
-            "claimed",
-            "work",
-            "review",
-            "device_test_if_required",
-            "integrate",
-            "closed"
+            "active",
+            "waiting",
+            "integration",
+            "closed",
+            "cancelled"
           ]
+        },
+        "checkpoint_states": {
+          "const": [
+            "draft",
+            "source_gate",
+            "ready",
+            "claimed",
+            "in_progress",
+            "waiting_on_author",
+            "waiting_on_review",
+            "waiting_on_device",
+            "integrating",
+            "completed",
+            "cancelled"
+          ]
+        },
+        "waiting_states": {
+          "const": [
+            "waiting_on_author",
+            "waiting_on_review",
+            "waiting_on_device"
+          ]
+        },
+        "terminal_checkpoint_states": {
+          "const": ["completed", "cancelled"]
         }
+      }
+    },
+    "checkpoint_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graph",
+        "ids_unique_within_task",
+        "dependencies_complete_before_ready",
+        "one_outcome_per_checkpoint",
+        "allowed_paths_required",
+        "read_only_checkpoint_uses_empty_allowed_paths",
+        "source_gate_is_checkpoint_explicit",
+        "independent_acceptance_required",
+        "independent_verification_required",
+        "references_resolve_within_checkpoint",
+        "independent_completion_persists",
+        "discovered_work_requires_new_checkpoint",
+        "fan_in_checkpoint_required"
+      ],
+      "properties": {
+        "graph": { "const": "directed_acyclic_graph" },
+        "ids_unique_within_task": { "const": true },
+        "dependencies_complete_before_ready": { "const": true },
+        "one_outcome_per_checkpoint": { "const": true },
+        "allowed_paths_required": { "const": true },
+        "read_only_checkpoint_uses_empty_allowed_paths": { "const": true },
+        "source_gate_is_checkpoint_explicit": { "const": true },
+        "independent_acceptance_required": { "const": true },
+        "independent_verification_required": { "const": true },
+        "references_resolve_within_checkpoint": { "const": true },
+        "independent_completion_persists": { "const": true },
+        "discovered_work_requires_new_checkpoint": { "const": true },
+        "fan_in_checkpoint_required": { "const": true }
+      }
+    },
+    "durability_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_unit",
+        "public_anchor_before_in_progress",
+        "one_claim_per_checkpoint",
+        "same_execution_lane_closes_or_hands_off_before_next",
+        "parallel_checkpoints_require_isolated_write_ownership",
+        "parallel_checkpoints_require_explicit_fan_in",
+        "completed_checkpoint_requires_reachable_commit",
+        "completed_checkpoint_requires_remote_evidence",
+        "reserve_closeout_capacity",
+        "local_only_progress_is_non_transferable",
+        "abrupt_stop_recovers_from_last_public_boundary"
+      ],
+      "properties": {
+        "execution_unit": { "const": "checkpoint" },
+        "public_anchor_before_in_progress": { "const": true },
+        "one_claim_per_checkpoint": { "const": true },
+        "same_execution_lane_closes_or_hands_off_before_next": { "const": true },
+        "parallel_checkpoints_require_isolated_write_ownership": { "const": true },
+        "parallel_checkpoints_require_explicit_fan_in": { "const": true },
+        "completed_checkpoint_requires_reachable_commit": { "const": true },
+        "completed_checkpoint_requires_remote_evidence": { "const": true },
+        "reserve_closeout_capacity": { "const": true },
+        "local_only_progress_is_non_transferable": { "const": true },
+        "abrupt_stop_recovers_from_last_public_boundary": { "const": true }
+      }
+    },
+    "registry_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry",
+        "registered_task_contract_role",
+        "umbrella_issue_role",
+        "checkpoint_issue_role",
+        "project_role",
+        "unregistered_issue_contract"
+      ],
+      "properties": {
+        "registry": { "const": "docs/contributing/tasks/task-registry.json" },
+        "registered_task_contract_role": { "const": "fine_grained_execution_authority" },
+        "umbrella_issue_role": { "const": "coordination_projection" },
+        "checkpoint_issue_role": { "const": "checkpoint_coordination_projection" },
+        "project_role": { "const": "discovery_summary" },
+        "unregistered_issue_contract": { "const": "issue_declared_claim_key" }
+      }
+    },
+    "routing_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "model_or_agent_ranking",
+        "self_report_grants_authority",
+        "quality_gate_varies_by_executor",
+        "high_risk_requires_independent_review",
+        "no_qualified_executor"
+      ],
+      "properties": {
+        "basis": { "const": "checkpoint_capabilities_risk_and_evidence" },
+        "model_or_agent_ranking": { "const": false },
+        "self_report_grants_authority": { "const": false },
+        "quality_gate_varies_by_executor": { "const": false },
+        "high_risk_requires_independent_review": { "const": true },
+        "no_qualified_executor": { "const": "remain_not_ready" }
       }
     },
     "authority": {
@@ -51,11 +201,75 @@
     "claim_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["confirmation", "default_lease_days", "external_contribution_route"],
+      "required": [
+        "scope",
+        "confirmation",
+        "default_lease_days",
+        "external_contribution_route",
+        "claim_states",
+        "released_or_expired_work_requires_handoff",
+        "transfer_requires_maintainer_confirmation",
+        "adoptable_requires_ready_or_waiting_checkpoint"
+      ],
       "properties": {
+        "scope": { "const": "checkpoint" },
         "confirmation": { "const": "manual_maintainer_confirmation" },
         "default_lease_days": { "type": "integer", "minimum": 1 },
-        "external_contribution_route": { "const": "fork_pull_request" }
+        "external_contribution_route": { "const": "fork_pull_request" },
+        "claim_states": {
+          "const": ["unclaimed", "active", "released", "transferred", "expired"]
+        },
+        "released_or_expired_work_requires_handoff": { "const": true },
+        "transfer_requires_maintainer_confirmation": { "const": true },
+        "adoptable_requires_ready_or_waiting_checkpoint": { "const": true }
+      }
+    },
+    "continuation_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pause_and_handoff_are_atomic",
+        "required_events",
+        "resume_requires_freshness_review",
+        "handoff_requires_fresh_context_compatibility",
+        "handoff_commit_must_be_reachable",
+        "evidence_references_must_resolve",
+        "next_action_cannot_expand_checkpoint_paths",
+        "stale_or_missing_evidence_fails_closed",
+        "completed_checkpoint_outcomes_must_not_be_reopened_implicitly"
+      ],
+      "properties": {
+        "schema": { "const": "docs/contributing/work-continuation.schema.json" },
+        "pause_and_handoff_are_atomic": { "const": true },
+        "required_events": {
+          "const": [
+            "session_end_with_incomplete_work",
+            "claim_release_with_work",
+            "claim_transfer",
+            "claim_expiry_with_work"
+          ]
+        },
+        "resume_requires_freshness_review": { "const": true },
+        "handoff_requires_fresh_context_compatibility": { "const": true },
+        "handoff_commit_must_be_reachable": { "const": true },
+        "evidence_references_must_resolve": { "const": true },
+        "next_action_cannot_expand_checkpoint_paths": { "const": true },
+        "stale_or_missing_evidence_fails_closed": { "const": true },
+        "completed_checkpoint_outcomes_must_not_be_reopened_implicitly": { "const": true }
+      }
+    },
+    "project_field_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hierarchy", "state", "routing", "continuation"],
+      "properties": {
+        "hierarchy": { "const": ["Parent issue", "Sub-issues progress"] },
+        "state": { "const": ["Status", "Lifecycle"] },
+        "routing": {
+          "const": ["Duty", "Contribution", "Entry level", "Device gate"]
+        },
+        "continuation": { "const": ["Continuation", "Claim expires"] }
       }
     },
     "public_surfaces": {
@@ -63,8 +277,12 @@
       "additionalProperties": false,
       "required": ["rfc_discussion", "task_hall_project"],
       "properties": {
-        "rfc_discussion": { "const": "https://github.com/Lingkyn/xr-foundry/discussions/22" },
-        "task_hall_project": { "const": "https://github.com/users/Lingkyn/projects/2" }
+        "rfc_discussion": {
+          "const": "https://github.com/Lingkyn/xr-foundry/discussions/22"
+        },
+        "task_hall_project": {
+          "const": "https://github.com/users/Lingkyn/projects/2"
+        }
       }
     }
   }

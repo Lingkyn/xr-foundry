@@ -1,0 +1,109 @@
+{
+  "schema": "xr-foundry.work_continuation.v1",
+  "id": "example-renderer-adapter-task.CP-02.handoff-1",
+  "task_id": "example-renderer-adapter-task",
+  "checkpoint_id": "CP-02",
+  "revision": {
+    "handoff": 1,
+    "task_contract": 1
+  },
+  "generated_at": "2026-07-15T12:00:00Z",
+  "repository": "https://github.com/example-contributor/xr-foundry",
+  "branch": "contributor/example-renderer-adapter",
+  "pull_request": null,
+  "commit": "0000000000000000000000000000000000000000",
+  "checkpoint_status": "waiting_on_review",
+  "claim_disposition": {
+    "status": "released",
+    "from_github_identity": "example-contributor",
+    "to_github_identity": null,
+    "confirmed_by_maintainer": "example-maintainer",
+    "effective_at": "2026-07-15T12:00:00Z",
+    "expires_at": null
+  },
+  "execution_transition": {
+    "prior_executor": "ExampleAgent",
+    "stop_reason": "review_gate",
+    "resume_mode": "fresh_context_from_public_boundary",
+    "private_session_required": false
+  },
+  "completed": [
+    {
+      "id": "W-01",
+      "outcome": "The adapter change and focused tests are present at the handoff commit.",
+      "paths": [
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/**"
+      ],
+      "evidence_ids": [
+        "E-01"
+      ],
+      "completed_at": "2026-07-15T11:50:00Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ],
+  "remaining": [
+    {
+      "id": "W-02",
+      "outcome": "An independent reviewer verifies the renderer-neutral boundary at the recorded commit.",
+      "acceptance": [
+        "The review records a clear pass or actionable findings against the frozen contract."
+      ],
+      "depends_on": [
+        "W-01"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-01",
+      "kind": "test",
+      "location": "docs/validation/example-renderer-adapter-test.json",
+      "commit": "0000000000000000000000000000000000000000",
+      "summary": "Example-only placeholder for a commit-bound test receipt.",
+      "reproducible": true
+    }
+  ],
+  "blocker": {
+    "kind": "review",
+    "summary": "The checkpoint needs a reviewer who did not author W-01.",
+    "owner": "maintainer",
+    "resumes_when": "A maintainer confirms an independent reviewer for CP-02."
+  },
+  "exact_next_action": {
+    "outcome": "Reproduce E-01 at the handoff commit and record the independent review result.",
+    "write_mode": "bounded_paths",
+    "allowed_paths": [
+      "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/**",
+      "docs/validation/**"
+    ],
+    "prerequisites": [
+      "Complete resume_review and receive a checkpoint-scoped claim if repository changes are needed."
+    ],
+    "verification": [
+      "Run the repository validator and the affected adapter tests at the recorded commit."
+    ],
+    "expected_evidence": [
+      "A commit-bound independent review receipt."
+    ]
+  },
+  "do_not_touch": [
+    "Any package outside the checkpoint allowed_paths",
+    "Task scope, acceptance, or authority without a new task revision"
+  ],
+  "resume_review": {
+    "required": true,
+    "status": "pending",
+    "checks": {
+      "task_revision_matches": null,
+      "branch_matches": null,
+      "pull_request_matches": null,
+      "commit_matches": null,
+      "evidence_reachable": null,
+      "claim_valid": null,
+      "allowed_paths_clean": null
+    },
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "notes": []
+  }
+}

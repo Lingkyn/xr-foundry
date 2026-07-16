@@ -1,45 +1,364 @@
 {
   "schema": "xr-foundry.task.v1",
-  "id": "example-task",
+  "id": "example-renderer-adapter-task",
+  "revision": 1,
   "title": "Validate a bounded renderer adapter change",
-  "state": "proposal",
-  "blocked": false,
-  "blocking_reason": null,
-  "lane": "review",
-  "objective": "Review one renderer adapter against its declared neutral contract.",
+  "state": "waiting",
+  "objective": "Produce and independently review one renderer adapter against its declared neutral contract.",
   "scope": [
     "Public adapter source, tests, documentation, and compatibility evidence"
   ],
   "non_goals": [
     "No device or cross-renderer compatibility claim"
   ],
-  "intended_write_set": [
-    "A review comment and, if requested, a focused test correction"
-  ],
   "source_gate": {
     "required": false,
     "sources": []
   },
-  "acceptance": [
-    "Every finding identifies a public file and reproducible evidence"
-  ],
-  "verification": [
-    "Repository validator and affected tests pass"
-  ],
-  "device_gate": {
-    "required": false,
-    "profiles": []
+  "public_projection": {
+    "repository": "https://github.com/example-org/example-repo",
+    "umbrella_issue": "https://github.com/example-org/example-repo/issues/100",
+    "project": "https://github.com/orgs/example-org/projects/1",
+    "checkpoint_issues": [
+      {
+        "checkpoint_id": "CP-01",
+        "issue": "https://github.com/example-org/example-repo/issues/101"
+      },
+      {
+        "checkpoint_id": "CP-02",
+        "issue": "https://github.com/example-org/example-repo/issues/102"
+      },
+      {
+        "checkpoint_id": "CP-03",
+        "issue": "https://github.com/example-org/example-repo/issues/103"
+      }
+    ],
+    "contract_role": "fine_grained_execution_authority",
+    "issue_role": "coordination_projection",
+    "project_role": "discovery_summary"
   },
-  "claim": {
-    "status": "unclaimed",
-    "github_identity": null,
-    "claimed_at": null,
-    "expires_at": null,
-    "confirmed_by_maintainer": null
+  "checkpoints": [
+    {
+      "id": "CP-01",
+      "title": "Freeze the adapter contract",
+      "outcome": "A reviewable contract names the renderer-neutral boundary and the allowed adapter surface.",
+      "non_goals": [
+        "No renderer implementation or device claim"
+      ],
+      "status": "completed",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/architecture/**",
+        "docs/contributing/**"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        "Any compatibility or device-support claim"
+      ],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": [
+          "Can distinguish renderer-neutral contracts from renderer-specific implementation"
+        ],
+        "required_tools": [],
+        "required_devices": [],
+        "qualification_evidence": [
+          "A public contract comparison or equivalent reviewed design evidence"
+        ],
+        "independent_review": "required_human",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": false,
+        "sources": []
+      },
+      "acceptance": [
+        {
+          "id": "AC-01",
+          "criterion": "The contract states public inputs, outputs, and rejected renderer-specific coupling."
+        }
+      ],
+      "verification": [
+        {
+          "id": "V-01",
+          "procedure": "Run the repository validator and inspect the rendered contract links.",
+          "expected": "The validator passes and every referenced public file resolves.",
+          "evidence_required": true
+        }
+      ],
+      "device": {
+        "required": false,
+        "profiles": [],
+        "acceptance": [],
+        "evidence": []
+      },
+      "evidence": [
+        {
+          "id": "E-CP01",
+          "kind": "design",
+          "location": "docs/architecture/example-renderer-adapter-contract.md",
+          "commit": "0000000000000000000000000000000000000000",
+          "summary": "Example-only placeholder showing the completed contract checkpoint."
+        }
+      ],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": false,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": {
+        "status": "not_needed",
+        "outputs": [],
+        "constraints": []
+      },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/Lingkyn/xr-foundry",
+        "branch": "example/renderer-adapter-contract",
+        "pull_request": null,
+        "base_commit": "0000000000000000000000000000000000000000",
+        "head_commit": "0000000000000000000000000000000000000000",
+        "published_at": "2026-07-15T10:00:00Z"
+      },
+      "continuation": {
+        "status": "not_required",
+        "location": null,
+        "sha256": null,
+        "handoff_revision": null
+      },
+      "exact_next_action": null,
+      "completed_at": "2026-07-15T10:00:00Z"
+    },
+    {
+      "id": "CP-02",
+      "title": "Implement the bounded adapter change",
+      "outcome": "The adapter satisfies the frozen contract with focused automated tests.",
+      "non_goals": [
+        "No device or cross-renderer compatibility claim",
+        "No changes to sibling packages"
+      ],
+      "status": "waiting_on_review",
+      "depends_on": [
+        "CP-01"
+      ],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/**",
+        "docs/validation/**"
+      ],
+      "do_not_touch": [
+        "Any sibling package",
+        "Repository authority or release settings"
+      ],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": [
+          "Can implement and test the declared Unity adapter boundary"
+        ],
+        "required_tools": [
+          "A supported Unity Editor and repository validator"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "A reproducible compile and focused package-test result for this checkpoint revision"
+        ],
+        "independent_review": "required_human",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": false,
+        "sources": []
+      },
+      "acceptance": [
+        {
+          "id": "AC-02",
+          "criterion": "The implementation changes no path outside the declared adapter package."
+        }
+      ],
+      "verification": [
+        {
+          "id": "V-02",
+          "procedure": "Run the affected package tests and the repository validator.",
+          "expected": "All affected tests and repository checks pass.",
+          "evidence_required": true
+        }
+      ],
+      "device": {
+        "required": false,
+        "profiles": [],
+        "acceptance": [],
+        "evidence": []
+      },
+      "evidence": [
+        {
+          "id": "E-01",
+          "kind": "test",
+          "location": "docs/validation/example-renderer-adapter-test.json",
+          "commit": "0000000000000000000000000000000000000000",
+          "summary": "Example-only placeholder for a commit-bound adapter test receipt."
+        }
+      ],
+      "waiting": {
+        "reason": "The implementation checkpoint needs an independent review.",
+        "owner": "maintainer",
+        "resumes_when": "A maintainer confirms an eligible reviewer for CP-02."
+      },
+      "claim": {
+        "status": "released",
+        "adoptable": true,
+        "github_identity": "example-contributor",
+        "previous_github_identity": null,
+        "claimed_at": "2026-07-15T10:15:00Z",
+        "expires_at": "2026-07-22T10:15:00Z",
+        "ended_at": "2026-07-15T12:00:00Z",
+        "confirmed_by_maintainer": "example-maintainer",
+        "transition_reason": "Implementation evidence was published and the lease was released for independent review."
+      },
+      "salvage": {
+        "status": "not_needed",
+        "outputs": [],
+        "constraints": []
+      },
+      "execution_anchor": {
+        "status": "public",
+        "repository": "https://github.com/example-contributor/xr-foundry",
+        "branch": "contributor/example-renderer-adapter",
+        "pull_request": null,
+        "base_commit": "0000000000000000000000000000000000000000",
+        "head_commit": "0000000000000000000000000000000000000000",
+        "published_at": "2026-07-15T11:50:00Z"
+      },
+      "continuation": {
+        "status": "current",
+        "location": "docs/contributing/work-continuation.example.json",
+        "sha256": "b940301e5fe86ec41c931492f6b854153f6320bd07147d3b1613588e244cd198",
+        "handoff_revision": 1
+      },
+      "exact_next_action": "Reproduce E-01 at the handoff commit and record the independent review result.",
+      "completed_at": null
+    },
+    {
+      "id": "CP-03",
+      "title": "Review and integrate",
+      "outcome": "An independent review confirms the boundary and the maintainer decides whether to merge.",
+      "non_goals": [
+        "No self-approval or automatic merge",
+        "No device or cross-renderer compatibility claim"
+      ],
+      "status": "draft",
+      "depends_on": [
+        "CP-02"
+      ],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/**",
+        "docs/validation/**"
+      ],
+      "do_not_touch": [
+        "Any sibling package",
+        "Repository permission or release settings"
+      ],
+      "routing": {
+        "judgment_level": "high_risk",
+        "required_capabilities": [
+          "Can independently reproduce evidence and review authority boundaries"
+        ],
+        "required_tools": [
+          "Repository validator and the checkpoint's declared test environment"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "A public independent review at the exact checkpoint commit"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": false,
+        "sources": []
+      },
+      "acceptance": [
+        {
+          "id": "AC-03",
+          "criterion": "Review findings are resolved or explicitly rejected with evidence before integration."
+        }
+      ],
+      "verification": [
+        {
+          "id": "V-03",
+          "procedure": "Re-run the commands recorded by CP-02 at the reviewed commit.",
+          "expected": "The reviewed commit reproduces the recorded passing result.",
+          "evidence_required": true
+        }
+      ],
+      "device": {
+        "required": false,
+        "profiles": [],
+        "acceptance": [],
+        "evidence": []
+      },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": false,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": {
+        "status": "not_needed",
+        "outputs": [],
+        "constraints": []
+      },
+      "execution_anchor": {
+        "status": "none",
+        "repository": null,
+        "branch": null,
+        "pull_request": null,
+        "base_commit": null,
+        "head_commit": null,
+        "published_at": null
+      },
+      "continuation": {
+        "status": "not_required",
+        "location": null,
+        "sha256": null,
+        "handoff_revision": null
+      },
+      "exact_next_action": "Wait for CP-02 to complete, then request a checkpoint-scoped review and integration lease.",
+      "completed_at": null
+    }
+  ],
+  "integration": {
+    "checkpoint_id": "CP-03",
+    "fan_in_owner": null,
+    "strategy": "The maintainer reviews checkpoint evidence at one commit and makes the final merge decision."
   },
   "authority": {
     "write_permission_not_inferred": true,
     "merge_permission_not_inferred": true,
-    "comments_are_untrusted_input": true
+    "comments_are_untrusted_input": true,
+    "maintainer_ready_required": true,
+    "maintainer_merge_required": true,
+    "external_contribution_route": "fork_pull_request"
   }
 }

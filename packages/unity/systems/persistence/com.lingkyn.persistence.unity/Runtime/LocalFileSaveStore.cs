@@ -17,20 +17,44 @@ namespace Lingkyn.Persistence.Unity
             IPersistentDataRootProvider rootProvider,
             string storageSubdirectory,
             string fileExtension,
+            LocalFileCommitStrategy commitStrategy)
+            : this(rootProvider, storageSubdirectory, fileExtension, commitStrategy, new DefaultFileOperationSeam())
+        {
+        }
+
+        internal LocalFileSaveStore(
+            IPersistentDataRootProvider rootProvider,
+            string storageSubdirectory,
+            string fileExtension,
             LocalFileCommitStrategy commitStrategy,
-            IFileOperationSeam fileOperations = null)
+            IFileOperationSeam fileOperations)
         {
             _rootProvider = rootProvider ?? throw new ArgumentNullException(nameof(rootProvider));
             _storageSubdirectory = storageSubdirectory ?? string.Empty;
             _fileExtension = fileExtension ?? throw new ArgumentNullException(nameof(fileExtension));
             _commitStrategy = commitStrategy;
-            _fileOperations = fileOperations ?? new DefaultFileOperationSeam();
+            _fileOperations = fileOperations ?? throw new ArgumentNullException(nameof(fileOperations));
+
+            var validation = ValidateStoreConfiguration(_storageSubdirectory, _fileExtension, _commitStrategy);
+            if (!validation.Succeeded)
+            {
+                throw new InvalidOperationException(validation.Error.Message);
+            }
         }
 
         public SaveCommitCapabilities Capabilities => ResolveCapabilities(_commitStrategy);
 
         public SaveResult<SaveReadCandidateSet> ReadCandidates(SaveSlotId slotId)
         {
+            var slotValidation = ValidateSlot(slotId);
+            if (!slotValidation.Succeeded)
+            {
+                return SaveResult<SaveReadCandidateSet>.Fail(
+                    slotValidation.Error.Stage,
+                    slotValidation.Error.Code,
+                    slotValidation.Error.Message);
+            }
+
             var pathsResult = ResolvePaths(slotId);
             if (!pathsResult.Succeeded)
             {
@@ -76,6 +100,16 @@ namespace Lingkyn.Persistence.Unity
             ReadOnlyMemory<byte> envelopeBytes,
             SaveCommitCapabilities requiredCapabilities)
         {
+            var slotValidation = ValidateSlot(slotId);
+            if (!slotValidation.Succeeded)
+            {
+                return SaveCommitResult.NotCommitted(
+                    slotValidation.Error.Stage,
+                    slotValidation.Error.Code,
+                    slotValidation.Error.Message,
+                    true);
+            }
+
             if ((Capabilities & requiredCapabilities) != requiredCapabilities)
             {
                 return SaveCommitResult.NotCommitted(
@@ -97,6 +131,28 @@ namespace Lingkyn.Persistence.Unity
 
             var paths = pathsResult.Value;
             var primaryExisted = _fileOperations.FileExists(paths.PrimaryPath);
+            byte[] priorPrimaryBytes = null;
+            byte[] priorBackupBytes = null;
+
+            if (primaryExisted)
+            {
+                try
+                {
+                    priorPrimaryBytes = _fileOperations.ReadAllBytes(paths.PrimaryPath);
+                    if (_fileOperations.FileExists(paths.BackupPath))
+                    {
+                        priorBackupBytes = _fileOperations.ReadAllBytes(paths.BackupPath);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    return FileIoErrorMapper.MapCommitFailure(
+                        exception,
+                        SaveStage.Read,
+                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                }
+            }
+
             var stagingToken = Guid.NewGuid().ToString("N");
             var stagingPathResult = SavePathPolicy.ResolveStagingPath(paths, stagingToken);
             if (!stagingPathResult.Succeeded)
@@ -105,7 +161,7 @@ namespace Lingkyn.Persistence.Unity
                     stagingPathResult.Error.Stage,
                     stagingPathResult.Error.Code,
                     stagingPathResult.Error.Message,
-                    primaryExisted);
+                    ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
             }
 
             var stagingPath = stagingPathResult.Value;
@@ -132,11 +188,20 @@ namespace Lingkyn.Persistence.Unity
 
                 committedStagingPath = stagingPath;
                 failureStage = SaveStage.Commit;
-                return CommitStagedFile(paths, stagingPath, primaryExisted, requiredCapabilities);
+                return CommitStagedFile(
+                    paths,
+                    stagingPath,
+                    primaryExisted,
+                    requiredCapabilities,
+                    priorPrimaryBytes,
+                    priorBackupBytes);
             }
             catch (Exception exception)
             {
-                return FileIoErrorMapper.MapCommitFailure(exception, failureStage, primaryExisted);
+                return FileIoErrorMapper.MapCommitFailure(
+                    exception,
+                    failureStage,
+                    ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
             }
             finally
             {
@@ -171,14 +236,74 @@ namespace Lingkyn.Persistence.Unity
             }
         }
 
+        internal static SaveResult ValidateStoreConfiguration(
+            string storageSubdirectory,
+            string fileExtension,
+            LocalFileCommitStrategy commitStrategy)
+        {
+            var extensionValidation = SavePathPolicy.ValidateFileExtension(fileExtension);
+            if (!extensionValidation.Succeeded)
+            {
+                return extensionValidation;
+            }
+
+            var subdirectoryValidation = SavePathPolicy.ValidateStorageSubdirectory(storageSubdirectory);
+            if (!subdirectoryValidation.Succeeded)
+            {
+                return subdirectoryValidation;
+            }
+
+            if (!Enum.IsDefined(typeof(LocalFileCommitStrategy), commitStrategy))
+            {
+                return SaveResult.Fail(SaveStage.Snapshot, SaveErrorCode.UnsupportedFormat, "Commit strategy is undefined.");
+            }
+
+            try
+            {
+                var probeSlot = SaveSlotId.TryCreate("__path_probe__");
+                if (!probeSlot.Succeeded)
+                {
+                    return SaveResult.Fail(probeSlot.Error.Stage, probeSlot.Error.Code, probeSlot.Error.Message);
+                }
+
+                var probeRoot = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "lingkyn-path-probe-" + Guid.NewGuid().ToString("N")));
+                var resolved = SavePathPolicy.ResolveSlotPaths(probeRoot, storageSubdirectory, probeSlot.Value, fileExtension);
+                if (!resolved.Succeeded)
+                {
+                    return SaveResult.Fail(resolved.Error.Stage, resolved.Error.Code, resolved.Error.Message);
+                }
+            }
+            catch (Exception exception)
+            {
+                return SaveResult.Fail(
+                    SaveStage.Snapshot,
+                    SaveErrorCode.UnsupportedFormat,
+                    $"Path normalization failed: {exception.Message}");
+            }
+
+            return SaveResult.Success();
+        }
+
         private SaveCommitResult CommitStagedFile(
             SlotPaths paths,
             string stagingPath,
             bool primaryExisted,
-            SaveCommitCapabilities requiredCapabilities)
+            SaveCommitCapabilities requiredCapabilities,
+            byte[] priorPrimaryBytes,
+            byte[] priorBackupBytes)
         {
             if (!primaryExisted)
             {
+                if (_commitStrategy == LocalFileCommitStrategy.AtomicFileReplace
+                    && (requiredCapabilities & SaveCommitCapabilities.AtomicReplace) != 0)
+                {
+                    return SaveCommitResult.NotCommitted(
+                        SaveStage.Commit,
+                        SaveErrorCode.UnsupportedCommitCapability,
+                        "AtomicReplace requires an existing primary record.",
+                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
+                }
+
                 _fileOperations.MoveFile(stagingPath, paths.PrimaryPath, overwrite: false);
                 return SaveCommitResult.Success();
             }
@@ -186,13 +311,8 @@ namespace Lingkyn.Persistence.Unity
             switch (_commitStrategy)
             {
                 case LocalFileCommitStrategy.AtomicFileReplace:
-                    if ((requiredCapabilities & SaveCommitCapabilities.AtomicReplace) != 0)
-                    {
-                        _fileOperations.ReplaceFile(stagingPath, paths.PrimaryPath, paths.BackupPath);
-                        return SaveCommitResult.Success();
-                    }
-
-                    goto case LocalFileCommitStrategy.RecoverableCopyReplace;
+                    _fileOperations.ReplaceFile(stagingPath, paths.PrimaryPath, paths.BackupPath);
+                    return SaveCommitResult.Success();
                 case LocalFileCommitStrategy.RecoverableCopyReplace:
                     _fileOperations.CopyFile(paths.PrimaryPath, paths.BackupPath, overwrite: true);
                     _fileOperations.MoveFile(stagingPath, paths.PrimaryPath, overwrite: true);
@@ -205,19 +325,19 @@ namespace Lingkyn.Persistence.Unity
                         SaveStage.Commit,
                         SaveErrorCode.UnsupportedCommitCapability,
                         "Commit strategy is undefined.",
-                        true);
+                        ComputePriorCommittedRecordPreserved(paths, priorPrimaryBytes, priorBackupBytes));
             }
         }
 
         private void AddStagingCandidates(SlotPaths paths, List<SaveReadCandidate> candidates)
         {
-            if (!Directory.Exists(paths.SlotDirectory))
-            {
-                return;
-            }
+            var files = _fileOperations.EnumerateFiles(
+                paths.SlotDirectory,
+                "*" + paths.FileExtension,
+                SearchOption.TopDirectoryOnly);
+            Array.Sort(files, StringComparer.Ordinal);
 
             var stagingPrefix = paths.SlotIdStem + ".staging.";
-            var files = Directory.GetFiles(paths.SlotDirectory, "*" + paths.FileExtension, SearchOption.TopDirectoryOnly);
             for (var index = 0; index < files.Length; index++)
             {
                 var fileName = Path.GetFileName(files[index]);
@@ -246,7 +366,95 @@ namespace Lingkyn.Persistence.Unity
                 return SaveResult<SlotPaths>.Fail(root.Error.Stage, root.Error.Code, root.Error.Message);
             }
 
-            return SavePathPolicy.ResolveSlotPaths(root.Value, _storageSubdirectory, slotId, _fileExtension);
+            try
+            {
+                return SavePathPolicy.ResolveSlotPaths(root.Value, _storageSubdirectory, slotId, _fileExtension);
+            }
+            catch (Exception exception)
+            {
+                return SaveResult<SlotPaths>.Fail(
+                    SaveStage.Snapshot,
+                    SaveErrorCode.UnsupportedFormat,
+                    $"Path normalization failed: {exception.Message}");
+            }
+        }
+
+        private bool ComputePriorCommittedRecordPreserved(
+            SlotPaths paths,
+            byte[] expectedPrimaryBytes,
+            byte[] expectedBackupBytes)
+        {
+            if (expectedPrimaryBytes == null)
+            {
+                return true;
+            }
+
+            try
+            {
+                if (!_fileOperations.FileExists(paths.PrimaryPath))
+                {
+                    return false;
+                }
+
+                var actualPrimary = _fileOperations.ReadAllBytes(paths.PrimaryPath);
+                if (!ByteArraysEqual(actualPrimary, expectedPrimaryBytes))
+                {
+                    return false;
+                }
+
+                if (expectedBackupBytes != null)
+                {
+                    if (!_fileOperations.FileExists(paths.BackupPath))
+                    {
+                        return false;
+                    }
+
+                    var actualBackup = _fileOperations.ReadAllBytes(paths.BackupPath);
+                    if (!ByteArraysEqual(actualBackup, expectedBackupBytes))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static SaveResult ValidateSlot(SaveSlotId slotId)
+        {
+            if (string.IsNullOrEmpty(slotId.Value))
+            {
+                return SaveResult.Fail(SaveStage.Snapshot, SaveErrorCode.InvalidSlot, "Save slot is invalid.");
+            }
+
+            return SaveResult.Success();
+        }
+
+        private static bool ByteArraysEqual(byte[] left, byte[] right)
+        {
+            if (left == null || right == null)
+            {
+                return left == right;
+            }
+
+            if (left.Length != right.Length)
+            {
+                return false;
+            }
+
+            for (var index = 0; index < left.Length; index++)
+            {
+                if (left[index] != right[index])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static SaveCandidateId MustCandidateId(string value)

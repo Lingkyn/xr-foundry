@@ -87,6 +87,28 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
         }
 
         [Test]
+        public void JsonUtilityCodecRejectsNonSerializableDto()
+        {
+            Assert.That(JsonUtilityDtoSupport.ValidateDtoType<NonSerializableDto>().Succeeded, Is.False);
+        }
+
+        [Test]
+        public void JsonUtilityCodecRejectsReadonlySerializedField()
+        {
+            Assert.That(JsonUtilityDtoSupport.ValidateDtoType<ReadonlySerializedDto>().Succeeded, Is.False);
+        }
+
+        [Test]
+        public void JsonUtilityCodecRejectsInvalidUtf8Payload()
+        {
+            var codec = new JsonUtilitySaveCodec<SupportedPlainDto>();
+            var invalidUtf8 = new byte[] { 0xFF, 0xFE, 0xFD };
+            var decoded = codec.Decode(1, invalidUtf8);
+            Assert.That(decoded.Succeeded, Is.False);
+            Assert.That(decoded.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
         public void PathPolicyKeepsDerivedPathsInsideRoot()
         {
             var slot = MustSlot("slot_a");
@@ -122,11 +144,40 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
             var store = CreateStore(LocalFileCommitStrategy.AtomicFileReplace);
             var slot = MustSlot("initial");
             var paths = MustPaths(slot);
-            var commit = store.Commit(slot, SampleEnvelopeBytes("initial"), SaveCommitCapabilities.AtomicReplace);
+            var commit = store.Commit(slot, SampleEnvelopeBytes("initial"), SaveCommitCapabilities.RecoverableReplace);
 
             Assert.That(commit.Committed, Is.True);
             Assert.That(File.Exists(paths.PrimaryPath), Is.True);
             Assert.That(File.Exists(paths.BackupPath), Is.False);
+        }
+
+        [Test]
+        public void AtomicInitialPreconditionFailsWhenAtomicRequired()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.AtomicFileReplace);
+            var slot = MustSlot("atomic_initial");
+            var paths = MustPaths(slot);
+
+            var commit = store.Commit(slot, SampleEnvelopeBytes("initial"), SaveCommitCapabilities.AtomicReplace);
+
+            Assert.That(commit.Committed, Is.False);
+            Assert.That(commit.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedCommitCapability));
+            Assert.That(File.Exists(paths.PrimaryPath), Is.False);
+        }
+
+        [Test]
+        public void AtomicStrategyUsesReplaceEvenWhenLowerMinimumRequired()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.AtomicFileReplace);
+            var slot = MustSlot("atomic_replace");
+            var paths = MustPaths(slot);
+
+            Assert.That(store.Commit(slot, SampleEnvelopeBytes("first"), SaveCommitCapabilities.RecoverableReplace).Committed, Is.True);
+            var priorPrimary = File.ReadAllBytes(paths.PrimaryPath);
+
+            Assert.That(store.Commit(slot, SampleEnvelopeBytes("second"), SaveCommitCapabilities.RecoverableReplace).Committed, Is.True);
+            Assert.That(File.Exists(paths.BackupPath), Is.True);
+            Assert.That(File.ReadAllBytes(paths.BackupPath), Is.EqualTo(priorPrimary));
         }
 
         [Test]
@@ -178,6 +229,48 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
         }
 
         [Test]
+        public void StagingCandidatesAreEnumeratedInDeterministicOrder()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);
+            var slot = MustSlot("staging_order");
+            var paths = MustPaths(slot);
+            Directory.CreateDirectory(paths.SlotDirectory);
+
+            File.WriteAllBytes(
+                Path.Combine(paths.SlotDirectory, paths.SlotIdStem + ".staging.ztoken.save"),
+                SampleEnvelopeBytes("z"));
+            File.WriteAllBytes(
+                Path.Combine(paths.SlotDirectory, paths.SlotIdStem + ".staging.atoken.save"),
+                SampleEnvelopeBytes("a"));
+
+            var read = store.ReadCandidates(slot);
+            Assert.That(read.Succeeded, Is.True);
+            Assert.That(read.Value.Candidates.Count, Is.EqualTo(2));
+            Assert.That(read.Value.Candidates[0].Id.Value, Is.EqualTo("staging-atoken"));
+            Assert.That(read.Value.Candidates[1].Id.Value, Is.EqualTo("staging-ztoken"));
+        }
+
+        [Test]
+        public void EnumerationFaultMapsToReadStage()
+        {
+            var seam = new FaultInjectingFileOperationSeam(new DefaultFileOperationSeam());
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace, seam);
+            var slot = MustSlot("enum_fail");
+            var paths = MustPaths(slot);
+            Directory.CreateDirectory(paths.SlotDirectory);
+            File.WriteAllBytes(paths.PrimaryPath, SampleEnvelopeBytes("primary"));
+            File.WriteAllBytes(
+                Path.Combine(paths.SlotDirectory, paths.SlotIdStem + ".staging.token.save"),
+                SampleEnvelopeBytes("staging"));
+
+            seam.ConfigureFault(FileOperationStage.Enumerate, SaveErrorCode.IoDenied, "enumerate denied");
+            var read = store.ReadCandidates(slot);
+            Assert.That(read.Succeeded, Is.False);
+            Assert.That(read.Error.Stage, Is.EqualTo(SaveStage.Read));
+            Assert.That(read.Error.Code, Is.EqualTo(SaveErrorCode.IoDenied));
+        }
+
+        [Test]
         public void BackupFailureMapsToCommitAndPreservesPrimary()
         {
             var seam = new FaultInjectingFileOperationSeam(new DefaultFileOperationSeam());
@@ -199,10 +292,28 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
         }
 
         [Test]
+        public void RecoverableBackupPreservationReportsFalseWhenBackupCorrupted()
+        {
+            var store = CreateStore(
+                LocalFileCommitStrategy.RecoverableCopyReplace,
+                new CorruptingBackupFileOperationSeam(new DefaultFileOperationSeam()));
+            var slot = MustSlot("backup_corrupt");
+            var paths = MustPaths(slot);
+
+            Assert.That(store.Commit(slot, SampleEnvelopeBytes("first"), SaveCommitCapabilities.RecoverableReplace).Committed, Is.True);
+            File.WriteAllBytes(paths.BackupPath, SampleEnvelopeBytes("backup-seed"));
+
+            var failed = store.Commit(slot, SampleEnvelopeBytes("second"), SaveCommitCapabilities.RecoverableReplace);
+
+            Assert.That(failed.Committed, Is.False);
+            Assert.That(failed.PriorCommittedRecordPreserved, Is.False);
+            Assert.That(File.Exists(paths.BackupPath), Is.False);
+        }
+
+        [Test]
         public void StageWriteFailureMapsToStageWriteAndPreservesPrimary()
         {
             var seam = new FaultInjectingFileOperationSeam(new DefaultFileOperationSeam());
-            seam.ConfigureFault(FileOperationStage.StageWrite, SaveErrorCode.IoDenied, "stage denied");
             var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace, seam);
             var slot = MustSlot("stage_fail");
             var paths = MustPaths(slot);
@@ -210,11 +321,29 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
             Assert.That(store.Commit(slot, SampleEnvelopeBytes("first"), SaveCommitCapabilities.RecoverableReplace).Committed, Is.True);
             var priorBytes = File.ReadAllBytes(paths.PrimaryPath);
 
+            seam.ConfigureFault(FileOperationStage.StageWrite, SaveErrorCode.IoDenied, "stage denied");
             var failed = store.Commit(slot, SampleEnvelopeBytes("second"), SaveCommitCapabilities.RecoverableReplace);
             Assert.That(failed.Committed, Is.False);
             Assert.That(failed.Error.Stage, Is.EqualTo(SaveStage.StageWrite));
             Assert.That(failed.PriorCommittedRecordPreserved, Is.True);
             Assert.That(File.ReadAllBytes(paths.PrimaryPath), Is.EqualTo(priorBytes));
+        }
+
+        [Test]
+        public void BestEffortFailurePreservationFalseWhenPrimaryLost()
+        {
+            var seam = new FaultInjectingFileOperationSeam(new DestroyingMoveFileOperationSeam(new DefaultFileOperationSeam()));
+            var store = CreateStore(LocalFileCommitStrategy.BestEffortDirectWrite, seam);
+            var slot = MustSlot("best_effort_loss");
+            var paths = MustPaths(slot);
+
+            Assert.That(store.Commit(slot, SampleEnvelopeBytes("first"), SaveCommitCapabilities.BestEffortWrite).Committed, Is.True);
+            seam.ConfigureFault(FileOperationStage.Replace, SaveErrorCode.IoDenied, "move denied");
+
+            var failed = store.Commit(slot, SampleEnvelopeBytes("second"), SaveCommitCapabilities.BestEffortWrite);
+            Assert.That(failed.Committed, Is.False);
+            Assert.That(failed.PriorCommittedRecordPreserved, Is.False);
+            Assert.That(File.Exists(paths.PrimaryPath), Is.False);
         }
 
         [Test]
@@ -281,6 +410,47 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
         }
 
         [Test]
+        public void DirectStoreBoundaryRejectsDefaultSlot()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);
+            var read = store.ReadCandidates(default);
+            Assert.That(read.Succeeded, Is.False);
+            Assert.That(read.Error.Code, Is.EqualTo(SaveErrorCode.InvalidSlot));
+
+            var commit = store.Commit(default, SampleEnvelopeBytes("payload"), SaveCommitCapabilities.RecoverableReplace);
+            Assert.That(commit.Committed, Is.False);
+            Assert.That(commit.Error.Code, Is.EqualTo(SaveErrorCode.InvalidSlot));
+        }
+
+        [Test]
+        public void DirectStoreBoundaryRejectsUnsafeExtension()
+        {
+            Assert.That(
+                () => new LocalFileSaveStore(
+                    new InjectedPersistentDataRootProvider(_tempRoot),
+                    "saves",
+                    "../evil.save",
+                    LocalFileCommitStrategy.RecoverableCopyReplace),
+                Throws.TypeOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void DirectStoreBoundaryRejectsUnsafeSubdirectory()
+        {
+            var validation = LocalFileSaveStore.ValidateStoreConfiguration("..", ".save", LocalFileCommitStrategy.RecoverableCopyReplace);
+            Assert.That(validation.Succeeded, Is.False);
+            Assert.That(validation.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
+        public void DirectStoreBoundaryRejectsUndefinedStrategy()
+        {
+            var validation = LocalFileSaveStore.ValidateStoreConfiguration("saves", ".save", (LocalFileCommitStrategy)99);
+            Assert.That(validation.Succeeded, Is.False);
+            Assert.That(validation.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
         public void TestsNeverWriteToProductionPersistentDataPath()
         {
             var productionPath = Application.persistentDataPath;
@@ -293,6 +463,17 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
         {
             public int score;
             public string label;
+        }
+
+        private sealed class NonSerializableDto
+        {
+            public int score;
+        }
+
+        [Serializable]
+        private sealed class ReadonlySerializedDto
+        {
+            public readonly int score;
         }
 
         [Serializable]
@@ -322,6 +503,69 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
             public int ToVersion { get; }
 
             public SupportedPlainDto Migrate(SupportedPlainDto state) => _apply(state);
+        }
+
+        private sealed class DestroyingMoveFileOperationSeam : IFileOperationSeam
+        {
+            private readonly IFileOperationSeam _inner;
+
+            public DestroyingMoveFileOperationSeam(IFileOperationSeam inner)
+            {
+                _inner = inner;
+            }
+
+            public Stream CreateWriteStream(string path) => _inner.CreateWriteStream(path);
+            public void FlushToDisk(Stream stream) => _inner.FlushToDisk(stream);
+            public bool FileExists(string path) => _inner.FileExists(path);
+            public byte[] ReadAllBytes(string path) => _inner.ReadAllBytes(path);
+            public string[] EnumerateFiles(string directoryPath, string searchPattern, SearchOption searchOption)
+                => _inner.EnumerateFiles(directoryPath, searchPattern, searchOption);
+            public void DeleteFile(string path) => _inner.DeleteFile(path);
+            public void CopyFile(string sourcePath, string destinationPath, bool overwrite)
+                => _inner.CopyFile(sourcePath, destinationPath, overwrite);
+            public void ReplaceFile(string sourcePath, string destinationPath, string destinationBackupPath)
+                => _inner.ReplaceFile(sourcePath, destinationPath, destinationBackupPath);
+            public void EnsureDirectory(string directoryPath) => _inner.EnsureDirectory(directoryPath);
+
+            public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
+            {
+                if (overwrite && _inner.FileExists(destinationPath))
+                {
+                    _inner.DeleteFile(destinationPath);
+                }
+
+                throw new IOException("Simulated destructive move failure.");
+            }
+        }
+
+        private sealed class CorruptingBackupFileOperationSeam : IFileOperationSeam
+        {
+            private readonly IFileOperationSeam _inner;
+
+            public CorruptingBackupFileOperationSeam(IFileOperationSeam inner)
+            {
+                _inner = inner;
+            }
+
+            public Stream CreateWriteStream(string path) => _inner.CreateWriteStream(path);
+            public void FlushToDisk(Stream stream) => _inner.FlushToDisk(stream);
+            public bool FileExists(string path) => _inner.FileExists(path);
+            public byte[] ReadAllBytes(string path) => _inner.ReadAllBytes(path);
+            public string[] EnumerateFiles(string directoryPath, string searchPattern, SearchOption searchOption)
+                => _inner.EnumerateFiles(directoryPath, searchPattern, searchOption);
+            public void DeleteFile(string path) => _inner.DeleteFile(path);
+            public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
+                => _inner.MoveFile(sourcePath, destinationPath, overwrite);
+            public void ReplaceFile(string sourcePath, string destinationPath, string destinationBackupPath)
+                => _inner.ReplaceFile(sourcePath, destinationPath, destinationBackupPath);
+            public void EnsureDirectory(string directoryPath) => _inner.EnsureDirectory(directoryPath);
+
+            public void CopyFile(string sourcePath, string destinationPath, bool overwrite)
+            {
+                _inner.CopyFile(sourcePath, destinationPath, overwrite);
+                _inner.DeleteFile(destinationPath);
+                throw new IOException("Simulated backup corruption.");
+            }
         }
 
         private struct SerializedConfig

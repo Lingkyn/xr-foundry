@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using Lingkyn.Persistence.Core;
 using UnityEngine;
 
@@ -79,6 +80,14 @@ namespace Lingkyn.Persistence.Unity
                     $"Unsupported DTO type: {type.FullName}.");
             }
 
+            if (type.GetCustomAttribute<SerializableAttribute>() == null)
+            {
+                return SaveResult.Fail(
+                    SaveStage.Encode,
+                    SaveErrorCode.UnsupportedFormat,
+                    $"DTO type must be marked [Serializable]: {type.FullName}.");
+            }
+
             if (!visiting.Add(type))
             {
                 return SaveResult.Fail(
@@ -88,6 +97,7 @@ namespace Lingkyn.Persistence.Unity
             }
 
             var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var hasSerializedField = false;
             for (var index = 0; index < fields.Length; index++)
             {
                 var field = fields[index];
@@ -96,9 +106,14 @@ namespace Lingkyn.Persistence.Unity
                     continue;
                 }
 
+                hasSerializedField = true;
                 if (field.IsInitOnly)
                 {
-                    continue;
+                    visiting.Remove(type);
+                    return SaveResult.Fail(
+                        SaveStage.Encode,
+                        SaveErrorCode.UnsupportedFormat,
+                        $"Readonly serialized fields are not supported: {type.FullName}.{field.Name}.");
                 }
 
                 var fieldValidation = ValidateType(field.FieldType, visiting);
@@ -107,6 +122,15 @@ namespace Lingkyn.Persistence.Unity
                     visiting.Remove(type);
                     return fieldValidation;
                 }
+            }
+
+            if (!hasSerializedField)
+            {
+                visiting.Remove(type);
+                return SaveResult.Fail(
+                    SaveStage.Encode,
+                    SaveErrorCode.UnsupportedFormat,
+                    $"DTO type must expose at least one explicitly serialized field: {type.FullName}.");
             }
 
             visiting.Remove(type);
@@ -133,6 +157,8 @@ namespace Lingkyn.Persistence.Unity
 
     public sealed class JsonUtilitySaveCodec<T> : ISaveCodec<T>
     {
+        private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
         public JsonUtilitySaveCodec()
         {
             var validation = JsonUtilityDtoSupport.ValidateDtoType<T>();
@@ -158,7 +184,7 @@ namespace Lingkyn.Persistence.Unity
             try
             {
                 var json = JsonUtility.ToJson(snapshot);
-                return SaveResult<byte[]>.Success(System.Text.Encoding.UTF8.GetBytes(json));
+                return SaveResult<byte[]>.Success(StrictUtf8.GetBytes(json));
             }
             catch (Exception exception)
             {
@@ -176,7 +202,7 @@ namespace Lingkyn.Persistence.Unity
 
             try
             {
-                var json = System.Text.Encoding.UTF8.GetString(bytes);
+                var json = StrictUtf8.GetString(bytes);
                 var snapshot = JsonUtility.FromJson<T>(json);
                 if (snapshot == null)
                 {
@@ -184,6 +210,13 @@ namespace Lingkyn.Persistence.Unity
                 }
 
                 return SaveResult<T>.Success(snapshot);
+            }
+            catch (DecoderFallbackException exception)
+            {
+                return SaveResult<T>.Fail(
+                    SaveStage.Decode,
+                    SaveErrorCode.UnsupportedFormat,
+                    $"Payload is not strict UTF-8: {exception.Message}");
             }
             catch (Exception exception)
             {

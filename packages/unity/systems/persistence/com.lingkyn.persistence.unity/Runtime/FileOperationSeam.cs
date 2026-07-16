@@ -12,7 +12,8 @@ namespace Lingkyn.Persistence.Unity
         Backup = 3,
         Replace = 4,
         Cleanup = 5,
-        Read = 6
+        Read = 6,
+        Enumerate = 7
     }
 
     internal interface IFileOperationSeam
@@ -21,6 +22,7 @@ namespace Lingkyn.Persistence.Unity
         void FlushToDisk(Stream stream);
         bool FileExists(string path);
         byte[] ReadAllBytes(string path);
+        string[] EnumerateFiles(string directoryPath, string searchPattern, SearchOption searchOption);
         void DeleteFile(string path);
         void MoveFile(string sourcePath, string destinationPath, bool overwrite);
         void CopyFile(string sourcePath, string destinationPath, bool overwrite);
@@ -59,6 +61,16 @@ namespace Lingkyn.Persistence.Unity
 
         public byte[] ReadAllBytes(string path) => File.ReadAllBytes(path);
 
+        public string[] EnumerateFiles(string directoryPath, string searchPattern, SearchOption searchOption)
+        {
+            if (!Directory.Exists(directoryPath))
+            {
+                return Array.Empty<string>();
+            }
+
+            return Directory.GetFiles(directoryPath, searchPattern, searchOption);
+        }
+
         public void DeleteFile(string path)
         {
             if (File.Exists(path))
@@ -69,9 +81,10 @@ namespace Lingkyn.Persistence.Unity
 
         public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
         {
-            if (overwrite && File.Exists(destinationPath))
+            if (overwrite)
             {
-                File.Delete(destinationPath);
+                File.Move(sourcePath, destinationPath, overwrite: true);
+                return;
             }
 
             File.Move(sourcePath, destinationPath);
@@ -137,6 +150,12 @@ namespace Lingkyn.Persistence.Unity
             return _inner.ReadAllBytes(path);
         }
 
+        public string[] EnumerateFiles(string directoryPath, string searchPattern, SearchOption searchOption)
+        {
+            ThrowIfFault(FileOperationStage.Enumerate);
+            return _inner.EnumerateFiles(directoryPath, searchPattern, searchOption);
+        }
+
         public void DeleteFile(string path)
         {
             ThrowIfFault(FileOperationStage.Cleanup);
@@ -187,7 +206,10 @@ namespace Lingkyn.Persistence.Unity
 
     internal static class FileIoErrorMapper
     {
-        public static SaveCommitResult MapCommitFailure(Exception exception, SaveStage stage, bool priorCommittedRecordPreserved)
+        public static SaveCommitResult MapCommitFailure(
+            Exception exception,
+            SaveStage stage,
+            bool priorCommittedRecordPreserved)
         {
             return SaveCommitResult.NotCommitted(
                 stage,

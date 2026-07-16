@@ -584,6 +584,22 @@ def completed_device_lab_receipt() -> dict:
     return payload
 
 
+def activate_checkpoint_fixture(checkpoint: dict) -> None:
+    """Make lifecycle-sensitive negative fixtures independent of live task state."""
+    checkpoint["status"] = "in_progress"
+    checkpoint["waiting"] = None
+    checkpoint["claim"].update(
+        {
+            "status": "active",
+            "adoptable": False,
+            "ended_at": None,
+            "transition_reason": None,
+        }
+    )
+    checkpoint["exact_next_action"] = "Continue the bounded test fixture."
+    checkpoint["completed_at"] = None
+
+
 def attach_device_runtime_receipt(
     payload: dict,
     directory: str | Path,
@@ -2383,7 +2399,10 @@ class RepositoryContractTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
         )
         for checkpoint in payload["checkpoints"]:
-            if checkpoint["id"] == "WB-05":
+            if checkpoint["id"] == "WB-01V":
+                activate_checkpoint_fixture(checkpoint)
+            elif checkpoint["id"] == "WB-05":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = [
                     "scripts/validate_repository.py",
                     "docs/contributing/deliberation-protocol.md",
@@ -2421,8 +2440,10 @@ class RepositoryContractTests(unittest.TestCase):
         )
         for checkpoint in payload["checkpoints"]:
             if checkpoint["id"] == "WB-01V":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = ["docs/**/foo"]
             elif checkpoint["id"] == "WB-05":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = ["docs/bar/**"]
 
         errors = MODULE.validate_task_contract(
@@ -2459,8 +2480,10 @@ class RepositoryContractTests(unittest.TestCase):
         )
         for checkpoint in payload["checkpoints"]:
             if checkpoint["id"] == "WB-01V":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = ["docs/a**/foo"]
             elif checkpoint["id"] == "WB-05":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = ["docs/a/x/foo"]
 
         errors = MODULE.validate_task_contract(
@@ -2616,8 +2639,10 @@ class RepositoryContractTests(unittest.TestCase):
         )
         for checkpoint in payload["checkpoints"]:
             if checkpoint["id"] == "WB-01V":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = ["README.md"]
             elif checkpoint["id"] == "WB-05":
+                activate_checkpoint_fixture(checkpoint)
                 checkpoint["allowed_paths"] = ["readme.md"]
 
         errors = MODULE.validate_task_contract(
@@ -2758,8 +2783,10 @@ class RepositoryContractTests(unittest.TestCase):
             payload = json.loads(workbench.read_text(encoding="utf-8"))
             for checkpoint in payload["checkpoints"]:
                 if checkpoint["id"] == "WB-01V":
+                    activate_checkpoint_fixture(checkpoint)
                     checkpoint["allowed_paths"] = [left]
                 elif checkpoint["id"] == "WB-05":
+                    activate_checkpoint_fixture(checkpoint)
                     checkpoint["allowed_paths"] = [right]
             return MODULE.validate_task_contract(
                 payload,

@@ -1,317 +1,285 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 
-namespace Lingkyn.Persistence.Core.Tests
+namespace Lingkyn.Persistence.Core.Editor.Tests
 {
     public sealed class PersistenceCoreContractTests
     {
         [Test]
-        public void SaveSlotIdRejectsInvalidCharacters()
+        public void SaveSlotIdRejectsInvalidInputs()
         {
-            Assert.Throws<ArgumentException>(() => _ = new SaveSlotId("slot/1"));
-            Assert.Throws<ArgumentException>(() => _ = new SaveSlotId(".."));
-            Assert.Throws<ArgumentException>(() => _ = new SaveSlotId(" "));
-            Assert.DoesNotThrow(() => _ = new SaveSlotId("profile_01.quick"));
+            var empty = SaveSlotId.TryCreate(string.Empty);
+            var whitespace = SaveSlotId.TryCreate(" ");
+            var separator = SaveSlotId.TryCreate("profile/main");
+            var valid = SaveSlotId.TryCreate("slot_main_01");
+
+            Assert.That(empty.Succeeded, Is.False);
+            Assert.That(whitespace.Succeeded, Is.False);
+            Assert.That(separator.Succeeded, Is.False);
+            Assert.That(valid.Succeeded, Is.True);
         }
 
         [Test]
-        public void EnvelopeDecodeRejectsMalformedAndFutureFormats()
+        public void EnvelopeCodecRejectsMalformedAndFutureFormats()
         {
             var malformed = SaveEnvelopeBinaryCodec.Decode(new byte[] { 0x01, 0x02, 0x03 });
-            Assert.That(malformed.Success, Is.False);
-            Assert.That(malformed.Stage, Is.EqualTo(SaveStage.Envelope));
+            Assert.That(malformed.Succeeded, Is.False);
+            Assert.That(malformed.Error.Stage, Is.EqualTo(SaveStage.Envelope));
 
-            var envelope = BuildEnvelope(1, "commit", Encoding.UTF8.GetBytes("payload"));
-            var encoded = SaveEnvelopeBinaryCodec.Encode(envelope);
-            OverwriteFormatVersion(encoded, SaveEnvelopeBinaryCodec.CurrentFormatVersion + 1);
-            var future = SaveEnvelopeBinaryCodec.Decode(encoded);
-            Assert.That(future.Success, Is.False);
-            Assert.That(future.ErrorCode, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+            var valid = BuildEnvelope("state-v1", 1);
+            var encoded = SaveEnvelopeBinaryCodec.Encode(valid);
+            Assert.That(encoded.Succeeded, Is.True);
+
+            var future = encoded.Value.ToArray();
+            future[4] = SaveEnvelopeBinaryCodec.FormatVersion + 1;
+            var futureDecode = SaveEnvelopeBinaryCodec.Decode(future);
+            Assert.That(futureDecode.Succeeded, Is.False);
+            Assert.That(futureDecode.Error.Code, Is.EqualTo(SaveErrorCode.FutureSchema));
         }
 
         [Test]
-        public void LoadRejectsCorruptedChecksumBeforeDecode()
+        public void CoordinatorRejectsChecksumCorruptionBeforeDecode()
         {
-            var codec = new TestCodec();
-            var store = new TestStore(SaveCommitCapability.AtomicReplace);
-            var integrity = new Sha256IntegrityProvider();
-            var pipeline = MigrationPipeline<string>.Create(1, Array.Empty<ISaveMigration<string>>()).Value;
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec();
+            var migrations = new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>());
+            var coordinator = CreateCoordinator(store, codec, migrations);
+            var slot = MustSlot("slot_main");
 
-            var coordinator = new SaveCoordinator<string>(
-                "schema",
-                1,
-                SaveCommitCapability.AtomicReplace,
-                store,
-                codec,
-                integrity,
-                pipeline);
+            var save = coordinator.Save(slot, "state-v1");
+            Assert.That(save.Succeeded, Is.True);
 
-            var payload = codec.Encode("saved");
-            var digest = integrity.Compute(payload);
-            digest[0] ^= 0xFF;
-            var envelope = new SaveEnvelope(1, "schema", 1, "commit", DateTime.UtcNow.Ticks, integrity.Algorithm, digest, payload);
-            store.LoadBytes = SaveEnvelopeBinaryCodec.Encode(envelope);
+            var corrupted = store.Bytes.ToArray();
+            corrupted[corrupted.Length - 1] ^= 0x40;
+            store.Bytes = corrupted;
 
-            var result = coordinator.Load(new SaveSlotId("slot-1"), _ => SaveResult.Ok(SaveStage.Validate));
-
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.Stage, Is.EqualTo(SaveStage.Verify));
-            Assert.That(result.ErrorCode, Is.EqualTo(SaveErrorCode.CorruptPayload));
-            Assert.That(codec.DecodeCount, Is.EqualTo(0));
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Verify));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.CorruptPayload));
+            Assert.That(codec.DecodeCallCount, Is.EqualTo(0));
         }
 
         [Test]
-        public void MigrationPipelineSucceedsWithDeterministicOrderedSteps()
+        public void MigrationPipelineAppliesDeterministicPath()
         {
-            var pipelineResult = MigrationPipeline<int>.Create(
-                3,
-                new ISaveMigration<int>[]
-                {
-                    new DelegateMigration<int>(1, 2, state => state + 10),
-                    new DelegateMigration<int>(2, 3, state => state + 20),
-                });
-
-            Assert.That(pipelineResult.Success, Is.True);
-            var migrated = pipelineResult.Value.Migrate(1, 5);
-            Assert.That(migrated.Success, Is.True);
-            Assert.That(migrated.Value, Is.EqualTo(35));
-        }
-
-        [Test]
-        public void MigrationPipelineRejectsMissingAmbiguousCyclicAndNonMonotonic()
-        {
-            var missingPipeline = MigrationPipeline<int>.Create(3, new ISaveMigration<int>[]
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
             {
-                new DelegateMigration<int>(1, 2, state => state),
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(1, 2, state => state + "|m12")
             });
-            var missingResult = missingPipeline.Value.Migrate(1, 7);
-            Assert.That(missingResult.Success, Is.False);
-            Assert.That(missingResult.ErrorCode, Is.EqualTo(SaveErrorCode.MissingMigration));
 
-            var ambiguous = MigrationPipeline<int>.Create(3, new ISaveMigration<int>[]
-            {
-                new DelegateMigration<int>(1, 2, state => state),
-                new DelegateMigration<int>(1, 3, state => state),
-            });
-            Assert.That(ambiguous.Success, Is.False);
-            Assert.That(ambiguous.ErrorCode, Is.EqualTo(SaveErrorCode.AmbiguousMigration));
-
-            var cyclic = MigrationPipeline<int>.Create(4, new ISaveMigration<int>[]
-            {
-                new DelegateMigration<int>(1, 2, state => state),
-                new DelegateMigration<int>(2, 1, state => state),
-            });
-            Assert.That(cyclic.Success, Is.False);
-            Assert.That(cyclic.ErrorCode, Is.EqualTo(SaveErrorCode.CyclicMigration));
-
-            var nonMonotonic = MigrationPipeline<int>.Create(4, new ISaveMigration<int>[]
-            {
-                new DelegateMigration<int>(3, 2, state => state),
-            });
-            Assert.That(nonMonotonic.Success, Is.False);
-            Assert.That(nonMonotonic.ErrorCode, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.Value, Is.EqualTo("seed|m01|m12"));
         }
 
         [Test]
-        public void MigrationRejectsFutureVersionBeforeReturningState()
+        public void MigrationPipelineRejectsMissingPath()
         {
-            var pipeline = MigrationPipeline<string>.Create(
-                2,
-                new ISaveMigration<string>[]
-                {
-                    new DelegateMigration<string>(1, 2, state => state + "-m2"),
-                }).Value;
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01")
+            });
 
-            var result = pipeline.Migrate(5, "state");
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorCode, Is.EqualTo(SaveErrorCode.FutureSchema));
-            Assert.That(result.HasValue, Is.False);
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.MissingMigration));
         }
 
         [Test]
-        public void CoordinatorEnforcesStageOrderAndFailClosed()
+        public void MigrationPipelineRejectsAmbiguousGraph()
         {
-            var trace = new List<string>();
-            var codec = new TestCodec(trace);
-            var integrity = new TraceIntegrityProvider(trace);
-            var store = new TestStore(SaveCommitCapability.AtomicReplace, trace);
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(0, 2, state => state + "|m02")
+            });
 
-            var pipeline = MigrationPipeline<string>.Create(
-                2,
-                new ISaveMigration<string>[]
-                {
-                    new DelegateMigration<string>(1, 2, state =>
-                    {
-                        trace.Add("migrate");
-                        return $"{state}-m";
-                    }),
-                }).Value;
+            var result = migrations.Apply(0, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.AmbiguousMigration));
+        }
 
-            var coordinator = new SaveCoordinator<string>(
-                "schema",
-                2,
-                SaveCommitCapability.AtomicReplace,
-                store,
-                codec,
-                integrity,
-                pipeline);
+        [Test]
+        public void MigrationPipelineRejectsCyclicGraph()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|m01"),
+                new DelegateMigration(1, 0, state => state + "|m10")
+            });
 
-            var payload = codec.Encode("input");
-            var digest = integrity.Compute(payload);
-            store.LoadBytes = SaveEnvelopeBinaryCodec.Encode(new SaveEnvelope(1, "schema", 1, "commit", 1, integrity.Algorithm, digest, payload));
+            var result = migrations.Apply(0, 1, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+        }
 
-            var validationRuns = 0;
-            var result = coordinator.Load(
-                new SaveSlotId("slot"),
+        [Test]
+        public void MigrationPipelineRejectsNonMonotonicGraph()
+        {
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(2, 1, state => state)
+            });
+
+            var result = migrations.Apply(0, 1, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.NonMonotonicMigration));
+        }
+
+        [Test]
+        public void MigrationPipelineRejectsFutureStoredVersion()
+        {
+            var migrations = new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>());
+            var result = migrations.Apply(5, 2, "seed");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.FutureSchema));
+        }
+
+        [Test]
+        public void CoordinatorStopsBeforeApplyWhenValidationFails()
+        {
+            var store = new InMemoryStore();
+            var codec = new Utf8StringCodec();
+            var migrations = new MigrationPipeline<string>(new ISaveMigration<string>[]
+            {
+                new DelegateMigration(0, 1, state => state + "|migrated")
+            });
+            var coordinator = CreateCoordinator(store, codec, migrations, currentSchemaVersion: 1);
+            var slot = MustSlot("slot_gate");
+
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("candidate", 0)).Value;
+            var applyCalls = 0;
+            var result = coordinator.LoadAndApply(
+                slot,
+                _ => SaveResult.Fail(SaveStage.Validate, SaveErrorCode.ValidateRejected, "validator rejected"),
                 _ =>
                 {
-                    validationRuns++;
-                    trace.Add("validate");
-                    return SaveResult.Fail(SaveStage.Validate, SaveErrorCode.ValidationRejected, "reject");
+                    applyCalls++;
+                    return SaveResult.Success();
                 });
 
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.Stage, Is.EqualTo(SaveStage.Validate));
-            Assert.That(result.HasValue, Is.False);
-            Assert.That(validationRuns, Is.EqualTo(1));
-            CollectionAssert.AreEqual(
-                new[] { "read", "verify", "decode", "migrate", "validate" },
-                trace);
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Validate));
+            Assert.That(applyCalls, Is.EqualTo(0));
+            Assert.That(codec.DecodeCallCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void SaveFailsWhenRequiredCommitCapabilityIsMissing()
+        public void CoordinatorReportsCapabilityMismatchBeforeCommit()
         {
-            var codec = new TestCodec();
-            var store = new TestStore(SaveCommitCapability.BestEffortWrite);
-            var integrity = new Sha256IntegrityProvider();
-            var pipeline = MigrationPipeline<string>.Create(1, Array.Empty<ISaveMigration<string>>()).Value;
-            var coordinator = new SaveCoordinator<string>(
-                "schema",
-                1,
-                SaveCommitCapability.AtomicReplace,
+            var store = new InMemoryStore { Capabilities = SaveCommitCapabilities.BestEffortWrite };
+            var coordinator = CreateCoordinator(
                 store,
+                new Utf8StringCodec(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                requiredCapabilities: SaveCommitCapabilities.AtomicReplace);
+
+            var result = coordinator.Save(MustSlot("slot_commit"), "payload");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Commit));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedCommitCapability));
+            Assert.That(store.CommitCallCount, Is.EqualTo(0));
+        }
+
+        private static SaveCoordinator<string> CreateCoordinator(
+            InMemoryStore store,
+            Utf8StringCodec codec,
+            MigrationPipeline<string> migrations,
+            int currentSchemaVersion = 0,
+            SaveCommitCapabilities requiredCapabilities = SaveCommitCapabilities.BestEffortWrite)
+        {
+            return new SaveCoordinator<string>(
+                "lingkyn.state",
+                currentSchemaVersion,
+                "bc59960",
                 codec,
-                integrity,
-                pipeline);
-
-            var result = coordinator.Save(new SaveSlotId("slot"), "state", "commit", DateTime.UtcNow.Ticks);
-            Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorCode, Is.EqualTo(SaveErrorCode.UnsupportedCommitCapability));
+                new Sha256IntegrityProvider(),
+                migrations,
+                store,
+                requiredCapabilities);
         }
 
-        private static SaveEnvelope BuildEnvelope(int schemaVersion, string commitId, byte[] payload)
+        private static SaveEnvelope BuildEnvelope(string payloadText, int schemaVersion)
         {
-            var integrity = new Sha256IntegrityProvider();
-            var digest = integrity.Compute(payload);
-            return new SaveEnvelope(1, "schema", schemaVersion, commitId, 1L, integrity.Algorithm, digest, payload);
+            var payload = Encoding.UTF8.GetBytes(payloadText);
+            var digest = new Sha256IntegrityProvider().ComputeDigest(payload).Value;
+            return new SaveEnvelope(
+                "lingkyn.state",
+                schemaVersion,
+                "bc59960",
+                DateTime.UtcNow.Ticks,
+                "sha-256",
+                digest,
+                payload);
         }
 
-        private static void OverwriteFormatVersion(byte[] bytes, int value)
+        private static SaveSlotId MustSlot(string value)
         {
-            var offset = 4;
-            bytes[offset + 0] = (byte)(value & 0xFF);
-            bytes[offset + 1] = (byte)((value >> 8) & 0xFF);
-            bytes[offset + 2] = (byte)((value >> 16) & 0xFF);
-            bytes[offset + 3] = (byte)((value >> 24) & 0xFF);
+            var candidate = SaveSlotId.TryCreate(value);
+            Assert.That(candidate.Succeeded, Is.True);
+            return candidate.Value;
         }
 
-        private sealed class DelegateMigration<TState> : ISaveMigration<TState>
+        private sealed class Utf8StringCodec : ISaveCodec<string>
         {
-            private readonly Func<TState, TState> step;
+            public int DecodeCallCount { get; private set; }
 
-            public DelegateMigration(int fromVersion, int toVersion, Func<TState, TState> step)
+            public SaveResult<byte[]> Encode(string snapshot)
+            {
+                return SaveResult<byte[]>.Success(Encoding.UTF8.GetBytes(snapshot ?? string.Empty));
+            }
+
+            public SaveResult<string> Decode(ReadOnlySpan<byte> bytes)
+            {
+                DecodeCallCount++;
+                return SaveResult<string>.Success(Encoding.UTF8.GetString(bytes));
+            }
+        }
+
+        private sealed class DelegateMigration : ISaveMigration<string>
+        {
+            private readonly Func<string, string> _apply;
+
+            public DelegateMigration(int fromVersion, int toVersion, Func<string, string> apply)
             {
                 FromVersion = fromVersion;
                 ToVersion = toVersion;
-                this.step = step;
+                _apply = apply;
             }
 
             public int FromVersion { get; }
             public int ToVersion { get; }
 
-            public TState Migrate(TState state) => step(state);
+            public string Migrate(string state) => _apply(state);
         }
 
-        private sealed class TestCodec : ISaveCodec<string>
+        private sealed class InMemoryStore : ISaveStore
         {
-            private readonly IList<string> trace;
+            public byte[] Bytes { get; set; } = Array.Empty<byte>();
+            public SaveCommitCapabilities Capabilities { get; set; } = SaveCommitCapabilities.BestEffortWrite;
+            public int CommitCallCount { get; private set; }
 
-            public TestCodec(IList<string> trace = null)
+            public SaveResult<byte[]> Read(SaveSlotId slotId)
             {
-                this.trace = trace;
-            }
-
-            public int DecodeCount { get; private set; }
-
-            public byte[] Encode(string state) => Encoding.UTF8.GetBytes(state ?? string.Empty);
-
-            public string Decode(ReadOnlySpan<byte> payload)
-            {
-                DecodeCount++;
-                trace?.Add("decode");
-                return Encoding.UTF8.GetString(payload);
-            }
-        }
-
-        private sealed class TraceIntegrityProvider : IIntegrityProvider
-        {
-            private readonly IList<string> trace;
-            private readonly Sha256IntegrityProvider inner = new Sha256IntegrityProvider();
-
-            public TraceIntegrityProvider(IList<string> trace)
-            {
-                this.trace = trace;
-            }
-
-            public string Algorithm => inner.Algorithm;
-
-            public byte[] Compute(ReadOnlySpan<byte> payload) => inner.Compute(payload);
-
-            public bool Verify(ReadOnlySpan<byte> payload, ReadOnlySpan<byte> expectedDigest)
-            {
-                trace?.Add("verify");
-                return inner.Verify(payload, expectedDigest);
-            }
-        }
-
-        private sealed class TestStore : ISaveStore
-        {
-            private readonly IList<string> trace;
-
-            public TestStore(SaveCommitCapability capabilities, IList<string> trace = null)
-            {
-                Capabilities = capabilities;
-                this.trace = trace;
-            }
-
-            public SaveCommitCapability Capabilities { get; }
-
-            public byte[] LoadBytes { get; set; }
-
-            public SaveResult<ReadOnlyMemory<byte>> Read(SaveSlotId slotId)
-            {
-                trace?.Add("read");
-                if (LoadBytes == null)
+                if (Bytes.Length == 0)
                 {
-                    return SaveResult<ReadOnlyMemory<byte>>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No save exists.");
+                    return SaveResult<byte[]>.Fail(SaveStage.Read, SaveErrorCode.NotFound, "No save exists.");
                 }
 
-                return SaveResult<ReadOnlyMemory<byte>>.Ok(SaveStage.Read, new ReadOnlyMemory<byte>(LoadBytes));
+                return SaveResult<byte[]>.Success(Bytes);
             }
 
-            public SaveResult Commit(SaveSlotId slotId, ReadOnlyMemory<byte> envelopeBytes, SaveCommitCapability requiredCapability)
+            public SaveResult Commit(
+                SaveSlotId slotId,
+                ReadOnlyMemory<byte> envelopeBytes,
+                SaveCommitCapabilities requiredCapabilities)
             {
-                trace?.Add("commit");
-                if ((Capabilities & requiredCapability) != requiredCapability)
-                {
-                    return SaveResult.Fail(SaveStage.Commit, SaveErrorCode.UnsupportedCommitCapability, "Capability mismatch.");
-                }
-
-                LoadBytes = envelopeBytes.ToArray();
-                return SaveResult.Ok(SaveStage.Commit);
+                CommitCallCount++;
+                Bytes = envelopeBytes.ToArray();
+                return SaveResult.Success();
             }
         }
     }

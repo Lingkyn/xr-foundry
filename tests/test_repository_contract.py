@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import copy
 import hashlib
 import json
 import os
@@ -735,24 +736,26 @@ class RepositoryContractTests(unittest.TestCase):
     def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
         self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
         self.assertEqual([], MODULE.validate_fast_structure(ROOT))
-        batch = json.loads(
-            (
-                ROOT
-                / "docs"
-                / "foundry"
-                / "batches"
-                / "unity-first-batch.v1.json"
-            ).read_text(encoding="utf-8")
+        registry = json.loads(
+            (ROOT / "docs" / "foundry" / "batches" / "batch-registry.v1.json").read_text(
+                encoding="utf-8"
+            )
         )
+        batches = [
+            json.loads((ROOT / item["path"]).read_text(encoding="utf-8"))
+            for item in registry["batches"]
+        ]
+        batch_packages = [item for batch in batches for item in batch["packages"]]
         catalog = current_compatibility_profiles()
         package_catalog = json.loads((ROOT / "package-catalog.json").read_text(encoding="utf-8"))
         self.assertEqual(
             {item["id"] for item in package_catalog["packages"]},
-            {item["id"] for item in batch["packages"]},
+            {item["id"] for item in batch_packages},
         )
+        self.assertEqual(len(batch_packages), len({item["id"] for item in batch_packages}))
         self.assertEqual(
             {item["id"] for item in catalog["profiles"]},
-            {item["compatibility_profile"] for item in batch["packages"]},
+            {item["compatibility_profile"] for item in batch_packages},
         )
 
     def test_foundry_first_batch_rejects_membership_and_version_drift(self) -> None:
@@ -801,6 +804,36 @@ class RepositoryContractTests(unittest.TestCase):
 
         self.assertTrue(
             any("compatibility profile identity/version mismatch" in error for error in errors)
+        )
+
+    def test_foundry_batch_registry_rejects_cross_batch_package_duplication(self) -> None:
+        first_batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-first-batch.v1.json"
+        )
+        next_batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-next-systems.v1.json"
+        )
+        original_loader = MODULE.load_json
+        first_batch = json.loads(first_batch_path.read_text(encoding="utf-8"))
+        duplicated = json.loads(next_batch_path.read_text(encoding="utf-8"))
+        duplicated["packages"].append(copy.deepcopy(first_batch["packages"][0]))
+
+        def load_with_duplicate(path: Path) -> dict:
+            return duplicated if Path(path) == next_batch_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_duplicate):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(
+            any("assigns a package to more than one batch" in error for error in errors)
         )
 
     def test_foundry_scaffolder_is_deterministic_dry_run_first_and_collision_safe(self) -> None:

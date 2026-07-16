@@ -24,6 +24,8 @@ packages/
         com.lingkyn.inventory.uitoolkit/
         com.lingkyn.inventory.xr.ugui/
         com.lingkyn.inventory.xr.uitoolkit/
+      persistence/
+        com.lingkyn.persistence.core/
 docs/
   architecture/
   standards/

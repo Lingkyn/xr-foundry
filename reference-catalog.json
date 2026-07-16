@@ -200,6 +200,28 @@
       ]
     },
     {
+      "id": "unity-persistence-core",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.core",
+      "package_id": "com.lingkyn.persistence.core",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Engine-light save envelopes, deterministic migration, typed commit results, integrity verification, and fail-closed primary/backup recovery contracts.",
+      "evidence": [
+        "docs/standards/persistence/source-manifest.json",
+        "docs/standards/persistence/architecture-contract.md",
+        "docs/standards/persistence/verification-contract.md",
+        "packages/unity/systems/persistence/com.lingkyn.persistence.core/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No filesystem or UnityEngine provider is included",
+        "No crash-durability, authentication, encryption, cloud, mobile, console, or device claim is made",
+        "Unity file-provider fault injection and release upgrade/rollback evidence remain pending"
+      ]
+    },
+    {
       "id": "repository-information-architecture",
       "kind": "repository_standard",
       "engine": "multi-engine_with_Unity_implemented",

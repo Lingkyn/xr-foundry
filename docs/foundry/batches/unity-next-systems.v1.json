@@ -1,0 +1,31 @@
+{
+  "schema": "xr-foundry.package_batch.v1",
+  "batch_id": "unity-next-systems",
+  "engine": "Unity",
+  "status": "building",
+  "release": {
+    "tag": null,
+    "commit_binding": "release_tag_exact_commit",
+    "immutable_history": true
+  },
+  "packages": [
+    {
+      "id": "com.lingkyn.persistence.core",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.core",
+      "version": "0.1.0",
+      "maturity": "incubating",
+      "compatibility_profile": "unity-6000.3-persistence-core-windows-editor",
+      "device_evidence": "not_applicable"
+    }
+  ],
+  "claim_boundary": [
+    "This building batch may grow only through independently admitted and validated package checkpoints.",
+    "Compatibility evidence applies only to each named exact profile and immutable evidence commit.",
+    "No batch membership or Editor test proves runtime-device, cross-version, security, cloud, or crash-durability behavior."
+  ],
+  "authority": {
+    "batch_inclusion_promotes_maturity": false,
+    "batch_release_grants_device_claim": false,
+    "agent_may_release": false
+  }
+}

@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="49" result="Passed" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.0687461">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-persistence-core-0e1be0f" fullname="xr-foundry-persistence-core-0e1be0f" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.068746" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1051" name="Lingkyn.Persistence.Core.Editor.Tests.dll" fullname="D:/rrjm/validation/xr-foundry-persistence-core-0e1be0f/Library/ScriptAssemblies/Lingkyn.Persistence.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062910" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="144716" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1052" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062643" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1053" name="Persistence" fullname="Lingkyn.Persistence" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062565" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1054" name="Core" fullname="Lingkyn.Persistence.Core" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062506" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1055" name="Editor" fullname="Lingkyn.Persistence.Core.Editor" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062447" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestSuite" id="1056" name="Tests" fullname="Lingkyn.Persistence.Core.Editor.Tests" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062315" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-suite type="TestFixture" id="1001" name="PersistenceCoreContractTests" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.059443" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+                  <properties />
+                  <test-case id="1015" name="BackupOnlyRecoveryReportsPrimaryMissingDiagnostic" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.BackupOnlyRecoveryReportsPrimaryMissingDiagnostic" methodname="BackupOnlyRecoveryReportsPrimaryMissingDiagnostic" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="2058439689" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.019301" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1045" name="CoordinatorChecksCancellationImmediatelyBeforeCommit" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorChecksCancellationImmediatelyBeforeCommit" methodname="CoordinatorChecksCancellationImmediatelyBeforeCommit" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="889236502" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.002388" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1043" name="CoordinatorConvertsApplyThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorConvertsApplyThrowsToStableResult" methodname="CoordinatorConvertsApplyThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="855073976" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000987" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1039" name="CoordinatorConvertsCodecDecodeThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorConvertsCodecDecodeThrowsToStableResult" methodname="CoordinatorConvertsCodecDecodeThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1608927348" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000540" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1038" name="CoordinatorConvertsCodecEncodeThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorConvertsCodecEncodeThrowsToStableResult" methodname="CoordinatorConvertsCodecEncodeThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="676265852" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000250" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1041" name="CoordinatorConvertsStoreCommitThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorConvertsStoreCommitThrowsToStableResult" methodname="CoordinatorConvertsStoreCommitThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="868874095" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000397" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1040" name="CoordinatorConvertsStoreReadThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorConvertsStoreReadThrowsToStableResult" methodname="CoordinatorConvertsStoreReadThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1697969999" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000374" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1042" name="CoordinatorConvertsValidatorThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorConvertsValidatorThrowsToStableResult" methodname="CoordinatorConvertsValidatorThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="517900921" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000402" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1034" name="CoordinatorPassesStoredSchemaVersionToCodecDecode" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorPassesStoredSchemaVersionToCodecDecode" methodname="CoordinatorPassesStoredSchemaVersionToCodecDecode" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1225398201" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.001501" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1005" name="CoordinatorRejectsChecksumCorruptionBeforeDecode" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorRejectsChecksumCorruptionBeforeDecode" methodname="CoordinatorRejectsChecksumCorruptionBeforeDecode" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="124823505" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000776" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1047" name="CoordinatorRejectsContradictoryProviderOutcome" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorRejectsContradictoryProviderOutcome" methodname="CoordinatorRejectsContradictoryProviderOutcome" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1575577251" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000611" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1036" name="CoordinatorRejectsIntegrityAlgorithmMismatch" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorRejectsIntegrityAlgorithmMismatch" methodname="CoordinatorRejectsIntegrityAlgorithmMismatch" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="628911063" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000353" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1044" name="CoordinatorReportsCapabilityMismatchBeforeCommit" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorReportsCapabilityMismatchBeforeCommit" methodname="CoordinatorReportsCapabilityMismatchBeforeCommit" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="982057881" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000281" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1033" name="CoordinatorStopsBeforeApplyWhenValidationFails" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.CoordinatorStopsBeforeApplyWhenValidationFails" methodname="CoordinatorStopsBeforeApplyWhenValidationFails" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1756614981" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000425" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1016" name="DefaultCandidateSetDoesNotThrowSelector" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.DefaultCandidateSetDoesNotThrowSelector" methodname="DefaultCandidateSetDoesNotThrowSelector" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="503402195" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000164" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1023" name="DeferredApplySemanticsRemainIntactAfterRecoverySelection" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.DeferredApplySemanticsRemainIntactAfterRecoverySelection" methodname="DeferredApplySemanticsRemainIntactAfterRecoverySelection" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="619226511" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000381" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1012" name="DuplicateBackupCandidatesAreRejected" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.DuplicateBackupCandidatesAreRejected" methodname="DuplicateBackupCandidatesAreRejected" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1714857963" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000365" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1011" name="DuplicatePrimaryCandidatesAreRejected" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.DuplicatePrimaryCandidatesAreRejected" methodname="DuplicatePrimaryCandidatesAreRejected" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="72770912" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000297" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1003" name="EnvelopeCodecRejectsMalformedAndFutureFormats" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.EnvelopeCodecRejectsMalformedAndFutureFormats" methodname="EnvelopeCodecRejectsMalformedAndFutureFormats" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="999602635" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000335" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1004" name="EnvelopeCodecRejectsMalformedUtf8Metadata" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.EnvelopeCodecRejectsMalformedUtf8Metadata" methodname="EnvelopeCodecRejectsMalformedUtf8Metadata" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="386154832" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000856" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1007" name="ExplicitRecoveryPolicySelectsValidBackupAndReportsRecovery" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.ExplicitRecoveryPolicySelectsValidBackupAndReportsRecovery" methodname="ExplicitRecoveryPolicySelectsValidBackupAndReportsRecovery" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1407951230" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000683" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1050" name="FailedCommitDoesNotInvokeObservers" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.FailedCommitDoesNotInvokeObservers" methodname="FailedCommitDoesNotInvokeObservers" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1367749478" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000454" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1046" name="FailedCommitPreservesPriorBytesAndSurfacesPreservation" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.FailedCommitPreservesPriorBytesAndSurfacesPreservation" methodname="FailedCommitPreservesPriorBytesAndSurfacesPreservation" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="597082804" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000633" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1013" name="InvalidBackupDoesNotMaskPrimaryFailure" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.InvalidBackupDoesNotMaskPrimaryFailure" methodname="InvalidBackupDoesNotMaskPrimaryFailure" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1581666629" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000385" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1024" name="MigrationPipelineAppliesDeterministicPath" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineAppliesDeterministicPath" methodname="MigrationPipelineAppliesDeterministicPath" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="995782881" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000254" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1032" name="MigrationPipelineConvertsMigrationThrowsToStableResult" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineConvertsMigrationThrowsToStableResult" methodname="MigrationPipelineConvertsMigrationThrowsToStableResult" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1995129924" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000226" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1028" name="MigrationPipelinePrefersNonMonotonicOverAmbiguous" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelinePrefersNonMonotonicOverAmbiguous" methodname="MigrationPipelinePrefersNonMonotonicOverAmbiguous" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="213143975" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000361" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1026" name="MigrationPipelineRejectsAmbiguousGraph" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineRejectsAmbiguousGraph" methodname="MigrationPipelineRejectsAmbiguousGraph" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="163542353" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000191" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1030" name="MigrationPipelineRejectsFutureStoredVersion" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineRejectsFutureStoredVersion" methodname="MigrationPipelineRejectsFutureStoredVersion" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="529950275" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000143" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1025" name="MigrationPipelineRejectsMissingPath" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineRejectsMissingPath" methodname="MigrationPipelineRejectsMissingPath" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="2094372874" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000184" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1029" name="MigrationPipelineRejectsNonMonotonicGraph" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineRejectsNonMonotonicGraph" methodname="MigrationPipelineRejectsNonMonotonicGraph" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1727065221" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000174" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1031" name="MigrationPipelineRejectsOvershootEdge" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineRejectsOvershootEdge" methodname="MigrationPipelineRejectsOvershootEdge" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1248733308" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000208" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1027" name="MigrationPipelineTreatsBackEdgeAsNonMonotonic" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.MigrationPipelineTreatsBackEdgeAsNonMonotonic" methodname="MigrationPipelineTreatsBackEdgeAsNonMonotonic" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1711137450" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000189" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1049" name="ObserverExceptionProducesWarningDiagnosticsWithoutChangingCommittedState" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.ObserverExceptionProducesWarningDiagnosticsWithoutChangingCommittedState" methodname="ObserverExceptionProducesWarningDiagnosticsWithoutChangingCommittedState" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="627657527" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000857" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1048" name="ObserversRunInOrderOnlyAfterDurableCommit" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.ObserversRunInOrderOnlyAfterDurableCommit" methodname="ObserversRunInOrderOnlyAfterDurableCommit" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="2106487946" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000467" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1008" name="PrimaryOnlyPolicyDoesNotFallBackToBackup" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.PrimaryOnlyPolicyDoesNotFallBackToBackup" methodname="PrimaryOnlyPolicyDoesNotFallBackToBackup" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1093904544" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000360" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1006" name="PrimaryWinsWhenBackupIsAlsoPresent" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.PrimaryWinsWhenBackupIsAlsoPresent" methodname="PrimaryWinsWhenBackupIsAlsoPresent" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1650533977" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000478" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1037" name="SaveEnvelopeOwnsImmutableByteCopies" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveEnvelopeOwnsImmutableByteCopies" methodname="SaveEnvelopeOwnsImmutableByteCopies" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1940111918" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000478" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1035" name="SaveErrorDefaultHashCodeIsSafe" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveErrorDefaultHashCodeIsSafe" methodname="SaveErrorDefaultHashCodeIsSafe" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="235451415" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000779" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1014" name="SaveReadCandidateBytesRemainImmutableBeforeValidation" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveReadCandidateBytesRemainImmutableBeforeValidation" methodname="SaveReadCandidateBytesRemainImmutableBeforeValidation" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="496020453" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000349" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1017" name="SaveReadCandidateRejectsDefaultCandidateId" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveReadCandidateRejectsDefaultCandidateId" methodname="SaveReadCandidateRejectsDefaultCandidateId" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="653554727" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.001504" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1018" name="SaveReadCandidateRejectsUndefinedCandidateKind" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveReadCandidateRejectsUndefinedCandidateKind" methodname="SaveReadCandidateRejectsUndefinedCandidateKind" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="170301365" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000260" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1022" name="SaveReadCandidateSetSnapshotsMembershipAndOrder" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveReadCandidateSetSnapshotsMembershipAndOrder" methodname="SaveReadCandidateSetSnapshotsMembershipAndOrder" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="271675977" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000387" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1002" name="SaveSlotIdRejectsInvalidInputs" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SaveSlotIdRejectsInvalidInputs" methodname="SaveSlotIdRejectsInvalidInputs" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="506527752" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000189" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1021" name="SelectorRejectsEmptyCandidateIdInSet" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SelectorRejectsEmptyCandidateIdInSet" methodname="SelectorRejectsEmptyCandidateIdInSet" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1967371535" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.001016" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1020" name="SelectorRejectsUndefinedCandidateKindInSet" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SelectorRejectsUndefinedCandidateKindInSet" methodname="SelectorRejectsUndefinedCandidateKindInSet" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="393134973" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000303" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1019" name="SelectorRejectsUndefinedRecoveryPolicy" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.SelectorRejectsUndefinedRecoveryPolicy" methodname="SelectorRejectsUndefinedRecoveryPolicy" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="75838798" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000244" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1009" name="StagingOnlyCandidateSetIsRejected" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.StagingOnlyCandidateSetIsRejected" methodname="StagingOnlyCandidateSetIsRejected" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="1163072545" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000314" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1010" name="ValidStagingIsNeverSelectedWhenPrimaryExists" fullname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests.ValidStagingIsNeverSelectedWhenPrimaryExists" methodname="ValidStagingIsNeverSelectedWhenPrimaryExists" classname="Lingkyn.Persistence.Core.Editor.Tests.PersistenceCoreContractTests" runstate="Runnable" seed="184711435" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.000363" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                    <output><![CDATA[Saving results to: <consumer-root>/editmode-results.xml
+]]></output>
+                  </test-case>
+                </test-suite>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

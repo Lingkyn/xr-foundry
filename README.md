@@ -101,7 +101,8 @@ Pin a reviewed commit SHA rather than `main`:
     "com.lingkyn.inventory.ugui": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.ugui#<same-full-40-character-commit-sha>",
     "com.lingkyn.inventory.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit#<same-full-40-character-commit-sha>",
     "com.lingkyn.inventory.xr.ugui": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui#<same-full-40-character-commit-sha>",
-    "com.lingkyn.inventory.xr.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit#<same-full-40-character-commit-sha>"
+    "com.lingkyn.inventory.xr.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit#<same-full-40-character-commit-sha>",
+    "com.lingkyn.persistence.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/persistence/com.lingkyn.persistence.core#<same-full-40-character-commit-sha>"
   }
 }
 ```

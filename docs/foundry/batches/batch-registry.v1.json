@@ -1,0 +1,17 @@
+{
+  "schema": "xr-foundry.batch_registry.v1",
+  "batches": [
+    {
+      "id": "unity-first-batch",
+      "path": "docs/foundry/batches/unity-first-batch.v1.json",
+      "state": "released",
+      "release_tag": "unity-first-batch-v0.1.0"
+    },
+    {
+      "id": "unity-next-systems",
+      "path": "docs/foundry/batches/unity-next-systems.v1.json",
+      "state": "building",
+      "release_tag": null
+    }
+  ]
+}

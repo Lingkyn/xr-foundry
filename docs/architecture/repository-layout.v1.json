@@ -26,6 +26,13 @@
         "com.lingkyn.inventory.xr.ugui",
         "com.lingkyn.inventory.xr.uitoolkit"
       ]
+    },
+    {
+      "id": "unity-system-persistence",
+      "path": "packages/unity/systems/persistence",
+      "packages": [
+        "com.lingkyn.persistence.core"
+      ]
     }
   ],
   "invariants": {

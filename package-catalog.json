@@ -203,6 +203,35 @@
           "renderer_scoped_named_device_evidence"
         ]
       }
+    },
+    {
+      "id": "com.lingkyn.persistence.core",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.core",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "verified_exact_profile",
+      "git_url_install": "verified_immutable_commit",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "unity_file_provider_fault_injection",
+        "satisfied": [
+          "positive_source_gate",
+          "architecture_gate",
+          "core_contract_tests",
+          "recovery_candidate_contract",
+          "immutable_git_url_clean_consumer",
+          "unity_6000_3_editor_compile",
+          "unity_6000_3_editmode_tests"
+        ],
+        "pending": [
+          "unity_file_provider_fault_injection",
+          "unity_adapter_exact_consumer",
+          "public_api_compatibility_review",
+          "upgrade_and_rollback_across_a_release",
+          "candidate_release_review"
+        ]
+      }
     }
   ]
 }

@@ -1,8 +1,13 @@
 {
   "schema": "xr-foundry.persistence_standard.v1",
-  "maturity": "source_gate_review",
+  "maturity": "admitted_blueprint",
   "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/54",
   "derivation_manifest": "docs/standards/persistence/source-manifest.json",
+  "independent_source_review": "https://github.com/Lingkyn/xr-foundry/pull/58#issuecomment-4993841797",
+  "admitted_blueprints": [
+    "docs/foundry/blueprints/persistence-core.v1.json",
+    "docs/foundry/blueprints/persistence-unity.v1.json"
+  ],
   "required_concepts": [
     "SaveSlotId",
     "SaveEnvelope",

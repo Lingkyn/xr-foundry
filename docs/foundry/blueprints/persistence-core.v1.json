@@ -1,0 +1,38 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "admitted",
+  "package": {
+    "id": "com.lingkyn.persistence.core",
+    "display_name": "Lingkyn Persistence Core",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Engine-light save envelopes, integrity and migration contracts, storage capabilities, orchestration, and structured results.",
+    "category": "system",
+    "family": "persistence",
+    "target_path": "packages/unity/systems/persistence/com.lingkyn.persistence.core",
+    "root_namespace": "Lingkyn.Persistence.Core",
+    "dependencies": {}
+  },
+  "admission": {
+    "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/54",
+    "source_manifest": "docs/standards/persistence/source-manifest.json",
+    "positive_sources": [
+      "https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace",
+      "https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.sha256",
+      "https://github.com/Interkarma/daggerfall-unity",
+      "https://github.com/OpenTTD/OpenTTD"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "BasicPersistence",
+    "sample_description": "Domain-only save, load, migration, integrity, and failure-result example."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}
+

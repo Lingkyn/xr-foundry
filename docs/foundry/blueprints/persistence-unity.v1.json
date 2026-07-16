@@ -1,0 +1,43 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "admitted",
+  "package": {
+    "id": "com.lingkyn.persistence.unity",
+    "display_name": "Lingkyn Persistence Unity",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Unity configuration, plain-DTO JSON codec, persistent-data path policy, local-file storage, recovery inspection, and Editor validation.",
+    "category": "system",
+    "family": "persistence",
+    "target_path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity",
+    "root_namespace": "Lingkyn.Persistence.Unity",
+    "dependencies": {
+      "com.lingkyn.persistence.core": "0.1.0"
+    }
+  },
+  "admission": {
+    "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/54",
+    "source_manifest": "docs/standards/persistence/source-manifest.json",
+    "positive_sources": [
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Application-persistentDataPath.html",
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/JsonUtility.html",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/script-serialization-rules.html",
+      "https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace",
+      "https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.flush",
+      "https://github.com/BayatGames/SaveGameFree",
+      "https://github.com/Interkarma/daggerfall-unity"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "LocalFilePersistence",
+    "sample_description": "Configured Unity local-file persistence with explicit capability and recovery reporting."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}
+

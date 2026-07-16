@@ -8,19 +8,6 @@
   },
   "candidates": [
     {
-      "id": "NEXT-PERSISTENCE",
-      "title": "Save and persistence family",
-      "state": "source_gate",
-      "objective": "Qualify a reusable persistence boundary for versioned saves, migration, atomic writes, recovery, and provider adapters.",
-      "source_requirements": [
-        "Official engine serialization and platform-storage guidance",
-        "Maintained professional implementations with explicit migration, corruption, and rollback behavior",
-        "License, maintenance, test, security, and independent-consumer review"
-      ],
-      "package_ids": [],
-      "exact_next_action": "Open one research checkpoint that compares positive public sources and proposes engine-neutral data and Unity adapter boundaries."
-    },
-    {
       "id": "NEXT-SETTINGS",
       "title": "Player settings and accessibility family",
       "state": "proposal",
@@ -48,4 +35,3 @@
     }
   ]
 }
-

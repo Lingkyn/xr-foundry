@@ -14,10 +14,11 @@ live in each package's `CHANGELOG.md`.
 - Added a version-adaptive reference contract: standards and tests may generate a
   target-specific candidate, while each installable manifest and support claim
   remains bound to an exact machine-validated compatibility profile.
-- Reset current Git-consumer and compatibility-profile evidence to pending until
-  the finalized package tree is tested at one immutable revision. Historical
-  results are not transferred across version, dependency, renderer, build, input,
-  runtime, or device tuples.
+- Bound the finalized package tree to nine exact Unity 6000.3.19f1 Editor
+  compatibility profiles with immutable manifests, resolved locks, compile
+  receipts, and applicable EditMode/PlayMode NUnit results. Evidence does not
+  transfer across version, dependency, renderer, build, input, runtime, or device
+  tuples.
 - Added current official Unity world-space UI Toolkit, XRI UI Toolkit, PICO
   multimodal direction, and Apple spatial-design sources with bounded roles and
   explicit non-claim limits.
@@ -25,6 +26,16 @@ live in each package's `CHANGELOG.md`.
   world-space UI plan, PICO tracked-controller profile, and fail-closed promotion
   rules for install/open, world anchoring, targeting, interaction states,
   readability, reach, occlusion, and comfort.
+- Added a provider-neutral, machine-checkable Inventory XR device receipt with a
+  PICO tracked-controller acceptance profile, official PICO evidence boundaries,
+  and fail-closed promotion rules for install/open, world anchoring, targeting,
+  interaction states, readability, reach, occlusion, and comfort.
+- Added the optional `com.lingkyn.inventory.xr` incubating package with a
+  provider-neutral world-space prefab, ScriptableObject profile, fail-closed scene
+  validation, tracked-ray and real XRI poke tests, and an imported setup sample;
+  this earlier single-renderer route was subsequently replaced by the canonical
+  renderer-explicit XR graph above, while Android and PICO evidence remain separate
+  promotion gates.
 - Added Agent Commons V1: a public, lease-based Task Hall and revision-bound Device
   Lab with machine-readable task/profile/receipt/label contracts, safe public forms,
   explicit permission boundaries, and provider-neutral agent guidance.
@@ -37,6 +48,12 @@ live in each package's `CHANGELOG.md`.
 - Established UGUI `0.2.0` directly as the incubating renderer projection with
   functional nested prefabs, stable-address intents, bounded scrolling, semantic
   state samples, prefab-backed raycast tests, and cross-layer projection gates.
+- Reopened the UGUI candidate after a structure-only false positive; `0.1.1`
+  now ships functional nested prefabs, stable-address intents, bounded scrolling,
+  semantic state samples, prefab-backed raycast tests, and cross-layer projection gates.
+- Promoted UGUI `0.1.1` to candidate after immutable Git install, Input System-only
+  sample setup, full package tests, and consumer-owned prefab-variant upgrade,
+  rollback, and final-upgrade evidence passed; retained `0.1.0` as superseded history.
 - Reconciled Inventory implementation, roadmap, package/reference catalogs, and
   promotion evidence; added a fail-closed projection-coherence validator and
   explicit earliest-unsatisfied gates for every Inventory package layer.

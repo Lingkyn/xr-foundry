@@ -1,11 +1,14 @@
 {
   "schema": "xr-foundry.settings_standard.v1",
-  "maturity": "source_gate_review",
+  "maturity": "admitted_blueprint",
   "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/55",
   "derivation_manifest": "docs/standards/settings/source-manifest.json",
   "coverage_matrix": "docs/standards/settings/coverage-matrix.md",
-  "independent_source_review": null,
-  "admitted_blueprints": [],
+  "independent_source_review": "https://github.com/Lingkyn/xr-foundry/pull/61#issuecomment-4995402618",
+  "admitted_blueprints": [
+    "docs/foundry/blueprints/settings-core.v1.json",
+    "docs/foundry/blueprints/settings-unity.v1.json"
+  ],
   "planned_boundaries": [
     {
       "role": "engine_light_core",
@@ -30,4 +33,3 @@
     "batch_release"
   ]
 }
-

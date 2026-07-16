@@ -8,19 +8,6 @@
   },
   "candidates": [
     {
-      "id": "NEXT-SETTINGS",
-      "title": "Player settings and accessibility family",
-      "state": "source_gate",
-      "objective": "Define reusable settings semantics for audio, graphics, controls, comfort, localization, and accessibility without coupling them to one UI renderer.",
-      "source_requirements": [
-        "Official platform and engine settings guidance",
-        "Accessibility guidance from shipped-game or industry authorities",
-        "Renderer, persistence, input, and XR comfort boundary review"
-      ],
-      "package_ids": [],
-      "exact_next_action": "Independently review the positive-source manifest, architecture boundary and verification contract before admitting package identifiers or blueprints."
-    },
-    {
       "id": "NEXT-INTERACTION",
       "title": "Semantic interaction family",
       "state": "proposal",

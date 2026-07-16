@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "com.lingkyn.inventory.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.core#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.lingkyn.inventory.presentation": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.presentation#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.lingkyn.inventory.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.lingkyn.inventory.xr.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.test-framework": "1.6.0",
+    "com.unity.xr.management": "4.5.3",
+    "com.unity.xr.openxr": "1.16.0"
+  },
+  "testables": [
+    "com.lingkyn.inventory.core",
+    "com.lingkyn.inventory.presentation",
+    "com.lingkyn.inventory.uitoolkit",
+    "com.lingkyn.inventory.xr.uitoolkit"
+  ]
+}

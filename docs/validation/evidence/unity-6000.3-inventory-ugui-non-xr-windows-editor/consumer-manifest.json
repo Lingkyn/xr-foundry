@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "com.lingkyn.inventory.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.core#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.lingkyn.inventory.presentation": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.presentation#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.lingkyn.inventory.ugui": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.ugui#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.lingkyn.inventory.core",
+    "com.lingkyn.inventory.presentation",
+    "com.lingkyn.inventory.ugui"
+  ]
+}

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="36" result="Passed" total="36" passed="36" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.8240624">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-agent-commons-v1" fullname="xr-foundry-agent-commons-v1" runstate="Runnable" testcasecount="36" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.824062" total="36" passed="36" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1024" name="Lingkyn.Inventory.Core.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="21" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.136489" total="21" passed="21" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="288524" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1025" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="21" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.135781" total="21" passed="21" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1026" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="21" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.134603" total="21" passed="21" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1027" name="Core" fullname="Lingkyn.Inventory.Core" runstate="Runnable" testcasecount="21" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.134470" total="21" passed="21" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1028" name="Tests" fullname="Lingkyn.Inventory.Core.Tests" runstate="Runnable" testcasecount="21" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.134316" total="21" passed="21" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1001" name="InventoryAggregateTests" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" testcasecount="20" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.092584" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1002" name="AddFillsStacksAndFailedOverflowIsAtomic" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.AddFillsStacksAndFailedOverflowIsAtomic" methodname="AddFillsStacksAndFailedOverflowIsAtomic" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1310127014" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.029271" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1008" name="ChangeEventObservesCommittedStateAndObserverFailureDoesNotUndoMutation" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.ChangeEventObservesCommittedStateAndObserverFailureDoesNotUndoMutation" methodname="ChangeEventObservesCommittedStateAndObserverFailureDoesNotUndoMutation" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1540424953" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001478" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1010" name="DefaultIdentifiersCannotEnterAuthoredDomainObjects" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.DefaultIdentifiersCannotEnterAuthoredDomainObjects" methodname="DefaultIdentifiersCannotEnterAuthoredDomainObjects" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="275925589" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002004" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1021" name="FragmentRegistryRejectsDuplicateOrUnregisteredCodecInstances" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.FragmentRegistryRejectsDuplicateOrUnregisteredCodecInstances" methodname="FragmentRegistryRejectsDuplicateOrUnregisteredCodecInstances" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1538558364" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002803" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1019" name="InstanceStateRemovalIsExplicitAndTransactional" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.InstanceStateRemovalIsExplicitAndTransactional" methodname="InstanceStateRemovalIsExplicitAndTransactional" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="914313270" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.005022" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1012" name="InvalidPersistenceStateLeavesInventoryAndRevisionUnchanged" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.InvalidPersistenceStateLeavesInventoryAndRevisionUnchanged" methodname="InvalidPersistenceStateLeavesInventoryAndRevisionUnchanged" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="742805867" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.009507" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1017" name="InvalidTypedStateRestoreIsStructuredAndAtomic" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.InvalidTypedStateRestoreIsStructuredAndAtomic" methodname="InvalidTypedStateRestoreIsStructuredAndAtomic" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1592460993" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002473" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1005" name="MoveSwapAndTransferHaveExplicitSemantics" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.MoveSwapAndTransferHaveExplicitSemantics" methodname="MoveSwapAndTransferHaveExplicitSemantics" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1839292041" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001760" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1011" name="PersistenceRoundTripRestoresEquivalentStateAtomically" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.PersistenceRoundTripRestoresEquivalentStateAtomically" methodname="PersistenceRoundTripRestoresEquivalentStateAtomically" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="280555367" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.003894" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1007" name="PolicyCanInspectDefinitionMetadataWithoutConsumerCoupling" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.PolicyCanInspectDefinitionMetadataWithoutConsumerCoupling" methodname="PolicyCanInspectDefinitionMetadataWithoutConsumerCoupling" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="2002976959" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002161" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1020" name="PreviousFragmentSchemaIsDecodedAndNormalizedToCurrentSchema" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.PreviousFragmentSchemaIsDecodedAndNormalizedToCurrentSchema" methodname="PreviousFragmentSchemaIsDecodedAndNormalizedToCurrentSchema" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="216085617" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001393" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1014" name="PreviousSchemaRequiresAndRunsOneDeterministicMigration" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.PreviousSchemaRequiresAndRunsOneDeterministicMigration" methodname="PreviousSchemaRequiresAndRunsOneDeterministicMigration" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="2098601026" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002602" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1006" name="RejectedPolicyLeavesStateAndRevisionUnchanged" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.RejectedPolicyLeavesStateAndRevisionUnchanged" methodname="RejectedPolicyLeavesStateAndRevisionUnchanged" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1941106548" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.000809" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1015" name="RestoreObserversSeeCommittedStateAndCannotRollbackIt" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.RestoreObserversSeeCommittedStateAndCannotRollbackIt" methodname="RestoreObserversSeeCommittedStateAndCannotRollbackIt" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="338365715" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002735" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1013" name="RestoreRejectsDuplicateUniqueInstancesWithoutMutation" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.RestoreRejectsDuplicateUniqueInstancesWithoutMutation" methodname="RestoreRejectsDuplicateUniqueInstancesWithoutMutation" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1262877" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.000570" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1009" name="SnapshotsDoNotChangeAfterLaterMutations" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.SnapshotsDoNotChangeAfterLaterMutations" methodname="SnapshotsDoNotChangeAfterLaterMutations" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="72124781" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.000514" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1004" name="SplitAndMergeConserveQuantity" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.SplitAndMergeConserveQuantity" methodname="SplitAndMergeConserveQuantity" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1849619968" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001340" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1016" name="TypedInstanceStateSurvivesMutationMovePersistenceAndRestore" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.TypedInstanceStateSurvivesMutationMovePersistenceAndRestore" methodname="TypedInstanceStateSurvivesMutationMovePersistenceAndRestore" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1457586322" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.003432" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1003" name="UniqueInstancesRequireIdentityAndRejectDuplicates" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.UniqueInstancesRequireIdentityAndRejectDuplicates" methodname="UniqueInstancesRequireIdentityAndRejectDuplicates" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="1097335395" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.000555" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1018" name="UnregisteredTypedStateAndFungibleStateAreRejected" fullname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests.UnregisteredTypedStateAndFungibleStateAreRejected" methodname="UnregisteredTypedStateAndFungibleStateAreRejected" classname="Lingkyn.Inventory.Core.Tests.InventoryAggregateTests" runstate="Runnable" seed="212256391" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.000704" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="TestFixture" id="1022" name="InventoryInvariantTests" fullname="Lingkyn.Inventory.Core.Tests.InventoryInvariantTests" classname="Lingkyn.Inventory.Core.Tests.InventoryInvariantTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.040333" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1023" name="DeterministicStatefulSequencePreservesQuantityAndRejectedState" fullname="Lingkyn.Inventory.Core.Tests.InventoryInvariantTests.DeterministicStatefulSequencePreservesQuantityAndRejectedState" methodname="DeterministicStatefulSequencePreservesQuantityAndRejectedState" classname="Lingkyn.Inventory.Core.Tests.InventoryInvariantTests" runstate="Runnable" seed="2109789514" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.039105" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1033" name="Lingkyn.Inventory.Presentation.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.Presentation.Editor.Tests.dll" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.013175" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="288524" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1034" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.012632" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1035" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.012416" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1036" name="Presentation" fullname="Lingkyn.Inventory.Presentation" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.012292" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1037" name="Tests" fullname="Lingkyn.Inventory.Presentation.Tests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.012135" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1029" name="InventoryPresentationTests" fullname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests" classname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.011871" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1031" name="DisabledPresenterStaysDisabledAcrossRefreshAndAggregateEvents" fullname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests.DisabledPresenterStaysDisabledAcrossRefreshAndAggregateEvents" methodname="DisabledPresenterStaysDisabledAcrossRefreshAndAggregateEvents" classname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests" runstate="Runnable" seed="1804850543" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.007176" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1030" name="PresenterOwnsMutationAndViewsReceiveReadOnlyModels" fullname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests.PresenterOwnsMutationAndViewsReceiveReadOnlyModels" methodname="PresenterOwnsMutationAndViewsReceiveReadOnlyModels" classname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests" runstate="Runnable" seed="307045039" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001830" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1032" name="ViewModelSnapshotsInputAndIntentPreservesStableAddress" fullname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests.ViewModelSnapshotsInputAndIntentPreservesStableAddress" methodname="ViewModelSnapshotsInputAndIntentPreservesStableAddress" classname="Lingkyn.Inventory.Presentation.Tests.InventoryPresentationTests" runstate="Runnable" seed="1174142006" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001737" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1047" name="Lingkyn.Inventory.UGUI.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.UGUI.Editor.Tests.dll" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.633983" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="288524" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1048" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.633488" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1049" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.633361" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1050" name="UGUI" fullname="Lingkyn.Inventory.UGUI" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.633291" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1051" name="Tests" fullname="Lingkyn.Inventory.UGUI.Tests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.633196" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1038" name="InventoryPresenterAndPrefabTests" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.633010" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1045" name="DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot" methodname="DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="1625547926" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.040303" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1040" name="DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges" methodname="DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="419825572" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.002650" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1042" name="NestedPrefabRolesAndVariantRetainIndependentSourceLinksAndBindings" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.NestedPrefabRolesAndVariantRetainIndependentSourceLinksAndBindings" methodname="NestedPrefabRolesAndVariantRetainIndependentSourceLinksAndBindings" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="270314973" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.007250" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1044" name="ScrollGridHandlesZeroSmallBoundaryAndLargeCapacitiesWithoutGhostState" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.ScrollGridHandlesZeroSmallBoundaryAndLargeCapacitiesWithoutGhostState" methodname="ScrollGridHandlesZeroSmallBoundaryAndLargeCapacitiesWithoutGhostState" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="168221366" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.560650" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1041" name="ShippedPrefabsHaveNoMissingScriptsAndAllFunctionalReferencesAreWired" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.ShippedPrefabsHaveNoMissingScriptsAndAllFunctionalReferencesAreWired" methodname="ShippedPrefabsHaveNoMissingScriptsAndAllFunctionalReferencesAreWired" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="427076116" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.003406" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1043" name="ShippedShellPreservesStableAddressesAndDoesNotDuplicateIntentSubscriptions" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.ShippedShellPreservesStableAddressesAndDoesNotDuplicateIntentSubscriptions" methodname="ShippedShellPreservesStableAddressesAndDoesNotDuplicateIntentSubscriptions" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="1560851597" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.008103" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1046" name="SlotVariantReplacementMustRebindAndThenRendersWithoutChangingGridAsset" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.SlotVariantReplacementMustRebindAndThenRendersWithoutChangingGridAsset" methodname="SlotVariantReplacementMustRebindAndThenRendersWithoutChangingGridAsset" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="185556147" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.005333" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1039" name="StateGalleryReplaysSemanticallyDistinctVisibleStates" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests.StateGalleryReplaysSemanticallyDistinctVisibleStates" methodname="StateGalleryReplaysSemanticallyDistinctVisibleStates" classname="Lingkyn.Inventory.UGUI.Tests.InventoryPresenterAndPrefabTests" runstate="Runnable" seed="1050927312" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.003201" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1057" name="Lingkyn.Inventory.XR.UGUI.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.XR.UGUI.Editor.Tests.dll" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.031827" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="288524" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1058" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.030905" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1059" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.030737" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1060" name="XR" fullname="Lingkyn.Inventory.XR" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.030661" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1061" name="UGUI" fullname="Lingkyn.Inventory.XR.UGUI" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.030597" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestSuite" id="1062" name="Tests" fullname="Lingkyn.Inventory.XR.UGUI.Tests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.030500" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-suite type="TestFixture" id="1052" name="InventoryXrPrefabAndValidationTests" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.030326" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                  <properties />
+                  <test-case id="1054" name="ApplyingProfilePreservesWorldPoseAndDefaultPlacementDetachesFromCamera" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests.ApplyingProfilePreservesWorldPoseAndDefaultPlacementDetachesFromCamera" methodname="ApplyingProfilePreservesWorldPoseAndDefaultPlacementDetachesFromCamera" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests" runstate="Runnable" seed="333576468" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.012038" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1053" name="ShippedPrefabIsWorldSpaceNestedProviderNeutralAndClosedByDefault" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests.ShippedPrefabIsWorldSpaceNestedProviderNeutralAndClosedByDefault" methodname="ShippedPrefabIsWorldSpaceNestedProviderNeutralAndClosedByDefault" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests" runstate="Runnable" seed="1573416718" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.001965" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1056" name="ValidatorRejectsConventionalGraphicRaycasterWithoutMutatingGlobalInput" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests.ValidatorRejectsConventionalGraphicRaycasterWithoutMutatingGlobalInput" methodname="ValidatorRejectsConventionalGraphicRaycasterWithoutMutatingGlobalInput" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests" runstate="Runnable" seed="80077331" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.003002" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1055" name="ValidatorRejectsMissingDuplicateDisabledAndDesktopInputModules" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests.ValidatorRejectsMissingDuplicateDisabledAndDesktopInputModules" methodname="ValidatorRejectsMissingDuplicateDisabledAndDesktopInputModules" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrPrefabAndValidationTests" runstate="Runnable" seed="2112021125" result="Passed" start-time="2026-07-15 16:22:53Z" end-time="2026-07-15 16:22:53Z" duration="0.012001" asserts="0">
+                    <properties>
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                    <output><![CDATA[Saving results to: PUBLIC_CONSUMER_ROOT\h-xrugui-editmode.xml
+]]></output>
+                  </test-case>
+                </test-suite>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

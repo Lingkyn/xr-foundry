@@ -219,6 +219,39 @@ def attach_compatibility_receipt(
             ),
             "dependencies": {},
         }
+    known_unity_edges = {
+        "com.unity.test-framework": {
+            "com.unity.ext.nunit": "2.0.3",
+            "com.unity.modules.imgui": "1.0.0",
+            "com.unity.modules.jsonserialize": "1.0.0",
+        },
+        "com.unity.ugui": {
+            "com.unity.modules.ui": "1.0.0",
+            "com.unity.modules.imgui": "1.0.0",
+        },
+    }
+    for dependency_id, edges in known_unity_edges.items():
+        if dependency_id in lock_dependencies:
+            lock_dependencies[dependency_id]["dependencies"] = {
+                child_id: requested_version
+                for child_id, requested_version in edges.items()
+                if child_id in lock_dependencies
+            }
+    shortest_depths: dict[str, int] = {}
+    pending_depths = [(dependency_id, 0) for dependency_id in manifest_dependencies]
+    while pending_depths:
+        dependency_id, depth = pending_depths.pop(0)
+        if dependency_id in shortest_depths and shortest_depths[dependency_id] <= depth:
+            continue
+        shortest_depths[dependency_id] = depth
+        entry = lock_dependencies.get(dependency_id, {})
+        pending_depths.extend(
+            (child_id, depth + 1)
+            for child_id in entry.get("dependencies", {})
+        )
+    for dependency_id, depth in shortest_depths.items():
+        if dependency_id in lock_dependencies:
+            lock_dependencies[dependency_id]["depth"] = depth
     manifest_path.write_text(
         json.dumps(
             {
@@ -707,7 +740,7 @@ class RepositoryContractTests(unittest.TestCase):
     def test_current_inventory_projections_are_coherent(self) -> None:
         self.assertEqual([], MODULE.validate_inventory_projection_coherence(ROOT))
 
-    def test_current_compatibility_profiles_are_adaptive_and_unverified(self) -> None:
+    def test_current_compatibility_profiles_are_adaptive_and_exact_verified(self) -> None:
         payload = current_compatibility_profiles()
 
         self.assertEqual(
@@ -740,10 +773,18 @@ class RepositoryContractTests(unittest.TestCase):
             {item["id"] for item in MODULE.load_json(ROOT / "package-catalog.json")["packages"]},
             {profile["install_artifact"] for profile in payload["profiles"]},
         )
+        self.assertEqual(9, len(payload["profiles"]))
         for profile in payload["profiles"]:
-            self.assertEqual("pending_automated_validation", profile["state"])
-            self.assertEqual([], profile["verified_claims"])
-            self.assertEqual([], profile["evidence"])
+            self.assertEqual("verified", profile["state"])
+            self.assertEqual("6000.3.19f1", profile["target"]["engine"]["version"])
+            self.assertEqual("6000.3.19f1", profile["target"]["editor"]["version"])
+            self.assertEqual(1, len(profile["evidence"]))
+            evidence = profile["evidence"][0]
+            self.assertEqual(profile["id"], evidence["profile_id"])
+            self.assertRegex(evidence["commit_sha"], r"^[0-9a-f]{40}$")
+            self.assertNotEqual("0" * 40, evidence["commit_sha"])
+            self.assertEqual(set(profile["verified_claims"]), set(evidence["checks"]))
+            self.assertTrue(profile["verified_claims"])
         self.assertEqual(
             [],
             MODULE.validate_compatibility_profile_payload(
@@ -753,9 +794,43 @@ class RepositoryContractTests(unittest.TestCase):
             ),
         )
 
+    def test_unity_external_lock_edge_accepts_resolver_upgrade_and_rejects_incompatible(self) -> None:
+        self.assertTrue(MODULE.unity_external_dependency_is_satisfied("1.2.0", "1.3.4"))
+        self.assertTrue(MODULE.unity_external_dependency_is_satisfied("1.2.0-pre.1", "1.2.0"))
+        self.assertFalse(MODULE.unity_external_dependency_is_satisfied("1.2.0", "1.2.0-pre.1"))
+        self.assertFalse(MODULE.unity_external_dependency_is_satisfied("2.0.0", "1.9.9"))
+        self.assertFalse(MODULE.unity_external_dependency_is_satisfied("not-semver", "1.0.0"))
+
+    def test_contribution_credit_never_grants_authority_or_accepts_empty_evidence(self) -> None:
+        schema = ROOT / "docs" / "contributing" / "contribution-credit.schema.json"
+        example = MODULE.load_json(
+            ROOT / "docs" / "contributing" / "contribution-credit.example.json"
+        )
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(example, schema, "credit example"),
+        )
+
+        escalated = json.loads(json.dumps(example))
+        escalated["authority"]["grants_merge_authority"] = True
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(escalated, schema, "credit escalation")
+        )
+
+        unsupported = json.loads(json.dumps(example))
+        unsupported["record_status"] = "accepted"
+        unsupported["credited_at"] = "2026-07-16T12:00:00Z"
+        unsupported["recorded_by"] = "@maintainer"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(unsupported, schema, "credit without evidence")
+        )
+
     def test_pending_compatibility_profile_rejects_verified_overclaim(self) -> None:
         payload = current_compatibility_profiles()
-        payload["profiles"][0]["verified_claims"] = ["editor_compile"]
+        profile = payload["profiles"][0]
+        profile["state"] = "pending_automated_validation"
+        profile["verified_claims"] = ["editor_compile"]
+        profile["evidence"] = []
 
         errors = MODULE.validate_compatibility_profile_payload(
             payload,
@@ -767,16 +842,14 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_verified_compatibility_profile_accepts_only_exact_bound_evidence(self) -> None:
         payload = current_compatibility_profiles()
-        with tempfile.TemporaryDirectory(dir=compatibility_evidence_test_root()) as directory:
-            _, _, _ = attach_compatibility_receipt(payload, directory)
-            self.assertEqual(
-                [],
-                MODULE.validate_compatibility_profile_payload(
-                    payload,
-                    ROOT,
-                    MODULE.load_json(ROOT / "package-catalog.json"),
-                ),
-            )
+        self.assertEqual(
+            [],
+            MODULE.validate_compatibility_profile_payload(
+                payload,
+                ROOT,
+                MODULE.load_json(ROOT / "package-catalog.json"),
+            ),
+        )
 
     def test_device_runtime_compatibility_requires_exact_device_lab_pass(self) -> None:
         payload = current_compatibility_profiles()

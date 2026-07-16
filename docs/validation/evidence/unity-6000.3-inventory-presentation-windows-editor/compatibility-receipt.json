@@ -1,0 +1,91 @@
+{
+  "$schema": "docs/validation/compatibility-evidence.schema.json",
+  "schema": "xr-foundry.compatibility_evidence.v1",
+  "kind": "editor_automated",
+  "profile_id": "unity-6000.3-inventory-presentation-windows-editor",
+  "commit_sha": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+  "target": {
+    "engine": {
+      "id": "unity",
+      "version": "6000.3.19f1"
+    },
+    "editor": {
+      "id": "unity-editor",
+      "version": "6000.3.19f1"
+    },
+    "renderer": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "requested_dependencies": {
+      "com.unity.test-framework": "1.6.0"
+    },
+    "resolved_dependencies": {
+      "com.unity.ext.nunit": "2.0.5",
+      "com.unity.modules.imgui": "1.0.0",
+      "com.unity.modules.jsonserialize": "1.0.0",
+      "com.unity.test-framework": "1.6.0"
+    },
+    "build_target": "WindowsEditor",
+    "graphics_api": "Null",
+    "scripting_backend": "Mono",
+    "architecture": "x86_64",
+    "xr_provider": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "runtime": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "input_routes": [
+      "not_applicable"
+    ],
+    "device": {
+      "id": "windows-editor-host",
+      "version": "10.0.26200"
+    }
+  },
+  "package_versions": {
+    "com.lingkyn.inventory.core": "0.1.1",
+    "com.lingkyn.inventory.presentation": "0.1.0"
+  },
+  "resolved_dependencies": {
+    "com.unity.ext.nunit": "2.0.5",
+    "com.unity.modules.imgui": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "manifest": {
+    "path": "docs/validation/evidence/unity-6000.3-inventory-presentation-windows-editor/consumer-manifest.json",
+    "sha256": "e14caaac1cae785501d1d9ea23fad2ace8cfdfbd85ae79332e849427b933ef96"
+  },
+  "lock": {
+    "path": "docs/validation/evidence/unity-6000.3-inventory-presentation-windows-editor/consumer-packages-lock.json",
+    "sha256": "9af43107649a37cd211740cf264ea02870ce95b534a55095d56f460fd9134de9"
+  },
+  "checks": [
+    {
+      "id": "editor_compile",
+      "status": "pass",
+      "evidence_refs": [
+        {
+          "kind": "compile_result",
+          "ref": "docs/validation/evidence/unity-6000.3-inventory-presentation-windows-editor/compile-result.json",
+          "sha256": "86a7c3c9848b01caa61a6c76f1f76153e9379cab9e92b706155b9e44880411db"
+        }
+      ]
+    },
+    {
+      "id": "editmode_tests",
+      "status": "pass",
+      "evidence_refs": [
+        {
+          "kind": "nunit_result",
+          "ref": "docs/validation/evidence/unity-6000.3-inventory-presentation-windows-editor/editmode-results.xml",
+          "sha256": "8b984fae027873c0c9ee836930870db015bc87e2b5fff791434ba9bc7302677e"
+        }
+      ]
+    }
+  ]
+}

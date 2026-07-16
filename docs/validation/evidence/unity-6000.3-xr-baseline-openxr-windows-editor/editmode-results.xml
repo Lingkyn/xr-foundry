@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.0358011">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-agent-commons-v1" fullname="xr-foundry-agent-commons-v1" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.035801" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1003" name="Lingkyn.XrBaseline.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.XrBaseline.Editor.Tests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.027751" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="278600" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1004" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.027062" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1005" name="Unity" fullname="Lingkyn.Unity" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.026875" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1006" name="XrBaseline" fullname="Lingkyn.Unity.XrBaseline" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.026635" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1007" name="Tests" fullname="Lingkyn.Unity.XrBaseline.Tests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.026476" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1001" name="XrBaselineContractTests" fullname="Lingkyn.Unity.XrBaseline.Tests.XrBaselineContractTests" classname="Lingkyn.Unity.XrBaseline.Tests.XrBaselineContractTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.025571" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1002" name="DefaultsAreSafeAndConsumerNeutral" fullname="Lingkyn.Unity.XrBaseline.Tests.XrBaselineContractTests.DefaultsAreSafeAndConsumerNeutral" methodname="DefaultsAreSafeAndConsumerNeutral" classname="Lingkyn.Unity.XrBaseline.Tests.XrBaselineContractTests" runstate="Runnable" seed="910172576" result="Passed" start-time="2026-07-15 16:21:42Z" end-time="2026-07-15 16:21:42Z" duration="0.013227" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[Saving results to: PUBLIC_CONSUMER_ROOT\h-xrbaseline-editmode.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

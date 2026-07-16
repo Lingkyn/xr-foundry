@@ -99,6 +99,9 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/rfcs/0001-agent-commons.md",
     "docs/contributing/agent-commons-source-manifest.json",
     "docs/contributing/agent-contribution-protocol.md",
+    "docs/contributing/contribution-credit.example.json",
+    "docs/contributing/contribution-credit.schema.json",
+    "docs/contributing/recognition-policy.md",
     "docs/contributing/task-hall.md",
     "docs/contributing/task-hall.v1.json",
     "docs/contributing/task-hall.v1.schema.json",
@@ -134,6 +137,63 @@ UNITY_EDITOR_VERSION_PATTERN = re.compile(
 EXACT_RUNTIME_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)(?:\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*"
 )
+
+
+def parse_semver_precedence(
+    value: Any,
+) -> tuple[tuple[int, int, int], tuple[str, ...] | None] | None:
+    """Parse SemVer precedence while deliberately ignoring build metadata."""
+
+    if not isinstance(value, str) or SEMVER_PATTERN.fullmatch(value) is None:
+        return None
+    precedence = value.split("+", 1)[0]
+    core, separator, prerelease = precedence.partition("-")
+    try:
+        major, minor, patch = (int(part) for part in core.split("."))
+    except (TypeError, ValueError):
+        return None
+    return (major, minor, patch), tuple(prerelease.split(".")) if separator else None
+
+
+def compare_semver_precedence(left: Any, right: Any) -> int | None:
+    parsed_left = parse_semver_precedence(left)
+    parsed_right = parse_semver_precedence(right)
+    if parsed_left is None or parsed_right is None:
+        return None
+    left_core, left_pre = parsed_left
+    right_core, right_pre = parsed_right
+    if left_core != right_core:
+        return 1 if left_core > right_core else -1
+    if left_pre is None or right_pre is None:
+        if left_pre is right_pre:
+            return 0
+        return 1 if left_pre is None else -1
+    for left_part, right_part in zip(left_pre, right_pre):
+        if left_part == right_part:
+            continue
+        left_numeric = left_part.isdigit()
+        right_numeric = right_part.isdigit()
+        if left_numeric and right_numeric:
+            return 1 if int(left_part) > int(right_part) else -1
+        if left_numeric != right_numeric:
+            return -1 if left_numeric else 1
+        return 1 if left_part > right_part else -1
+    if len(left_pre) == len(right_pre):
+        return 0
+    return 1 if len(left_pre) > len(right_pre) else -1
+
+
+def unity_external_dependency_is_satisfied(declared: Any, resolved: Any) -> bool:
+    """Accept Unity's exact resolved node when it satisfies a SemVer edge request."""
+
+    parsed_declared = parse_semver_precedence(declared)
+    parsed_resolved = parse_semver_precedence(resolved)
+    if parsed_declared is None or parsed_resolved is None:
+        return False
+    if parsed_declared[1] is None and parsed_resolved[1] is not None:
+        return False
+    comparison = compare_semver_precedence(resolved, declared)
+    return comparison is not None and comparison >= 0
 TASK_HALL_VERSION = "0.3.0"
 TASK_HALL_REGISTRY_PATH = "docs/contributing/tasks/task-registry.json"
 TASK_HALL_PROJECT = "https://github.com/users/Lingkyn/projects/2"
@@ -1999,6 +2059,8 @@ def validate_task_hall_contract(root: Path) -> list[str]:
     example_path = root / "docs" / "contributing" / "task-contract.example.json"
     continuation_schema_path = root / "docs" / "contributing" / "work-continuation.schema.json"
     continuation_example_path = root / "docs" / "contributing" / "work-continuation.example.json"
+    credit_schema_path = root / "docs" / "contributing" / "contribution-credit.schema.json"
+    credit_example_path = root / "docs" / "contributing" / "contribution-credit.example.json"
     registry_path = root / TASK_HALL_REGISTRY_PATH
     registry_schema_path = root / "docs" / "contributing" / "tasks" / "task-registry.schema.json"
     labels_path = root / "docs" / "contributing" / "label-contract.json"
@@ -2073,6 +2135,22 @@ def validate_task_hall_contract(root: Path) -> list[str]:
                     "Task Hall continuation example schema binding",
                 )
             )
+    if credit_schema_path.exists():
+        try:
+            Draft202012Validator.check_schema(load_json(credit_schema_path))
+        except Exception as error:
+            errors.append(f"Contribution credit JSON Schema is invalid: {error}")
+    if credit_example_path.exists():
+        credit_example = load_json(credit_example_path)
+        errors.extend(
+            validate_json_schema_instance(
+                credit_example,
+                credit_schema_path,
+                "Contribution credit example schema binding",
+            )
+        )
+        if credit_example.get("record_status") != "example":
+            errors.append("Contribution credit example must not masquerade as accepted credit")
     if registry_path.exists():
         registry_payload = load_json(registry_path)
         errors.extend(validate_task_registry(root, registry_payload, "Task Hall registry"))
@@ -2854,12 +2932,13 @@ def validate_device_lab_execution_receipt(
                     )
                     continue
                 traversed_edges += 1
-                expected_edge_version = (
-                    custom_versions.get(dependency_id)
-                    if dependency_id in custom_versions
-                    else child.get("version")
-                )
-                if edge_version != expected_edge_version:
+                if dependency_id in custom_versions:
+                    edge_is_satisfied = edge_version == custom_versions[dependency_id]
+                else:
+                    edge_is_satisfied = unity_external_dependency_is_satisfied(
+                        edge_version, child.get("version")
+                    )
+                if not edge_is_satisfied:
                     errors.append(
                         f"{label}: Unity lock edge version drift: {package_id} -> {dependency_id}"
                     )
@@ -5200,12 +5279,13 @@ def validate_compatibility_profile_payload(
                     )
                     continue
                 traversed_edges += 1
-                expected_edge_version = (
-                    package_versions.get(child_id)
-                    if child_id in package_versions
-                    else child.get("version")
-                )
-                if edge_version != expected_edge_version:
+                if child_id in package_versions:
+                    edge_is_satisfied = edge_version == package_versions[child_id]
+                else:
+                    edge_is_satisfied = unity_external_dependency_is_satisfied(
+                        edge_version, child.get("version")
+                    )
+                if not edge_is_satisfied:
                     binding_errors.append(
                         f"{profile_id}: Unity lock edge version drift: "
                         f"{dependency_id} -> {child_id}"

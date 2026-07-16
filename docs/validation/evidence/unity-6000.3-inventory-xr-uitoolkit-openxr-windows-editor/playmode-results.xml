@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="2" result="Passed" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.3376225">
+  <test-suite type="TestSuite" id="1018" name="xr-foundry-agent-commons-v1" fullname="xr-foundry-agent-commons-v1" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.337623" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1003" name="Lingkyn.Inventory.UIToolkit.PlayMode.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.UIToolkit.PlayMode.Tests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.091726" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="276136" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1004" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.088027" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1005" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.087554" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1006" name="UIToolkit" fullname="Lingkyn.Inventory.UIToolkit" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.087264" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1007" name="Tests" fullname="Lingkyn.Inventory.UIToolkit.Tests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.086878" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1001" name="InventoryDocumentInteractionPlayModeTests" fullname="Lingkyn.Inventory.UIToolkit.Tests.InventoryDocumentInteractionPlayModeTests" classname="Lingkyn.Inventory.UIToolkit.Tests.InventoryDocumentInteractionPlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.085932" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1002" name="InteractionGateSuppressesIntentsWithoutHidingRenderedState" fullname="Lingkyn.Inventory.UIToolkit.Tests.InventoryDocumentInteractionPlayModeTests.InteractionGateSuppressesIntentsWithoutHidingRenderedState" methodname="InteractionGateSuppressesIntentsWithoutHidingRenderedState" classname="Lingkyn.Inventory.UIToolkit.Tests.InventoryDocumentInteractionPlayModeTests" runstate="Runnable" seed="1347839516" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.077386" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1010" name="Lingkyn.Inventory.XR.UIToolkit.PlayMode.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.XR.UIToolkit.PlayMode.Tests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.233420" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="276136" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1011" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.232793" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1012" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.232560" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1013" name="XR" fullname="Lingkyn.Inventory.XR" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.232376" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1014" name="UIToolkit" fullname="Lingkyn.Inventory.XR.UIToolkit" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.232149" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestSuite" id="1015" name="Tests" fullname="Lingkyn.Inventory.XR.UIToolkit.Tests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.231972" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-suite type="TestFixture" id="1008" name="InventoryUIToolkitPlacementPlayModeTests" fullname="Lingkyn.Inventory.XR.UIToolkit.Tests.InventoryUIToolkitPlacementPlayModeTests" classname="Lingkyn.Inventory.XR.UIToolkit.Tests.InventoryUIToolkitPlacementPlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.231736" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                  <properties />
+                  <test-case id="1009" name="RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera" fullname="Lingkyn.Inventory.XR.UIToolkit.Tests.InventoryUIToolkitPlacementPlayModeTests.RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera" methodname="RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera" classname="Lingkyn.Inventory.XR.UIToolkit.Tests.InventoryUIToolkitPlacementPlayModeTests" runstate="Runnable" seed="258679200" result="Passed" start-time="2026-07-15 16:24:28Z" end-time="2026-07-15 16:24:28Z" duration="0.230943" asserts="0">
+                    <properties>
+                      <property name="_JOINTYPE" value="UnityCombinatorial" />
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                    <output><![CDATA[Reference frame of the curve not set and XROrigin is not found, using global up as default.
+Detected an Event System component that could interfere with UI Toolkit input. Create a Panel Input Configuration component and configured it by setting Panel Input Redirection to No input redirection to prevent interactions with the Event System.
+Saving results to: PUBLIC_CONSUMER_ROOT\h-xruitoolkit-playmode.xml
+]]></output>
+                  </test-case>
+                </test-suite>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="6" result="Passed" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.3766383">
+  <test-suite type="TestSuite" id="1022" name="xr-foundry-agent-commons-v1" fullname="xr-foundry-agent-commons-v1" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.376638" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1005" name="Lingkyn.Inventory.UGUI.PlayMode.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.UGUI.PlayMode.Tests.dll" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.242462" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="270952" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1006" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.239942" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1007" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.239512" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1008" name="UGUI" fullname="Lingkyn.Inventory.UGUI" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.239275" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1009" name="Tests" fullname="Lingkyn.Inventory.UGUI.Tests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.239028" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1001" name="InventoryInputPlayModeTests" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests" classname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.238004" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1003" name="KeyboardSubmitUsesSameShippedSlotIntentAndDisabledSuppressesBothPaths" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests.KeyboardSubmitUsesSameShippedSlotIntentAndDisabledSuppressesBothPaths" methodname="KeyboardSubmitUsesSameShippedSlotIntentAndDisabledSuppressesBothPaths" classname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests" runstate="Runnable" seed="428164808" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.198065" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1004" name="PresenterRendersAggregateIntoShippedShellAndInputOnlyEmitsIntent" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests.PresenterRendersAggregateIntoShippedShellAndInputOnlyEmitsIntent" methodname="PresenterRendersAggregateIntoShippedShellAndInputOnlyEmitsIntent" classname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests" runstate="Runnable" seed="101936085" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.024143" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1002" name="ShippedPrefabRaycastsAndActivatesDistinctLeftCenterRightSlots" fullname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests.ShippedPrefabRaycastsAndActivatesDistinctLeftCenterRightSlots" methodname="ShippedPrefabRaycastsAndActivatesDistinctLeftCenterRightSlots" classname="Lingkyn.Inventory.UGUI.Tests.InventoryInputPlayModeTests" runstate="Runnable" seed="660543009" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.006586" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1014" name="Lingkyn.Inventory.XR.UGUI.PlayMode.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Inventory.XR.UGUI.PlayMode.Tests.dll" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.123053" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="270952" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1015" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.122129" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1016" name="Inventory" fullname="Lingkyn.Inventory" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.121871" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1017" name="XR" fullname="Lingkyn.Inventory.XR" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.121680" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1018" name="UGUI" fullname="Lingkyn.Inventory.XR.UGUI" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.121505" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestSuite" id="1019" name="Tests" fullname="Lingkyn.Inventory.XR.UGUI.Tests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.121305" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-suite type="TestFixture" id="1010" name="InventoryXrInteractionPlayModeTests" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.121035" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                  <properties />
+                  <test-case id="1013" name="RealXriPokeInteractorRoutesThroughShippedSlotOnRelease" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests.RealXriPokeInteractorRoutesThroughShippedSlotOnRelease" methodname="RealXriPokeInteractorRoutesThroughShippedSlotOnRelease" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests" runstate="Runnable" seed="221374137" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.082700" asserts="0">
+                    <properties>
+                      <property name="_JOINTYPE" value="UnityCombinatorial" />
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                  </test-case>
+                  <test-case id="1012" name="RealXriRayInteractorRoutesToDistinctShippedSlots" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests.RealXriRayInteractorRoutesToDistinctShippedSlots" methodname="RealXriRayInteractorRoutesToDistinctShippedSlots" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests" runstate="Runnable" seed="2065291357" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.025930" asserts="0">
+                    <properties>
+                      <property name="_JOINTYPE" value="UnityCombinatorial" />
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                    <output><![CDATA[Reference frame of the curve not set and XROrigin is not found, using global up as default.
+]]></output>
+                  </test-case>
+                  <test-case id="1011" name="SurfaceFailsClosedRecoversAndDoesNotFollowCamera" fullname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests.SurfaceFailsClosedRecoversAndDoesNotFollowCamera" methodname="SurfaceFailsClosedRecoversAndDoesNotFollowCamera" classname="Lingkyn.Inventory.XR.UGUI.Tests.InventoryXrInteractionPlayModeTests" runstate="Runnable" seed="1869411648" result="Passed" start-time="2026-07-15 16:23:05Z" end-time="2026-07-15 16:23:05Z" duration="0.011093" asserts="0">
+                    <properties>
+                      <property name="_JOINTYPE" value="UnityCombinatorial" />
+                      <property name="retryIteration" value="0" />
+                      <property name="repeatIteration" value="0" />
+                    </properties>
+                    <output><![CDATA[Reference frame of the curve not set and XROrigin is not found, using global up as default.
+Saving results to: PUBLIC_CONSUMER_ROOT\h-xrugui-playmode.xml
+]]></output>
+                  </test-case>
+                </test-suite>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

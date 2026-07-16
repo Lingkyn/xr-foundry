@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "com.lingkyn.project-initializer": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/foundations/com.lingkyn.project-initializer#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.render-pipelines.universal": "17.3.0",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.lingkyn.project-initializer"
+  ]
+}

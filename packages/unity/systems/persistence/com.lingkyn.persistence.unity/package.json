@@ -1,0 +1,22 @@
+{
+  "name": "com.lingkyn.persistence.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Persistence Unity",
+  "description": "Unity configuration, plain-DTO JSON codec, persistent-data path policy, local-file storage, recovery inspection, and Editor validation.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.persistence.core": "0.1.0"
+  },
+  "samples": [
+    {
+      "displayName": "LocalFilePersistence",
+      "description": "Configured Unity local-file persistence with explicit capability and recovery reporting.",
+      "path": "Samples~/LocalFilePersistence"
+    }
+  ]
+}

@@ -214,7 +214,7 @@
       "device_evidence": "not_applicable",
       "promotion": {
         "candidate_status": "blocked",
-        "earliest_failed_gate": "unity_file_provider_fault_injection",
+        "earliest_failed_gate": "public_api_compatibility_review",
         "satisfied": [
           "positive_source_gate",
           "architecture_gate",
@@ -222,13 +222,43 @@
           "recovery_candidate_contract",
           "immutable_git_url_clean_consumer",
           "unity_6000_3_editor_compile",
+          "unity_6000_3_editmode_tests",
+          "unity_file_provider_fault_injection",
+          "unity_adapter_exact_consumer"
+        ],
+        "pending": [
+          "public_api_compatibility_review",
+          "upgrade_and_rollback_across_a_release",
+          "candidate_release_review"
+        ]
+      }
+    },
+    {
+      "id": "com.lingkyn.persistence.unity",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "verified_exact_profile",
+      "git_url_install": "verified_immutable_commit",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "public_api_compatibility_review",
+        "satisfied": [
+          "scriptableobject_configuration",
+          "jsonutility_plain_dto_boundary",
+          "persistent_data_root_policy",
+          "staged_flush_commit",
+          "fault_injection",
+          "prior_record_preservation_checks",
+          "immutable_git_url_clean_consumer",
+          "unity_6000_3_editor_compile",
           "unity_6000_3_editmode_tests"
         ],
         "pending": [
-          "unity_file_provider_fault_injection",
-          "unity_adapter_exact_consumer",
           "public_api_compatibility_review",
           "upgrade_and_rollback_across_a_release",
+          "cross_platform_filesystem_profiles",
           "candidate_release_review"
         ]
       }

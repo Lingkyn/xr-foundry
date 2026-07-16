@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.Persistence.Unity",
+  "rootNamespace": "Lingkyn.Persistence.Unity",
+  "references": [
+    "Lingkyn.Persistence.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

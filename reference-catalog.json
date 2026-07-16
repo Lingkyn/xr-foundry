@@ -218,7 +218,29 @@
       "non_claims": [
         "No filesystem or UnityEngine provider is included",
         "No crash-durability, authentication, encryption, cloud, mobile, console, or device claim is made",
-        "Unity file-provider fault injection and release upgrade/rollback evidence remain pending"
+        "Release upgrade/rollback and public API compatibility review remain pending"
+      ]
+    },
+    {
+      "id": "unity-persistence-adapter",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity",
+      "package_id": "com.lingkyn.persistence.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Unity ScriptableObject configuration, JsonUtility plain-DTO codec, persistent-data root binding, staged local-file commits, recovery inspection, and injected fault verification.",
+      "evidence": [
+        "docs/standards/persistence/source-manifest.json",
+        "docs/standards/persistence/architecture-contract.md",
+        "docs/standards/persistence/verification-contract.md",
+        "packages/unity/systems/persistence/com.lingkyn.persistence.unity/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No authentication, encryption, cloud, console, or named-device behavior is included",
+        "Windows Editor evidence does not prove another operating system or crash-durability boundary",
+        "Candidate promotion waits for public API, release upgrade/rollback, and additional filesystem profile review"
       ]
     },
     {

@@ -2,8 +2,8 @@
   "$schema": "docs/validation/compatibility-evidence.schema.json",
   "schema": "xr-foundry.compatibility_evidence.v1",
   "kind": "editor_automated",
-  "profile_id": "unity-6000.3-persistence-core-windows-editor",
-  "commit_sha": "469f69a6899508e0978f9bb7bcccf7e74878429e",
+  "profile_id": "unity-6000.3-persistence-unity-windows-editor",
+  "commit_sha": "4a2f358000b9704700f8f90e1a15907938bb2ce4",
   "target": {
     "engine": {
       "id": "unity",
@@ -47,7 +47,8 @@
     }
   },
   "package_versions": {
-    "com.lingkyn.persistence.core": "0.1.0"
+    "com.lingkyn.persistence.core": "0.1.0",
+    "com.lingkyn.persistence.unity": "0.1.0"
   },
   "resolved_dependencies": {
     "com.unity.ext.nunit": "2.0.5",
@@ -56,12 +57,12 @@
     "com.unity.test-framework": "1.6.0"
   },
   "manifest": {
-    "path": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/consumer-manifest.json",
-    "sha256": "01c58590b8e997bcd3a5df9826444432af8dd10b8c955c6d7738695299ecd068"
+    "path": "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/consumer-manifest.json",
+    "sha256": "d01077d8c51d2c1967a22dccfa2e11c4d00413124444a8ab0b4eff40c19fe18c"
   },
   "lock": {
-    "path": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/consumer-packages-lock.json",
-    "sha256": "b4a3499593a990018d0005e83fadec6c6f9bbcf071c6b58b601ece31020f517a"
+    "path": "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/consumer-packages-lock.json",
+    "sha256": "ee596b825189f87c183e6fa9477c30c255eda2084bd15df384a3f52bdd510e70"
   },
   "checks": [
     {
@@ -70,8 +71,8 @@
       "evidence_refs": [
         {
           "kind": "compile_result",
-          "ref": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/compile-result.json",
-          "sha256": "95ba98de5a55ee693ad376c9888561796a8cd84f77e9fafd58878f50dcb9d4ad"
+          "ref": "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/compile-result.json",
+          "sha256": "0364580e31e205b90f828a4f1c3bae9b7eea3319455603e6cdb96f7c76ff5e28"
         }
       ]
     },
@@ -81,8 +82,8 @@
       "evidence_refs": [
         {
           "kind": "nunit_result",
-          "ref": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/editmode-results.xml",
-          "sha256": "bf33832af8ac1b875f65ddc3a74e247ac87679ce4f9cc4ec84c2f4603afca1f5"
+          "ref": "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/editmode-results.xml",
+          "sha256": "81c087d0c96cc13c96862e6d3cadaec50021951d24d102914007bdea48089c52"
         }
       ]
     }

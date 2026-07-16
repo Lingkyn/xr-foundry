@@ -4,7 +4,7 @@
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1051" name="Lingkyn.Persistence.Core.Editor.Tests.dll" fullname="D:/rrjm/validation/xr-foundry-persistence-core-0e1be0f/Library/ScriptAssemblies/Lingkyn.Persistence.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062910" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1051" name="Lingkyn.Persistence.Core.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.Persistence.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="49" result="Passed" start-time="2026-07-16 16:43:54Z" end-time="2026-07-16 16:43:54Z" duration="0.062910" total="49" passed="49" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
         <property name="_PID" value="144716" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />

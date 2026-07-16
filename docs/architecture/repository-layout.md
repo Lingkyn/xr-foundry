@@ -30,6 +30,8 @@ packages/
       settings/
         com.lingkyn.settings.core/
         com.lingkyn.settings.unity/
+      interaction/
+        com.lingkyn.interaction.core/
 docs/
   architecture/
   standards/

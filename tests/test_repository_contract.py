@@ -2175,6 +2175,23 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(
             MODULE.validate_json_schema_instance(superseded_ready, schema, "superseded ready")
         )
+        superseded_executable = json.loads(json.dumps(resolved_record))
+        superseded_executable["status"] = "superseded"
+        superseded_executable["execution"]["readiness"] = "superseded"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(
+                superseded_executable, schema, "superseded executable task"
+            )
+        )
+        rejected_executable = json.loads(json.dumps(resolved_record))
+        rejected_executable["status"] = "rejected"
+        rejected_executable["decision"] = None
+        rejected_executable["execution"]["readiness"] = "not_ready"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(
+                rejected_executable, schema, "rejected executable task"
+            )
+        )
 
     def test_independent_review_receipt_requires_distinct_agents_and_closed_findings(self) -> None:
         payload = json.loads(
@@ -2206,6 +2223,17 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertTrue(any("JSON Schema violation" in error for error in finding_errors))
 
+        valid_shared_maintainer = json.loads(json.dumps(accepted))
+        valid_shared_maintainer["independent_review"]["assisted_by"] = [
+            "Independent Review Agent"
+        ]
+        self.assertEqual(
+            [],
+            MODULE.validate_independent_review_receipt(
+                valid_shared_maintainer, "shared-maintainer review", root=ROOT
+            ),
+        )
+
     def test_completed_high_risk_checkpoint_requires_immutable_review_evidence(self) -> None:
         payload = json.loads(
             (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
@@ -2231,6 +2259,20 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertTrue(
             any("completed high-risk checkpoint requires immutable review evidence" in error for error in errors)
+        )
+
+        forged_review = json.loads(json.dumps(evidence))
+        forged_review[0]["kind"] = "review"
+        forged_errors = MODULE.validate_checkpoint_routing(
+            checkpoint["routing"],
+            "high-risk forged review",
+            device=checkpoint["device"],
+            evidence=forged_review,
+            status="completed",
+            root=ROOT,
+        )
+        self.assertTrue(
+            any("completed high-risk checkpoint requires immutable review evidence" in error for error in forged_errors)
         )
 
     def test_contract_test_gate_is_fail_fast_and_propagates_test_failure(self) -> None:

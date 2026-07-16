@@ -16,3 +16,9 @@ GitHub Actions remains the merge-time enforcement boundary. A local result is
 execution evidence, not permission to bypass the required pull-request check.
 The command does not grant repository authority and does not prove any headset,
 controller, comfort, or other device behavior.
+
+Independent review is separated at the executing-Agent boundary, not by forcing
+different GitHub accounts. Multiple local or cloud Agents may work under one
+accountable maintainer identity, but an accepted receipt requires disjoint
+`assisted_by` sets, fresh review context, and `reviewed_own_output=false`. The
+maintainer identity remains accountable for the final decision.

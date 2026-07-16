@@ -186,7 +186,9 @@
           "execution": {
             "properties": {
               "readiness": { "const": "not_ready" },
-              "task": { "type": "null" }
+              "task": { "type": "null" },
+              "scope": { "maxItems": 0 },
+              "exact_next_action": { "type": "null" }
             }
           }
         }
@@ -198,7 +200,10 @@
         "properties": {
           "execution": {
             "properties": {
-              "readiness": { "const": "superseded" }
+              "readiness": { "const": "superseded" },
+              "task": { "type": "null" },
+              "scope": { "maxItems": 0 },
+              "exact_next_action": { "type": "null" }
             }
           }
         }

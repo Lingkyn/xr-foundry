@@ -1489,6 +1489,7 @@ def validate_checkpoint_routing(
     device: Any = None,
     evidence: Any = None,
     status: Any = None,
+    root: Path | None = None,
 ) -> list[str]:
     errors: list[str] = []
     if not isinstance(routing, dict):
@@ -1523,6 +1524,11 @@ def validate_checkpoint_routing(
                 and bool(item.get("location"))
                 and isinstance(item.get("commit"), str)
                 and FULL_SHA_PATTERN.fullmatch(item.get("commit", "")) is not None
+                and item.get("commit") != "0" * 40
+                and commit_is_public_origin_reachable(
+                    root or ROOT,
+                    item.get("commit", ""),
+                )
             ]
             if not review_evidence:
                 errors.append(
@@ -1802,6 +1808,7 @@ def validate_task_contract(
                     device=checkpoint.get("device"),
                     evidence=checkpoint.get("evidence"),
                     status=status,
+                    root=root,
                 )
             )
             deps = checkpoint.get("depends_on", [])

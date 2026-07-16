@@ -44,6 +44,7 @@ answers for different models.
 | [`com.lingkyn.project-initializer`](packages/unity/foundations/com.lingkyn.project-initializer/) | Incubating | Configurable folder/scene scaffold, baseline prefabs, validation, and editor tools |
 | [`com.lingkyn.xr-baseline`](packages/unity/foundations/com.lingkyn.xr-baseline/) | Incubating | Vendor-neutral XR Sandbox assets, rig helpers, configuration, and smoke-build tools |
 | [`Inventory Package Family`](docs/standards/inventory/README.md) | Incubating | One reusable Inventory system with optional Core, Unity authoring, renderer-neutral Presentation, UGUI, UI Toolkit, and renderer-specific XR modules |
+| [`Persistence Package Family`](docs/standards/persistence/README.md) | Incubating | Engine-light save/recovery contracts plus an optional Unity local-file, ScriptableObject, and JsonUtility adapter |
 
 The human-facing landing page groups a reusable system into one row to reduce
 cognitive load. Its family page explains recommended compositions and lets a
@@ -102,7 +103,8 @@ Pin a reviewed commit SHA rather than `main`:
     "com.lingkyn.inventory.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit#<same-full-40-character-commit-sha>",
     "com.lingkyn.inventory.xr.ugui": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui#<same-full-40-character-commit-sha>",
     "com.lingkyn.inventory.xr.uitoolkit": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit#<same-full-40-character-commit-sha>",
-    "com.lingkyn.persistence.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/persistence/com.lingkyn.persistence.core#<same-full-40-character-commit-sha>"
+    "com.lingkyn.persistence.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/persistence/com.lingkyn.persistence.core#<same-full-40-character-commit-sha>",
+    "com.lingkyn.persistence.unity": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/persistence/com.lingkyn.persistence.unity#<same-full-40-character-commit-sha>"
   }
 }
 ```

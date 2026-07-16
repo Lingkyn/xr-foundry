@@ -697,6 +697,18 @@ def validate_readme_git_install_matrix(
     return errors
 
 
+def source_has_valid_namespace_contract(source_name: str, text: str) -> bool:
+    namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)
+    is_assembly_info = (
+        source_name == "AssemblyInfo.cs"
+        and re.search(r"\[\s*assembly\s*:", text) is not None
+        and re.search(r"\b(class|struct|interface|enum|record|delegate)\b", text) is None
+    )
+    return (bool(namespaces) or is_assembly_info) and all(
+        value.startswith("Lingkyn.") for value in namespaces
+    )
+
+
 def validate_internal_namespace_links(
     package_root: Path, package_roots: dict[str, Path] | None = None
 ) -> list[str]:
@@ -6595,8 +6607,7 @@ def validate_repository(root: Path) -> list[str]:
         errors.extend(validate_unity_asset_path_literals(package_root, set(declared_package_roots)))
         for source in package_root.rglob("*.cs"):
             text = source.read_text(encoding="utf-8")
-            namespaces = re.findall(r"\bnamespace\s+([A-Za-z0-9_.]+)", text)
-            if not namespaces or any(not value.startswith("Lingkyn.") for value in namespaces):
+            if not source_has_valid_namespace_contract(source.name, text):
                 errors.append(f"{source.relative_to(root)}: namespace must start with Lingkyn.")
             if not source.with_name(source.name + ".meta").exists():
                 errors.append(f"{source.relative_to(root)}: missing .meta")

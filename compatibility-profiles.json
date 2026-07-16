@@ -47,7 +47,8 @@
     "unity-6000.3-inventory-uitoolkit-non-xr-windows-editor",
     "unity-6000.3-inventory-xr-ugui-openxr-windows-editor",
     "unity-6000.3-inventory-xr-uitoolkit-openxr-windows-editor",
-    "unity-6000.3-persistence-core-windows-editor"
+    "unity-6000.3-persistence-core-windows-editor",
+    "unity-6000.3-persistence-unity-windows-editor"
   ],
   "profiles": [
     {
@@ -831,6 +832,75 @@
           "receipt_path": "docs/validation/evidence/unity-6000.3-persistence-core-windows-editor/compatibility-receipt.json",
           "manifest_sha256": "01c58590b8e997bcd3a5df9826444432af8dd10b8c955c6d7738695299ecd068",
           "lock_sha256": "b4a3499593a990018d0005e83fadec6c6f9bbcf071c6b58b601ece31020f517a",
+          "checks": [
+            "editor_compile",
+            "editmode_tests"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unity-6000.3-persistence-unity-windows-editor",
+      "state": "verified",
+      "install_artifact": "com.lingkyn.persistence.unity",
+      "target": {
+        "engine": {
+          "id": "unity",
+          "version": "6000.3.19f1"
+        },
+        "editor": {
+          "id": "unity-editor",
+          "version": "6000.3.19f1"
+        },
+        "renderer": {
+          "id": "not_applicable",
+          "version": "not_applicable"
+        },
+        "requested_dependencies": {
+          "com.unity.test-framework": "1.6.0"
+        },
+        "resolved_dependencies": {
+          "com.unity.ext.nunit": "2.0.5",
+          "com.unity.modules.imgui": "1.0.0",
+          "com.unity.modules.jsonserialize": "1.0.0",
+          "com.unity.test-framework": "1.6.0"
+        },
+        "build_target": "WindowsEditor",
+        "graphics_api": "Null",
+        "scripting_backend": "Mono",
+        "architecture": "x86_64",
+        "xr_provider": {
+          "id": "not_applicable",
+          "version": "not_applicable"
+        },
+        "runtime": {
+          "id": "not_applicable",
+          "version": "not_applicable"
+        },
+        "input_routes": [
+          "not_applicable"
+        ],
+        "device": {
+          "id": "windows-editor-host",
+          "version": "10.0.26200"
+        }
+      },
+      "package_versions": {
+        "com.lingkyn.persistence.core": "0.1.0",
+        "com.lingkyn.persistence.unity": "0.1.0"
+      },
+      "verified_claims": [
+        "editor_compile",
+        "editmode_tests"
+      ],
+      "evidence": [
+        {
+          "kind": "editor_automated",
+          "profile_id": "unity-6000.3-persistence-unity-windows-editor",
+          "commit_sha": "4a2f358000b9704700f8f90e1a15907938bb2ce4",
+          "receipt_path": "docs/validation/evidence/unity-6000.3-persistence-unity-windows-editor/compatibility-receipt.json",
+          "manifest_sha256": "d01077d8c51d2c1967a22dccfa2e11c4d00413124444a8ab0b4eff40c19fe18c",
+          "lock_sha256": "ee596b825189f87c183e6fa9477c30c255eda2084bd15df384a3f52bdd510e70",
           "checks": [
             "editor_compile",
             "editmode_tests"

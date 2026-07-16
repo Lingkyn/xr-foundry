@@ -31,7 +31,8 @@
       "id": "unity-system-persistence",
       "path": "packages/unity/systems/persistence",
       "packages": [
-        "com.lingkyn.persistence.core"
+        "com.lingkyn.persistence.core",
+        "com.lingkyn.persistence.unity"
       ]
     }
   ],

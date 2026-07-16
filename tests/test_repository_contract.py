@@ -1026,7 +1026,10 @@ class RepositoryContractTests(unittest.TestCase):
             {item["id"] for item in MODULE.load_json(ROOT / "package-catalog.json")["packages"]},
             {profile["install_artifact"] for profile in payload["profiles"]},
         )
-        self.assertEqual(9, len(payload["profiles"]))
+        self.assertEqual(
+            len(payload["profiles"]),
+            len({profile["install_artifact"] for profile in payload["profiles"]}),
+        )
         for profile in payload["profiles"]:
             self.assertEqual("verified", profile["state"])
             self.assertEqual("6000.3.19f1", profile["target"]["engine"]["version"])
@@ -4231,6 +4234,30 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertTrue(
                 any("undecodable controlled text file: undecodable.md" in error for error in errors)
             )
+
+    def test_namespace_contract_admits_attribute_only_assembly_info(self) -> None:
+        source = (
+            "using System.Runtime.CompilerServices;\n\n"
+            '[assembly: InternalsVisibleTo("Lingkyn.Example.Editor.Tests")]\n'
+        )
+
+        self.assertTrue(
+            MODULE.source_has_valid_namespace_contract("AssemblyInfo.cs", source)
+        )
+        self.assertFalse(
+            MODULE.source_has_valid_namespace_contract("Other.cs", source)
+        )
+
+    def test_namespace_contract_rejects_types_hidden_in_assembly_info(self) -> None:
+        source = (
+            "using System.Runtime.CompilerServices;\n"
+            '[assembly: InternalsVisibleTo("Lingkyn.Example.Editor.Tests")]\n'
+            "internal sealed class HiddenType {}\n"
+        )
+
+        self.assertFalse(
+            MODULE.source_has_valid_namespace_contract("AssemblyInfo.cs", source)
+        )
 
 
 if __name__ == "__main__":

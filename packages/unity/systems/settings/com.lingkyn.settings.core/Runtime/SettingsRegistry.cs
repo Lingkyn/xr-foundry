@@ -84,6 +84,13 @@ namespace Lingkyn.Settings.Core
             {
                 foreach (var pair in overrides)
                 {
+                    if (!SettingKey.TryCreate(pair.Key.Value).Succeeded)
+                    {
+                        throw new ArgumentException(
+                            "Profile override contains an invalid setting key.",
+                            nameof(overrides));
+                    }
+
                     if (!built.ContainsKey(pair.Key))
                     {
                         built[pair.Key] = pair.Value;

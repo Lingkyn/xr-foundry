@@ -238,12 +238,6 @@ namespace Lingkyn.Settings.Core
         public SettingKey Key { get; }
         public SettingScope Scope { get; }
 
-        private ScopedSettingKey(SettingKey key, SettingScope scope)
-        {
-            Key = key;
-            Scope = scope;
-        }
-
         public static SettingsResult<ScopedSettingKey> TryCreate(SettingKey key, SettingScope scope)
         {
             if (string.IsNullOrEmpty(key.Value))

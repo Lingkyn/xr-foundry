@@ -289,6 +289,27 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         }
 
         [Test]
+        public void DefinitionAndOptionConstraintRejectDefaultIdentities()
+        {
+            var definition = SettingDefinitionValidator.ValidateBuilt(
+                default,
+                SettingValueKind.Boolean,
+                SettingValue.FromBoolean(false),
+                SettingScope.User,
+                0,
+                false,
+                null,
+                null,
+                null,
+                default);
+            Assert.That(definition.Succeeded, Is.False);
+            Assert.That(definition.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidKey));
+
+            Assert.Throws<ArgumentException>(() =>
+                new OptionConstraint(new[] { default(OptionId) }));
+        }
+
+        [Test]
         public void FreezeListCopiesCallerOwnedArrays()
         {
             var source = new[] { SettingsTransactionCommand.CreateResetScope(SettingScope.User) };

@@ -40,6 +40,11 @@ namespace Lingkyn.Settings.Core
             var seen = new HashSet<OptionId>();
             foreach (var option in _allowed)
             {
+                if (!OptionId.TryCreate(option.Value).Succeeded)
+                {
+                    throw new ArgumentException("Option constraint contains an invalid option id.", nameof(allowed));
+                }
+
                 if (!seen.Add(option))
                 {
                     throw new ArgumentException("Option constraint contains duplicate option ids.", nameof(allowed));
@@ -102,7 +107,7 @@ namespace Lingkyn.Settings.Core
 
     public sealed class SettingDefinition
     {
-        public SettingDefinition(
+        internal SettingDefinition(
             SettingKey key,
             SettingValueKind kind,
             SettingValue defaultValue,
@@ -152,6 +157,15 @@ namespace Lingkyn.Settings.Core
             OptionConstraint optionConstraint,
             AccessibilityMetadata accessibility)
         {
+            var keyValidation = SettingKey.TryCreate(key.Value);
+            if (!keyValidation.Succeeded)
+            {
+                return SettingsResult<SettingDefinition>.Fail(
+                    keyValidation.Error.Code,
+                    keyValidation.Error.Message,
+                    key);
+            }
+
             var scopeValidation = SettingScopeValidator.Validate(defaultScope);
             if (!scopeValidation.Succeeded)
             {
@@ -243,6 +257,13 @@ namespace Lingkyn.Settings.Core
             SettingDefinition definition,
             SettingValue value)
         {
+            if (definition == null)
+            {
+                return SettingsResult.Fail(
+                    SettingsValidationCode.InvalidKey,
+                    "Setting definition is required.");
+            }
+
             if (value.Kind != definition.Kind)
             {
                 return SettingsResult.Fail(

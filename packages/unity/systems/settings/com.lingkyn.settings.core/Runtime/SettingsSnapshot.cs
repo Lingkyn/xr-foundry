@@ -115,6 +115,15 @@ namespace Lingkyn.Settings.Core
 
             foreach (var pair in snapshot.KnownValues)
             {
+                var keyValidation = SettingKey.TryCreate(pair.Key.Key.Value);
+                if (!keyValidation.Succeeded)
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(
+                        keyValidation.Error.Code,
+                        "Loaded snapshot contains an invalid setting key.",
+                        pair.Key.Key);
+                }
+
                 var scopeValidation = SettingScopeValidator.Validate(pair.Key.Scope);
                 if (!scopeValidation.Succeeded)
                 {

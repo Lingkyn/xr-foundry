@@ -11,4 +11,3 @@
 
 - `SettingChange` reports explicit presence via `HadOldValue` / `HasNewValue` for accurate reset removals.
 - `SettingsTransactionCommand.CreateResetScope` replaces the conflicting `ResetScope` factory name.
-- `SettingsUnityFactory` propagates repository load failures unless `UseDefaultsOnRepositoryLoadFailure` is enabled.

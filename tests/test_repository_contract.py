@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import hashlib
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -11,6 +12,7 @@ import unittest
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -941,7 +943,15 @@ class RepositoryContractTests(unittest.TestCase):
             ["git", "rev-parse", f"{public_commit}^{{tree}}"], cwd=ROOT, text=True
         ).strip()
         local_only = subprocess.check_output(
-            ["git", "commit-tree", tree],
+            [
+                "git",
+                "-c",
+                "user.name=XR Foundry Contract Test",
+                "-c",
+                "user.email=xr-foundry-contract-test@example.invalid",
+                "commit-tree",
+                tree,
+            ],
             cwd=ROOT,
             input="local-only evidence object\n",
             text=True,
@@ -1989,22 +1999,55 @@ class RepositoryContractTests(unittest.TestCase):
 
         errors = MODULE.validate_task_contract(payload, "unsafe task")
 
-        self.assertTrue(any("write_permission_not_inferred=true" in error for error in errors))
+        self.assertTrue(any("write_permission_not_inferred" in error for error in errors))
 
-    def test_task_hall_example_is_unclaimed(self) -> None:
-        payload = json.loads(
+    def test_task_hall_positive_fixtures_pass(self) -> None:
+        self.assertEqual([], MODULE.validate_task_hall_contract(ROOT))
+        example = json.loads(
             (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
                 encoding="utf-8"
             )
         )
+        continuation = json.loads(
+            (ROOT / "docs" / "contributing" / "work-continuation.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        live_task = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        authority = json.loads(
+            (ROOT / "docs" / "contributing" / "task-hall.v1.json").read_text(encoding="utf-8")
+        )
 
-        self.assertEqual("proposal", payload["state"])
-        self.assertFalse(payload["blocked"])
-        self.assertEqual("unclaimed", payload["claim"]["status"])
-        self.assertIsNone(payload["claim"]["github_identity"])
-        self.assertEqual([], MODULE.validate_task_contract(payload, "Task Hall example"))
+        self.assertEqual("0.3.0", authority["version"])
+        self.assertEqual([], MODULE.validate_task_hall_authority(authority))
+        self.assertEqual([], MODULE.validate_task_contract(example, "Task Hall example"))
+        self.assertEqual(
+            [], MODULE.validate_work_continuation(continuation, "Task Hall continuation")
+        )
+        self.assertEqual([], MODULE.validate_task_registry(ROOT, registry))
+        self.assertEqual(
+            [],
+            MODULE.validate_task_contract(
+                live_task,
+                "registered live task",
+                require_canonical_repository=True,
+            ),
+        )
 
-    def test_task_contract_rejects_competing_lifecycle_vocabulary(self) -> None:
+    def test_task_contract_rejects_competing_umbrella_lifecycle(self) -> None:
         payload = json.loads(
             (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
                 encoding="utf-8"
@@ -2014,70 +2057,1224 @@ class RepositoryContractTests(unittest.TestCase):
 
         errors = MODULE.validate_task_contract(payload, "stale lifecycle task")
 
-        self.assertTrue(any("canonical Task Hall lifecycle" in error for error in errors))
+        self.assertTrue(any("canonical Task Hall umbrella lifecycle" in error for error in errors))
 
-    def test_task_contract_enforces_conditional_source_and_device_gates(self) -> None:
-        source = json.loads(
+    def test_task_contract_rejects_missing_and_duplicate_issue_projections(self) -> None:
+        payload = json.loads(
             (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
                 encoding="utf-8"
             )
         )
-        required_source = json.loads(json.dumps(source))
-        required_source["source_gate"] = {"required": True, "sources": []}
-        required_source["state"] = "source_gate"
-        source_errors = MODULE.validate_task_contract(required_source, "empty source gate")
-        self.assertTrue(any("required source gate" in error for error in source_errors))
-        self.assertTrue(any("JSON Schema violation" in error for error in source_errors))
+        missing = json.loads(json.dumps(payload))
+        missing["public_projection"]["checkpoint_issues"] = missing["public_projection"][
+            "checkpoint_issues"
+        ][:-1]
+        missing_errors = MODULE.validate_task_contract(missing, "missing projection")
+        self.assertTrue(any("missing checkpoint Issue projections" in error for error in missing_errors))
 
-        disabled_device = json.loads(json.dumps(source))
-        disabled_device["device_gate"] = {
+        duplicate = json.loads(json.dumps(payload))
+        duplicate["public_projection"]["checkpoint_issues"].append(
+            {
+                "checkpoint_id": "CP-01",
+                "issue": "https://github.com/example-org/example-repo/issues/199",
+            }
+        )
+        duplicate_id_errors = MODULE.validate_task_contract(duplicate, "duplicate checkpoint projection")
+        self.assertTrue(
+            any("duplicate checkpoint Issue projections" in error for error in duplicate_id_errors)
+        )
+
+        duplicate_issue = json.loads(json.dumps(payload))
+        duplicate_issue["public_projection"]["checkpoint_issues"][1]["issue"] = duplicate_issue[
+            "public_projection"
+        ]["checkpoint_issues"][0]["issue"]
+        duplicate_issue_errors = MODULE.validate_task_contract(
+            duplicate_issue, "duplicate issue projection"
+        )
+        self.assertTrue(any("duplicate Issue projections" in error for error in duplicate_issue_errors))
+
+        umbrella_collision = json.loads(json.dumps(payload))
+        umbrella_collision["public_projection"]["checkpoint_issues"][0]["issue"] = (
+            umbrella_collision["public_projection"]["umbrella_issue"]
+        )
+        umbrella_errors = MODULE.validate_task_contract(
+            umbrella_collision, "checkpoint equals umbrella"
+        )
+        self.assertTrue(
+            any("checkpoint Issue cannot equal umbrella Issue" in error for error in umbrella_errors)
+        )
+        self.assertTrue(
+            any("unique role-separated set" in error for error in umbrella_errors)
+        )
+
+    def test_task_contract_rejects_foreign_repository_projections(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        payload["public_projection"]["checkpoint_issues"][0]["issue"] = (
+            "https://github.com/other-org/other-repo/issues/101"
+        )
+
+        errors = MODULE.validate_task_contract(payload, "foreign projection")
+
+        self.assertTrue(any("foreign repository" in error for error in errors))
+
+    def test_registered_task_requires_canonical_task_hall_project(self) -> None:
+        payload = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        payload["public_projection"]["project"] = "https://github.com/orgs/other-org/projects/9"
+
+        errors = MODULE.validate_task_contract(
+            payload,
+            "non-canonical project",
+            require_canonical_repository=True,
+        )
+
+        self.assertTrue(
+            any("canonical Task Hall Project" in error for error in errors)
+        )
+
+    def test_task_contract_rejects_self_authorizing_and_unqualified_high_risk_routing(
+        self,
+    ) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self_auth = json.loads(json.dumps(payload))
+        self_auth["checkpoints"][0]["routing"]["self_report_grants_authority"] = True
+        self_auth_errors = MODULE.validate_task_contract(self_auth, "self-authorizing")
+        self.assertTrue(any("self-authorizing routing" in error for error in self_auth_errors))
+        self.assertTrue(any("JSON Schema violation" in error for error in self_auth_errors))
+
+        unqualified = json.loads(json.dumps(payload))
+        routing = unqualified["checkpoints"][2]["routing"]
+        routing["judgment_level"] = "security_or_release"
+        routing["required_capabilities"] = []
+        routing["qualification_evidence"] = []
+        routing["independent_review"] = "not_required"
+        unqualified_errors = MODULE.validate_task_contract(unqualified, "unqualified high-risk")
+        self.assertTrue(
+            any("unqualified high-risk execution" in error for error in unqualified_errors)
+        )
+        self.assertTrue(
+            any("high-risk routing requires required_capabilities" in error for error in unqualified_errors)
+        )
+
+    def test_required_device_review_requires_device_capability_gate_and_evidence(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        incomplete = json.loads(json.dumps(payload))
+        routing = incomplete["checkpoints"][0]["routing"]
+        routing["independent_review"] = "required_device"
+        routing["required_devices"] = []
+        incomplete["checkpoints"][0]["device"] = {
             "required": False,
-            "profiles": ["pico-openxr-controller"],
+            "profiles": [],
+            "acceptance": [],
+            "evidence": [],
         }
-        device_errors = MODULE.validate_task_contract(disabled_device, "contradictory device gate")
-        self.assertTrue(any("profiles must be empty" in error for error in device_errors))
-        self.assertTrue(any("JSON Schema violation" in error for error in device_errors))
+        incomplete_errors = MODULE.validate_task_contract(incomplete, "incomplete device review")
+        self.assertTrue(
+            any("non-empty required_devices" in error for error in incomplete_errors)
+        )
+        self.assertTrue(
+            any("coherent device gate" in error for error in incomplete_errors)
+        )
 
-        device_state = json.loads(json.dumps(source))
-        device_state["state"] = "device_test_if_required"
-        state_errors = MODULE.validate_task_contract(device_state, "unbound device state")
-        self.assertTrue(any("claim.status=claimed" in error for error in state_errors))
-        self.assertTrue(any("device_gate.required=true" in error for error in state_errors))
+        completed = json.loads(json.dumps(payload))
+        completed_routing = completed["checkpoints"][0]["routing"]
+        completed_routing["independent_review"] = "required_device"
+        completed_routing["required_devices"] = ["pico-openxr-controller"]
+        completed["checkpoints"][0]["device"] = {
+            "required": True,
+            "profiles": ["pico-openxr-controller"],
+            "acceptance": ["Confirm world-space UI comfort on device"],
+            "evidence": [],
+        }
+        completed["checkpoints"][0]["status"] = "completed"
+        completed["checkpoints"][0]["evidence"] = [
+            {
+                "id": "E-NON-DEVICE",
+                "kind": "test",
+                "location": "docs/device-lab/README.md",
+                "commit": "0000000000000000000000000000000000000000",
+                "summary": "Not device evidence",
+            }
+        ]
+        completed_errors = MODULE.validate_task_contract(completed, "completed without device evidence")
+        self.assertTrue(
+            any(
+                "completed required_device checkpoint requires device evidence" in error
+                for error in completed_errors
+            )
+        )
 
-    def test_task_contract_enforces_claim_state_and_complete_lease(self) -> None:
-        source = json.loads(
+    def test_task_contract_rejects_duplicate_checkpoint_local_ids(self) -> None:
+        payload = json.loads(
             (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
                 encoding="utf-8"
             )
         )
-        source["state"] = "work"
-        source["claim"] = {
-            "status": "claimed",
-            "github_identity": "",
-            "claimed_at": "2026-07-16T12:00:00Z",
-            "expires_at": "2026-07-15T12:00:00Z",
-            "confirmed_by_maintainer": None,
+        duplicate_acceptance = json.loads(json.dumps(payload))
+        duplicate_acceptance["checkpoints"][0]["acceptance"].append(
+            {
+                "id": "AC-01",
+                "criterion": "Duplicate local acceptance id must fail closed.",
+            }
+        )
+        acceptance_errors = MODULE.validate_task_contract(
+            duplicate_acceptance, "duplicate acceptance ids"
+        )
+        self.assertTrue(
+            any("duplicate acceptance id AC-01" in error for error in acceptance_errors)
+        )
+
+        duplicate_verification = json.loads(json.dumps(payload))
+        duplicate_verification["checkpoints"][0]["verification"].append(
+            {
+                "id": "V-01",
+                "procedure": "Repeat the same verification id.",
+                "expected": "Validation fails closed.",
+                "evidence_required": True,
+            }
+        )
+        verification_errors = MODULE.validate_task_contract(
+            duplicate_verification, "duplicate verification ids"
+        )
+        self.assertTrue(
+            any("duplicate verification id V-01" in error for error in verification_errors)
+        )
+
+        duplicate_evidence = json.loads(json.dumps(payload))
+        duplicate_evidence["checkpoints"][0]["evidence"].append(
+            {
+                "id": "E-CP01",
+                "kind": "test",
+                "location": "docs/architecture/example-duplicate.md",
+                "commit": "0000000000000000000000000000000000000000",
+                "summary": "Duplicate evidence id must fail closed.",
+            }
+        )
+        evidence_errors = MODULE.validate_task_contract(
+            duplicate_evidence, "duplicate evidence ids"
+        )
+        self.assertTrue(
+            any("duplicate evidence id E-CP01" in error for error in evidence_errors)
+        )
+
+    def test_task_contract_rejects_unresolved_device_evidence_references(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        payload["checkpoints"][1]["device"] = {
+            "required": True,
+            "profiles": ["pico-openxr-controller"],
+            "acceptance": ["Confirm the device evidence reference resolves locally"],
+            "evidence": ["E-MISSING-DEVICE"],
         }
-        source["unexpected_authority"] = "write"
 
-        errors = MODULE.validate_task_contract(source, "incomplete claim")
+        errors = MODULE.validate_task_contract(payload, "unresolved device evidence")
 
-        self.assertTrue(any("claim.github_identity" in error for error in errors))
-        self.assertTrue(any("claim.confirmed_by_maintainer" in error for error in errors))
-        self.assertTrue(any("expires_at must be after" in error for error in errors))
-        self.assertTrue(any("Additional properties" in error for error in errors))
+        self.assertTrue(
+            any(
+                "device evidence reference 'E-MISSING-DEVICE' does not resolve within the checkpoint"
+                in error
+                for error in errors
+            )
+        )
 
-    def test_task_hall_lifecycle_order_is_machine_enforced(self) -> None:
+    def test_task_contract_rejects_overlapping_concurrent_allowed_paths(self) -> None:
+        payload = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        for checkpoint in payload["checkpoints"]:
+            if checkpoint["id"] == "WB-05":
+                checkpoint["allowed_paths"] = [
+                    "scripts/validate_repository.py",
+                    "docs/contributing/deliberation-protocol.md",
+                ]
+                break
+
+        errors = MODULE.validate_task_contract(
+            payload,
+            "overlapping concurrent writes",
+            require_canonical_repository=True,
+        )
+
+        self.assertTrue(
+            any(
+                "concurrent checkpoints WB-01V and WB-05 claim overlapping allowed_paths"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_allowed_paths_overlap_detects_docs_glob_starstar_witness(self) -> None:
+        self.assertTrue(MODULE.allowed_paths_overlap("docs/**/foo", "docs/bar/**"))
+        self.assertTrue(MODULE.allowed_path_matches("docs/bar/foo", "docs/**/foo"))
+        self.assertTrue(MODULE.allowed_path_matches("docs/bar/foo", "docs/bar/**"))
+        self.assertFalse(MODULE.allowed_paths_overlap("packages/a/**", "packages/b/**"))
+
+        payload = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        for checkpoint in payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["docs/**/foo"]
+            elif checkpoint["id"] == "WB-05":
+                checkpoint["allowed_paths"] = ["docs/bar/**"]
+
+        errors = MODULE.validate_task_contract(
+            payload,
+            "glob intersection witness",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "concurrent checkpoints WB-01V and WB-05 claim overlapping allowed_paths"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_allowed_paths_unify_starstar_segment_grammar_docs_a_starstar_foo(self) -> None:
+        # Embedded ** is illegal; previously matching treated docs/a**/foo as crossing
+        # slash so it shared witness docs/a/x/foo with docs/a/x/foo while intersection
+        # treated the patterns as disjoint.
+        self.assertFalse(
+            MODULE.is_safe_repository_relative_allowed_path("docs/a**/foo")
+        )
+        self.assertFalse(MODULE.allowed_path_matches("docs/a/x/foo", "docs/a**/foo"))
+        self.assertTrue(MODULE.allowed_paths_overlap("docs/a**/foo", "docs/a/x/foo"))
+
+        payload = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        for checkpoint in payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["docs/a**/foo"]
+            elif checkpoint["id"] == "WB-05":
+                checkpoint["allowed_paths"] = ["docs/a/x/foo"]
+
+        errors = MODULE.validate_task_contract(
+            payload,
+            "embedded starstar grammar regression",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "allowed_path 'docs/a**/foo' is not a safe repository-relative path" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "concurrent checkpoints WB-01V and WB-05 claim overlapping allowed_paths"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_allowed_paths_reject_unsafe_repository_relative_forms(self) -> None:
+        unsafe_paths = [
+            "../outside/**",
+            "/tmp/**",
+            "C:/temp/**",
+            "c:\\temp\\**",
+            "//server/share/**",
+            "\\\\server\\share\\**",
+            "docs/../scripts/**",
+            "docs/./foo",
+            "docs//foo",
+            "docs/a**/foo",
+            "",
+            ".",
+            "..",
+            "**/../secret",
+        ]
+        for pattern in unsafe_paths:
+            self.assertFalse(
+                MODULE.is_safe_repository_relative_allowed_path(pattern),
+                pattern,
+            )
+
+        self.assertTrue(
+            MODULE.is_safe_repository_relative_allowed_path("docs/contributing/tasks/**")
+        )
+        self.assertTrue(
+            MODULE.is_safe_repository_relative_allowed_path("docs/**/foo")
+        )
+        self.assertTrue(
+            MODULE.is_safe_repository_relative_allowed_path("scripts/validate_repository.py")
+        )
+
+        payload = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        for checkpoint in payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["docs/../scripts/**"]
+                break
+
+        errors = MODULE.validate_task_contract(
+            payload,
+            "unsafe relative allowed_paths",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "allowed_path 'docs/../scripts/**' is not a safe repository-relative path"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+        absolute_payload = json.loads(json.dumps(payload))
+        for checkpoint in absolute_payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["/tmp/**"]
+                break
+        absolute_errors = MODULE.validate_task_contract(
+            absolute_payload,
+            "absolute allowed_paths",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "allowed_path '/tmp/**' is not a safe repository-relative path" in error
+                for error in absolute_errors
+            ),
+            absolute_errors,
+        )
+
+        drive_payload = json.loads(json.dumps(payload))
+        for checkpoint in drive_payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["C:/temp/**"]
+                break
+        drive_errors = MODULE.validate_task_contract(
+            drive_payload,
+            "drive allowed_paths",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "allowed_path 'C:/temp/**' is not a safe repository-relative path" in error
+                for error in drive_errors
+            ),
+            drive_errors,
+        )
+
+        parent_payload = json.loads(json.dumps(payload))
+        for checkpoint in parent_payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["../outside/**"]
+                break
+        parent_errors = MODULE.validate_task_contract(
+            parent_payload,
+            "parent escape allowed_paths",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "allowed_path '../outside/**' is not a safe repository-relative path"
+                in error
+                for error in parent_errors
+            ),
+            parent_errors,
+        )
+
+    def test_allowed_paths_casefold_ownership_aliases_overlap(self) -> None:
+        self.assertTrue(MODULE.allowed_paths_overlap("README.md", "readme.md"))
+        self.assertTrue(MODULE.allowed_paths_overlap("Docs/**", "docs/foo"))
+        self.assertFalse(MODULE.allowed_paths_overlap("README.md", "LICENSE.md"))
+
+        payload = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        for checkpoint in payload["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["README.md"]
+            elif checkpoint["id"] == "WB-05":
+                checkpoint["allowed_paths"] = ["readme.md"]
+
+        errors = MODULE.validate_task_contract(
+            payload,
+            "casefold ownership alias",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "concurrent checkpoints WB-01V and WB-05 claim overlapping allowed_paths"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+        same = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        for checkpoint in same["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = ["README.md", "readme.md"]
+                break
+        same_errors = MODULE.validate_task_contract(
+            same,
+            "casefold duplicate within checkpoint",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "collides under portable ownership-key aliasing" in error
+                for error in same_errors
+            ),
+            same_errors,
+        )
+
+    def test_allowed_paths_portable_ownership_key_rejects_windows_aliases_and_controls(
+        self,
+    ) -> None:
+        import unicodedata
+
+        nfd_readme = "README" + unicodedata.normalize("NFD", "é") + ".md"
+        nfc_readme = unicodedata.normalize("NFC", nfd_readme)
+        self.assertNotEqual(nfd_readme, nfc_readme)
+
+        next_line = "docs/foo\u0085bar"
+        zero_width = "docs/foo\u200bbar"
+        bidi_cf = "docs/foo\u202ebar"
+        self.assertEqual(unicodedata.category("\u0085"), "Cc")
+        self.assertEqual(unicodedata.category("\u200b"), "Cf")
+        self.assertEqual(unicodedata.category("\u202e"), "Cf")
+        unsafe_aliases = [
+            "README.md.",
+            "README.md::",
+            "README.md::$DATA",
+            "README.md\x00",
+            "README.md\x1f",
+            "README.md\x7f",
+            next_line,
+            zero_width,
+            bidi_cf,
+            " CON",
+            "CON ",
+            "docs\\readme.md",
+            " docs/foo",
+            "docs/foo ",
+            "NUL",
+            "nul.txt",
+            "COM1",
+            "COM¹",
+            "COM²",
+            "COM³",
+            "lpt9.log",
+            "LPT¹",
+            "LPT².txt",
+            "LPT³.log",
+            "AUX.cache",
+            "PRN.md",
+            "docs/foo.",
+            "docs/foo /bar",
+            nfd_readme,
+        ]
+        for pattern in unsafe_aliases:
+            self.assertIsNone(
+                MODULE.allowed_path_ownership_key(pattern),
+                pattern,
+            )
+            self.assertFalse(
+                MODULE.is_safe_repository_relative_allowed_path(pattern),
+                pattern,
+            )
+
+        self.assertEqual(
+            MODULE.allowed_path_ownership_key("README.md"),
+            "readme.md",
+        )
+        self.assertEqual(
+            MODULE.allowed_path_ownership_key(nfc_readme),
+            nfc_readme.casefold(),
+        )
+        self.assertTrue(
+            MODULE.is_safe_repository_relative_allowed_path("docs/**/foo")
+        )
+        self.assertTrue(
+            MODULE.is_safe_repository_relative_allowed_path("docs/*/?.md")
+        )
+
+        # Unsafe aliases fail closed for overlap and never match canonically.
+        self.assertTrue(MODULE.allowed_paths_overlap("README.md", "README.md."))
+        self.assertTrue(MODULE.allowed_paths_overlap("README.md", "README.md::"))
+        self.assertTrue(
+            MODULE.allowed_paths_overlap("README.md", "README.md::$DATA")
+        )
+        self.assertTrue(MODULE.allowed_paths_overlap("README.md", nfd_readme))
+        self.assertFalse(MODULE.allowed_path_matches("README.md.", "README.md."))
+        self.assertFalse(
+            MODULE.allowed_path_matches("README.md::$DATA", "README.md::$DATA")
+        )
+        self.assertTrue(MODULE.allowed_path_matches("README.md", "README.md"))
+        self.assertTrue(MODULE.allowed_path_matches("readme.md", "README.md"))
+        self.assertTrue(MODULE.allowed_path_matches(nfc_readme, nfc_readme))
+
+        workbench = (
+            ROOT
+            / "docs"
+            / "contributing"
+            / "tasks"
+            / "agent-commons-public-workbench.task.json"
+        )
+
+        def contract_errors(left: str, right: str, label: str) -> list[str]:
+            payload = json.loads(workbench.read_text(encoding="utf-8"))
+            for checkpoint in payload["checkpoints"]:
+                if checkpoint["id"] == "WB-01V":
+                    checkpoint["allowed_paths"] = [left]
+                elif checkpoint["id"] == "WB-05":
+                    checkpoint["allowed_paths"] = [right]
+            return MODULE.validate_task_contract(
+                payload,
+                label,
+                require_canonical_repository=True,
+            )
+
+        attack_pairs = [
+            ("README.md.", "README.md", "trailing-dot ownership alias"),
+            ("README.md::", "README.md", "ads-colon ownership alias"),
+            ("README.md::$DATA", "README.md", "ads-data ownership alias"),
+            ("README.md\x00", "README.md", "c0-control ownership alias"),
+            (next_line, "README.md", "u+0085-cc ownership alias"),
+            (zero_width, "README.md", "u+200b-cf ownership alias"),
+            (bidi_cf, "README.md", "bidi-cf ownership alias"),
+            ("NUL.txt", "README.md", "reserved-device ownership"),
+            ("COM¹", "README.md", "superscript-com1 ownership"),
+            ("LPT².txt", "README.md", "superscript-lpt2 ownership"),
+            ("docs\\readme.md", "README.md", "backslash ownership alias"),
+            (" README.md", "README.md", "outer-whitespace ownership alias"),
+            (nfd_readme, nfc_readme, "nfd-nfc ownership alias"),
+        ]
+        for left, right, label in attack_pairs:
+            errors = contract_errors(left, right, label)
+            self.assertTrue(
+                any(
+                    f"allowed_path {left!r} is not a safe repository-relative path"
+                    in error
+                    for error in errors
+                ),
+                (label, errors),
+            )
+            self.assertTrue(
+                any(
+                    "concurrent checkpoints WB-01V and WB-05 claim overlapping allowed_paths"
+                    in error
+                    for error in errors
+                ),
+                (label, errors),
+            )
+
+        duplicate = json.loads(workbench.read_text(encoding="utf-8"))
+        for checkpoint in duplicate["checkpoints"]:
+            if checkpoint["id"] == "WB-01V":
+                checkpoint["allowed_paths"] = [nfc_readme, nfc_readme]
+                break
+        duplicate_errors = MODULE.validate_task_contract(
+            duplicate,
+            "nfc ownership duplicate",
+            require_canonical_repository=True,
+        )
+        self.assertTrue(
+            any(
+                "collides under portable ownership-key aliasing" in error
+                for error in duplicate_errors
+            ),
+            duplicate_errors,
+        )
+
+    def test_task_contract_rejects_non_downstream_integration_fan_in(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        payload["integration"]["checkpoint_id"] = "CP-01"
+
+        errors = MODULE.validate_task_contract(payload, "non-downstream fan-in")
+
+        self.assertTrue(
+            any(
+                "integration checkpoint CP-01 must be downstream of CP-02" in error
+                for error in errors
+            )
+        )
+        self.assertTrue(
+            any(
+                "integration checkpoint CP-01 must be downstream of CP-03" in error
+                for error in errors
+            )
+        )
+
+    def test_task_registry_enforces_safe_unique_and_agreeing_entries(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual([], MODULE.validate_task_registry(ROOT, registry))
+
+        unsafe = json.loads(json.dumps(registry))
+        unsafe["tasks"][0]["contract"] = "docs/contributing/tasks/../task-hall.v1.json"
+        unsafe_errors = MODULE.validate_task_registry(ROOT, unsafe, "unsafe registry")
+        self.assertTrue(any("contract path is unsafe" in error for error in unsafe_errors))
+
+        missing = json.loads(json.dumps(registry))
+        missing["tasks"][0]["contract"] = "docs/contributing/tasks/missing-task.task.json"
+        missing_errors = MODULE.validate_task_registry(ROOT, missing, "missing registry")
+        self.assertTrue(any("does not exist" in error for error in missing_errors))
+
+        duplicate = json.loads(json.dumps(registry))
+        duplicate["tasks"].append(json.loads(json.dumps(duplicate["tasks"][0])))
+        duplicate_errors = MODULE.validate_task_registry(ROOT, duplicate, "duplicate registry")
+        self.assertTrue(any("duplicate task id" in error for error in duplicate_errors))
+
+        mismatched = json.loads(json.dumps(registry))
+        mismatched["tasks"][0]["state"] = "closed"
+        mismatched["tasks"][0]["umbrella_issue"] = "https://github.com/Lingkyn/xr-foundry/issues/999"
+        mismatch_errors = MODULE.validate_task_registry(ROOT, mismatched, "mismatched registry")
+        self.assertTrue(any("contract state must equal" in error for error in mismatch_errors))
+        self.assertTrue(any("umbrella Issue must equal" in error for error in mismatch_errors))
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            contract_rel = "docs/contributing/tasks/agent-commons-public-workbench.task.json"
+            source = ROOT / contract_rel
+            target = root / contract_rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            task = json.loads(source.read_text(encoding="utf-8"))
+            task["public_projection"]["repository"] = "https://github.com/other-org/other-repo"
+            task["public_projection"]["umbrella_issue"] = (
+                "https://github.com/other-org/other-repo/issues/34"
+            )
+            task["public_projection"]["project"] = "https://github.com/orgs/other-org/projects/1"
+            for entry in task["public_projection"]["checkpoint_issues"]:
+                number = entry["issue"].rsplit("/", 1)[-1]
+                entry["issue"] = f"https://github.com/other-org/other-repo/issues/{number}"
+            target.write_text(json.dumps(task), encoding="utf-8")
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+            foreign = json.loads(json.dumps(registry))
+            foreign["tasks"][0]["umbrella_issue"] = task["public_projection"]["umbrella_issue"]
+            foreign_errors = MODULE.validate_task_registry(root, foreign, "foreign registry")
+            self.assertTrue(any("canonical repository" in error for error in foreign_errors))
+            self.assertTrue(
+                any("canonical Task Hall Project" in error for error in foreign_errors)
+            )
+
+    def test_task_registry_rejects_duplicate_paths_and_projection_urls(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        live = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "agent-commons-public-workbench.task.json"
+            ).read_text(encoding="utf-8")
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first_rel = "docs/contributing/tasks/agent-commons-public-workbench.task.json"
+            second_rel = "docs/contributing/tasks/second-workbench.task.json"
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+
+            first = json.loads(json.dumps(live))
+            second = json.loads(json.dumps(live))
+            second["id"] = "second-workbench-task"
+            second["public_projection"]["umbrella_issue"] = (
+                "https://github.com/Lingkyn/xr-foundry/issues/134"
+            )
+            for index, entry in enumerate(second["public_projection"]["checkpoint_issues"]):
+                entry["issue"] = f"https://github.com/Lingkyn/xr-foundry/issues/{200 + index}"
+            (root / first_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / first_rel).write_text(json.dumps(first), encoding="utf-8")
+            (root / second_rel).write_text(json.dumps(second), encoding="utf-8")
+
+            duplicate_contract = {
+                "schema": "xr-foundry.task_registry.v1",
+                "coverage": {"mode": "explicit_registration"},
+                "authority": registry["authority"],
+                "tasks": [
+                    {
+                        "task_id": first["id"],
+                        "contract": first_rel,
+                        "umbrella_issue": first["public_projection"]["umbrella_issue"],
+                        "state": first["state"],
+                    },
+                    {
+                        "task_id": second["id"],
+                        "contract": first_rel,
+                        "umbrella_issue": second["public_projection"]["umbrella_issue"],
+                        "state": second["state"],
+                    },
+                ],
+            }
+            contract_errors = MODULE.validate_task_registry(
+                root, duplicate_contract, "duplicate contract path registry"
+            )
+            self.assertTrue(any("duplicate contract path" in error for error in contract_errors))
+
+            duplicate_umbrella = json.loads(json.dumps(duplicate_contract))
+            duplicate_umbrella["tasks"][1]["contract"] = second_rel
+            duplicate_umbrella["tasks"][1]["umbrella_issue"] = first["public_projection"][
+                "umbrella_issue"
+            ]
+            second_collide = json.loads(json.dumps(second))
+            second_collide["public_projection"]["umbrella_issue"] = first["public_projection"][
+                "umbrella_issue"
+            ]
+            (root / second_rel).write_text(json.dumps(second_collide), encoding="utf-8")
+            umbrella_errors = MODULE.validate_task_registry(
+                root, duplicate_umbrella, "duplicate umbrella registry"
+            )
+            self.assertTrue(any("duplicate umbrella Issue" in error for error in umbrella_errors))
+
+            second_ok = json.loads(json.dumps(second))
+            second_ok["public_projection"]["checkpoint_issues"][0]["issue"] = first[
+                "public_projection"
+            ]["checkpoint_issues"][0]["issue"]
+            (root / second_rel).write_text(json.dumps(second_ok), encoding="utf-8")
+            duplicate_checkpoint = {
+                "schema": "xr-foundry.task_registry.v1",
+                "coverage": {"mode": "explicit_registration"},
+                "authority": registry["authority"],
+                "tasks": [
+                    {
+                        "task_id": first["id"],
+                        "contract": first_rel,
+                        "umbrella_issue": first["public_projection"]["umbrella_issue"],
+                        "state": first["state"],
+                    },
+                    {
+                        "task_id": second["id"],
+                        "contract": second_rel,
+                        "umbrella_issue": second["public_projection"]["umbrella_issue"],
+                        "state": second["state"],
+                    },
+                ],
+            }
+            checkpoint_errors = MODULE.validate_task_registry(
+                root, duplicate_checkpoint, "duplicate checkpoint issue registry"
+            )
+            self.assertTrue(
+                any("duplicate checkpoint Issue URL" in error for error in checkpoint_errors)
+            )
+
+    def test_task_registry_rejects_symlink_contracts(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        live = (
+            ROOT
+            / "docs"
+            / "contributing"
+            / "tasks"
+            / "agent-commons-public-workbench.task.json"
+        ).read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            contract_rel = "docs/contributing/tasks/agent-commons-public-workbench.task.json"
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+            target = root / contract_rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            real_file = root / "docs" / "contributing" / "tasks" / "real-source.task.json"
+            real_file.write_bytes(live)
+            try:
+                target.symlink_to(real_file)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks unavailable in this environment")
+            symlink_errors = MODULE.validate_task_registry(
+                root, registry, "symlink registry"
+            )
+            self.assertTrue(any("must not be a symlink" in error for error in symlink_errors))
+
+    def test_task_registry_rejects_hardlink_contracts(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        live = (
+            ROOT
+            / "docs"
+            / "contributing"
+            / "tasks"
+            / "agent-commons-public-workbench.task.json"
+        ).read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            contract_rel = "docs/contributing/tasks/agent-commons-public-workbench.task.json"
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+            target = root / contract_rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            hardlink_source = root / "docs" / "contributing" / "tasks" / "hardlink-source.task.json"
+            hardlink_source.write_bytes(live)
+            try:
+                os.link(hardlink_source, target)
+            except (OSError, NotImplementedError, AttributeError):
+                self.skipTest("hardlinks unavailable in this environment")
+            hardlink_errors = MODULE.validate_task_registry(
+                root, registry, "hardlink registry"
+            )
+            self.assertTrue(any("must not be a hardlink" in error for error in hardlink_errors))
+
+    def test_task_registry_rejects_tasks_directory_parent_link_escape(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        live = (
+            ROOT
+            / "docs"
+            / "contributing"
+            / "tasks"
+            / "agent-commons-public-workbench.task.json"
+        ).read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            external = Path(directory) / "external-tasks"
+            external.mkdir(parents=True, exist_ok=True)
+            (external / "agent-commons-public-workbench.task.json").write_bytes(live)
+            contributing = root / "docs" / "contributing"
+            contributing.mkdir(parents=True, exist_ok=True)
+            tasks_link = contributing / "tasks"
+            linked = False
+            if os.name == "nt":
+                completed = subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(tasks_link), str(external)],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                linked = completed.returncode == 0 and tasks_link.exists()
+            if not linked:
+                try:
+                    tasks_link.symlink_to(external, target_is_directory=True)
+                    linked = True
+                except (OSError, NotImplementedError):
+                    self.skipTest("parent directory junction/symlink unavailable")
+
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+
+            errors = MODULE.validate_task_registry(root, registry, "parent-link registry")
+            self.assertTrue(
+                any(
+                    "must not be a symlink, junction, or reparse point" in error
+                    or "resolves outside the repository root" in error
+                    for error in errors
+                ),
+                errors,
+            )
+
+    def test_task_registry_resolution_errors_fail_closed(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            contract_rel = "docs/contributing/tasks/agent-commons-public-workbench.task.json"
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+            target = root / contract_rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(
+                (
+                    ROOT
+                    / "docs"
+                    / "contributing"
+                    / "tasks"
+                    / "agent-commons-public-workbench.task.json"
+                ).read_bytes()
+            )
+            original_resolve = Path.resolve
+
+            def boom(self: Path, *args: object, **kwargs: object):
+                text = self.as_posix().replace("\\", "/")
+                if text.endswith("/docs/contributing/tasks") or text.endswith(contract_rel):
+                    raise OSError("simulated resolution failure")
+                return original_resolve(self, *args, **kwargs)
+
+            with mock.patch.object(Path, "resolve", boom):
+                errors = MODULE.validate_task_registry(
+                    root, registry, "resolution-error registry"
+                )
+            self.assertTrue(
+                any("unreadable" in error for error in errors),
+                errors,
+            )
+
+    def test_resolution_runtime_error_fail_closed_at_three_sites(self) -> None:
+        registry = json.loads(
+            (ROOT / "docs" / "contributing" / "tasks" / "task-registry.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            contract_rel = "docs/contributing/tasks/agent-commons-public-workbench.task.json"
+            for schema_rel in (
+                "docs/contributing/tasks/task-registry.schema.json",
+                "docs/contributing/task-contract.schema.json",
+            ):
+                schema_path = root / schema_rel
+                schema_path.parent.mkdir(parents=True, exist_ok=True)
+                schema_path.write_bytes((ROOT / schema_rel).read_bytes())
+            target = root / contract_rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(
+                (
+                    ROOT
+                    / "docs"
+                    / "contributing"
+                    / "tasks"
+                    / "agent-commons-public-workbench.task.json"
+                ).read_bytes()
+            )
+            original_resolve = Path.resolve
+            root_resolved = root.resolve()
+            tasks_resolved = (root / "docs" / "contributing" / "tasks").resolve()
+            contract_resolved = target.resolve()
+
+            def boom_repo_root(self: Path, *args: object, **kwargs: object):
+                candidate = original_resolve(self, *args, **kwargs)
+                if candidate == root_resolved or self == root:
+                    raise RuntimeError("simulated repo-root symlink loop")
+                return candidate
+
+            with mock.patch.object(Path, "resolve", boom_repo_root):
+                repo_errors = MODULE.resolve_controlled_tasks_root(
+                    root, "runtime-error repo root"
+                )[2]
+            self.assertTrue(
+                any("repository root is unreadable" in error for error in repo_errors),
+                repo_errors,
+            )
+            with mock.patch.object(Path, "resolve", boom_repo_root):
+                registry_repo_errors = MODULE.validate_task_registry(
+                    root, registry, "runtime-error repo root registry"
+                )
+            self.assertTrue(
+                any("repository root is unreadable" in error for error in registry_repo_errors),
+                registry_repo_errors,
+            )
+
+            def boom_tasks_root(self: Path, *args: object, **kwargs: object):
+                text = self.as_posix().replace("\\", "/")
+                if text.endswith("/docs/contributing/tasks"):
+                    raise RuntimeError("simulated tasks-root symlink loop")
+                candidate = original_resolve(self, *args, **kwargs)
+                if candidate == tasks_resolved:
+                    raise RuntimeError("simulated tasks-root symlink loop")
+                return candidate
+
+            with mock.patch.object(Path, "resolve", boom_tasks_root):
+                tasks_errors = MODULE.resolve_controlled_tasks_root(
+                    root, "runtime-error tasks root"
+                )[2]
+            self.assertTrue(
+                any(
+                    "controlled tasks directory is unreadable" in error
+                    for error in tasks_errors
+                ),
+                tasks_errors,
+            )
+            with mock.patch.object(Path, "resolve", boom_tasks_root):
+                registry_tasks_errors = MODULE.validate_task_registry(
+                    root, registry, "runtime-error tasks root registry"
+                )
+            self.assertTrue(
+                any(
+                    "controlled tasks directory is unreadable" in error
+                    for error in registry_tasks_errors
+                ),
+                registry_tasks_errors,
+            )
+
+            def boom_contract(self: Path, *args: object, **kwargs: object):
+                text = self.as_posix().replace("\\", "/")
+                if text.endswith(contract_rel):
+                    raise RuntimeError("simulated contract symlink loop")
+                candidate = original_resolve(self, *args, **kwargs)
+                if candidate == contract_resolved:
+                    raise RuntimeError("simulated contract symlink loop")
+                return candidate
+
+            with mock.patch.object(Path, "resolve", boom_contract):
+                contract_path, contract_errors = MODULE.inspect_registered_contract_path(
+                    root, contract_rel, "runtime-error contract"
+                )
+            self.assertIsNone(contract_path)
+            self.assertTrue(
+                any("registered contract is unreadable" in error for error in contract_errors),
+                contract_errors,
+            )
+            with mock.patch.object(Path, "resolve", boom_contract):
+                registry_contract_errors = MODULE.validate_task_registry(
+                    root, registry, "runtime-error contract registry"
+                )
+            self.assertTrue(
+                any(
+                    "registered contract is unreadable" in error
+                    for error in registry_contract_errors
+                ),
+                registry_contract_errors,
+            )
+
+    def test_task_contract_validation_uses_target_root_schema(self) -> None:
+        payload = json.loads(
+            (ROOT / "docs" / "contributing" / "task-contract.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            schema_path = root / "docs" / "contributing" / "task-contract.schema.json"
+            schema_path.parent.mkdir(parents=True, exist_ok=True)
+            schema_path.write_text("{", encoding="utf-8")
+            errors = MODULE.validate_task_contract(
+                payload, "foreign-root schema", root=root
+            )
+            self.assertTrue(any("invalid JSON" in error or "JSON" in error for error in errors))
+            self.assertFalse(
+                any("canonical Task Hall umbrella lifecycle" in error for error in errors)
+            )
+
+    def test_task_hall_lifecycle_and_policies_are_machine_enforced(self) -> None:
         payload = json.loads(
             (ROOT / "docs" / "contributing" / "task-hall.v1.json").read_text(
                 encoding="utf-8"
             )
         )
-        payload["lifecycle"]["ordered_states"][2:4] = ["claimed", "ready"]
+        lifecycle = json.loads(json.dumps(payload))
+        lifecycle["lifecycle"]["umbrella_states"][2:4] = ["active", "ready"]
+        lifecycle_errors = MODULE.validate_task_hall_authority(lifecycle)
+        self.assertTrue(any("umbrella lifecycle" in error for error in lifecycle_errors))
 
-        errors = MODULE.validate_task_hall_authority(payload)
+        durability = json.loads(json.dumps(payload))
+        durability["durability_policy"]["local_only_progress_is_non_transferable"] = False
+        durability_errors = MODULE.validate_task_hall_authority(durability)
+        self.assertTrue(
+            any("local_only_progress_is_non_transferable" in error for error in durability_errors)
+        )
 
-        self.assertTrue(any("canonical ordered V1 states" in error for error in errors))
+        routing = json.loads(json.dumps(payload))
+        routing["routing_policy"]["self_report_grants_authority"] = True
+        routing["routing_policy"]["model_or_agent_ranking"] = True
+        routing_errors = MODULE.validate_task_hall_authority(routing)
+        self.assertTrue(any("self_report_grants_authority" in error for error in routing_errors))
+        self.assertTrue(any("model_or_agent_ranking" in error for error in routing_errors))
+
+        registry = json.loads(json.dumps(payload))
+        registry["registry_policy"]["registry"] = "tmp/evil-registry.json"
+        registry_errors = MODULE.validate_task_hall_authority(registry)
+        self.assertTrue(any("registry='tmp/evil-registry.json'" in error or "must keep registry=" in error for error in registry_errors))
 
     def test_task_hall_global_authority_rejects_every_permission_escalation(self) -> None:
         source = json.loads(
@@ -2226,7 +3423,15 @@ class RepositoryContractTests(unittest.TestCase):
             ["git", "rev-parse", f"{public_commit}^{{tree}}"], cwd=ROOT, text=True
         ).strip()
         payload["revision"]["commit_sha"] = subprocess.check_output(
-            ["git", "commit-tree", tree],
+            [
+                "git",
+                "-c",
+                "user.name=XR Foundry Contract Test",
+                "-c",
+                "user.email=xr-foundry-contract-test@example.invalid",
+                "commit-tree",
+                tree,
+            ],
             cwd=ROOT,
             input="device local-only evidence object\n",
             text=True,

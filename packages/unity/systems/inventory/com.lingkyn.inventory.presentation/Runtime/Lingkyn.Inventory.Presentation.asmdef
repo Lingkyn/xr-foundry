@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.Inventory.Presentation",
+  "rootNamespace": "Lingkyn.Inventory.Presentation",
+  "references": [
+    "Lingkyn.Inventory.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

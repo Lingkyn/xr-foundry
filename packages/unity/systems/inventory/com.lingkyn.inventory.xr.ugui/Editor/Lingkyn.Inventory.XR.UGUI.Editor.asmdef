@@ -1,0 +1,19 @@
+{
+  "name": "Lingkyn.Inventory.XR.UGUI.Editor",
+  "rootNamespace": "Lingkyn.Inventory.XR.UGUI.Editor",
+  "references": [
+    "Lingkyn.Inventory.XR.UGUI",
+    "Lingkyn.Inventory.UGUI",
+    "UnityEngine.UI",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

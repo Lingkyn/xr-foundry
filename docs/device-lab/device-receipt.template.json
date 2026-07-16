@@ -1,14 +1,17 @@
 {
   "schema": "xr-foundry.device_execution_receipt.v1",
   "receipt_id": "template-not-evidence",
+  "compatibility_profile_id": null,
   "task_url": null,
   "revision": {
     "repository": "https://github.com/Lingkyn/xr-foundry",
     "commit_sha": null
   },
   "artifact": {
+    "kind": "android-apk",
+    "file_name": null,
     "sha256": null,
-    "artifact_ref": null,
+    "repository_path": null,
     "application_id": null
   },
   "package_tuple": {
@@ -30,13 +33,40 @@
       "version": "replace-with-version"
     }
   },
+  "dependency_resolution": {
+    "manifest": {
+      "format": "unity-manifest-v1",
+      "kind": "repository_file",
+      "ref": null,
+      "sha256": null
+    },
+    "lock": {
+      "format": "unity-packages-lock-v1",
+      "kind": "repository_file",
+      "ref": null,
+      "sha256": null
+    },
+    "resolved_packages": [
+      { "id": "com.unity.xr.interaction.toolkit", "version": null },
+      { "id": "com.unity.xr.openxr", "version": null },
+      { "id": "com.unity.xr.management", "version": null },
+      { "id": "com.unity.inputsystem", "version": null }
+    ]
+  },
   "device_profile_id": "pico-openxr-controller",
   "test_plan_id": "inventory-world-space-ui-v1",
   "software": {
     "engine": "Unity",
     "engine_version": null,
+    "editor_version": null,
     "runtime_id": "openxr-pico",
     "runtime_version": null
+  },
+  "build": {
+    "target": null,
+    "graphics_api": null,
+    "scripting_backend": null,
+    "architecture": null
   },
   "device": {
     "family_id": "pico-4-family",
@@ -48,18 +78,55 @@
     "routes": [
       "tracked-controller-ray"
     ],
+    "sources": [
+      {
+        "id": "left-controller",
+        "kind": "tracked-controller",
+        "handedness": "left",
+        "description": null
+      },
+      {
+        "id": "right-controller",
+        "kind": "tracked-controller",
+        "handedness": "right",
+        "description": null
+      }
+    ],
     "device_description": null
+  },
+  "execution_context": {
+    "posture": null,
+    "duration_seconds": null
   },
   "checks": [
     { "id": "artifact-install", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "sample-open", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "recorded-posture-duration", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "world-anchor-head-turn", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "world-anchor-lateral-lean", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "binocular-readability", "status": "not_tested", "observation": "", "evidence_refs": [] },
-    { "id": "left-center-right-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
-    { "id": "left-center-right-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "panel-scale-fit", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "viewing-angle", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "controller-reach", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "scene-occlusion", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "sustained-comfort", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-left-target-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-center-target-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-right-target-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-left-target-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-center-target-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-right-target-hover", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-left-target-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-center-target-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-right-target-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-left-target-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-center-target-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-right-target-activate", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-target-isolation", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-target-isolation", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "left-controller-disabled-no-mutation", "status": "not_tested", "observation": "", "evidence_refs": [] },
+    { "id": "right-controller-disabled-no-mutation", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "semantic-state-feedback", "status": "not_tested", "observation": "", "evidence_refs": [] },
-    { "id": "occlusion-clipping-comfort", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "restart-or-recenter", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "direct-poke-interaction", "status": "not_tested", "observation": "", "evidence_refs": [] },
     { "id": "hand-ray-interaction", "status": "not_tested", "observation": "", "evidence_refs": [] },
@@ -86,6 +153,5 @@
   "timestamps": {
     "started_at": null,
     "completed_at": null
-  },
-  "legacy_receipts": []
+  }
 }

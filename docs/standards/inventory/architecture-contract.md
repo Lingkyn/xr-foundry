@@ -94,7 +94,13 @@ folder structure, scene singleton, service locator, or persistent GameObject.
 Presentation reads snapshots/view models and sends commands. Buttons, slots,
 drag/drop handlers, ray targets, and panels cannot edit collections directly.
 
-The baseline Unity UI composition uses nested prefabs with independent roles:
+Renderer-neutral presentation owns semantic UI state, immutable view models,
+selection/activation intents, and presenter ports. It has no dependency on UGUI,
+UI Toolkit, scenes, XR Interaction Toolkit, or a device SDK. Renderer adapters
+translate those contracts into their own visual trees and input events; they do
+not redefine Inventory semantics.
+
+The first Unity renderer uses nested UGUI prefabs with independent roles:
 
 ```text
 InventoryShell
@@ -111,6 +117,11 @@ assets. A product can replace any view through presenter interfaces without
 forking domain code. Prefab variants may provide styling; they cannot change domain
 semantics.
 
+The peer UI Toolkit adapter preserves the same semantic roles as UXML/USS and
+`VisualElement` composition. Identical role names do not imply shared renderer
+objects: a `RectTransform`, Canvas, UGUI prefab, `VisualElement`, UXML tree, and
+`PanelSettings` remain inside their renderer adapters.
+
 ## Package boundaries
 
 ### `com.lingkyn.inventory.core`
@@ -123,27 +134,57 @@ persistence interfaces. Its runtime assembly has no Unity UI or XR dependency.
 ScriptableObject authoring, definition catalogs, inspectors, conversion, Unity
 serialization adapters, and validation tools.
 
+### `com.lingkyn.inventory.presentation`
+
+Renderer-neutral view state, immutable view models, semantic selection/activation
+intents, `IInventoryView`, and the presenter that maps Core snapshots and results
+to the view contract. Its runtime assembly is engine-light and has no Unity UI or
+XR dependency.
+
 ### `com.lingkyn.inventory.ugui`
 
-Presenters, Unity UI bindings, nested prefabs, keyboard/pointer sample, and
-presentation tests. It does not depend on XR Interaction Toolkit.
+UGUI bindings, nested prefabs, keyboard/pointer input, a state-gallery sample, and
+renderer tests. It consumes `com.lingkyn.inventory.presentation` and does not
+depend on XR Interaction Toolkit.
 
-### `com.lingkyn.inventory.xr`
+### `com.lingkyn.inventory.uitoolkit`
 
-Optional world-space UI, tracked-device interaction, XR interaction presets, and
-device-validation sample. It depends on Unity UI and XR Interaction Toolkit but
-does not redefine domain types.
+UI Toolkit bindings, UXML/USS composition, keyboard/pointer input, a state-gallery
+sample, and renderer tests. It is a peer of UGUI, not a wrapper around a Canvas or
+UGUI prefab.
+
+### `com.lingkyn.inventory.xr.ugui`
+
+Optional world-space Canvas composition, tracked-device interaction, renderer-
+specific validation, and a device-validation sample for UGUI.
+
+### `com.lingkyn.inventory.xr.uitoolkit`
+
+Optional UI Toolkit world-space composition, XRI interaction routing, renderer-
+specific validation, and a device-validation sample. It does not reuse Canvas
+validators or infer evidence from the UGUI route.
 
 ## XR contract
 
-The XR package defaults to world-space UI. It provides stable ray/direct targets,
-visible hover/select/disabled states, predictable focus, and input-module checks.
-It must support scene placement independent of head pose; head-locked behavior is
-an explicit optional policy, never the default.
+Each XR renderer composition defaults to world-space UI. It provides stable
+interaction targets, visible hover/select/disabled states, predictable focus, and
+renderer-appropriate input checks. It must support scene placement independent of
+head pose; head-locked behavior is an explicit optional policy, never the default.
+
+UGUI validation owns Canvas, `TrackedDeviceGraphicRaycaster`, and
+`XRUIInputModule` requirements. UI Toolkit validation owns `UIDocument`, world-
+space panel configuration, panel input, and the supported XRI UI Toolkit path.
+Neither validator is a renderer-neutral rule.
+
+A shared `com.lingkyn.inventory.xr.core` package must not be created speculatively.
+Common XR semantics may be extracted only after both working renderer compositions
+show tested duplication that is independent of their renderer APIs.
 
 Editor simulation proves only configuration and interaction routing. Readability,
 reach, occlusion, controller stability, scale, angle, comfort, and headset runtime
-remain unproven until recorded on a real target device.
+remain unproven until recorded on a real target device. Evidence is scoped to the
+exact revision, artifact hash, renderer adapter, XR adapter, device/runtime profile,
+and input modality; it cannot be transferred across those boundaries.
 
 ## Explicit non-goals for the first core release
 

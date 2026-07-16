@@ -1,0 +1,10 @@
+{
+  "name": "Lingkyn.Inventory.UIToolkit.StateGallery.Sample.Editor",
+  "rootNamespace": "Lingkyn.Inventory.UIToolkit.Samples.Editor",
+  "references": [
+    "Lingkyn.Inventory.UIToolkit",
+    "Lingkyn.Inventory.UIToolkit.StateGallery.Sample"
+  ],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

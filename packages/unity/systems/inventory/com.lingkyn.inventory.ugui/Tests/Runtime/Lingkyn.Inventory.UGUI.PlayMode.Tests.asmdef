@@ -1,0 +1,8 @@
+{
+  "name": "Lingkyn.Inventory.UGUI.PlayMode.Tests",
+  "rootNamespace": "Lingkyn.Inventory.UGUI.Tests",
+  "references": ["Lingkyn.Inventory.Core", "Lingkyn.Inventory.Presentation", "Lingkyn.Inventory.UGUI", "Unity.ugui"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "includePlatforms": [],
+  "autoReferenced": false
+}

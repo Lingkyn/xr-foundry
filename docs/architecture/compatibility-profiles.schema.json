@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/compatibility-profiles.schema.json",
+  "title": "XR Foundry compatibility profiles",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "capability",
+    "evidence_policy",
+    "allowed_states",
+    "current_profile_ids",
+    "profiles"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "docs/architecture/compatibility-profiles.schema.json"
+    },
+    "schema": {
+      "const": "xr-foundry.compatibility_profiles.v2"
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference_and_generation",
+        "engine_version_binding",
+        "tool_version_binding",
+        "installable_manifest_versions",
+        "support_claim_source"
+      ],
+      "properties": {
+        "reference_and_generation": { "const": "version_adaptive" },
+        "engine_version_binding": { "const": "exact_profile" },
+        "tool_version_binding": { "const": "exact_profile" },
+        "installable_manifest_versions": { "const": "concrete" },
+        "support_claim_source": { "const": "exact_verified_profile_only" }
+      }
+    },
+    "evidence_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_unit",
+        "tuple_dimensions",
+        "cross_tuple_transfer_allowed",
+        "unmatched_target"
+      ],
+      "properties": {
+        "claim_unit": { "const": "exact_execution_tuple" },
+        "tuple_dimensions": {
+          "const": [
+            "engine",
+            "editor",
+            "renderer",
+            "requested_dependencies",
+            "resolved_dependencies",
+            "build_target",
+            "graphics_api",
+            "scripting_backend",
+            "architecture",
+            "xr_provider",
+            "runtime",
+            "input_routes",
+            "device"
+          ]
+        },
+        "cross_tuple_transfer_allowed": { "const": false },
+        "unmatched_target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["route", "result_state", "support_claim_allowed"],
+          "properties": {
+            "route": { "const": "raw_material_regeneration" },
+            "result_state": { "const": "candidate" },
+            "support_claim_allowed": { "const": false }
+          }
+        }
+      }
+    },
+    "allowed_states": {
+      "const": ["candidate", "pending_automated_validation", "verified"]
+    },
+    "current_profile_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/profile" }
+    }
+  },
+  "$defs": {
+    "axis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "unityAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)[abfp](?:0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "semanticAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": {
+          "type": "string",
+          "pattern": "^(?:not_applicable|(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?)$"
+        }
+      }
+    },
+    "runtimeAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": {
+          "type": "string",
+          "pattern": "^(?:not_applicable|(?:0|[1-9][0-9]*)(?:\\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*)$"
+        }
+      }
+    },
+    "dependencyVersions": {
+      "type": "object",
+      "propertyNames": { "pattern": "^com\\.[a-z0-9.-]+$" },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine",
+        "editor",
+        "renderer",
+        "requested_dependencies",
+        "resolved_dependencies",
+        "build_target",
+        "graphics_api",
+        "scripting_backend",
+        "architecture",
+        "xr_provider",
+        "runtime",
+        "input_routes",
+        "device"
+      ],
+      "properties": {
+        "engine": { "$ref": "#/$defs/unityAxis" },
+        "editor": { "$ref": "#/$defs/unityAxis" },
+        "renderer": { "$ref": "#/$defs/semanticAxis" },
+        "requested_dependencies": { "$ref": "#/$defs/dependencyVersions" },
+        "resolved_dependencies": { "$ref": "#/$defs/dependencyVersions" },
+        "build_target": { "type": "string", "minLength": 1 },
+        "graphics_api": { "type": "string", "minLength": 1 },
+        "scripting_backend": { "type": "string", "minLength": 1 },
+        "architecture": { "type": "string", "minLength": 1 },
+        "xr_provider": { "$ref": "#/$defs/semanticAxis" },
+        "runtime": { "$ref": "#/$defs/runtimeAxis" },
+        "input_routes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "device": { "$ref": "#/$defs/runtimeAxis" }
+      }
+    },
+    "packageVersions": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$" },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+      }
+    },
+    "evidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "profile_id",
+        "commit_sha",
+        "receipt_path",
+        "manifest_sha256",
+        "lock_sha256",
+        "checks"
+      ],
+      "properties": {
+        "kind": {
+          "enum": ["editor_automated", "android_build", "device_runtime"]
+        },
+        "profile_id": { "type": "string", "minLength": 1 },
+        "commit_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "receipt_path": {
+          "type": "string",
+          "pattern": "^docs/validation/[A-Za-z0-9._/-]+\\.json$"
+        },
+        "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "lock_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "editor_compile",
+              "editmode_tests",
+              "playmode_tests",
+              "android_build",
+              "device_runtime"
+            ]
+          }
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "install_artifact",
+        "target",
+        "package_versions",
+        "verified_claims",
+        "evidence"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$" },
+        "state": {
+          "enum": ["candidate", "pending_automated_validation", "verified"]
+        },
+        "install_artifact": {
+          "type": "string",
+          "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"
+        },
+        "target": { "$ref": "#/$defs/target" },
+        "package_versions": { "$ref": "#/$defs/packageVersions" },
+        "verified_claims": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "editor_compile",
+              "editmode_tests",
+              "playmode_tests",
+              "android_build",
+              "device_runtime"
+            ]
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceReference" }
+        }
+      }
+    }
+  }
+}

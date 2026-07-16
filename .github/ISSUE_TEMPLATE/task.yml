@@ -1,16 +1,30 @@
-name: Task candidate
-description: Propose bounded research, implementation, review, integration, or documentation work
+name: Task or checkpoint candidate
+description: Propose bounded, independently handoff-ready public work
 title: "[Task]: "
 body:
   - type: markdown
     attributes:
       value: |
-        Submission creates a proposed task, not a permission grant. A maintainer applies `task:ready` after checking source, scope, acceptance, verification, and device gates. Do not include secrets, private project content, or local paths.
+        Submission creates a proposal, not a permission grant. A maintainer applies `task:ready` only after the work is independently bounded and checks its source, dependency, acceptance, verification, review, and device gates. Do not include secrets, private project content, session transcripts, or local paths.
+  - type: input
+    id: parent
+    attributes:
+      label: Parent workstream or Issue
+      description: Link the umbrella Issue/RFC, or state that this proposes a new workstream.
+    validations:
+      required: true
   - type: input
     id: objective
     attributes:
       label: Objective
       description: State one reusable, observable outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Why this matters
+      description: Explain the user, contributor, package, evidence, or maintenance outcome this checkpoint unlocks.
     validations:
       required: true
   - type: dropdown
@@ -21,15 +35,70 @@ body:
         - Research
         - Implementation
         - Review
+        - Device testing
         - Integration
         - Documentation
+    validations:
+      required: true
+  - type: dropdown
+    id: contribution_type
+    attributes:
+      label: Contribution type
+      options:
+        - Code
+        - Documentation
+        - Research
+        - Review
+        - Tests
+        - Device or user testing
+        - Infrastructure
+        - Design
+        - Triage
+        - Translation
+        - Community
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Expected difficulty
+      options:
+        - Newcomer (fully guided)
+        - Familiar (bounded repository knowledge)
+        - Advanced (domain judgment required)
+        - Maintainer or security boundary
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: Expected size
+      options:
+        - XS (about one focused change)
+        - S (one independently reviewable checkpoint)
+        - M (must be decomposed into named checkpoints)
+        - Unknown pending source gate
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Checkpoints and dependencies
+      description: Give each checkpoint an ID, outcome, prerequisites, and fan-in owner. A claimant must be able to take one checkpoint without locking the whole workstream.
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
-      label: Scope and intended write set
-      description: Name the package, public files, or evidence surface. State what may change.
+      label: Allowed paths and intended write set
+      description: Name the exact package, public files, or evidence surface that may change.
+    validations:
+      required: true
+  - type: textarea
+    id: do_not_touch
+    attributes:
+      label: Do not touch
+      description: List paths, claims, consumers, settings, devices, or adjacent checkpoints outside this work.
     validations:
       required: true
   - type: textarea
@@ -57,7 +126,7 @@ body:
     id: verification
     attributes:
       label: Verification
-      description: List exact validator, tests, consumer compile, review, and evidence steps.
+      description: List exact validator, tests, consumer compile, review, and evidence steps, plus the evidence location and the exact next action if interrupted.
     validations:
       required: true
   - type: dropdown
@@ -79,6 +148,13 @@ body:
       description: Name exact required profiles, or state not applicable. Never infer one device from another.
     validations:
       required: true
+  - type: textarea
+    id: shepherd
+    attributes:
+      label: Shepherd, reviewer, and handoff requirement
+      description: Name the maintainer shepherd or state unassigned; identify independent review, continuation receipt, and adoption requirements. Good first issues require a shepherd.
+    validations:
+      required: true
   - type: checkboxes
     id: authority
     attributes:
@@ -87,4 +163,8 @@ body:
         - label: I understand that submitting or claiming this task grants no write, review, merge, release, or package-promotion permission.
           required: true
         - label: I removed secrets, private project data, device identifiers, and machine-local paths.
+          required: true
+        - label: I will preserve completed checkpoints and publish a continuation handoff before releasing, transferring, or abandoning partial work.
+          required: true
+        - label: I will disclose material coding-assistant help under an accountable human identity; an Agent review will not be presented as required human review.
           required: true

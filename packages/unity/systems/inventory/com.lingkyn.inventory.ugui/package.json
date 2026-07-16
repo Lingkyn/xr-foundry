@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.inventory.ugui",
+  "version": "0.2.0",
+  "displayName": "Lingkyn Inventory UGUI",
+  "description": "UGUI views and input adapters for the renderer-neutral Lingkyn Inventory Presentation contract.",
+  "unity": "6000.0",
+  "author": { "name": "Lingkyn", "url": "https://github.com/Lingkyn" },
+  "license": "MIT",
+  "keywords": ["inventory", "ugui", "prefab", "presenter"],
+  "samples": [{
+    "displayName": "Inventory UI State Gallery",
+    "description": "Replayable neutral Inventory UI states and prefab replacement guidance.",
+    "path": "Samples~/StateGallery"
+  }],
+  "dependencies": {
+    "com.lingkyn.inventory.core": "0.1.1",
+    "com.lingkyn.inventory.presentation": "0.1.0",
+    "com.unity.ugui": "2.0.0"
+  }
+}

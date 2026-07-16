@@ -2,16 +2,11 @@
 
 ## Baseline
 
-`com.lingkyn.inventory.core@0.1.0-pre.1` is the first public prerelease baseline.
-It is deliberately not the candidate verdict. The candidate revision must install
-over this baseline in an independent consumer, preserve or explicitly migrate its
-public and persisted contracts, and then roll back to this revision without corrupting
-consumer state or package resolution.
-
-The `0.1.0` candidate declares no public type removal or persisted schema break
-from that baseline. The independent consumer installed the prerelease, upgraded to
-the immutable candidate package tree, and rolled back to the prerelease with all
-package tests passing at each boundary.
+`com.lingkyn.inventory.core@0.1.0` is the previous public baseline. The current
+`0.1.1` package declares no public type removal or persisted-schema break from that
+tag, but it receives no inherited install or test verdict. Its immutable revision
+must resolve in an independent consumer, preserve or explicitly migrate public and
+persisted contracts, and support a reviewed rollback path before promotion.
 
 The machine-readable type list lives in `core-api-baseline.json`. Repository
 validation compares that list with public Runtime declarations so a public type
@@ -49,13 +44,14 @@ The Runtime assembly intentionally excludes UnityEngine, UnityEditor, UI, XR,
 scenes, storage providers, service SDKs, equipment, crafting, commerce, networking,
 and consumer namespaces. Those integrations belong in later packages or public seams.
 
-## First-candidate gate
+## Current promotion gate
 
-The first candidate may advance only when all of the following are recorded:
+The current package may advance only when all of the following are recorded:
 
-- the prerelease tag and immutable commit exist publicly;
-- a clean consumer installs and tests the prerelease by immutable Git reference;
-- the reviewed candidate revision installs and tests over that consumer;
-- rollback to the prerelease reference resolves and tests again;
+- the previous public tag and immutable commit exist;
+- a clean consumer installs and tests the current immutable package revision;
+- public API and persisted-state comparison against `0.1.0` is reviewed;
+- rollback to the previous public reference resolves without corrupting consumer
+  state or package resolution;
 - public API and persistence migration notes match the actual delta; and
-- catalogs, package docs, changelog, verification ledger, and Issue #6 agree.
+- catalogs, package docs, changelog, and the verification ledger agree.

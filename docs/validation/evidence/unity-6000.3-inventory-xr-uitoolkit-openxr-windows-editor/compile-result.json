@@ -1,0 +1,19 @@
+{
+  "$schema": "docs/validation/unity-compile-result.schema.json",
+  "schema": "xr-foundry.unity_compile_result.v1",
+  "profile_id": "unity-6000.3-inventory-xr-uitoolkit-openxr-windows-editor",
+  "commit_sha": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+  "unity_version": "6000.3.19f1",
+  "build_target": "WindowsEditor",
+  "graphics_api": "Null",
+  "scripting_backend": "Mono",
+  "architecture": "x86_64",
+  "manifest_sha256": "c70f34137a9ef7c2233d765f53408668ef37c2392784a77b0f4f02dc901e3f4b",
+  "lock_sha256": "5aa43b2c9c63f2619a75c1ccc7b7f3e639ec3c74d650faa6d72780007543fb56",
+  "batchmode": true,
+  "result": "pass",
+  "error_count": 0,
+  "warning_count": 0,
+  "started_at": "2026-07-15T16:23:54.9796999Z",
+  "completed_at": "2026-07-15T16:24:11.0769867Z"
+}

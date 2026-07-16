@@ -1,0 +1,17 @@
+{
+  "name": "Lingkyn.Inventory.UIToolkit",
+  "rootNamespace": "Lingkyn.Inventory.UIToolkit",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

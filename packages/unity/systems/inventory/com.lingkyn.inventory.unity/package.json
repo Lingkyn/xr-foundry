@@ -1,0 +1,28 @@
+{
+  "name": "com.lingkyn.inventory.unity",
+  "version": "0.1.1",
+  "displayName": "Lingkyn Inventory Unity Authoring",
+  "description": "ScriptableObject authoring, catalogs, validation, inspectors, and deterministic conversion for Lingkyn Inventory Core.",
+  "unity": "6000.0",
+  "author": {
+    "name": "Lingkyn",
+    "url": "https://github.com/Lingkyn"
+  },
+  "license": "MIT",
+  "keywords": [
+    "inventory",
+    "scriptableobject",
+    "authoring",
+    "validation"
+  ],
+  "samples": [
+    {
+      "displayName": "Inventory Authoring",
+      "description": "Designer-facing setup and conversion walkthrough without product content.",
+      "path": "Samples~/InventoryAuthoring"
+    }
+  ],
+  "dependencies": {
+    "com.lingkyn.inventory.core": "0.1.1"
+  }
+}

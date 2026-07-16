@@ -1,0 +1,25 @@
+{
+  "schema": "xr-foundry.contribution_credit.v1",
+  "record_status": "example",
+  "id": "credit-example-research",
+  "github_identity": "@example-contributor",
+  "contribution_type": "research",
+  "summary": "Example only: admitted a source comparison that changed a public design decision.",
+  "evidence": [],
+  "credited_at": null,
+  "recorded_by": null,
+  "assistance": {
+    "used": true,
+    "accountable_human": "@example-contributor",
+    "assisted_by": [
+      "Assisted-by: ExampleAgent:example-model"
+    ]
+  },
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "grants_release_authority": false,
+    "triggers_role_promotion": false
+  }
+}

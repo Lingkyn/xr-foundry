@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2200000000000000000000000000008, type: 3}
+  m_Name: InventoryUIToolkitWorldSpaceDefault
+  m_EditorClassIdentifier:
+  panelSettings: {fileID: 11400000, guid: b2200000000000000000000000000009, type: 2}
+  referenceResolution: {x: 640, y: 440}
+  panelPixelsPerUnit: 100
+  metersPerPixel: 0.001
+  colliderDepthMeters: 0.02
+  defaultDistanceMeters: 1.25
+  maxInteractionDistanceMeters: 3
+  defaultVerticalOffsetMeters: -0.05

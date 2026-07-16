@@ -1,0 +1,14 @@
+{
+  "name": "Lingkyn.Inventory.UGUI",
+  "rootNamespace": "Lingkyn.Inventory.UGUI",
+  "references": ["Lingkyn.Inventory.Core", "Lingkyn.Inventory.Presentation", "Unity.ugui"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

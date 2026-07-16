@@ -1,0 +1,25 @@
+{
+  "name": "com.lingkyn.inventory.uitoolkit",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Inventory UI Toolkit",
+  "description": "Renderer adapter that binds neutral Inventory presentation state and semantic intents to Unity UI Toolkit.",
+  "unity": "6000.3",
+  "author": {
+    "name": "Lingkyn",
+    "url": "https://github.com/Lingkyn"
+  },
+  "license": "MIT",
+  "keywords": ["inventory", "ui-toolkit", "presentation", "adapter"],
+  "samples": [
+    {
+      "displayName": "Inventory UI Toolkit State Gallery",
+      "description": "Replayable Inventory presentation states using the shipped UXML and USS document.",
+      "path": "Samples~/StateGallery"
+    }
+  ],
+  "dependencies": {
+    "com.lingkyn.inventory.core": "0.1.1",
+    "com.lingkyn.inventory.presentation": "0.1.0",
+    "com.unity.modules.uielements": "1.0.0"
+  }
+}

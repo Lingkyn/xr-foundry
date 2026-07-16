@@ -1,0 +1,21 @@
+{
+  "name": "Lingkyn.Inventory.XR.UGUI.Editor.Tests",
+  "rootNamespace": "Lingkyn.Inventory.XR.UGUI.Tests",
+  "references": [
+    "Lingkyn.Inventory.XR.UGUI",
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UGUI",
+    "UnityEngine.UI",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": ["TestAssemblies"]
+}

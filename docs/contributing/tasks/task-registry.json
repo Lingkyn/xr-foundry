@@ -1,0 +1,23 @@
+{
+  "schema": "xr-foundry.task_registry.v1",
+  "revision": 6,
+  "generated_at": "2026-07-16T12:11:24Z",
+  "coverage": {
+    "mode": "explicit_registration",
+    "unregistered_issue_contract": "issue_declared_claim_key"
+  },
+  "authority": {
+    "registered_record": "fine_grained_execution_authority",
+    "umbrella_issue": "coordination_projection",
+    "checkpoint_issue": "checkpoint_coordination_projection",
+    "project": "discovery_summary"
+  },
+  "tasks": [
+    {
+      "task_id": "agent-commons-public-workbench",
+      "contract": "docs/contributing/tasks/agent-commons-public-workbench.task.json",
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/34",
+      "state": "closed"
+    }
+  ]
+}

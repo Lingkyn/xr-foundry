@@ -10,6 +10,7 @@
     "capability",
     "allowed_targets",
     "allowed_package_compositions",
+    "execution_requirements",
     "required_checks",
     "optional_checks",
     "non_claims"
@@ -24,7 +25,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["device_profile_id", "composition_ids", "required_input_routes"],
+        "required": [
+          "device_profile_id",
+          "composition_ids",
+          "required_input_routes",
+          "required_input_source_ids"
+        ],
         "properties": {
           "device_profile_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
           "composition_ids": {
@@ -34,6 +40,12 @@
             "uniqueItems": true
           },
           "required_input_routes": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "required_input_source_ids": {
             "type": "array",
             "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
             "minItems": 1,
@@ -56,6 +68,26 @@
           "presentation": { "type": "string", "minLength": 1 },
           "renderer_adapter": { "type": "string", "minLength": 1 },
           "xr_adapter": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "execution_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_duration_seconds", "allowed_postures", "required_resolved_packages"],
+      "properties": {
+        "minimum_duration_seconds": { "type": "integer", "minimum": 1 },
+        "allowed_postures": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "required_resolved_packages": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)+$" },
+          "minItems": 1,
+          "uniqueItems": true
         }
       }
     },

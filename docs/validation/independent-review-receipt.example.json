@@ -1,0 +1,55 @@
+{
+  "schema": "xr-foundry.independent_review_receipt.v1",
+  "record_status": "example",
+  "repository": "https://github.com/Lingkyn/xr-foundry",
+  "task_id": "example-public-task",
+  "checkpoint_id": "EXAMPLE-REVIEW-01",
+  "task_revision": 1,
+  "reviewed_commit": "0000000000000000000000000000000000000000",
+  "executor": {
+    "github_identity": "example-maintainer",
+    "assisted_by": ["Example Build Agent"]
+  },
+  "independent_review": {
+    "github_identity": "example-maintainer",
+    "assisted_by": ["Example Review Agent"],
+    "fresh_context": true,
+    "reviewed_own_output": false
+  },
+  "maintainer_decision": {
+    "github_identity": "example-maintainer",
+    "decision": "changes_requested",
+    "decision_url": "https://github.com/Lingkyn/xr-foundry/pull/1#issuecomment-1"
+  },
+  "scope": {
+    "allowed_paths": ["docs/example/**"],
+    "acceptance_ids": ["EXAMPLE-AC1"],
+    "excluded_claims": ["No device or release claim"]
+  },
+  "checks": [
+    {
+      "id": "EXAMPLE-V1",
+      "command": "python scripts/validate_repository.py --json --run-contract-tests",
+      "status": "not_run",
+      "evidence": "Example only; no execution evidence"
+    }
+  ],
+  "findings": [
+    {
+      "id": "EXAMPLE-F1",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Example unresolved finding",
+      "evidence": "Example only"
+    }
+  ],
+  "conclusion": "changes_required",
+  "reviewed_at": "2026-01-01T00:00:00Z",
+  "limitations": ["This file demonstrates shape and grants no authority"],
+  "authority": {
+    "review_grants_write_permission": false,
+    "review_grants_merge_permission": false,
+    "agent_review_replaces_maintainer_decision": false,
+    "device_claim_inferred": false
+  }
+}

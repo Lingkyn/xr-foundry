@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.0272445">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-agent-commons-v1" fullname="xr-foundry-agent-commons-v1" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.027245" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1003" name="Lingkyn.ProjectInitializer.Editor.Tests.dll" fullname="PUBLIC_CONSUMER_ROOT/Library/ScriptAssemblies/Lingkyn.ProjectInitializer.Editor.Tests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.021853" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="323668" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1004" name="Lingkyn" fullname="Lingkyn" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.021521" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1005" name="Unity" fullname="Lingkyn.Unity" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.021426" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1006" name="ProjectInitializer" fullname="Lingkyn.Unity.ProjectInitializer" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.021328" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1007" name="Tests" fullname="Lingkyn.Unity.ProjectInitializer.Tests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.021199" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1001" name="IndieDirectoryContractTests" fullname="Lingkyn.Unity.ProjectInitializer.Tests.IndieDirectoryContractTests" classname="Lingkyn.Unity.ProjectInitializer.Tests.IndieDirectoryContractTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.020502" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1002" name="BaselineScenesAreConsumerNeutralAndUnderProjectRoot" fullname="Lingkyn.Unity.ProjectInitializer.Tests.IndieDirectoryContractTests.BaselineScenesAreConsumerNeutralAndUnderProjectRoot" methodname="BaselineScenesAreConsumerNeutralAndUnderProjectRoot" classname="Lingkyn.Unity.ProjectInitializer.Tests.IndieDirectoryContractTests" runstate="Runnable" seed="435620200" result="Passed" start-time="2026-07-15 16:20:21Z" end-time="2026-07-15 16:20:21Z" duration="0.011389" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[Saving results to: PUBLIC_USER_HOME/AppData/LocalLow/DefaultCompany/xr-foundry-agent-commons-v1\TestResults.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

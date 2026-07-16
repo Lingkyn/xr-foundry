@@ -18,6 +18,18 @@
   "input_routes": [
     "tracked-controller-ray"
   ],
+  "input_sources": [
+    {
+      "id": "left-controller",
+      "kind": "tracked-controller",
+      "handedness": "left"
+    },
+    {
+      "id": "right-controller",
+      "kind": "tracked-controller",
+      "handedness": "right"
+    }
+  ],
   "non_claims": [
     "Device-test claims are not open until Issue #29 admits this profile",
     "No Quest model, operating-system version, renderer, package composition, or capability has passed",

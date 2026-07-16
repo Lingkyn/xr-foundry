@@ -67,6 +67,32 @@
       ]
     },
     {
+      "id": "github-about-discussions",
+      "publisher": "GitHub",
+      "title": "About discussions",
+      "url": "https://docs.github.com/en/discussions/collaborating-with-your-community-using-discussions/about-discussions",
+      "source_role": "Open-ended public deliberation surface",
+      "positive_evidence": [
+        "Documents Discussions as an open-ended place for a community to discuss project direction and future, plan, and gather input"
+      ],
+      "limits": [
+        "A Discussion post is conversation, not an admitted repository decision or execution authority"
+      ]
+    },
+    {
+      "id": "github-discussion-to-issue",
+      "publisher": "GitHub",
+      "title": "Managing discussions",
+      "url": "https://docs.github.com/en/discussions/managing-discussions-for-your-community/managing-discussions",
+      "source_role": "Deliberation-to-execution projection boundary",
+      "positive_evidence": [
+        "Documents that maintainers can create an Issue when a Discussion yields an idea or bug that is ready to be worked on"
+      ],
+      "limits": [
+        "Creating an Issue does not by itself prove readiness, correctness, or permission"
+      ]
+    },
+    {
       "id": "github-actions-security",
       "publisher": "GitHub",
       "title": "Secure use reference",
@@ -129,6 +155,370 @@
       ],
       "limits": [
         "Reference precedent only; no code or permission model is inherited"
+      ]
+    },
+    {
+      "id": "multica-repository",
+      "publisher": "Multica",
+      "title": "Multica open-source managed agents platform",
+      "url": "https://github.com/multica-ai/multica",
+      "source_role": "Current multi-provider agent-workspace implementation precedent",
+      "positive_evidence": [
+        "Implements issue assignment, execution tracking, reusable skills, local runtimes, and support for Codex, Cursor, Claude Code, and other coding tools"
+      ],
+      "limits": [
+        "Multica's authenticated server database and agent permissions are not XR Foundry's public GitHub authority"
+      ]
+    },
+    {
+      "id": "multica-task-runs",
+      "publisher": "Multica",
+      "title": "Tasks",
+      "url": "https://multica.ai/docs/tasks",
+      "source_role": "Issue-versus-execution-attempt and retry precedent",
+      "positive_evidence": [
+        "Separates durable issues from execution tasks, records task states and runs, distinguishes infrastructure retry from a fresh manual rerun, and documents provider session-resume capabilities"
+      ],
+      "limits": [
+        "Quota and agent errors are non-retryable, and a private provider session does not create a cross-provider public handoff"
+      ]
+    },
+    {
+      "id": "multica-agent-assignment",
+      "publisher": "Multica",
+      "title": "Assign issues to agents",
+      "url": "https://multica.ai/docs/assigning-issues",
+      "source_role": "Agent assignment, reassignment, and concurrency precedent",
+      "positive_evidence": [
+        "Documents routed agent tasks, explicit task lifecycle, one active task per agent per issue, reassignment, and parallel agents on one issue"
+      ],
+      "limits": [
+        "Reassignment cancels active issue tasks and assigned agents can edit issue state; XR Foundry must map execution to bounded checkpoints and preserve maintainer authority"
+      ]
+    },
+    {
+      "id": "multica-project-resources",
+      "publisher": "Multica",
+      "title": "Project resources",
+      "url": "https://multica.ai/docs/project-resources",
+      "source_role": "Repository/worktree/local-directory execution-isolation precedent",
+      "positive_evidence": [
+        "Documents Git worktree and local-directory modes, per-directory serialization, resource scoping, and structured project context for Agents"
+      ],
+      "limits": [
+        "Local-directory mode has no file-level lock, dirty-tree protection, automatic commit, or pull request and may write Agent guidance files; it requires a separate security and authority adapter before use"
+      ]
+    },
+    {
+      "id": "github-good-first-issue",
+      "publisher": "GitHub",
+      "title": "Encouraging helpful contributions to your project with labels",
+      "url": "https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/encouraging-helpful-contributions-to-your-project-with-labels",
+      "source_role": "Public newcomer-work discovery",
+      "positive_evidence": [
+        "Documents that good first issue labels help people find approachable work and can be surfaced by GitHub"
+      ],
+      "limits": [
+        "A discoverability label does not prove readiness, reserve work, or grant repository permission"
+      ]
+    },
+    {
+      "id": "github-contribution-guidelines",
+      "publisher": "GitHub",
+      "title": "Setting guidelines for repository contributors",
+      "url": "https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/setting-guidelines-for-repository-contributors",
+      "source_role": "Discoverable public contribution instructions",
+      "positive_evidence": [
+        "Documents where GitHub surfaces CONTRIBUTING guidance and how it can communicate contribution routes"
+      ],
+      "limits": [
+        "Guidance text does not enforce acceptance, validation, or authority"
+      ]
+    },
+    {
+      "id": "github-profile-contributions-reference",
+      "publisher": "GitHub",
+      "title": "Profile contributions reference",
+      "url": "https://docs.github.com/en/account-and-profile/reference/profile-contributions-reference",
+      "source_role": "Boundary of GitHub's built-in public contribution display",
+      "positive_evidence": [
+        "Documents which repository activities GitHub can count or display on a profile"
+      ],
+      "limits": [
+        "A profile activity count does not measure contribution quality, non-code impact, trust, or repository authority"
+      ]
+    },
+    {
+      "id": "github-repository-contributors",
+      "publisher": "GitHub",
+      "title": "Viewing a project's contributors",
+      "url": "https://docs.github.com/en/repositories/viewing-activity-and-data-for-your-repository/viewing-a-projects-contributors",
+      "source_role": "Boundary of GitHub's repository contributor graph",
+      "positive_evidence": [
+        "Documents how GitHub derives the contributors graph from repository commits"
+      ],
+      "limits": [
+        "Commit-derived visibility omits many review, research, testing, mentoring, and device contributions"
+      ]
+    },
+    {
+      "id": "kubernetes-contributor-guide",
+      "publisher": "Kubernetes",
+      "title": "Kubernetes Contributor Guide",
+      "url": "https://github.com/kubernetes/community/blob/main/contributors/guide/README.md",
+      "source_role": "Mature public work-discovery and contribution-path precedent",
+      "positive_evidence": [
+        "Publishes how contributors find work, file Issues, and submit pull requests in a large community project"
+      ],
+      "limits": [
+        "Kubernetes commands, bots, ownership, and organization membership are not inherited"
+      ]
+    },
+    {
+      "id": "kubernetes-help-wanted",
+      "publisher": "Kubernetes",
+      "title": "Help Wanted and Good First Issue labels",
+      "url": "https://github.com/kubernetes/community/blob/main/contributors/guide/help-wanted.md",
+      "source_role": "Maintainer-curated newcomer and external-help task precedent",
+      "positive_evidence": [
+        "Defines extra context and mentoring expectations for help-wanted and good-first-issue work"
+      ],
+      "limits": [
+        "Kubernetes label automation and staffing assumptions are not inherited"
+      ]
+    },
+    {
+      "id": "kubernetes-kep-process",
+      "publisher": "Kubernetes",
+      "title": "Kubernetes Enhancement Proposals",
+      "url": "https://github.com/kubernetes/enhancements/blob/master/keps/README.md",
+      "source_role": "Versioned, reviewable proposal and decision-history precedent",
+      "positive_evidence": [
+        "Describes a common proposal format, explicit reviewers and approvers, searchable status, and a discoverable historical decision record for non-trivial changes"
+      ],
+      "limits": [
+        "XR Foundry does not inherit Kubernetes governance, approval roles, or mandatory process for already-bounded low-risk work"
+      ]
+    },
+    {
+      "id": "kubernetes-roles-responsibilities",
+      "publisher": "Kubernetes",
+      "title": "Roles and responsibilities",
+      "url": "https://kubernetes.io/docs/contribute/participate/roles-and-responsibilities/",
+      "source_role": "Responsibility and permission separation precedent",
+      "positive_evidence": [
+        "Distinguishes contributor, member, reviewer, and approver duties with increasing responsibility"
+      ],
+      "limits": [
+        "XR Foundry needs its own role criteria and explicit maintainer decisions"
+      ]
+    },
+    {
+      "id": "rust-project-groups",
+      "publisher": "The Rust Project",
+      "title": "Project groups",
+      "url": "https://forge.rust-lang.org/governance/project-groups.html",
+      "source_role": "Bounded public project-charter and completion precedent",
+      "positive_evidence": [
+        "Describes scoped project groups with leads, liaisons, members, repositories, and archival after completion"
+      ],
+      "limits": [
+        "Does not define XR Foundry checkpoint or continuation-handoff data"
+      ]
+    },
+    {
+      "id": "rust-issue-assignment",
+      "publisher": "The Rust Project",
+      "title": "Issue assignment",
+      "url": "https://forge.rust-lang.org/triagebot/issue-assignment.html",
+      "source_role": "Public claim, release, and reassignment precedent",
+      "positive_evidence": [
+        "Documents explicit assignment, release, and reassignment flows for issue work"
+      ],
+      "limits": [
+        "XR Foundry V1 does not install or trust a comment-trigger assignment bot"
+      ]
+    },
+    {
+      "id": "rust-review-queue",
+      "publisher": "The Rust Project",
+      "title": "Review queue tracking",
+      "url": "https://forge.rust-lang.org/triagebot/review-queue-tracking.html",
+      "source_role": "Review capacity and explicit reviewer-load precedent",
+      "positive_evidence": [
+        "Documents explicit review queues and reviewer capacity tracking"
+      ],
+      "limits": [
+        "A queue does not make an Agent review equivalent to a required human approval"
+      ]
+    },
+    {
+      "id": "godot-contribution-routes",
+      "publisher": "Godot Engine",
+      "title": "How to contribute",
+      "url": "https://docs.godotengine.org/en/4.4/contributing/how_to_contribute.html",
+      "source_role": "Game-engine community contribution-route precedent",
+      "positive_evidence": [
+        "Recognizes code, review, testing, documentation, translation, issue, demo, and community contributions"
+      ],
+      "limits": [
+        "Godot's engine, team, and review workflow do not define Unity package acceptance"
+      ]
+    },
+    {
+      "id": "godot-bug-triage",
+      "publisher": "Godot Engine",
+      "title": "Bug triage guidelines",
+      "url": "https://docs.godotengine.org/en/4.4/contributing/workflow/bug_triage_guidelines.html",
+      "source_role": "Public triage, stale-state, and adoption precedent",
+      "positive_evidence": [
+        "Documents structured triage and explicit follow-up for work that needs reproduction or contributor input"
+      ],
+      "limits": [
+        "Godot triage labels do not define XR Foundry lease or continuation authority"
+      ]
+    },
+    {
+      "id": "home-assistant-review-process",
+      "publisher": "Home Assistant",
+      "title": "Pull request review process",
+      "url": "https://developers.home-assistant.io/docs/review-process/",
+      "source_role": "Focused change, review, testing, and draft-state precedent",
+      "positive_evidence": [
+        "Recommends small focused pull requests, testing before review, draft state for unresolved failures, and community review and test feedback"
+      ],
+      "limits": [
+        "Small pull requests can still need explicit dependency and integration coordination"
+      ]
+    },
+    {
+      "id": "cncf-contributor-incentives",
+      "publisher": "Cloud Native Computing Foundation",
+      "title": "Incentivizing contributors to move up the ladder",
+      "url": "https://contribute.cncf.io/projects/best-practices/community/contributor-growth/incentivizing-contributors/",
+      "source_role": "Traceable recognition and responsibility-ladder precedent",
+      "positive_evidence": [
+        "Recommends explicit roles, responsibilities, privileges, effort expectations, and traceable recognition"
+      ],
+      "limits": [
+        "Mentions ranked activity only as an option and does not require a leaderboard or score-based promotion"
+      ]
+    },
+    {
+      "id": "cncf-project-health",
+      "publisher": "Cloud Native Computing Foundation",
+      "title": "Project Health Measurement",
+      "url": "https://contribute.cncf.io/projects/best-practices/community/project-health/",
+      "source_role": "Project-health metric interpretation boundary",
+      "positive_evidence": [
+        "Recommends a small project-specific set of actionable health measures and a reality check on imperfect dashboards"
+      ],
+      "limits": [
+        "Popularity and raw activity measures do not by themselves establish project health or individual trust"
+      ]
+    },
+    {
+      "id": "all-contributors-spec",
+      "publisher": "All Contributors",
+      "title": "All Contributors specification",
+      "url": "https://allcontributors.org/en/specification/",
+      "source_role": "Inclusive, typed public acknowledgement precedent",
+      "positive_evidence": [
+        "Recommends recognizing all contribution categories, linking contributors, and treating contributor ordering as immaterial"
+      ],
+      "limits": [
+        "The specification does not validate repository-specific evidence or grant roles"
+      ]
+    },
+    {
+      "id": "all-contributors-types",
+      "publisher": "All Contributors",
+      "title": "Emoji Key and Contribution Types",
+      "url": "https://allcontributors.org/emoji-key/",
+      "source_role": "Non-code contribution vocabulary precedent",
+      "positive_evidence": [
+        "Publishes distinct categories for code and non-code contribution acknowledgement"
+      ],
+      "limits": [
+        "XR Foundry uses a smaller typed vocabulary and public evidence contract"
+      ]
+    },
+    {
+      "id": "chaoss-contributors-metric",
+      "publisher": "CHAOSS",
+      "title": "Metric: Contributors",
+      "url": "https://www.chaoss.community/kb/metric-contributors/",
+      "source_role": "Contribution breadth and metric-ethics boundary",
+      "positive_evidence": [
+        "Defines contributors broadly across code and non-code work and documents multiple collection routes"
+      ],
+      "limits": [
+        "Warns that publishing metrics can create privacy, contractual, and data-ethics risks"
+      ]
+    },
+    {
+      "id": "linux-tool-generated-content",
+      "publisher": "Linux kernel community",
+      "title": "Kernel Guidelines for Tool-Generated Content",
+      "url": "https://docs.kernel.org/process/generated-content.html",
+      "source_role": "Human accountability and transparent tool-origin precedent",
+      "positive_evidence": [
+        "Requires submitters to understand and defend tool-generated contributions and encourages transparent disclosure of tools, affected scope, and testing"
+      ],
+      "limits": [
+        "Linux kernel licensing, mailing-list, and maintainer policies are not inherited"
+      ]
+    },
+    {
+      "id": "linux-assisted-by",
+      "publisher": "Linux kernel community",
+      "title": "Submitting patches: Using Assisted-by",
+      "url": "https://www.kernel.org/doc/html/next/process/submitting-patches.html#using-assisted-by",
+      "source_role": "Advanced coding-tool attribution precedent",
+      "positive_evidence": [
+        "Documents Assisted-by disclosure for advanced coding tools while human sign-off remains separate"
+      ],
+      "limits": [
+        "The trailer records assistance and does not make a tool a human author, reviewer, or legal signatory"
+      ]
+    },
+    {
+      "id": "github-ai-generated-code-review",
+      "publisher": "GitHub",
+      "title": "Review AI-generated code",
+      "url": "https://docs.github.com/en/copilot/tutorials/review-ai-generated-code",
+      "source_role": "Human oversight and validation for AI-generated changes",
+      "positive_evidence": [
+        "Emphasizes functional checks, architecture and intent review, dependency scrutiny, collaborative review, and human oversight"
+      ],
+      "limits": [
+        "The guidance does not guarantee correctness of AI output or feedback"
+      ]
+    },
+    {
+      "id": "github-copilot-review-boundary",
+      "publisher": "GitHub",
+      "title": "Using GitHub Copilot code review",
+      "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review",
+      "source_role": "AI review authority boundary",
+      "positive_evidence": [
+        "Documents that Copilot leaves comments rather than approvals and its review does not count toward required approvals"
+      ],
+      "limits": [
+        "AI findings still require validation and do not replace human review"
+      ]
+    },
+    {
+      "id": "openssf-osps-baseline-2026",
+      "publisher": "Open Source Security Foundation",
+      "title": "Open Source Project Security Baseline, 2026-02-19",
+      "url": "https://baseline.openssf.org/versions/2026-02-19.html",
+      "source_role": "Generated executable and source-repository boundary",
+      "positive_evidence": [
+        "OSPS-QA-05.01 states that an active version-control system must not contain generated executable artifacts"
+      ],
+      "limits": [
+        "Recommends build-time generation or separate storage but does not prescribe one artifact host or attestation implementation"
       ]
     }
   ]

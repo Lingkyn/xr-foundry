@@ -1,0 +1,19 @@
+{
+  "name": "Lingkyn.Inventory.UGUI.StateGallery.Sample.Editor",
+  "rootNamespace": "Lingkyn.Inventory.UGUI.Samples.Editor",
+  "references": [
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UGUI",
+    "Lingkyn.Inventory.UGUI.StateGallery.Sample",
+    "Unity.ugui"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

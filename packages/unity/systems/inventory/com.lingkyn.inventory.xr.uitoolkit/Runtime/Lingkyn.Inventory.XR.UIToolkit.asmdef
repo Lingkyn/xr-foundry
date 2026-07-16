@@ -1,0 +1,17 @@
+{
+  "name": "Lingkyn.Inventory.XR.UIToolkit",
+  "rootNamespace": "Lingkyn.Inventory.XR.UIToolkit",
+  "references": [
+    "Lingkyn.Inventory.UIToolkit",
+    "Unity.XR.Interaction.Toolkit"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

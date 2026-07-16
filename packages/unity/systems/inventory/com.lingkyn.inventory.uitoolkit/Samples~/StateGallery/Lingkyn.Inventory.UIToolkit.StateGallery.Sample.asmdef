@@ -1,0 +1,11 @@
+{
+  "name": "Lingkyn.Inventory.UIToolkit.StateGallery.Sample",
+  "rootNamespace": "Lingkyn.Inventory.UIToolkit.Samples",
+  "references": [
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UIToolkit"
+  ],
+  "includePlatforms": [],
+  "autoReferenced": true
+}

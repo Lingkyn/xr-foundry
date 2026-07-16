@@ -1,18 +1,85 @@
 {
   "schema": "xr-foundry.task_hall.v1",
-  "version": "1.0.0",
+  "version": "0.3.0",
+  "stability": "pre-stable",
+  "compatibility": "no_backward_compatibility_guarantee",
   "lifecycle": {
-    "ordered_states": [
+    "umbrella_states": [
       "proposal",
       "source_gate",
       "ready",
+      "active",
+      "waiting",
+      "integration",
+      "closed",
+      "cancelled"
+    ],
+    "checkpoint_states": [
+      "draft",
+      "source_gate",
+      "ready",
       "claimed",
-      "work",
-      "review",
-      "device_test_if_required",
-      "integrate",
-      "closed"
+      "in_progress",
+      "waiting_on_author",
+      "waiting_on_review",
+      "waiting_on_device",
+      "integrating",
+      "completed",
+      "cancelled"
+    ],
+    "waiting_states": [
+      "waiting_on_author",
+      "waiting_on_review",
+      "waiting_on_device"
+    ],
+    "terminal_checkpoint_states": [
+      "completed",
+      "cancelled"
     ]
+  },
+  "checkpoint_policy": {
+    "graph": "directed_acyclic_graph",
+    "ids_unique_within_task": true,
+    "dependencies_complete_before_ready": true,
+    "one_outcome_per_checkpoint": true,
+    "allowed_paths_required": true,
+    "read_only_checkpoint_uses_empty_allowed_paths": true,
+    "source_gate_is_checkpoint_explicit": true,
+    "independent_acceptance_required": true,
+    "independent_verification_required": true,
+    "references_resolve_within_checkpoint": true,
+    "independent_completion_persists": true,
+    "discovered_work_requires_new_checkpoint": true,
+    "fan_in_checkpoint_required": true
+  },
+  "durability_policy": {
+    "execution_unit": "checkpoint",
+    "public_anchor_before_in_progress": true,
+    "one_claim_per_checkpoint": true,
+    "same_execution_lane_closes_or_hands_off_before_next": true,
+    "parallel_checkpoints_require_isolated_write_ownership": true,
+    "parallel_checkpoints_require_explicit_fan_in": true,
+    "completed_checkpoint_requires_reachable_commit": true,
+    "completed_checkpoint_requires_remote_evidence": true,
+    "reserve_closeout_capacity": true,
+    "local_only_progress_is_non_transferable": true,
+    "abrupt_stop_recovers_from_last_public_boundary": true
+  },
+  "registry_policy": {
+    "registry": "docs/contributing/tasks/task-registry.json",
+    "registered_task_contract_role": "fine_grained_execution_authority",
+    "umbrella_issue_role": "coordination_projection",
+    "checkpoint_issue_role": "checkpoint_coordination_projection",
+    "project_role": "discovery_summary",
+    "unregistered_issue_contract": "issue_declared_claim_key"
+  },
+  "routing_policy": {
+    "basis": "checkpoint_capabilities_risk_and_evidence",
+    "model_or_agent_ranking": false,
+    "self_report_grants_authority": false,
+    "quality_gate_varies_by_executor": false,
+    "high_risk_requires_independent_review": true,
+    "no_qualified_executor": "remain_not_ready"
   },
   "authority": {
     "claim_grants_repository_write": false,
@@ -23,9 +90,43 @@
     "issue_comment_is_untrusted_input": true
   },
   "claim_policy": {
+    "scope": "checkpoint",
     "confirmation": "manual_maintainer_confirmation",
     "default_lease_days": 7,
-    "external_contribution_route": "fork_pull_request"
+    "external_contribution_route": "fork_pull_request",
+    "claim_states": [
+      "unclaimed",
+      "active",
+      "released",
+      "transferred",
+      "expired"
+    ],
+    "released_or_expired_work_requires_handoff": true,
+    "transfer_requires_maintainer_confirmation": true,
+    "adoptable_requires_ready_or_waiting_checkpoint": true
+  },
+  "continuation_policy": {
+    "schema": "docs/contributing/work-continuation.schema.json",
+    "pause_and_handoff_are_atomic": true,
+    "required_events": [
+      "session_end_with_incomplete_work",
+      "claim_release_with_work",
+      "claim_transfer",
+      "claim_expiry_with_work"
+    ],
+    "resume_requires_freshness_review": true,
+    "handoff_requires_fresh_context_compatibility": true,
+    "handoff_commit_must_be_reachable": true,
+    "evidence_references_must_resolve": true,
+    "next_action_cannot_expand_checkpoint_paths": true,
+    "stale_or_missing_evidence_fails_closed": true,
+    "completed_checkpoint_outcomes_must_not_be_reopened_implicitly": true
+  },
+  "project_field_contract": {
+    "hierarchy": ["Parent issue", "Sub-issues progress"],
+    "state": ["Status", "Lifecycle"],
+    "routing": ["Duty", "Contribution", "Entry level", "Device gate"],
+    "continuation": ["Continuation", "Claim expires"]
   },
   "public_surfaces": {
     "rfc_discussion": "https://github.com/Lingkyn/xr-foundry/discussions/22",

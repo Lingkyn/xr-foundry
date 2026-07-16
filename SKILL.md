@@ -14,11 +14,13 @@ Pin package installs to an immutable reviewed revision. Keep consumer-specific
 adapters and content in the consumer repository. Run the public repository checks
 and the consumer's own compile/tests. Do not claim engine, device, controller,
 comfort, spatial-audio, or headset support without the required current evidence.
+
 For Inventory XR device claims, follow
-`{baseDir}/docs/validation/inventory-xr-device-receipt-template.md` and run the
-repository validator against the completed JSON receipt. This Inventory-specific
-receipt remains a compatibility surface; new public device evidence should use the
-generic Device Lab contract below.
+`{baseDir}/docs/device-lab/test-plans/inventory-world-space-ui-v1.json`, start from
+`{baseDir}/docs/device-lab/device-receipt.template.json`, and run the repository
+validator with `--device-lab-receipt`. Do not transfer a receipt between renderer,
+device, runtime, resolved dependency lock, build, input-source, posture, or duration
+compositions.
 
 For contribution work, read `{baseDir}/docs/contributing/task-hall.md`; for device
 evidence, read `{baseDir}/docs/device-lab/README.md`. A claim lease coordinates work

@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "com.lingkyn.xr-baseline": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/foundations/com.lingkyn.xr-baseline#a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.test-framework": "1.6.0",
+    "com.unity.xr.interaction.toolkit": "3.5.1",
+    "com.unity.xr.management": "4.5.3",
+    "com.unity.xr.openxr": "1.16.0"
+  },
+  "testables": [
+    "com.lingkyn.xr-baseline"
+  ]
+}

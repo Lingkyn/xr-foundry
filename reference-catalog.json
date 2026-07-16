@@ -1,7 +1,8 @@
 {
   "schema": "xr-foundry.reference_catalog.v1",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "repository": "https://github.com/Lingkyn/xr-foundry",
+  "compatibility_profiles": "compatibility-profiles.json",
   "selection_dispositions": ["install", "extend_public_seam", "reference_only", "raw_material", "reject"],
   "evidence_order": ["manifest_and_license", "documentation_tests_samples", "repository_validation", "independent_consumer_compile", "runtime_device_evidence_when_claimed"],
   "artifacts": [
@@ -9,48 +10,44 @@
       "id": "unity-project-initializer",
       "kind": "package_and_reference",
       "engine": "Unity",
-      "path": "com.lingkyn.project-initializer",
+      "path": "packages/unity/foundations/com.lingkyn.project-initializer",
       "package_id": "com.lingkyn.project-initializer",
       "maturity": "incubating",
       "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
       "purpose": "Configurable project scaffold, baseline scenes and prefabs, and validation tools.",
-      "evidence": ["tests", "samples", "docs/validation/2026-07-15-git-url-unity-smoke.md"],
-      "non_claims": ["No consumer architecture is mandatory", "No runtime device behavior is claimed"]
+      "evidence": ["packages/unity/foundations/com.lingkyn.project-initializer/Tests", "packages/unity/foundations/com.lingkyn.project-initializer/Samples~", "docs/validation/2026-07-15-canonical-nested-git-consumer.md"],
+      "non_claims": ["No consumer architecture is mandatory", "No runtime device behavior is claimed", "Automated consumer evidence is not a release or device claim"]
     },
     {
       "id": "unity-xr-baseline",
       "kind": "package_and_reference",
       "engine": "Unity",
-      "path": "com.lingkyn.xr-baseline",
+      "path": "packages/unity/foundations/com.lingkyn.xr-baseline",
       "package_id": "com.lingkyn.xr-baseline",
       "maturity": "incubating",
       "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
       "purpose": "Vendor-neutral XR greybox initialization, rig helpers, configuration, and interaction validation.",
-      "evidence": ["tests", "samples", "docs/validation/2026-07-15-git-url-unity-smoke.md"],
-      "non_claims": ["No vendor runtime is bundled", "No headset behavior is claimed without device evidence"]
+      "evidence": ["packages/unity/foundations/com.lingkyn.xr-baseline/Tests", "packages/unity/foundations/com.lingkyn.xr-baseline/Samples~", "docs/validation/2026-07-15-canonical-nested-git-consumer.md"],
+      "non_claims": ["No vendor runtime is bundled", "No headset behavior is claimed without device evidence", "Automated consumer evidence is not a named-device result"]
     },
     {
       "id": "unity-inventory-core",
       "kind": "package_and_reference",
       "engine": "Unity",
-      "path": "com.lingkyn.inventory.core",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.core",
       "package_id": "com.lingkyn.inventory.core",
-      "maturity": "candidate",
-      "use_modes": ["install", "reference_only"],
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only", "raw_material"],
       "purpose": "Engine-light Inventory domain model, transactions, policies, events, snapshots, and persistence contracts.",
       "evidence": [
         "docs/standards/inventory/source-manifest.json",
         "docs/standards/inventory/coverage-matrix.md",
-        "com.lingkyn.inventory.core/Tests/Editor",
-        "docs/validation/2026-07-15-inventory-core-local-consumer.md",
-        "docs/validation/2026-07-15-inventory-core-git-url-consumer.md",
-        "docs/validation/2026-07-15-inventory-core-persistence.md",
-        "docs/validation/2026-07-15-inventory-core-instance-state.md",
-        "docs/validation/2026-07-15-inventory-core-candidate.md"
+        "packages/unity/systems/inventory/com.lingkyn.inventory.core/Tests/Editor",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
       ],
       "non_claims": [
         "No Unity authoring, UI, equipment, persistence provider, networking, or XR adapter is included",
-        "Candidate compatibility applies to the 0.1.x Core release line; no stable or 1.0 claim is made",
+        "Candidate promotion waits for a formal release review",
         "Clean-consumer Core evidence does not prove the complete Inventory product family"
       ]
     },
@@ -60,85 +57,166 @@
       "engine": "engine-neutral-core_with_unity_profile",
       "path": "docs/standards/inventory",
       "maturity": "incubating",
-      "use_modes": ["reference_only"],
+      "use_modes": ["reference_only", "raw_material"],
       "purpose": "Positive-source-only architecture, package boundaries, capability coverage, and verification gates for a reusable Inventory package family.",
       "evidence": [
         "docs/standards/inventory/source-manifest.json",
         "docs/standards/inventory/inventory-standard.json",
-        "docs/standards/inventory/verification-contract.md"
+        "docs/standards/inventory/verification-contract.md",
+        "docs/architecture/version-adaptive-reference-model.md",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
       ],
       "non_claims": [
-        "Core, Unity authoring, and UGUI are candidate; XR is implemented but remains incubating until Android and Pico gates pass",
+        "Package maturity remains scoped to each package's next independent gate",
         "No community Inventory repository is an admitted code seed",
-        "No headset usability or comfort is claimed before a recorded device receipt"
+        "Historical evidence is not transferred across a package ID, renderer, device, runtime, build, or input boundary",
+        "No headset usability or comfort is claimed before a recorded device receipt for the exact composition",
+        "Raw-material generation for another version creates a new candidate, not inherited compatibility evidence"
       ]
     },
     {
       "id": "unity-inventory-authoring",
       "kind": "package_and_reference",
       "engine": "Unity",
-      "path": "com.lingkyn.inventory.unity",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.unity",
       "package_id": "com.lingkyn.inventory.unity",
-      "maturity": "candidate",
-      "use_modes": ["install", "reference_only"],
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only", "raw_material"],
       "purpose": "ScriptableObject item, catalog, container, and inventory authoring with deterministic Core conversion and actionable validation.",
       "evidence": [
         "docs/standards/inventory/architecture-contract.md",
-        "com.lingkyn.inventory.unity/Tests/Editor",
-        "docs/validation/2026-07-15-inventory-unity-local-consumer.md",
-        "docs/validation/2026-07-15-inventory-unity-git-consumer.md"
+        "packages/unity/systems/inventory/com.lingkyn.inventory.unity/Tests/Editor",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
       ],
       "non_claims": [
         "No player state is stored in authoring assets",
         "No UGUI, XR, scene, storage provider, or product content is included",
-        "Candidate authoring evidence does not prove later presentation or XR layers"
+        "Candidate promotion waits for a formal release review",
+        "Authoring evidence does not prove later presentation or XR layers"
+      ]
+    },
+    {
+      "id": "unity-inventory-presentation",
+      "kind": "package_and_reference",
+      "engine": "engine-light_contract_for_Unity_adapters",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.presentation",
+      "package_id": "com.lingkyn.inventory.presentation",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only", "raw_material"],
+      "purpose": "Renderer-neutral Inventory view state, immutable view models, semantic intents, view port, and presenter.",
+      "evidence": [
+        "docs/standards/inventory/architecture-contract.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/Tests/Editor",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
+      ],
+      "non_claims": [
+        "No UGUI, UI Toolkit, XR, scene, device, styling, localization, or input implementation is included",
+        "Automated consumer evidence does not replace public API review",
+        "No old renderer-owned presentation namespace is an active compatibility surface"
       ]
     },
     {
       "id": "unity-inventory-ugui",
       "kind": "package_and_reference",
       "engine": "Unity",
-      "path": "com.lingkyn.inventory.ugui",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui",
       "package_id": "com.lingkyn.inventory.ugui",
-      "maturity": "candidate",
-      "use_modes": ["install", "reference_only"],
-      "purpose": "Presenter-owned Inventory UGUI with independently replaceable nested prefab roles and replayable states.",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only", "raw_material"],
+      "purpose": "UGUI renderer bindings with independently replaceable nested prefab roles and replayable neutral states.",
       "evidence": [
         "docs/standards/inventory/architecture-contract.md",
-        "com.lingkyn.inventory.ugui/Runtime/Prefabs",
-        "com.lingkyn.inventory.ugui/Tests",
-        "docs/validation/2026-07-15-inventory-ugui-local-consumer.md",
-        "docs/validation/2026-07-15-inventory-ugui-git-consumer.md",
-        "docs/validation/2026-07-15-inventory-ugui-0.1.1-candidate.md"
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Runtime/Prefabs",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Tests",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
       ],
       "non_claims": [
-        "The 0.1.0 structure-only receipt is superseded and is not functional-candidate evidence",
         "No XR Interaction Toolkit dependency or world-space comfort claim",
         "No product styling, scene, localization catalog, or item database",
-        "Candidate presentation evidence does not prove world-space or headset usability"
+        "Formal candidate review remains pending"
       ]
     },
     {
-      "id": "unity-inventory-xr",
+      "id": "unity-inventory-uitoolkit",
       "kind": "package_and_reference",
       "engine": "Unity",
-      "path": "com.lingkyn.inventory.xr",
-      "package_id": "com.lingkyn.inventory.xr",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit",
+      "package_id": "com.lingkyn.inventory.uitoolkit",
       "maturity": "incubating",
-      "use_modes": ["install", "reference_only"],
-      "purpose": "Provider-neutral world-space Inventory UGUI composition, strict XR input validation, tracked-ray and poke interaction routes, and a device-evidence-ready validation sample.",
+      "use_modes": ["install", "reference_only", "raw_material"],
+      "purpose": "Peer UI Toolkit renderer bindings, UXML/USS role composition, semantic input routing, and state samples.",
       "evidence": [
         "docs/standards/inventory/architecture-contract.md",
-        "com.lingkyn.inventory.xr/Runtime/Prefabs",
-        "com.lingkyn.inventory.xr/Tests",
-        "com.lingkyn.inventory.xr/Samples~/WorldSpaceInventory",
-        "docs/validation/2026-07-15-inventory-xr-local-consumer.md",
-        "docs/validation/2026-07-15-inventory-xr-git-consumer.md"
+        "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Tests",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Samples~/StateGallery",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
+      ],
+      "non_claims": [
+        "No UGUI Canvas or prefab is reused",
+        "No XR Interaction Toolkit, world-space, or headset claim is included in the renderer package",
+        "Renderer acceptance and candidate review remain pending"
+      ]
+    },
+    {
+      "id": "unity-inventory-xr-ugui",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui",
+      "package_id": "com.lingkyn.inventory.xr.ugui",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only", "raw_material"],
+      "purpose": "Renderer-explicit world-space Inventory UGUI composition, strict XR input validation, tracked-ray and poke routes, and a device-evidence-ready sample.",
+      "evidence": [
+        "docs/standards/inventory/architecture-contract.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/Runtime/Prefabs",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/Tests",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/Samples~/WorldSpaceInventory",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
       ],
       "non_claims": [
         "No XR Origin, EventSystem, OpenXR provider, or vendor SDK is bundled",
-        "Local Editor and PlayMode evidence does not prove headset readability, scale, angle, reach, occlusion, targeting, or comfort",
-        "Candidate promotion remains blocked on Android build/install/open and real Pico evidence"
+        "Android build/install/open and exact PICO renderer tuple evidence remain pending"
+      ]
+    },
+    {
+      "id": "unity-inventory-xr-uitoolkit",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit",
+      "package_id": "com.lingkyn.inventory.xr.uitoolkit",
+      "maturity": "incubating",
+      "use_modes": ["install", "reference_only", "raw_material"],
+      "purpose": "Renderer-explicit world-space Inventory UI Toolkit composition, XRI input-route contract, fail-closed validation, and Device Lab-ready sample.",
+      "evidence": [
+        "docs/standards/inventory/architecture-contract.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/Tests",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/Samples~/WorldSpaceInventoryUIToolkit",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
+      ],
+      "non_claims": [
+        "No UGUI Canvas, GraphicRaycaster, XR Origin, provider, or vendor SDK is bundled",
+        "UGUI automated or device evidence cannot promote the UI Toolkit route",
+        "Android build/install/open and independent named-device evidence remain pending"
+      ]
+    },
+    {
+      "id": "repository-information-architecture",
+      "kind": "repository_standard",
+      "engine": "multi-engine_with_Unity_implemented",
+      "path": "docs/architecture",
+      "maturity": "incubating",
+      "use_modes": ["reference_only"],
+      "purpose": "Canonical engine, foundation, system-family, and installable-package layout for human and Agent discovery.",
+      "evidence": [
+        "docs/architecture/repository-layout.md",
+        "docs/architecture/repository-layout.v1.json",
+        "docs/architecture/version-adaptive-reference-model.md",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md"
+      ],
+      "non_claims": [
+        "No unimplemented engine root is advertised",
+        "No old-path compatibility layer is provided",
+        "Repository folders do not replace independent package manifests or evidence"
       ]
     },
     {

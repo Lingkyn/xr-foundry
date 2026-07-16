@@ -29,7 +29,13 @@
     },
     {
       "capability": "presentation_separation_and_composition",
-      "source_ids": ["unity-scriptableobject-architecture", "unity-nested-prefabs", "more-mountains-inventory-engine"]
+      "source_ids": [
+        "unity-scriptableobject-architecture",
+        "unity-nested-prefabs",
+        "more-mountains-inventory-engine",
+        "unity-ui-toolkit-world-space",
+        "unity-ui-toolkit-world-space-create"
+      ]
     },
     {
       "capability": "package_and_test_contract",
@@ -39,6 +45,8 @@
       "capability": "xr_world_space_interaction",
       "source_ids": [
         "unity-xri",
+        "unity-xri-ui-toolkit-support",
+        "unity-xri-world-space-ui-sample",
         "unity-xri-examples",
         "pico-unity-project-validation",
         "pico-unity-controller-ray-canvas",
@@ -53,29 +61,50 @@
       "id": "com.lingkyn.inventory.core",
       "responsibility": "engine-light domain model, policies, transactions, events, snapshots, and persistence contracts",
       "required_dependencies": [],
-      "implementation_status": "implemented_candidate",
-      "earliest_failed_gate": "none"
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "core_atomic_mutation_tests"
     },
     {
       "id": "com.lingkyn.inventory.unity",
       "responsibility": "Unity authoring assets, catalogs, inspectors, and serialization adapters",
       "required_dependencies": ["com.lingkyn.inventory.core"],
-      "implementation_status": "implemented_candidate",
-      "earliest_failed_gate": "none"
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "local_clean_consumer_editmode_tests"
+    },
+    {
+      "id": "com.lingkyn.inventory.presentation",
+      "responsibility": "renderer-neutral view state, immutable view models, semantic intents, view port, and presenter",
+      "required_dependencies": ["com.lingkyn.inventory.core"],
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "presenter_unit_tests"
     },
     {
       "id": "com.lingkyn.inventory.ugui",
-      "responsibility": "presenters, view bindings, nested prefabs, and non-XR Unity UI samples",
-      "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.unity"],
-      "implementation_status": "implemented_candidate",
-      "earliest_failed_gate": "none"
+      "responsibility": "UGUI view bindings, nested prefabs, input routing, and non-XR renderer samples",
+      "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.presentation", "com.unity.ugui"],
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "required_visible_state_replay"
     },
     {
-      "id": "com.lingkyn.inventory.xr",
-      "responsibility": "optional world-space UI, tracked-controller interaction, and XR validation samples",
-      "required_dependencies": ["com.lingkyn.inventory.ugui", "com.unity.xr.interaction.toolkit"],
+      "id": "com.lingkyn.inventory.uitoolkit",
+      "responsibility": "UI Toolkit view bindings, UXML and USS composition, input routing, and non-XR renderer samples",
+      "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.presentation", "com.unity.modules.uielements"],
       "implementation_status": "implemented_incubating",
-      "earliest_failed_gate": "android_build_install_open"
+      "earliest_failed_gate": "semantic_state_and_intent_tests"
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.ugui",
+      "responsibility": "optional UGUI world-space Canvas, tracked-controller interaction, and renderer-specific XR validation samples",
+      "required_dependencies": ["com.lingkyn.inventory.presentation", "com.lingkyn.inventory.ugui", "com.unity.xr.interaction.toolkit"],
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "local_clean_consumer"
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.uitoolkit",
+      "responsibility": "optional UI Toolkit world-space panel, XRI interaction, and renderer-specific XR validation samples",
+      "required_dependencies": ["com.lingkyn.inventory.core", "com.lingkyn.inventory.presentation", "com.lingkyn.inventory.uitoolkit", "com.unity.xr.interaction.toolkit"],
+      "implementation_status": "implemented_incubating",
+      "earliest_failed_gate": "local_clean_consumer"
     }
   ],
   "required_domain_types": [

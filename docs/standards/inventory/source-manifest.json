@@ -295,6 +295,160 @@
       "license_boundary": "Documentation reference only; no SDK source or assets are copied"
     },
     {
+      "id": "unity-ui-toolkit-world-space",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "World space UI",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/ui-systems/world-space-ui.html",
+      "source_role": "renderer_neutral_boundary_and_world_space_ui",
+      "positive_evidence": [
+        "Unity 6.3 documents world-space UI as a supported UI Toolkit route rather than a Canvas-only concern",
+        "Separates panel/rendering configuration from application presentation semantics"
+      ],
+      "limits": [
+        "World-space rendering documentation does not prove XR input, device readability, or comfort"
+      ],
+      "license_boundary": "Documentation reference only; package code and assets are independently authored"
+    },
+    {
+      "id": "unity-ui-toolkit-world-space-create",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "Create a world space UI",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/ui-systems/create-world-space-ui.html",
+      "source_role": "ui_toolkit_world_space_composition",
+      "positive_evidence": [
+        "Defines the Unity 6.3 UI Toolkit world-space document and panel composition path",
+        "Provides a renderer-specific basis for a UI Toolkit XR adapter without importing UGUI"
+      ],
+      "limits": [
+        "The example is not an Inventory system and does not establish a named-device result"
+      ],
+      "license_boundary": "Documentation reference only; no example source or assets are copied"
+    },
+    {
+      "id": "unity-ui-toolkit-world-space-input",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "Configure input for a world space panel",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/ui-systems/world-space-panel-input-configuration.html",
+      "source_role": "ui_toolkit_world_space_input_contract",
+      "positive_evidence": [
+        "Defines panel input as a distinct UI Toolkit configuration concern",
+        "Supports fail-closed validation that is independent of Canvas raycaster rules"
+      ],
+      "limits": [
+        "Panel configuration does not prove XR interactor targeting or headset usability"
+      ],
+      "license_boundary": "Documentation reference only"
+    },
+    {
+      "id": "unity-xri-ui-toolkit-support",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_normative",
+      "publisher": "Unity Technologies",
+      "title": "UI Toolkit support in XR Interaction Toolkit",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ui-world-space-ui-toolkit-support.html",
+      "source_role": "xr_ui_toolkit_interaction_contract",
+      "positive_evidence": [
+        "Documents supported ray and poke interaction with world-space UI Toolkit",
+        "Documents coexistence with UGUI while keeping their renderer configurations distinct",
+        "States the minimum Unity and XRI version boundary for this route"
+      ],
+      "limits": [
+        "Package support does not transfer evidence between renderers or devices",
+        "Known limitations and version-specific behavior must be rechecked at each pinned dependency revision"
+      ],
+      "license_boundary": "Package API reference only; implementation remains inside a Unity-only adapter"
+    },
+    {
+      "id": "unity-xri-world-space-ui-sample",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_first_party_reference",
+      "publisher": "Unity Technologies",
+      "title": "World Space UI sample",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/samples-world-space-ui.html",
+      "source_role": "xr_ui_toolkit_sample_reference",
+      "positive_evidence": [
+        "Provides an official sample route for world-space UI Toolkit with XR interaction",
+        "Supports comparison of required panel, input, ray, and poke configuration"
+      ],
+      "limits": [
+        "Sample behavior is a configuration reference, not Inventory code or named-device acceptance evidence"
+      ],
+      "license_boundary": "Reference only; sample source and assets are not copied"
+    },
+    {
+      "id": "pico-os6-interaction-kind",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_first_party_reference",
+      "publisher": "PICO",
+      "title": "A new 3D interaction paradigm for spatial applications",
+      "url": "https://developer.picoxr.com/blog/a-new-3d-interaction-paradigm-for-spatial-applications/",
+      "source_role": "future_multimodal_interaction_direction",
+      "positive_evidence": [
+        "Separates stable application actions from gaze, hand, controller, and poke interaction kinds",
+        "Supports keeping semantic Inventory intents independent of the active input modality"
+      ],
+      "limits": [
+        "Forward-looking PICO OS 6 guidance is not proof for the current Unity package, PICO firmware, or controller route",
+        "No support claim is made until the exact runtime and device profile is implemented and tested"
+      ],
+      "license_boundary": "Conceptual public reference only"
+    },
+    {
+      "id": "apple-spatial-layout",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_professional_guidance",
+      "publisher": "Apple",
+      "title": "Spatial layout",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/spatial-layout/",
+      "source_role": "cross_platform_spatial_design_principles",
+      "positive_evidence": [
+        "Provides first-party spatial layout principles for legibility, placement, depth, and comfort considerations"
+      ],
+      "limits": [
+        "Design principles do not define PICO controller input or a Unity implementation",
+        "No Apple visual asset, proprietary material, or platform behavior is copied"
+      ],
+      "license_boundary": "Principles are summarized and linked; no protected assets or source are copied"
+    },
+    {
+      "id": "apple-spatial-gestures",
+      "admission": "admitted_positive",
+      "provenance_scope": "external_public",
+      "code_seed_allowed": false,
+      "authority_class": "official_professional_guidance",
+      "publisher": "Apple",
+      "title": "Gestures",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/gestures",
+      "source_role": "cross_platform_input_boundary_reference",
+      "positive_evidence": [
+        "Shows that gaze and pinch semantics require a platform-specific interaction adapter rather than tracked-controller assumptions"
+      ],
+      "limits": [
+        "The Vision Pro interaction model is not used as a substitute for PICO, Quest, or XRI device evidence"
+      ],
+      "license_boundary": "Principles are summarized and linked; no protected assets or source are copied"
+    },
+    {
       "id": "unity-xri-examples",
       "admission": "admitted_positive",
       "provenance_scope": "external_public",

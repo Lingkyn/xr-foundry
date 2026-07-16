@@ -11,6 +11,10 @@
       ],
       "required_input_routes": [
         "tracked-controller-ray"
+      ],
+      "required_input_source_ids": [
+        "left-controller",
+        "right-controller"
       ]
     },
     {
@@ -21,6 +25,10 @@
       ],
       "required_input_routes": [
         "tracked-controller-ray"
+      ],
+      "required_input_source_ids": [
+        "left-controller",
+        "right-controller"
       ]
     }
   ],
@@ -42,6 +50,19 @@
       "xr_adapter": "com.lingkyn.inventory.xr.uitoolkit"
     }
   ],
+  "execution_requirements": {
+    "minimum_duration_seconds": 120,
+    "allowed_postures": [
+      "seated",
+      "standing"
+    ],
+    "required_resolved_packages": [
+      "com.unity.xr.interaction.toolkit",
+      "com.unity.xr.openxr",
+      "com.unity.xr.management",
+      "com.unity.inputsystem"
+    ]
+  },
   "required_checks": [
     {
       "id": "artifact-install",
@@ -54,39 +75,134 @@
       "expected": "The world-space Inventory sample opens and displays its declared composition."
     },
     {
+      "id": "recorded-posture-duration",
+      "purpose": "Bind the observation window to a reproducible human test posture and minimum duration",
+      "expected": "The tester uses the posture recorded in the receipt and continuously exercises the composition for at least 120 seconds."
+    },
+    {
       "id": "world-anchor-head-turn",
       "purpose": "Reject unintended head-locked UI",
-      "expected": "The UI remains world anchored while the tester turns their head."
+      "expected": "The UI remains at its recorded world pose while the tester turns their head left, right, up, and down."
     },
     {
       "id": "world-anchor-lateral-lean",
       "purpose": "Prove spatial anchoring under positional movement",
-      "expected": "The UI preserves its world pose while the tester leans laterally."
+      "expected": "The UI preserves its recorded world pose while the tester leans laterally in both directions."
     },
     {
       "id": "binocular-readability",
       "purpose": "Evaluate headset readability at the recorded placement",
-      "expected": "Representative labels and values are readable binocularly at the recorded distance and scale."
+      "expected": "Representative labels, quantities, and state text are readable binocularly at the recorded distance."
     },
     {
-      "id": "left-center-right-hover",
-      "purpose": "Exercise the declared input route across the complete surface",
-      "expected": "Representative left, center, and right targets expose a stable hover/focus state."
+      "id": "panel-scale-fit",
+      "purpose": "Record whether physical scale supports the complete Inventory surface",
+      "expected": "The complete surface fits at a usable physical scale without requiring unintended head-locked resizing."
     },
     {
-      "id": "left-center-right-activate",
-      "purpose": "Exercise activation across the complete surface",
-      "expected": "Representative left, center, and right targets activate exactly once with the declared input route."
+      "id": "viewing-angle",
+      "purpose": "Record whether panel angle preserves legibility and target acquisition",
+      "expected": "The recorded panel angle keeps representative text and left, center, and right targets legible and selectable."
+    },
+    {
+      "id": "controller-reach",
+      "purpose": "Prove both tracked controllers can acquire the complete interaction surface",
+      "expected": "Both recorded controllers can comfortably acquire the left, center, and right targets from the recorded posture."
+    },
+    {
+      "id": "scene-occlusion",
+      "purpose": "Detect scene geometry or UI layers that hide required content or targets",
+      "expected": "Required text, states, and targets are not materially occluded or clipped throughout the recorded posture and head movement."
+    },
+    {
+      "id": "sustained-comfort",
+      "purpose": "Capture comfort over the complete minimum observation window",
+      "expected": "The recorded placement, scale, angle, and reach cause no immediate discomfort during the full duration recorded in the receipt."
+    },
+    {
+      "id": "left-controller-left-target-hover",
+      "purpose": "Prove left-controller hover on the left target",
+      "expected": "The left controller produces a stable hover state on the left target without activating it."
+    },
+    {
+      "id": "left-controller-center-target-hover",
+      "purpose": "Prove left-controller hover on the center target",
+      "expected": "The left controller produces a stable hover state on the center target without activating it."
+    },
+    {
+      "id": "left-controller-right-target-hover",
+      "purpose": "Prove left-controller hover on the right target",
+      "expected": "The left controller produces a stable hover state on the right target without activating it."
+    },
+    {
+      "id": "right-controller-left-target-hover",
+      "purpose": "Prove right-controller hover on the left target",
+      "expected": "The right controller produces a stable hover state on the left target without activating it."
+    },
+    {
+      "id": "right-controller-center-target-hover",
+      "purpose": "Prove right-controller hover on the center target",
+      "expected": "The right controller produces a stable hover state on the center target without activating it."
+    },
+    {
+      "id": "right-controller-right-target-hover",
+      "purpose": "Prove right-controller hover on the right target",
+      "expected": "The right controller produces a stable hover state on the right target without activating it."
+    },
+    {
+      "id": "left-controller-left-target-activate",
+      "purpose": "Prove left-controller activation on the left target",
+      "expected": "The left controller activates the left target exactly once and records the expected domain intent."
+    },
+    {
+      "id": "left-controller-center-target-activate",
+      "purpose": "Prove left-controller activation on the center target",
+      "expected": "The left controller activates the center target exactly once and records the expected domain intent."
+    },
+    {
+      "id": "left-controller-right-target-activate",
+      "purpose": "Prove left-controller activation on the right target",
+      "expected": "The left controller activates the right target exactly once and records the expected domain intent."
+    },
+    {
+      "id": "right-controller-left-target-activate",
+      "purpose": "Prove right-controller activation on the left target",
+      "expected": "The right controller activates the left target exactly once and records the expected domain intent."
+    },
+    {
+      "id": "right-controller-center-target-activate",
+      "purpose": "Prove right-controller activation on the center target",
+      "expected": "The right controller activates the center target exactly once and records the expected domain intent."
+    },
+    {
+      "id": "right-controller-right-target-activate",
+      "purpose": "Prove right-controller activation on the right target",
+      "expected": "The right controller activates the right target exactly once and records the expected domain intent."
+    },
+    {
+      "id": "left-controller-target-isolation",
+      "purpose": "Reject multi-target hover or activation leakage from the left controller",
+      "expected": "For each left, center, and right acquisition, only the intended target changes hover/pressed state and emits an intent."
+    },
+    {
+      "id": "right-controller-target-isolation",
+      "purpose": "Reject multi-target hover or activation leakage from the right controller",
+      "expected": "For each left, center, and right acquisition, only the intended target changes hover/pressed state and emits an intent."
+    },
+    {
+      "id": "left-controller-disabled-no-mutation",
+      "purpose": "Prove disabled controls cannot mutate Inventory through the left controller",
+      "expected": "Hovering and activating a disabled target with the left controller emits no domain intent and leaves Inventory state and revision unchanged."
+    },
+    {
+      "id": "right-controller-disabled-no-mutation",
+      "purpose": "Prove disabled controls cannot mutate Inventory through the right controller",
+      "expected": "Hovering and activating a disabled target with the right controller emits no domain intent and leaves Inventory state and revision unchanged."
     },
     {
       "id": "semantic-state-feedback",
       "purpose": "Verify renderer projection of neutral UI states",
       "expected": "Hover, pressed, selected, disabled, empty, and error states remain distinguishable where applicable."
-    },
-    {
-      "id": "occlusion-clipping-comfort",
-      "purpose": "Capture human visual and comfort evidence",
-      "expected": "Placement has no severe clipping, unavoidable occlusion, or immediate discomfort in the recorded posture."
     },
     {
       "id": "restart-or-recenter",
@@ -120,6 +236,8 @@
   "non_claims": [
     "Passing one package composition does not prove the sibling renderer or XR adapter",
     "Passing one device profile, operating-system version, runtime, or input route does not prove another",
+    "Passing one resolved dependency lock or build tuple does not prove another version, target, graphics API, scripting backend, or architecture",
+    "An execution shorter than 120 seconds or without a recorded allowed posture cannot support the required suite",
     "Editor, simulator, screenshot, or source inspection cannot satisfy required headset checks",
     "Optional capability claims require their own passed check and an input route admitted by the device profile"
   ]

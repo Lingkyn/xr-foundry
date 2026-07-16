@@ -1,0 +1,14 @@
+{
+  "name": "Lingkyn.Inventory.UGUI.StateGallery.Sample",
+  "rootNamespace": "Lingkyn.Inventory.UGUI.Samples",
+  "references": ["Lingkyn.Inventory.Presentation", "Lingkyn.Inventory.UGUI"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

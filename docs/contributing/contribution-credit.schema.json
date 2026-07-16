@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/contribution-credit.schema.json",
+  "title": "XR Foundry contribution credit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "record_status",
+    "id",
+    "github_identity",
+    "contribution_type",
+    "summary",
+    "evidence",
+    "credited_at",
+    "recorded_by",
+    "assistance",
+    "authority"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xr-foundry.contribution_credit.v1"
+    },
+    "record_status": {
+      "enum": ["example", "accepted"]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^credit-[a-z0-9][a-z0-9-]*$"
+    },
+    "github_identity": {
+      "$ref": "#/$defs/githubIdentity"
+    },
+    "contribution_type": {
+      "enum": [
+        "code",
+        "docs",
+        "research",
+        "review",
+        "test",
+        "userTesting",
+        "infra",
+        "design",
+        "triage",
+        "translation",
+        "community"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280
+    },
+    "evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "url", "repository_revision", "sha256"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "commit",
+              "pull_request",
+              "issue",
+              "discussion",
+              "review",
+              "test_receipt",
+              "device_receipt",
+              "research_manifest",
+              "release",
+              "other"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://github\\.com/Lingkyn/xr-foundry/"
+          },
+          "repository_revision": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "test_receipt",
+                    "device_receipt",
+                    "research_manifest",
+                    "release"
+                  ]
+                }
+              },
+              "required": ["kind"]
+            },
+            "then": {
+              "properties": {
+                "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "credited_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "recorded_by": {
+      "oneOf": [
+        { "$ref": "#/$defs/githubIdentity" },
+        { "type": "null" }
+      ]
+    },
+    "assistance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["used", "accountable_human", "assisted_by"],
+      "properties": {
+        "used": {
+          "type": "boolean"
+        },
+        "accountable_human": {
+          "oneOf": [
+            { "$ref": "#/$defs/githubIdentity" },
+            { "type": "null" }
+          ]
+        },
+        "assisted_by": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^Assisted-by: [^\\r\\n]+$"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "used": { "const": true }
+            },
+            "required": ["used"]
+          },
+          "then": {
+            "properties": {
+              "accountable_human": { "$ref": "#/$defs/githubIdentity" },
+              "assisted_by": { "minItems": 1 }
+            }
+          },
+          "else": {
+            "properties": {
+              "accountable_human": { "type": "null" },
+              "assisted_by": { "maxItems": 0 }
+            }
+          }
+        }
+      ]
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grants_repository_permission",
+        "grants_review_authority",
+        "grants_merge_authority",
+        "grants_release_authority",
+        "triggers_role_promotion"
+      ],
+      "properties": {
+        "grants_repository_permission": { "const": false },
+        "grants_review_authority": { "const": false },
+        "grants_merge_authority": { "const": false },
+        "grants_release_authority": { "const": false },
+        "triggers_role_promotion": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "githubIdentity": {
+      "type": "string",
+      "pattern": "^@[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "record_status": { "const": "example" }
+        },
+        "required": ["record_status"]
+      },
+      "then": {
+        "properties": {
+          "evidence": { "maxItems": 0 },
+          "credited_at": { "type": "null" },
+          "recorded_by": { "type": "null" }
+        }
+      },
+      "else": {
+        "properties": {
+          "evidence": { "minItems": 1 },
+          "credited_at": { "type": "string", "format": "date-time" },
+          "recorded_by": { "$ref": "#/$defs/githubIdentity" }
+        }
+      }
+    }
+  ]
+}

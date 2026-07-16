@@ -8,7 +8,8 @@ thin.
 ## Candidate gate
 
 - Repository validator and Python contract tests pass.
-- Every promoted package resolves and compiles in a fresh Unity 6000.3 project.
+- Every promoted package resolves and compiles in a fresh consumer matching its
+  declared compatibility profile.
 - EditMode package tests pass.
 - Installation and migration evidence names an immutable commit.
 
@@ -22,29 +23,33 @@ thin.
 
 Inventory is an incubating system standard with a positive-external-source-only
 manifest, package-family architecture, nested presentation composition, and a
-verification contract. The independently authored Core `0.1.0` implementation is
-admitted at `candidate` maturity after persistence/migration, typed instance-state,
-public API, immutable install, upgrade, rollback, and clean-consumer gates passed.
-Unity authoring is also candidate. UGUI `0.1.1` is candidate after the withdrawn
-`0.1.0` structure-only verdict was corrected with functional shipped prefabs,
-immutable install, sample, consumer-owned variant upgrade/rollback, and review evidence.
-XR `0.1.0` is implemented at incubating maturity with a provider-neutral world-space
-prefab, strict input validation, local and immutable-Git tracked-ray/poke tests, and
-imported sample evidence. Android and Pico gates remain, so candidate lower layers
-are not evidence that the complete family or XR experience is finished.
+verification contract. Core, Unity authoring, Presentation, UGUI, UI Toolkit, XR
+UGUI, and XR UI Toolkit form the implemented renderer-neutral graph. The current
+package tree still needs fresh immutable Git-consumer evidence before any layer can
+advance to its later review, renderer, Android, or named-device gates; evidence
+from an earlier package or dependency tuple is not inherited.
+
+Unity `6000.3.19f1` is the first automated implementation profile, not the
+repository's generation limit. Another Unity, UI, XRI, or future engine tuple
+begins as raw-material regeneration and earns its own profile only after equivalent
+validation.
 
 | Package | Version | Maturity | Earliest unsatisfied gate |
 | --- | --- | --- | --- |
-| `com.lingkyn.inventory.core` | `0.1.0` | `candidate` | `none` |
-| `com.lingkyn.inventory.unity` | `0.1.0` | `candidate` | `none` |
-| `com.lingkyn.inventory.ugui` | `0.1.1` | `candidate` | `none` |
-| `com.lingkyn.inventory.xr` | `0.1.0` | `incubating` | `android_build_install_open` |
+| `com.lingkyn.inventory.core` | `0.1.1` | `incubating` | `core_atomic_mutation_tests` |
+| `com.lingkyn.inventory.unity` | `0.1.1` | `incubating` | `local_clean_consumer_editmode_tests` |
+| `com.lingkyn.inventory.presentation` | `0.1.0` | `incubating` | `presenter_unit_tests` |
+| `com.lingkyn.inventory.ugui` | `0.2.0` | `incubating` | `required_visible_state_replay` |
+| `com.lingkyn.inventory.uitoolkit` | `0.1.0` | `incubating` | `semantic_state_and_intent_tests` |
+| `com.lingkyn.inventory.xr.ugui` | `0.1.0` | `incubating` | `local_clean_consumer` |
+| `com.lingkyn.inventory.xr.uitoolkit` | `0.1.0` | `incubating` | `local_clean_consumer` |
 
 ## Reference-library evolution
 
 - Add coverage, extension seams, failure cases, and migration evidence to each
   reference entry as packages mature.
-- Promote the optional XR layer only after Android and named-device evidence without weakening the candidate lower-layer boundaries.
+- Promote each optional XR renderer composition only after its own Android and
+  named-device evidence without weakening the lower-layer boundaries.
 - Add reusable tools, templates, and validation contracts when they have a real
   consumer and evidence.
 - Consider Unreal Engine and Godot collections only when working implementations,

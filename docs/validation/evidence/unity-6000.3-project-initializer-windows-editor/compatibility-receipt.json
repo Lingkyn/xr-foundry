@@ -1,0 +1,126 @@
+{
+  "$schema": "docs/validation/compatibility-evidence.schema.json",
+  "schema": "xr-foundry.compatibility_evidence.v1",
+  "kind": "editor_automated",
+  "profile_id": "unity-6000.3-project-initializer-windows-editor",
+  "commit_sha": "a25bbc7c9855ae4f094a58e43d8ab5ffdf37a7bf",
+  "target": {
+    "engine": {
+      "id": "unity",
+      "version": "6000.3.19f1"
+    },
+    "editor": {
+      "id": "unity-editor",
+      "version": "6000.3.19f1"
+    },
+    "renderer": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "requested_dependencies": {
+      "com.unity.inputsystem": "1.19.0",
+      "com.unity.render-pipelines.universal": "17.3.0",
+      "com.unity.test-framework": "1.6.0"
+    },
+    "resolved_dependencies": {
+      "com.unity.burst": "1.8.29",
+      "com.unity.collections": "2.6.6",
+      "com.unity.ext.nunit": "2.0.5",
+      "com.unity.inputsystem": "1.19.0",
+      "com.unity.mathematics": "1.3.3",
+      "com.unity.modules.hierarchycore": "1.0.0",
+      "com.unity.modules.imgui": "1.0.0",
+      "com.unity.modules.jsonserialize": "1.0.0",
+      "com.unity.modules.physics": "1.0.0",
+      "com.unity.modules.terrain": "1.0.0",
+      "com.unity.modules.ui": "1.0.0",
+      "com.unity.modules.uielements": "1.0.0",
+      "com.unity.nuget.mono-cecil": "1.11.6",
+      "com.unity.render-pipelines.core": "17.3.0",
+      "com.unity.render-pipelines.universal": "17.3.0",
+      "com.unity.render-pipelines.universal-config": "17.0.3",
+      "com.unity.searcher": "4.9.4",
+      "com.unity.shadergraph": "17.3.0",
+      "com.unity.test-framework": "1.6.0",
+      "com.unity.test-framework.performance": "3.5.0",
+      "com.unity.ugui": "2.0.0"
+    },
+    "build_target": "WindowsEditor",
+    "graphics_api": "Null",
+    "scripting_backend": "Mono",
+    "architecture": "x86_64",
+    "xr_provider": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "runtime": {
+      "id": "not_applicable",
+      "version": "not_applicable"
+    },
+    "input_routes": [
+      "not_applicable"
+    ],
+    "device": {
+      "id": "windows-editor-host",
+      "version": "10.0.26200"
+    }
+  },
+  "package_versions": {
+    "com.lingkyn.project-initializer": "0.1.0"
+  },
+  "resolved_dependencies": {
+    "com.unity.burst": "1.8.29",
+    "com.unity.collections": "2.6.6",
+    "com.unity.ext.nunit": "2.0.5",
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.mathematics": "1.3.3",
+    "com.unity.modules.hierarchycore": "1.0.0",
+    "com.unity.modules.imgui": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.modules.physics": "1.0.0",
+    "com.unity.modules.terrain": "1.0.0",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.nuget.mono-cecil": "1.11.6",
+    "com.unity.render-pipelines.core": "17.3.0",
+    "com.unity.render-pipelines.universal": "17.3.0",
+    "com.unity.render-pipelines.universal-config": "17.0.3",
+    "com.unity.searcher": "4.9.4",
+    "com.unity.shadergraph": "17.3.0",
+    "com.unity.test-framework": "1.6.0",
+    "com.unity.test-framework.performance": "3.5.0",
+    "com.unity.ugui": "2.0.0"
+  },
+  "manifest": {
+    "path": "docs/validation/evidence/unity-6000.3-project-initializer-windows-editor/consumer-manifest.json",
+    "sha256": "844586707238fc8e5005dd166e8f44bb74b8c7fcb7815ee3c29e1cc2568f587d"
+  },
+  "lock": {
+    "path": "docs/validation/evidence/unity-6000.3-project-initializer-windows-editor/consumer-packages-lock.json",
+    "sha256": "390cdf16822e77f8d1f20a04b75f1222e29a5b99dfc491163b7f6bf1ecf78515"
+  },
+  "checks": [
+    {
+      "id": "editor_compile",
+      "status": "pass",
+      "evidence_refs": [
+        {
+          "kind": "compile_result",
+          "ref": "docs/validation/evidence/unity-6000.3-project-initializer-windows-editor/compile-result.json",
+          "sha256": "d600f8143d474a7725605af94401c0117fb1659216e9e44f59f3e69d03171bfe"
+        }
+      ]
+    },
+    {
+      "id": "editmode_tests",
+      "status": "pass",
+      "evidence_refs": [
+        {
+          "kind": "nunit_result",
+          "ref": "docs/validation/evidence/unity-6000.3-project-initializer-windows-editor/editmode-results.xml",
+          "sha256": "ab6e75fb53a674ecbd0ef177d2b9482841991ce6de805cabfbb11522dfbd0992"
+        }
+      ]
+    }
+  ]
+}

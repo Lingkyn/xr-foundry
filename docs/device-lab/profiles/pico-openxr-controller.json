@@ -18,9 +18,22 @@
   "input_routes": [
     "tracked-controller-ray"
   ],
+  "input_sources": [
+    {
+      "id": "left-controller",
+      "kind": "tracked-controller",
+      "handedness": "left"
+    },
+    {
+      "id": "right-controller",
+      "kind": "tracked-controller",
+      "handedness": "right"
+    }
+  ],
   "non_claims": [
     "claim_allowed permits a maintainer-confirmed evidence task; it is not a passing device claim",
     "No device model, operating-system version, renderer, package composition, or capability has passed",
-    "Editor simulation and another device profile cannot satisfy this profile"
+    "Editor simulation and another device profile cannot satisfy this profile",
+    "Declaring left and right tracked-controller sources does not prove either controller or any capability"
   ]
 }

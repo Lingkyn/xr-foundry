@@ -24,6 +24,10 @@ evidence remain explicit gates.
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
 | Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Claim a bounded public task | [`Public Task Hall V1`](docs/contributing/task-hall.md) |
+| Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
+| Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
+| Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
 
 Thin adapters are included for tools that discover repository instructions in
@@ -137,6 +141,7 @@ Every live package must provide:
 Run the local checks:
 
 ```powershell
+python -m pip install -r scripts/contract-requirements.txt
 python scripts/validate_repository.py --json
 python -m unittest discover -s tests -p "test_*.py"
 ```
@@ -148,6 +153,12 @@ Unity package tests run from a Unity consumer through the Test Framework.
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SUPPORT.md`](SUPPORT.md), and
 [`SECURITY.md`](SECURITY.md). Package proposals begin as `incubating`; mature game
 systems require a positive-source and coverage bake-off before code is admitted.
+
+The [Task Hall](docs/contributing/task-hall.md) publishes bounded research, build,
+review, and integration work. The [Device Lab](docs/device-lab/README.md) lets
+contributors submit revision-bound headset evidence without code or repository
+write access. Claiming work coordinates a lease only; it never grants GitHub
+permissions or merge authority.
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.

@@ -1,0 +1,58 @@
+title: "[RFC] "
+labels: [rfc]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this Ideas-category form for a reusable package, standard, Task Hall, or Device Lab RFC. A Discussion is a proposal surface, not Ready work or repository authority.
+  - type: input
+    id: outcome
+    attributes:
+      label: Proposed reusable outcome
+      description: State the cross-consumer result in one sentence.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Common problem and affected consumers
+      description: Explain why an existing public seam cannot solve the problem unchanged.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Positive public sources and limits
+      description: Link official/professional evidence, maintenance and license facts, and rejected alternatives.
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Domain, presentation, renderer, XR, engine, and device boundaries
+      description: Separate independent axes and state what cannot be inferred across them.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Tests, migration, consumer, review, and device evidence plan
+      description: Name the first failing gate and any real human/device decision required.
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Candidate Task Hall work
+      description: List bounded tasks, intended write sets, acceptance, verification, and dependencies.
+    validations:
+      required: true
+  - type: checkboxes
+    id: authority
+    attributes:
+      label: Public authority boundary
+      options:
+        - label: I understand that this RFC and any `/claim` comment grant no write, review, merge, release, or promotion permission.
+          required: true
+        - label: I removed secrets, private consumer data, device identifiers, and machine-local paths.
+          required: true

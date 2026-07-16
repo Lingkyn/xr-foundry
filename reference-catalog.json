@@ -1,6 +1,6 @@
 {
   "schema": "xr-foundry.reference_catalog.v1",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": "https://github.com/Lingkyn/xr-foundry",
   "selection_dispositions": ["install", "extend_public_seam", "reference_only", "raw_material", "reject"],
   "evidence_order": ["manifest_and_license", "documentation_tests_samples", "repository_validation", "independent_consumer_compile", "runtime_device_evidence_when_claimed"],
@@ -139,6 +139,71 @@
         "No XR Origin, EventSystem, OpenXR provider, or vendor SDK is bundled",
         "Local Editor and PlayMode evidence does not prove headset readability, scale, angle, reach, occlusion, targeting, or comfort",
         "Candidate promotion remains blocked on Android build/install/open and real Pico evidence"
+      ]
+    },
+    {
+      "id": "agent-commons-rfc-v1",
+      "kind": "governance_rfc",
+      "engine": "cross-engine",
+      "path": "docs/rfcs/0001-agent-commons.md",
+      "maturity": "proposed",
+      "use_modes": ["reference_only"],
+      "purpose": "Public decision record for bounded agent-assisted work, least-privilege authority, and revision-bound device evidence.",
+      "evidence": [
+        "docs/contributing/agent-commons-source-manifest.json",
+        "docs/contributing/task-hall.md",
+        "docs/device-lab/README.md"
+      ],
+      "non_claims": [
+        "No external contributor receives write or merge permission",
+        "No comment-trigger automation or autonomous dispatch is enabled",
+        "No device or renderer result is claimed by the RFC"
+      ]
+    },
+    {
+      "id": "public-task-hall-v1",
+      "kind": "collaboration_contract",
+      "engine": "cross-engine",
+      "path": "docs/contributing",
+      "maturity": "incubating",
+      "use_modes": ["reference_only", "raw_material"],
+      "purpose": "A public Ready-task, time-limited claim, review, and integration contract for human and agent-assisted contributors.",
+      "evidence": [
+        "docs/contributing/task-hall.v1.json",
+        "docs/contributing/task-hall.v1.schema.json",
+        "docs/contributing/task-contract.schema.json",
+        "docs/contributing/task-contract.example.json",
+        "docs/contributing/label-contract.json",
+        ".github/ISSUE_TEMPLATE/task.yml",
+        "tests/test_repository_contract.py"
+      ],
+      "non_claims": [
+        "A claim lease grants no GitHub permission",
+        "Agents are not independent repository identities",
+        "V1 has no comment-trigger execution or automatic merge"
+      ]
+    },
+    {
+      "id": "public-device-lab-v1",
+      "kind": "evidence_contract",
+      "engine": "cross-engine",
+      "path": "docs/device-lab",
+      "maturity": "incubating",
+      "use_modes": ["reference_only", "raw_material"],
+      "purpose": "Revision-bound device profiles and receipts for community hardware evidence without repository write access.",
+      "evidence": [
+        "docs/device-lab/device-profile.schema.json",
+        "docs/device-lab/capability-test-plan.schema.json",
+        "docs/device-lab/test-plans/inventory-world-space-ui-v1.json",
+        "docs/device-lab/device-receipt.schema.json",
+        "docs/device-lab/device-receipt.template.json",
+        ".github/ISSUE_TEMPLATE/device-test.yml",
+        "tests/test_repository_contract.py"
+      ],
+      "non_claims": [
+        "Starter profiles are not tested and support no device claim",
+        "One device, renderer, or interaction result does not prove another",
+        "A receipt does not itself promote, approve, or merge a package"
       ]
     }
   ],

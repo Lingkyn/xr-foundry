@@ -1,0 +1,45 @@
+{
+  "schema": "xr-foundry.task.v1",
+  "id": "example-task",
+  "title": "Validate a bounded renderer adapter change",
+  "state": "proposal",
+  "blocked": false,
+  "blocking_reason": null,
+  "lane": "review",
+  "objective": "Review one renderer adapter against its declared neutral contract.",
+  "scope": [
+    "Public adapter source, tests, documentation, and compatibility evidence"
+  ],
+  "non_goals": [
+    "No device or cross-renderer compatibility claim"
+  ],
+  "intended_write_set": [
+    "A review comment and, if requested, a focused test correction"
+  ],
+  "source_gate": {
+    "required": false,
+    "sources": []
+  },
+  "acceptance": [
+    "Every finding identifies a public file and reproducible evidence"
+  ],
+  "verification": [
+    "Repository validator and affected tests pass"
+  ],
+  "device_gate": {
+    "required": false,
+    "profiles": []
+  },
+  "claim": {
+    "status": "unclaimed",
+    "github_identity": null,
+    "claimed_at": null,
+    "expires_at": null,
+    "confirmed_by_maintainer": null
+  },
+  "authority": {
+    "write_permission_not_inferred": true,
+    "merge_permission_not_inferred": true,
+    "comments_are_untrusted_input": true
+  }
+}

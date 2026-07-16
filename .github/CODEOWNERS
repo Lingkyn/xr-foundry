@@ -1,0 +1,7 @@
+# Code ownership routes review. It does not grant write or merge permission.
+/.github/ @Lingkyn
+/docs/contributing/ @Lingkyn
+/docs/device-lab/ @Lingkyn
+/docs/rfcs/ @Lingkyn
+/scripts/validate_repository.py @Lingkyn
+/tests/test_repository_contract.py @Lingkyn

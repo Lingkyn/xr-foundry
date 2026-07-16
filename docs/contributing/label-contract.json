@@ -1,0 +1,21 @@
+{
+  "schema": "xr-foundry.task_hall_labels.v1",
+  "labels": [
+    { "name": "rfc", "purpose": "Public design proposal requiring discussion and maintainer decision" },
+    { "name": "task:ready", "purpose": "Scope, source, acceptance, and verification gates are actionable" },
+    { "name": "task:claimed", "purpose": "A maintainer-confirmed, time-limited claim lease is active" },
+    { "name": "task:review", "purpose": "Implementation or evidence awaits independent review" },
+    { "name": "task:blocked", "purpose": "A concrete dependency, permission, decision, or device is missing" },
+    { "name": "device-lab", "purpose": "Work produces or reviews a device profile or receipt" },
+    { "name": "needs-device:pico", "purpose": "Requires evidence from the declared PICO profile" },
+    { "name": "needs-device:quest", "purpose": "Requires evidence from the declared Meta Quest profile" },
+    { "name": "needs-device:vision-pro", "purpose": "Requires evidence from the declared Apple Vision Pro profile" },
+    { "name": "renderer:ugui", "purpose": "UGUI renderer scope" },
+    { "name": "renderer:ui-toolkit", "purpose": "UI Toolkit renderer scope" },
+    { "name": "role:research", "purpose": "Source and license comparison duty" },
+    { "name": "role:build", "purpose": "Implementation and test duty" },
+    { "name": "role:review", "purpose": "Independent review duty" },
+    { "name": "role:device-test", "purpose": "Device procedure and receipt duty" },
+    { "name": "security-boundary", "purpose": "Permission, workflow, secret, or untrusted-input review required" }
+  ]
+}

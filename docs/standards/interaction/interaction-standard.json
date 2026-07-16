@@ -5,6 +5,9 @@
   "derivation_manifest": "docs/standards/interaction/source-manifest.json",
   "coverage_matrix": "docs/standards/interaction/coverage-matrix.md",
   "independent_source_review": "docs/standards/interaction/independent-source-review.json",
+  "independent_review_addenda": [
+    "docs/standards/interaction/state-contract-amendment-review.json"
+  ],
   "admitted_blueprints": [
     "docs/foundry/blueprints/interaction-core.v1.json",
     "docs/foundry/blueprints/interaction-unity.v1.json"
@@ -12,7 +15,7 @@
   "planned_boundaries": [
     {
       "role": "engine_light_core",
-      "owns": ["intent, context, route, source and binding-suggestion identity", "typed values", "source modality and capabilities", "route admission", "context priority", "conflict diagnostics", "phases", "deterministic frame routing", "policy snapshots", "handler outcomes"],
+      "owns": ["intent, context, route, source and binding-suggestion identity", "observation grouping", "typed values", "source modality and capabilities", "route admission", "context priority", "conflict diagnostics", "phases", "immutable prior and next routing state", "deterministic frame routing", "policy snapshots", "handler outcomes"],
       "excludes": ["Unity", "Input System", "XRI", "OpenXR", "physical control paths", "renderers", "gameplay implementation", "vendor SDKs", "device claims"]
     },
     {

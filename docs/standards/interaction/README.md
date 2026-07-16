@@ -10,7 +10,7 @@ headset integration.
 
 | Layer | Owns | Does not own |
 | --- | --- | --- |
-| Engine-light Core | Stable intent/context/route/source/binding-suggestion identities, typed values, phases, capability requirements, route admission, context priority, conflict diagnostics, deterministic frame routing, cancellation, outcomes, and policy snapshots | Physical control paths, Unity/OpenXR types, polling, UI, locomotion, object manipulation, device discovery, platform settings |
+| Engine-light Core | Stable intent/context/route/source/binding-suggestion identities, observation grouping, typed values, phases, capability requirements, route admission, context priority, immutable prior/next routing state, conflict diagnostics, deterministic frame routing, cancellation, outcomes, and policy snapshots | Physical control paths, Unity/OpenXR types, polling, UI, locomotion, object manipulation, device discovery, platform settings |
 | Unity Input System adapter | ScriptableObject authoring, Input Action identity mapping, Input System phase/value conversion, binding-display and override seams, and actionable validation | Product actions, automatic scene search, XRI interactors, OpenXR profiles, vendor SDKs, runtime rebinding UI, named-device claims |
 
 Future tracked-ray, hand, gaze, voice, assistive-input, XRI, OpenXR, or vendor

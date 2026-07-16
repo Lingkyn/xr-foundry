@@ -1,0 +1,25 @@
+{
+  "schema": "xr-foundry.independent_source_review_addendum.v1",
+  "subject": "Semantic Interaction routing-state and observation clarification",
+  "reviewed_on": "2026-07-16",
+  "reviewer": {
+    "kind": "independent_agent_advisory",
+    "provider": "Cursor Agent",
+    "mode": "read_only",
+    "write_or_merge_authority": false
+  },
+  "verdict": "pass",
+  "required_changes": [],
+  "reviewed_boundaries": [
+    "globally unique route identity and one-context ownership",
+    "observation-scoped priority and collision resolution",
+    "adapter validation of identical physical observation facts",
+    "immutable prior and next routing state without hidden router mutation",
+    "validated hold threshold and repeated toggle dispatch semantics",
+    "preserved Settings port and engine, renderer, runtime, and device evidence boundaries"
+  ],
+  "non_claims": [
+    "This addendum grants no implementation, maturity, release, compatibility, accessibility, comfort, platform, or device claim.",
+    "It does not replace Core tests, exact-consumer validation, implementation review, or Device Lab evidence."
+  ]
+}

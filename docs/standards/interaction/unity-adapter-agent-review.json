@@ -1,0 +1,33 @@
+{
+  "schema": "xr-foundry.independent_implementation_review_addendum.v1",
+  "subject": "Unity Input System adapter for Semantic Interaction",
+  "reviewed_commit": "5c948b13e166de4b1882e2c0d5b4a857670ffdff",
+  "reviewed_on": "2026-07-16",
+  "reviewer": {
+    "kind": "independent_agent_advisory",
+    "provider": "Cursor Agent",
+    "mode": "read_only",
+    "write_or_merge_authority": false
+  },
+  "verdict": "pass",
+  "required_changes": [],
+  "resolved_first_review_findings": [
+    "live InputAction callback capture for started, performed, and canceled phases",
+    "phase and supported raw-value coverage",
+    "asset, index, and field-specific validation diagnostics",
+    "duplicate intent, context, route, suggestion, and observation-route rejection",
+    "InputActionReference GUID consistency validation"
+  ],
+  "reviewed_boundaries": [
+    "deterministic ScriptableObject-to-Core conversion without authored-asset mutation",
+    "explicit InputActionReference and stable action and binding GUID identity",
+    "caller-owned observation stamps and explicit route candidate order",
+    "typed Input System phase and value conversion",
+    "binding display, suggestion, and override seams",
+    "absence of scene search, product commands, renderer, XRI, OpenXR, vendor, and device claims"
+  ],
+  "non_claims": [
+    "This advisory Agent review does not replace maintainer approval or exact-consumer validation.",
+    "It grants no maturity, release, accessibility, comfort, XR runtime, or device claim."
+  ]
+}

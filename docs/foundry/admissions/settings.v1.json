@@ -1,0 +1,48 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "settings",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-07-16",
+  "source_manifest": "docs/standards/settings/source-manifest.json",
+  "reference_alignment": [],
+  "consumer_contexts": [
+    "desktop, console, mobile, and spatial applications with player preferences",
+    "audio, display, controls, comfort, language, and accessibility configuration surfaces"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://learn.microsoft.com/en-us/xbox/accessibility/guidelines",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html"
+    ],
+    "independent_professional_sources": [
+      "https://dev.epicgames.com/documentation/unreal-engine/lyra-sample-game-settings-in-unreal-engine?lang=en-US",
+      "https://github.com/ppy/osu-framework"
+    ]
+  },
+  "common_kernel": [
+    "typed setting definitions, values, defaults, scopes, and validation",
+    "whole-snapshot transactions with apply, reverse rollback, and persistence ports",
+    "discoverability metadata without claiming accessibility outcomes"
+  ],
+  "configurable_variation": [
+    "consumer-defined setting catalogs, applicators, profiles, categories, renderers, localization, and device-specific values"
+  ],
+  "excluded_project_specific": [
+    "one game's menu layout, labels, art, concrete quality tiers, comfort values, and product defaults",
+    "direct dependencies on a consumer scene, singleton, player service, private assembly, or vendor account"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Typed player settings and transactional application recur across engines and products; the reusable kernel can remain independent of any particular menu, renderer, option catalog, default, or device.",
+  "non_claims": [
+    "Admission and metadata do not prove accessibility, comfort, usability, localization quality, or named-device behavior."
+  ]
+}

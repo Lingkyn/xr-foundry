@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT_SCHEMA = ROOT / "docs" / "foundry" / "unity-package-blueprint.schema.json"
+SYSTEM_ADMISSION_SCHEMA = ROOT / "docs" / "foundry" / "system-admission.schema.json"
 FULL_PACKAGE_ID = re.compile(r"com\.lingkyn\.[a-z0-9_.-]+")
 
 
@@ -70,8 +71,44 @@ def validate_blueprint(
     if payload.get("record_status") == "admitted":
         admission = payload.get("admission")
         if isinstance(admission, dict):
+            system_admission_rel = admission.get("system_admission_record")
             manifest_rel = admission.get("source_manifest")
             source_urls = admission.get("positive_sources")
+            if isinstance(system_admission_rel, str):
+                admission_parts = PurePosixPath(system_admission_rel).parts
+                if (
+                    PurePosixPath(system_admission_rel).is_absolute()
+                    or ".." in admission_parts
+                    or not system_admission_rel.startswith("docs/foundry/admissions/")
+                ):
+                    errors.append("Admitted blueprint system_admission_record path is unsafe")
+                else:
+                    admission_path = repository_root / PurePosixPath(system_admission_rel)
+                    if not admission_path.exists():
+                        errors.append("Admitted blueprint system_admission_record does not exist")
+                    elif not SYSTEM_ADMISSION_SCHEMA.exists():
+                        errors.append("System admission schema does not exist")
+                    else:
+                        admission_payload = load_json(admission_path)
+                        admission_schema = load_json(SYSTEM_ADMISSION_SCHEMA)
+                        admission_validator = Draft202012Validator(
+                            admission_schema, format_checker=FormatChecker()
+                        )
+                        for issue in sorted(
+                            admission_validator.iter_errors(admission_payload),
+                            key=lambda item: ".".join(
+                                str(part) for part in item.absolute_path
+                            ),
+                        ):
+                            errors.append(
+                                "System admission violation at "
+                                f"{'.'.join(str(part) for part in issue.absolute_path) or '$'}: "
+                                f"{issue.message}"
+                            )
+                        if admission_payload.get("family") != package.get("family"):
+                            errors.append("System admission family must match blueprint package.family")
+                        if admission_payload.get("source_manifest") != manifest_rel:
+                            errors.append("System admission source_manifest must match blueprint source_manifest")
             if isinstance(manifest_rel, str):
                 manifest_parts = PurePosixPath(manifest_rel).parts
                 if (

@@ -17,6 +17,7 @@
   },
   "admission": {
     "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/55",
+    "system_admission_record": "docs/foundry/admissions/settings.v1.json",
     "source_manifest": "docs/standards/settings/source-manifest.json",
     "positive_sources": [
       "https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html",

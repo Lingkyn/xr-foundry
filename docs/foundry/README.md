@@ -8,22 +8,25 @@ decision record is [RFC 0003](../rfcs/0003-foundry-production-line.md).
 ## Start here
 
 1. Select one proposal from [`queue/next-batch.json`](queue/next-batch.json).
-2. Complete its positive-source gate. Do not use a consumer project, course
+2. Complete the [cross-project system admission gate](system-admission.md).
+   A project feature, taxonomy, scene, or one-off gameplay rule stays in its
+   consumer repository even when it can technically be packaged.
+3. Complete its positive-source gate. Do not use a consumer project, course
    project, internal prototype, or rejected candidate as derivation material.
-3. Create a blueprint from
+4. Create a blueprint from
    [`unity-package-blueprint.example.json`](unity-package-blueprint.example.json).
-4. Validate and preview it:
+5. Validate and preview it:
 
    ```text
    python scripts/scaffold_unity_package.py blueprint.json --output-root . --json
    ```
 
-5. Only an admitted blueprint may add `--write`. The target must not exist.
-6. Replace the deliberate failing scaffold test with real implementation and
+6. Only an admitted blueprint may add `--write`. The target must not exist.
+7. Replace the deliberate failing scaffold test with real implementation and
    focused tests before proposing catalog admission.
-7. Run fast structure checks during iteration, then the complete repository and
+8. Run fast structure checks during iteration, then the complete repository and
    exact-consumer gates before promotion or release.
-8. Use Device Lab separately for every claimed headset/input/renderer tuple.
+9. Use Device Lab separately for every claimed headset/input/renderer tuple.
 
 The scaffolder never edits catalogs, batches, compatibility profiles, releases,
 GitHub state, or maturity. Its output is staging material, not a finished package.

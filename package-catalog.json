@@ -351,6 +351,38 @@
           "candidate_release_review"
         ]
       }
+    },
+    {
+      "id": "com.lingkyn.interaction.unity",
+      "path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity",
+      "maturity": "incubating",
+      "version": "0.1.0",
+      "independent_compile": "verified_exact_profile",
+      "git_url_install": "verified_immutable_commit",
+      "device_evidence": "not_applicable",
+      "promotion": {
+        "candidate_status": "blocked",
+        "earliest_failed_gate": "public_api_compatibility_review",
+        "satisfied": [
+          "scriptableobject_authoring",
+          "deterministic_core_conversion",
+          "indexed_validation",
+          "explicit_inputactionreference_guid",
+          "callback_phase_and_typed_value_conversion",
+          "explicit_observation_ordering",
+          "binding_display_suggestion_override_seams",
+          "immutable_git_url_clean_consumer",
+          "unity_6000_3_editor_compile",
+          "unity_6000_3_editmode_tests",
+          "independent_agent_advisory"
+        ],
+        "pending": [
+          "public_api_compatibility_review",
+          "upgrade_and_rollback_across_a_release",
+          "live_modality_and_device_profiles",
+          "candidate_release_review"
+        ]
+      }
     }
   ]
 }

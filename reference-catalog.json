@@ -310,6 +310,27 @@
       ]
     },
     {
+      "id": "unity-interaction-adapter",
+      "kind": "package_and_reference",
+      "engine": "Unity",
+      "path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity",
+      "package_id": "com.lingkyn.interaction.unity",
+      "maturity": "incubating",
+      "use_modes": ["install", "extend_public_seam", "reference_only", "raw_material"],
+      "purpose": "Unity Input System authoring, callback capture, stable GUID identity, explicit observation ordering, binding display, suggestions, and override persistence for the engine-light Interaction Core.",
+      "evidence": [
+        "docs/standards/interaction/architecture-contract.md",
+        "docs/standards/interaction/unity-adapter-agent-review.json",
+        "packages/unity/systems/interaction/com.lingkyn.interaction.unity/Tests/Editor",
+        "docs/validation/evidence/unity-6000.3-interaction-unity-windows-editor/compatibility-receipt.json"
+      ],
+      "non_claims": [
+        "No XRI, OpenXR, renderer, vendor runtime, device binding, scene search, or product command is included",
+        "Binding suggestions remain advisory and override records apply only after whole-snapshot validation",
+        "Windows Editor Input System evidence does not prove a live modality, XR runtime, device, accessibility, or comfort outcome"
+      ]
+    },
+    {
       "id": "repository-information-architecture",
       "kind": "repository_standard",
       "engine": "multi-engine_with_Unity_implemented",

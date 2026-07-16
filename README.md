@@ -109,7 +109,8 @@ Pin a reviewed commit SHA rather than `main`:
     "com.lingkyn.persistence.unity": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/persistence/com.lingkyn.persistence.unity#<same-full-40-character-commit-sha>",
     "com.lingkyn.settings.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/settings/com.lingkyn.settings.core#<same-full-40-character-commit-sha>",
     "com.lingkyn.settings.unity": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/settings/com.lingkyn.settings.unity#<same-full-40-character-commit-sha>",
-    "com.lingkyn.interaction.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/interaction/com.lingkyn.interaction.core#<same-full-40-character-commit-sha>"
+    "com.lingkyn.interaction.core": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/interaction/com.lingkyn.interaction.core#<same-full-40-character-commit-sha>",
+    "com.lingkyn.interaction.unity": "https://github.com/Lingkyn/xr-foundry.git?path=/packages/unity/systems/interaction/com.lingkyn.interaction.unity#<same-full-40-character-commit-sha>"
   }
 }
 ```

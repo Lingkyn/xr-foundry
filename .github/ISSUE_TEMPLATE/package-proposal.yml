@@ -7,6 +7,14 @@ body:
     id: common_problem
     attributes:
       label: Common problem and consumers
+      description: Name at least two materially different cross-project consumer contexts; multiple scenes in one game do not count.
+    validations:
+      required: true
+  - type: textarea
+    id: common_kernel
+    attributes:
+      label: Source-supported common kernel
+      description: Identify only capabilities shared by independent positive sources; explain why this is an industry system rather than one product feature.
     validations:
       required: true
   - type: textarea
@@ -20,6 +28,13 @@ body:
     id: architecture
     attributes:
       label: API, data, prefab/component, UI, save/load, and extension boundaries
+    validations:
+      required: true
+  - type: textarea
+    id: project_exclusions
+    attributes:
+      label: Configurable variation and project-specific exclusions
+      description: State what becomes configuration, policy, port, adapter, sample, or extension, and what must remain in consumer repositories.
     validations:
       required: true
   - type: textarea

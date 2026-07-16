@@ -879,11 +879,18 @@ class RepositoryContractTests(unittest.TestCase):
             admitted["admission"]["implementation_issue"] = (
                 "https://github.com/Lingkyn/xr-foundry/issues/52"
             )
+            admitted["package"]["family"] = "interaction"
+            admitted["package"]["target_path"] = (
+                "packages/unity/systems/interaction/com.lingkyn.example-system"
+            )
+            admitted["admission"]["system_admission_record"] = (
+                "docs/foundry/admissions/interaction.v1.json"
+            )
             admitted["admission"]["source_manifest"] = (
-                "docs/foundry/source-manifest.json"
+                "docs/standards/interaction/source-manifest.json"
             )
             admitted["admission"]["positive_sources"] = [
-                "https://docs.unity3d.com/6000.0/Documentation/Manual/CustomPackages.html"
+                "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#input"
             ]
             self.assertEqual([], SCAFFOLD_MODULE.validate_blueprint(admitted))
             admitted_plan = SCAFFOLD_MODULE.build_scaffold_plan(
@@ -921,8 +928,15 @@ class RepositoryContractTests(unittest.TestCase):
         blueprint["admission"]["implementation_issue"] = (
             "https://github.com/Lingkyn/xr-foundry/issues/52"
         )
+        blueprint["package"]["family"] = "interaction"
+        blueprint["package"]["target_path"] = (
+            "packages/unity/systems/interaction/com.lingkyn.example-system"
+        )
+        blueprint["admission"]["system_admission_record"] = (
+            "docs/foundry/admissions/interaction.v1.json"
+        )
         blueprint["admission"]["source_manifest"] = (
-            "docs/foundry/source-manifest.json"
+            "docs/standards/interaction/source-manifest.json"
         )
         blueprint["admission"]["positive_sources"] = [
             "https://example.invalid/unadmitted-source"
@@ -932,6 +946,22 @@ class RepositoryContractTests(unittest.TestCase):
 
         self.assertTrue(
             any("positive_sources must be admitted by source_manifest" in error for error in errors)
+        )
+
+    def test_foundry_admitted_blueprint_requires_matching_system_admission(self) -> None:
+        blueprint = json.loads(
+            (
+                ROOT / "docs" / "foundry" / "blueprints" / "interaction-core.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        blueprint["admission"]["system_admission_record"] = (
+            "docs/foundry/admissions/settings.v1.json"
+        )
+
+        errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
+
+        self.assertTrue(
+            any("family must match" in error for error in errors)
         )
 
     def test_foundry_next_batch_rejects_placeholder_actions(self) -> None:

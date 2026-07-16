@@ -47,7 +47,8 @@
       "id": "unity-system-interaction",
       "path": "packages/unity/systems/interaction",
       "packages": [
-        "com.lingkyn.interaction.core"
+        "com.lingkyn.interaction.core",
+        "com.lingkyn.interaction.unity"
       ]
     }
   ],

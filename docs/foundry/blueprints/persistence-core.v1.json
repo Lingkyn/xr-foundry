@@ -15,6 +15,7 @@
   },
   "admission": {
     "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/54",
+    "system_admission_record": "docs/foundry/admissions/persistence.v1.json",
     "source_manifest": "docs/standards/persistence/source-manifest.json",
     "positive_sources": [
       "https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace",
@@ -35,4 +36,3 @@
     "grants_device_claim": false
   }
 }
-

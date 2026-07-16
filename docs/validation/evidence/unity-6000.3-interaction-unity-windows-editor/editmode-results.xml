@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="26" result="Passed" total="26" passed="26" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-07-16 21:52:53Z" end-time="2026-07-16 21:52:54Z" duration="0.3216799">
+  <test-suite type="TestSuite" id="1000" name="xr-foundry-interaction-unity-5c948b1" fullname="xr-foundry-interaction-unity-5c948b1" runstate="Runnable" testcasecount="26" result="Passed" total="26" passed="26" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties><property name="platform" value="EditMode" /></properties>
+    <test-suite type="Assembly" id="1001" name="Lingkyn.Interaction.Core.Editor.Tests.dll" fullname="consumer-project/Library/ScriptAssemblies/Lingkyn.Interaction.Core.Editor.Tests.dll" runstate="Runnable" testcasecount="11" result="Passed" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties><property name="platform" value="EditMode" /><property name="EditorOnly" value="True" /></properties>
+      <test-case name="BindingSuggestionIsImmutableAndNeverActivatesRoute" result="Passed" />
+      <test-case name="FrameEnforcesObservationAndIngressContract" result="Passed" />
+      <test-case name="FullCapabilityAndModalityMustMatch" result="Passed" />
+      <test-case name="HoldAndThresholdPoliciesAreAppliedFromExplicitState" result="Passed" />
+      <test-case name="PerformedAndCanceledRequireExplicitStartedState" result="Passed" />
+      <test-case name="PolicyValidationRejectsInvalidIdsEnumsAndRanges" result="Passed" />
+      <test-case name="PostTransformOverflowFailsClosed" result="Passed" />
+      <test-case name="PriorityAndCollisionApplyOnlyWithinOneObservation" result="Passed" />
+      <test-case name="RegistryRejectsDuplicateRouteAndMismatchedMembership" result="Passed" />
+      <test-case name="RouterIsDeterministicAndDoesNotMutatePriorState" result="Passed" />
+      <test-case name="ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice" result="Passed" />
+    </test-suite>
+    <test-suite type="Assembly" id="1002" name="Lingkyn.Interaction.Unity.Editor.Tests.dll" fullname="consumer-project/Library/ScriptAssemblies/Lingkyn.Interaction.Unity.Editor.Tests.dll" runstate="Runnable" testcasecount="15" result="Passed" total="15" passed="15" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties><property name="platform" value="EditMode" /><property name="EditorOnly" value="True" /></properties>
+      <test-case name="AuthoringConvertsDeterministicallyWithoutMutatingAssets" result="Passed" />
+      <test-case name="BindingDisplayEnumeratesEveryBindingByStableGuid" result="Passed" />
+      <test-case name="BindingSuggestionValidationIsIndexedAndDuplicateSafe" result="Passed" />
+      <test-case name="InputSystemPhasesMapOnlyToNeutralLifecycle" result="Passed" />
+      <test-case name="LiveCallbackCapturesStartedPerformedAndCanceledFrames" result="Passed" />
+      <test-case name="LiveCallbackRejectsMismatchedActionGuid" result="Passed" />
+      <test-case name="ObservationRejectsDuplicateRouteCandidate" result="Passed" />
+      <test-case name="ObservationRejectsMixedPhysicalFactsAndMismatchedValues" result="Passed" />
+      <test-case name="ObservationUsesExplicitCandidateAndSequenceOrder" result="Passed" />
+      <test-case name="OverrideRoundTripIsDeterministicAndAppliesByBindingGuid" result="Passed" />
+      <test-case name="OverrideValidationIsAtomicBeforeExistingOverridesAreReplaced" result="Passed" />
+      <test-case name="RawValueConversionCoversSupportedKindsAndFailsClosed" result="Passed" />
+      <test-case name="RouteRequiresExplicitInputActionReference" result="Passed" />
+      <test-case name="ValidationReportsAssetIndexAndFieldPath" result="Passed" />
+      <test-case name="ValidationReportsDuplicateIntentContextRouteAndUnknownIntentPaths" result="Passed" />
+    </test-suite>
+  </test-suite>
+</test-run>

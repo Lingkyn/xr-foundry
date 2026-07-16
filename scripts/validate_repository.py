@@ -61,6 +61,11 @@ TEXT_SUFFIXES = {
     ".yaml",
     ".yml",
 }
+STRICT_TEXT_SUFFIXES = TEXT_SUFFIXES - {".asset"}
+PLACEHOLDER_PATTERN = re.compile(
+    r"(?:\bTBD\b|\bTODO\b|<placeholder>|replace[ _-]?me|lorem ipsum)",
+    re.IGNORECASE,
+)
 COMPATIBILITY_PROFILES = Path("compatibility-profiles.json")
 COMPATIBILITY_PROFILES_SCHEMA = (
     Path("docs") / "architecture" / "compatibility-profiles.schema.json"
@@ -518,6 +523,10 @@ def scan_text_safety(root: Path) -> list[str]:
             continue
         text = decode_text_file(path)
         if text is None:
+            if path.suffix.lower() in STRICT_TEXT_SUFFIXES:
+                errors.append(
+                    f"undecodable controlled text file: {path.relative_to(root)}"
+                )
             continue
         lowered = text.casefold()
         for marker in forbidden_public_markers():
@@ -2462,6 +2471,14 @@ def validate_foundry_contract(root: Path) -> list[str]:
                 errors.append(
                     f"Foundry first batch {package_id}: compatibility profile must exist and be verified"
                 )
+            elif (
+                profile.get("install_artifact") != package_id
+                or profile.get("package_versions", {}).get(package_id)
+                != item.get("version")
+            ):
+                errors.append(
+                    f"Foundry first batch {package_id}: compatibility profile identity/version mismatch"
+                )
 
     queue_path = root / "docs" / "foundry" / "queue" / "next-batch.json"
     if queue_path.exists():
@@ -2473,6 +2490,22 @@ def validate_foundry_contract(root: Path) -> list[str]:
                 errors.append("Foundry next-batch queue contains duplicate candidate ids")
             if any(item.get("package_ids") for item in candidates if isinstance(item, dict)):
                 errors.append("Foundry proposal/source-gate queue must not reserve package ids")
+            for item in candidates:
+                if not isinstance(item, dict):
+                    continue
+                controlled_text = [
+                    item.get("title"),
+                    item.get("objective"),
+                    item.get("exact_next_action"),
+                    *(item.get("source_requirements") or []),
+                ]
+                if any(
+                    isinstance(value, str) and PLACEHOLDER_PATTERN.search(value)
+                    for value in controlled_text
+                ):
+                    errors.append(
+                        f"Foundry next-batch {item.get('id')}: placeholder text is prohibited"
+                    )
 
     packages_root = root / "packages"
     if packages_root.exists():

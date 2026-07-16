@@ -4,6 +4,8 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
+import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -27,7 +29,11 @@ def deterministic_guid(package_id: str, relative_path: str) -> str:
     return hashlib.sha256(f"{package_id}:{relative_path}".encode("utf-8")).hexdigest()[:32]
 
 
-def validate_blueprint(payload: Any, schema_path: Path = BLUEPRINT_SCHEMA) -> list[str]:
+def validate_blueprint(
+    payload: Any,
+    schema_path: Path = BLUEPRINT_SCHEMA,
+    repository_root: Path = ROOT,
+) -> list[str]:
     if not schema_path.exists():
         return [f"Blueprint schema is missing: {schema_path}"]
     schema = load_json(schema_path)
@@ -61,6 +67,36 @@ def validate_blueprint(payload: Any, schema_path: Path = BLUEPRINT_SCHEMA) -> li
             errors.append("System blueprint target_path must bind its family and package id")
         if category == "adapter" and target_path != f"packages/unity/adapters/{family}/{package_id}":
             errors.append("Adapter blueprint target_path must bind its family and package id")
+    if payload.get("record_status") == "admitted":
+        admission = payload.get("admission")
+        if isinstance(admission, dict):
+            manifest_rel = admission.get("source_manifest")
+            source_urls = admission.get("positive_sources")
+            if isinstance(manifest_rel, str):
+                manifest_parts = PurePosixPath(manifest_rel).parts
+                if (
+                    PurePosixPath(manifest_rel).is_absolute()
+                    or ".." in manifest_parts
+                    or not manifest_rel.startswith("docs/")
+                ):
+                    errors.append("Admitted blueprint source_manifest path is unsafe")
+                else:
+                    manifest_path = repository_root / PurePosixPath(manifest_rel)
+                    if not manifest_path.exists():
+                        errors.append("Admitted blueprint source_manifest does not exist")
+                    else:
+                        source_manifest = load_json(manifest_path)
+                        admitted_urls = {
+                            str(item.get("url", ""))
+                            for item in source_manifest.get("sources", [])
+                            if isinstance(item, dict)
+                            and item.get("admission", "admitted_positive")
+                            == "admitted_positive"
+                        }
+                        if not isinstance(source_urls, list) or not set(source_urls) <= admitted_urls:
+                            errors.append(
+                                "Admitted blueprint positive_sources must be admitted by source_manifest"
+                            )
     return errors
 
 
@@ -210,14 +246,31 @@ def resolve_target(output_root: Path, target_path: str) -> Path:
     return target
 
 
-def write_scaffold(target: Path, plan: dict[str, str]) -> None:
-    if target.exists():
-        raise FileExistsError(f"Scaffold target already exists: {target}")
+def write_plan_to_directory(target: Path, plan: dict[str, str]) -> None:
     target.mkdir(parents=True, exist_ok=False)
     for relative_path, content in plan.items():
         path = target / PurePosixPath(relative_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8", newline="\n")
+
+
+def write_scaffold(target: Path, plan: dict[str, str]) -> None:
+    if target.exists():
+        raise FileExistsError(f"Scaffold target already exists: {target}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(
+        tempfile.mkdtemp(prefix=f".{target.name}.foundry-", dir=target.parent)
+    )
+    staging.rmdir()
+    try:
+        write_plan_to_directory(staging, plan)
+        if target.exists():
+            raise FileExistsError(f"Scaffold target already exists: {target}")
+        staging.rename(target)
+    except Exception:
+        if staging.exists():
+            shutil.rmtree(staging)
+        raise
 
 
 def main() -> int:
@@ -265,4 +318,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -31,9 +31,10 @@
     "admission": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["implementation_issue", "positive_sources", "intended_maturity"],
+      "required": ["implementation_issue", "source_manifest", "positive_sources", "intended_maturity"],
       "properties": {
         "implementation_issue": { "type": ["string", "null"], "format": "uri", "pattern": "^https://github\\.com/Lingkyn/xr-foundry/issues/[1-9][0-9]*$" },
+        "source_manifest": { "type": ["string", "null"], "pattern": "^docs/[A-Za-z0-9._/-]+\\.json$" },
         "positive_sources": { "type": "array", "items": { "type": "string", "format": "uri" }, "uniqueItems": true },
         "intended_maturity": { "const": "incubating" }
       }
@@ -67,6 +68,7 @@
           "admission": {
             "properties": {
               "implementation_issue": { "type": "string" },
+              "source_manifest": { "type": "string" },
               "positive_sources": { "minItems": 1 }
             }
           }
@@ -80,6 +82,7 @@
           "admission": {
             "properties": {
               "implementation_issue": { "type": "null" },
+              "source_manifest": { "type": "null" },
               "positive_sources": { "maxItems": 0 }
             }
           }
@@ -88,4 +91,3 @@
     }
   ]
 }
-

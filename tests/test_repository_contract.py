@@ -777,6 +777,32 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("cover every live catalog package" in error for error in errors))
         self.assertTrue(any("version must match package catalog" in error for error in errors))
 
+    def test_foundry_first_batch_rejects_compatibility_profile_swap(self) -> None:
+        batch_path = (
+            ROOT
+            / "docs"
+            / "foundry"
+            / "batches"
+            / "unity-first-batch.v1.json"
+        )
+        original_loader = MODULE.load_json
+        swapped = json.loads(batch_path.read_text(encoding="utf-8"))
+        first_profile = swapped["packages"][0]["compatibility_profile"]
+        swapped["packages"][0]["compatibility_profile"] = swapped["packages"][1][
+            "compatibility_profile"
+        ]
+        swapped["packages"][1]["compatibility_profile"] = first_profile
+
+        def load_with_swap(path: Path) -> dict:
+            return swapped if Path(path) == batch_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_swap):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(
+            any("compatibility profile identity/version mismatch" in error for error in errors)
+        )
+
     def test_foundry_scaffolder_is_deterministic_dry_run_first_and_collision_safe(self) -> None:
         example_path = (
             ROOT / "docs" / "foundry" / "unity-package-blueprint.example.json"
@@ -820,6 +846,9 @@ class RepositoryContractTests(unittest.TestCase):
             admitted["admission"]["implementation_issue"] = (
                 "https://github.com/Lingkyn/xr-foundry/issues/52"
             )
+            admitted["admission"]["source_manifest"] = (
+                "docs/foundry/source-manifest.json"
+            )
             admitted["admission"]["positive_sources"] = [
                 "https://docs.unity3d.com/6000.0/Documentation/Manual/CustomPackages.html"
             ]
@@ -834,6 +863,57 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertTrue((target / ".foundry-scaffold.json").exists())
             with self.assertRaises(FileExistsError):
                 SCAFFOLD_MODULE.write_scaffold(target, admitted_plan)
+
+            failed_target = target.parent / "com.lingkyn.atomic-failure"
+            with mock.patch.object(
+                SCAFFOLD_MODULE,
+                "write_plan_to_directory",
+                side_effect=OSError("simulated write failure"),
+            ):
+                with self.assertRaises(OSError):
+                    SCAFFOLD_MODULE.write_scaffold(failed_target, admitted_plan)
+            self.assertFalse(failed_target.exists())
+            self.assertEqual(
+                [],
+                list(failed_target.parent.glob(f".{failed_target.name}.foundry-*")),
+            )
+
+    def test_foundry_admitted_blueprint_rejects_unadmitted_positive_source(self) -> None:
+        blueprint = json.loads(
+            (
+                ROOT / "docs" / "foundry" / "unity-package-blueprint.example.json"
+            ).read_text(encoding="utf-8")
+        )
+        blueprint["record_status"] = "admitted"
+        blueprint["admission"]["implementation_issue"] = (
+            "https://github.com/Lingkyn/xr-foundry/issues/52"
+        )
+        blueprint["admission"]["source_manifest"] = (
+            "docs/foundry/source-manifest.json"
+        )
+        blueprint["admission"]["positive_sources"] = [
+            "https://example.invalid/unadmitted-source"
+        ]
+
+        errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
+
+        self.assertTrue(
+            any("positive_sources must be admitted by source_manifest" in error for error in errors)
+        )
+
+    def test_foundry_next_batch_rejects_placeholder_actions(self) -> None:
+        queue_path = ROOT / "docs" / "foundry" / "queue" / "next-batch.json"
+        original_loader = MODULE.load_json
+        queue = json.loads(queue_path.read_text(encoding="utf-8"))
+        queue["candidates"][0]["exact_next_action"] = "<placeholder>"
+
+        def load_with_placeholder(path: Path) -> dict:
+            return queue if Path(path) == queue_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_placeholder):
+            errors = MODULE.validate_foundry_contract(ROOT)
+
+        self.assertTrue(any("placeholder text is prohibited" in error for error in errors))
 
     def test_foundry_blueprint_rejects_unsafe_or_mismatched_target(self) -> None:
         blueprint = json.loads(
@@ -4107,6 +4187,17 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertEqual(len(suffixes), len(leak_paths))
             self.assertFalse(any("binary.asset" in error for error in errors))
             self.assertFalse(any(".git" in error for error in errors))
+
+    def test_public_leakage_scan_rejects_undecodable_controlled_text(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "undecodable.md").write_bytes(b"public contract \x96 invalid utf-8")
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertTrue(
+                any("undecodable controlled text file: undecodable.md" in error for error in errors)
+            )
 
 
 if __name__ == "__main__":

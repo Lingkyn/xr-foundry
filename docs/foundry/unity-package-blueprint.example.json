@@ -15,6 +15,7 @@
   },
   "admission": {
     "implementation_issue": null,
+    "source_manifest": null,
     "positive_sources": [],
     "intended_maturity": "incubating"
   },
@@ -29,4 +30,3 @@
     "grants_device_claim": false
   }
 }
-

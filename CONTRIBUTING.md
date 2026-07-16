@@ -9,12 +9,34 @@ Thank you for helping improve the packages and reference library.
   implementation, review, integration, or documentation.
 - Use the [Device Lab](docs/device-lab/README.md) for revision-bound headset and
   interaction evidence.
+- Contribute through code, documentation, research, design, review, tests,
+  user/device testing, or infrastructure. These are separate contribution types,
+  not a single activity score.
 - Report reproducible defects through the Bug form and security vulnerabilities
   privately through [SECURITY.md](SECURITY.md).
 
 Submitting or claiming an Issue grants no repository permission. External
 contributors normally use a fork. A maintainer must confirm a Task Hall claim lease
 before the task is treated as reserved.
+
+## Choose a checkpoint, not an unfinished umbrella
+
+An umbrella Issue preserves the goal and dependency graph. Claimable work is a
+named checkpoint or sub-issue with one independently valuable outcome, allowed
+paths, dependencies, non-goals, acceptance, verification, evidence location, and
+device/review gates. A lease covers only that checkpoint.
+
+`good first issue` is a certified subset of `help wanted`: it must include setup
+context, exact change and test locations, a bounded expected size, and a named
+maintainer shepherd. A generic `task:ready` label alone does not mean work is
+newcomer-ready.
+
+If you stop, release, transfer, or time out, publish the continuation receipt before
+leaving. Preserve completed checkpoints and state the current revision, evidence,
+remaining work, blocker, allowed paths, do-not-touch boundary, and exact next safe
+action. Useful partial work may become `task:salvageable` or
+`task:available-for-adoption`; it must not be flattened back into “everything is
+unfinished.”
 
 ## Before opening a change
 
@@ -41,6 +63,8 @@ before the task is treated as reserved.
 - Preserve `.meta` files when moving Unity assets.
 - Link the Ready task and confirmed claim lease when applicable. Schedule scope
   discovered outside the intended write set as another Issue.
+- Link the exact checkpoint and update its durable continuation state. Do not claim
+  an umbrella Issue when only one child checkpoint is being changed.
 - Do not use a task claim as approval, merge, release, maturity, or device-support
   authority.
 - For device claims, submit a V1 receipt with immutable revision, build digest,
@@ -50,3 +74,18 @@ Package APIs should favor configuration and narrow extension seams over assumpti
 about a specific consumer's namespace, folders, scenes, services, or gameplay types.
 Update `reference-catalog.json` whenever an artifact's selection, evidence, maturity,
 or compatibility boundary changes.
+
+## Recognition and responsibility
+
+Accepted contributions may be acknowledged by evidence-linked category in
+[`CONTRIBUTORS.md`](CONTRIBUTORS.md) under the
+[recognition policy](docs/contributing/recognition-policy.md). Evidence, public
+recognition, and repository trust/permissions are separate records. No number of
+commits, lines, comments, pull requests, device passes, or credits automatically
+grants review, merge, release, or maintainer authority.
+
+Every Agent-assisted contribution needs an accountable human GitHub identity. Add
+`Assisted-by: TOOL:MODEL` when known without publishing private prompts or session
+logs. An Agent must not sign a human legal attestation or satisfy a required human
+review. The human submitter remains responsible for licensing, correctness,
+privacy, tests, and follow-up.

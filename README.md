@@ -24,9 +24,10 @@ evidence remain explicit gates.
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
 | Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| Claim a bounded public task | [`Public Task Hall V1`](docs/contributing/task-hall.md) |
+| Find or claim bounded public work | [`Public Task Hall V1`](docs/contributing/task-hall.md) and the [live Project](https://github.com/users/Lingkyn/projects/2) |
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
 | Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
+| See how contributions are recognized | [`Recognition policy`](docs/contributing/recognition-policy.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
 
@@ -179,3 +180,25 @@ permissions or merge authority.
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.
+
+## Public workbench for people and Agents
+
+XR Foundry treats GitHub as durable shared state, not merely a place to upload the
+final code. Umbrella Issues keep a system understandable as one outcome; child
+Issues and named checkpoints expose independently valuable work. Each checkpoint
+states its dependencies, allowed paths, non-goals, acceptance, verification,
+evidence, device/review gates, and exact next safe action.
+
+This lets a contributor finish one unit without pretending the whole system is
+done. If a person, Cursor, Codex, Claude Code, or another tool stops midstream, a
+continuation receipt preserves completed checkpoints, the current revision,
+evidence, remaining work, blockers, and handoff boundary for the next contributor.
+If a process stops too abruptly to publish that receipt, work resumes from the last
+public checkpoint boundary; local-only output is never assumed complete.
+
+Contribution is not limited to code. Research, documentation, design, review,
+tests, device/user testing, and infrastructure can all be acknowledged through
+accepted evidence. They remain separate categories rather than a total points
+ranking, and no activity score grants repository permission. Start with the
+[Task Hall](docs/contributing/task-hall.md), choose one certified checkpoint, and
+use a fork pull request unless you already hold an appropriate repository role.

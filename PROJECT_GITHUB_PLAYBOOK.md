@@ -20,7 +20,7 @@ support claim.
 
 The repository, not a chat transcript or agent memory, is the handoff and rollback
 center. Durable decisions belong in RFCs, Issues, pull requests, catalogs, tests,
-and evidence files.
+evidence files, and structured continuation receipts.
 
 ## XR package/reference adapter
 
@@ -46,6 +46,19 @@ Hardware evidence follows the [Device Lab](docs/device-lab/README.md). A task cl
 is a time-limited coordination lease and grants no GitHub permission. External
 contributors normally use forks. Maintainers retain readiness, review, integration,
 promotion, release, repository-setting, and permission decisions.
+
+Umbrella Issues preserve outcomes and dependency graphs; independently claimable
+checkpoints and sub-issues preserve execution state. A claim covers one checkpoint,
+not the whole umbrella. A pause, lease release, transfer, or adoption must preserve
+completed checkpoints, evidence, remaining work, boundaries, and the exact next
+safe action in a continuation receipt. GitHub parent/sub-issue relationships and
+Project views keep the umbrella readable without hiding work that another person or
+Agent can take.
+
+Accepted contribution evidence, public recognition, and revocable trust/permission
+are separate records. The repository does not use a total activity score or
+leaderboard to grant authority. Agent-assisted work remains accountable to a human
+GitHub identity, and Agent review cannot replace required human review.
 
 Public contribution content is untrusted input. No comment command executes code in
 V1. Workflows keep read-only permissions, disable persisted checkout credentials,

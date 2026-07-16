@@ -15,6 +15,7 @@
   },
   "admission": {
     "implementation_issue": null,
+    "system_admission_record": null,
     "source_manifest": null,
     "positive_sources": [],
     "intended_maturity": "incubating"

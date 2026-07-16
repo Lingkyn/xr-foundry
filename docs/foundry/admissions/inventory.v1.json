@@ -1,0 +1,54 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "inventory",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-07-16",
+  "source_manifest": "docs/standards/inventory/source-manifest.json",
+  "reference_alignment": [{
+    "url": "https://github.com/Lingkyn/game-system-reference-standards/blob/main/entries/blueprints/inventory-item-system.md",
+    "entry_id": "REF-SYS-inventory-item-system",
+    "admission": "Common"
+  }],
+  "consumer_contexts": [
+    "grid, list, weight, and capacity inventories across different game genres",
+    "player backpacks, shared storage, equipment sources, and service-owned item containers"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity.com/en-us/economy/sdk/player-inventory",
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/lyra-inventory-and-equipment-in-unreal-engine"
+    ],
+    "independent_professional_sources": [
+      "https://opsive.com/support/documentation/ultimate-inventory-system/",
+      "https://inventory-engine-docs.moremountains.com/"
+    ]
+  },
+  "common_kernel": [
+    "stable item definitions and instance identity",
+    "container capacity, stacking, and atomic mutations",
+    "snapshots, persistence contracts, and change observations",
+    "renderer-neutral presentation and optional engine and XR adapters"
+  ],
+  "configurable_variation": [
+    "slot, weight, capacity, uniqueness, sorting, filtering, and presentation policies",
+    "consumer-owned item effects, equipment, crafting, economy, networking, and art"
+  ],
+  "excluded_project_specific": [
+    "one game's item names, lore, economy values, drop tables, recipes, and art",
+    "one project's scenes, commands, services, namespaces, folder layout, and private assemblies"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Inventory is a widely recurring game-system family with a stable container and mutation kernel; genre-specific economy, content, UI, networking, and item behavior remain configurable or consumer-owned.",
+  "non_claims": [
+    "Admission does not claim that every inventory genre, renderer, network model, economy, or device is implemented or verified."
+  ]
+}

@@ -32,6 +32,7 @@ packages/
         com.lingkyn.settings.unity/
       interaction/
         com.lingkyn.interaction.core/
+        com.lingkyn.interaction.unity/
 docs/
   architecture/
   standards/

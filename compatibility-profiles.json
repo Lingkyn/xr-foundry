@@ -51,7 +51,8 @@
     "unity-6000.3-persistence-unity-windows-editor",
     "unity-6000.3-settings-core-windows-editor",
     "unity-6000.3-settings-unity-windows-editor",
-    "unity-6000.3-interaction-core-windows-editor"
+    "unity-6000.3-interaction-core-windows-editor",
+    "unity-6000.3-interaction-unity-windows-editor"
   ],
   "profiles": [
     {
@@ -1028,6 +1029,55 @@
           "receipt_path": "docs/validation/evidence/unity-6000.3-interaction-core-windows-editor/compatibility-receipt.json",
           "manifest_sha256": "8720b13831220126a1ddbac27064e1d1ceff269f915e449527d5659093eb584e",
           "lock_sha256": "3492d19acaddca966fa1bbca8f3761e72a232d3707f54eeb84ff87f92d562f29",
+          "checks": ["editor_compile", "editmode_tests"]
+        }
+      ]
+    },
+    {
+      "id": "unity-6000.3-interaction-unity-windows-editor",
+      "state": "verified",
+      "install_artifact": "com.lingkyn.interaction.unity",
+      "target": {
+        "engine": { "id": "unity", "version": "6000.3.19f1" },
+        "editor": { "id": "unity-editor", "version": "6000.3.19f1" },
+        "renderer": { "id": "not_applicable", "version": "not_applicable" },
+        "requested_dependencies": {
+          "com.unity.inputsystem": "1.14.2",
+          "com.unity.test-framework": "1.6.0"
+        },
+        "resolved_dependencies": {
+          "com.unity.ext.nunit": "2.0.5",
+          "com.unity.inputsystem": "1.14.2",
+          "com.unity.modules.hierarchycore": "1.0.0",
+          "com.unity.modules.imgui": "1.0.0",
+          "com.unity.modules.jsonserialize": "1.0.0",
+          "com.unity.modules.physics": "1.0.0",
+          "com.unity.modules.ui": "1.0.0",
+          "com.unity.modules.uielements": "1.0.0",
+          "com.unity.test-framework": "1.6.0"
+        },
+        "build_target": "WindowsEditor",
+        "graphics_api": "Null",
+        "scripting_backend": "Mono",
+        "architecture": "x86_64",
+        "xr_provider": { "id": "not_applicable", "version": "not_applicable" },
+        "runtime": { "id": "not_applicable", "version": "not_applicable" },
+        "input_routes": ["not_applicable"],
+        "device": { "id": "windows-editor-host", "version": "10.0.26200" }
+      },
+      "package_versions": {
+        "com.lingkyn.interaction.core": "0.1.0",
+        "com.lingkyn.interaction.unity": "0.1.0"
+      },
+      "verified_claims": ["editor_compile", "editmode_tests"],
+      "evidence": [
+        {
+          "kind": "editor_automated",
+          "profile_id": "unity-6000.3-interaction-unity-windows-editor",
+          "commit_sha": "5c948b13e166de4b1882e2c0d5b4a857670ffdff",
+          "receipt_path": "docs/validation/evidence/unity-6000.3-interaction-unity-windows-editor/compatibility-receipt.json",
+          "manifest_sha256": "ed2acb0edb22c7777d4a13eb0a164b627b4612c18b63704ef295a8a5e8591d66",
+          "lock_sha256": "422b102beec95baeeef3c0bf413c0a77f50ace58c3155fe5ffa44f2858872af6",
           "checks": ["editor_compile", "editmode_tests"]
         }
       ]

@@ -1,0 +1,17 @@
+{
+  "name": "Lingkyn.Interaction.Unity",
+  "rootNamespace": "Lingkyn.Interaction.Unity",
+  "references": [
+    "Lingkyn.Interaction.Core",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -12,10 +12,10 @@ batch and publishes a dry-run-first package blueprint/scaffolder. New systems en
 through the public source-gate queue; no package directory or package ID is created
 before admission. See [`docs/foundry`](docs/foundry/README.md).
 
-Persistence and Settings/Accessibility have completed their first independently
-validated Core and Unity checkpoints. Semantic Interaction has completed its
-professional source gate and its engine-light Core checkpoint; the Unity Input
-System adapter remains the next independently closable implementation checkpoint.
+Persistence, Settings/Accessibility, and Semantic Interaction have completed
+their first independently validated Core and Unity checkpoints. Their next gates
+are public API compatibility review, one release upgrade/rollback exercise, and
+any separately scoped live runtime or named-device evidence required by a claim.
 
 ## Candidate gate
 

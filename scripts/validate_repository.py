@@ -138,6 +138,8 @@ REQUIRED_AGENT_COMMONS_FILES = {
 REQUIRED_FOUNDRY_FILES = {
     "docs/foundry/README.md",
     "docs/foundry/release-policy.md",
+    "docs/foundry/system-admission.md",
+    "docs/foundry/system-admission.schema.json",
     "docs/foundry/source-manifest.json",
     "docs/foundry/foundry-manifest.json",
     "docs/foundry/foundry-manifest.schema.json",
@@ -2400,6 +2402,67 @@ def validate_foundry_contract(root: Path) -> list[str]:
                 validate_json_schema_instance(load_json(instance_path), schema_path, label)
             )
 
+    admission_schema_path = root / "docs" / "foundry" / "system-admission.schema.json"
+    admission_root = root / "docs" / "foundry" / "admissions"
+    admissions_by_family: dict[str, dict[str, Any]] = {}
+    if admission_root.exists():
+        for admission_path in sorted(admission_root.glob("*.json")):
+            payload = load_json(admission_path)
+            errors.extend(
+                validate_json_schema_instance(
+                    payload,
+                    admission_schema_path,
+                    f"Foundry system admission {admission_path.name}",
+                )
+            )
+            family = str(payload.get("family", "")) if isinstance(payload, dict) else ""
+            if family in admissions_by_family:
+                errors.append(f"Foundry system admission family is duplicated: {family}")
+            elif family:
+                admissions_by_family[family] = payload
+
+    admitted_blueprint_root = root / "docs" / "foundry" / "blueprints"
+    blueprint_schema_path = root / "docs" / "foundry" / "unity-package-blueprint.schema.json"
+    if admitted_blueprint_root.exists():
+        for admitted_path in sorted(admitted_blueprint_root.glob("*.json")):
+            payload = load_json(admitted_path)
+            errors.extend(
+                validate_json_schema_instance(
+                    payload,
+                    blueprint_schema_path,
+                    f"Foundry admitted blueprint {admitted_path.name}",
+                )
+            )
+            package = payload.get("package", {}) if isinstance(payload, dict) else {}
+            admission = payload.get("admission", {}) if isinstance(payload, dict) else {}
+            family = str(package.get("family", "")) if isinstance(package, dict) else ""
+            admission_rel = (
+                str(admission.get("system_admission_record", ""))
+                if isinstance(admission, dict)
+                else ""
+            )
+            admission_path = root / admission_rel
+            if not admission_rel or not admission_path.exists():
+                errors.append(
+                    f"Foundry admitted blueprint {admitted_path.name}: system admission record is missing"
+                )
+                continue
+            referenced_admission = load_json(admission_path)
+            family_record = admissions_by_family.get(family)
+            if (
+                family_record is None
+                or not isinstance(referenced_admission, dict)
+                or referenced_admission.get("family") != family
+            ):
+                errors.append(
+                    f"Foundry admitted blueprint {admitted_path.name}: family admission binding is invalid"
+                )
+            else:
+                if family_record.get("source_manifest") != admission.get("source_manifest"):
+                    errors.append(
+                        f"Foundry admitted blueprint {admitted_path.name}: source manifest must match family admission"
+                    )
+
     blueprint_path = root / "docs" / "foundry" / "unity-package-blueprint.example.json"
     if blueprint_path.exists():
         blueprint = load_json(blueprint_path)
@@ -2452,6 +2515,18 @@ def validate_foundry_contract(root: Path) -> list[str]:
             for item in catalog.get("packages", [])
             if isinstance(item, dict)
         }
+        catalog_system_families = {
+            PurePosixPath(str(item.get("path", ""))).parts[3]
+            for item in catalog.get("packages", [])
+            if isinstance(item, dict)
+            and len(PurePosixPath(str(item.get("path", ""))).parts) >= 5
+            and PurePosixPath(str(item.get("path", ""))).parts[:3]
+            == ("packages", "unity", "systems")
+        }
+        if catalog_system_families != set(admissions_by_family):
+            errors.append(
+                "Foundry system admissions must cover every live system family exactly once"
+            )
         profile_by_id = {
             str(item.get("id", "")): item
             for item in profiles.get("profiles", [])

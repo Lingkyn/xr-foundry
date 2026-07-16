@@ -6,10 +6,10 @@
   "required": ["schema", "version", "lifecycle", "validation_levels", "surfaces", "authority"],
   "properties": {
     "schema": { "const": "xr-foundry.production_line.v1" },
-    "version": { "const": "1.1.0" },
+    "version": { "const": "1.2.0" },
     "lifecycle": {
       "const": [
-        "proposal", "source_gate", "admitted_blueprint", "scaffold", "build",
+        "proposal", "system_scope_gate", "source_gate", "admitted_blueprint", "scaffold", "build",
         "fast_validation", "exact_consumer_validation", "independent_review",
         "maturity_promotion", "release", "observation"
       ]
@@ -32,11 +32,12 @@
     "surfaces": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["first_batch", "batch_registry", "next_queue", "blueprint_schema", "source_manifest", "release_policy"],
+      "required": ["first_batch", "batch_registry", "next_queue", "system_admission_schema", "blueprint_schema", "source_manifest", "release_policy"],
       "properties": {
         "first_batch": { "const": "docs/foundry/batches/unity-first-batch.v1.json" },
         "batch_registry": { "const": "docs/foundry/batches/batch-registry.v1.json" },
         "next_queue": { "const": "docs/foundry/queue/next-batch.json" },
+        "system_admission_schema": { "const": "docs/foundry/system-admission.schema.json" },
         "blueprint_schema": { "const": "docs/foundry/unity-package-blueprint.schema.json" },
         "source_manifest": { "const": "docs/foundry/source-manifest.json" },
         "release_policy": { "const": "docs/foundry/release-policy.md" }

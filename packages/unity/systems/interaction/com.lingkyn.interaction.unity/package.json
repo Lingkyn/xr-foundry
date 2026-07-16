@@ -1,0 +1,23 @@
+{
+  "name": "com.lingkyn.interaction.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Interaction Unity",
+  "description": "Unity ScriptableObject authoring and thin Input System conversion for semantic interaction Core, with explicit binding display, suggestion, override, and validation seams.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.interaction.core": "0.1.0",
+    "com.unity.inputsystem": "1.14.2"
+  },
+  "samples": [
+    {
+      "displayName": "InputSystemRouting",
+      "description": "ScriptableObject-authored semantic definitions and explicit InputActionReference conversion into ordered Core source frames without XRI, OpenXR, renderer, scene-search, or device assumptions.",
+      "path": "Samples~/InputSystemRouting"
+    }
+  ]
+}

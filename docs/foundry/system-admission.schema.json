@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/foundry/system-admission.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "family",
+    "decision",
+    "classification",
+    "reviewed_on",
+    "source_manifest",
+    "consumer_contexts",
+    "evidence_basis",
+    "common_kernel",
+    "configurable_variation",
+    "excluded_project_specific",
+    "checks",
+    "rationale",
+    "non_claims"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.system_admission.v1" },
+    "family": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "decision": { "const": "admitted_cross_project_standard_candidate" },
+    "classification": { "enum": ["common_system", "standard_system", "foundation"] },
+    "reviewed_on": { "type": "string", "format": "date" },
+    "source_manifest": { "type": "string", "pattern": "^docs/standards/[a-z0-9-]+/source-manifest\\.json$" },
+    "reference_alignment": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url", "entry_id", "admission"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "entry_id": { "type": "string", "minLength": 1 },
+          "admission": { "enum": ["Common", "Standard", "Candidate"] }
+        }
+      }
+    },
+    "consumer_contexts": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 12 }
+    },
+    "evidence_basis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authoritative_sources", "independent_professional_sources"],
+      "properties": {
+        "authoritative_sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "format": "uri" }
+        },
+        "independent_professional_sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "format": "uri" }
+        }
+      }
+    },
+    "common_kernel": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 5 }
+    },
+    "configurable_variation": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 5 }
+    },
+    "excluded_project_specific": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 5 }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recurring_cross_project_problem",
+        "common_kernel_from_multiple_positive_sources",
+        "no_consumer_project_raw_material",
+        "no_product_taxonomy_in_core",
+        "configuration_or_extension_seams",
+        "clean_consumer_validation_planned",
+        "licensing_and_provenance_reviewed"
+      ],
+      "properties": {
+        "recurring_cross_project_problem": { "const": true },
+        "common_kernel_from_multiple_positive_sources": { "const": true },
+        "no_consumer_project_raw_material": { "const": true },
+        "no_product_taxonomy_in_core": { "const": true },
+        "configuration_or_extension_seams": { "const": true },
+        "clean_consumer_validation_planned": { "const": true },
+        "licensing_and_provenance_reviewed": { "const": true }
+      }
+    },
+    "rationale": { "type": "string", "minLength": 40 },
+    "non_claims": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 12 }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Lingkyn.Interaction.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.Interaction.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.Interaction.Unity",
+    "Lingkyn.Interaction.Core",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

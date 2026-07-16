@@ -47,7 +47,7 @@ namespace Lingkyn.Settings.Core
             }
         }
 
-        public IReadOnlyList<OptionId> Allowed => _allowed;
+        public IReadOnlyList<OptionId> Allowed => Array.AsReadOnly(_allowed);
 
         public bool IsAllowed(OptionId option)
         {
@@ -198,20 +198,12 @@ namespace Lingkyn.Settings.Core
 
             if (numericConstraint.HasValue)
             {
-                var numeric = numericConstraint.Value;
-                if (numeric.MinInclusive > numeric.MaxInclusive)
+                var numericValidation = ValidateNumericConstraint(numericConstraint.Value, key);
+                if (!numericValidation.Succeeded)
                 {
                     return SettingsResult<SettingDefinition>.Fail(
-                        SettingsValidationCode.OutOfRange,
-                        "Numeric min must not exceed max.",
-                        key);
-                }
-
-                if (numeric.HasStep && numeric.Step <= 0)
-                {
-                    return SettingsResult<SettingDefinition>.Fail(
-                        SettingsValidationCode.InvalidStep,
-                        "Numeric step must be positive when provided.",
+                        numericValidation.Error.Code,
+                        numericValidation.Error.Message,
                         key);
                 }
             }
@@ -258,6 +250,37 @@ namespace Lingkyn.Settings.Core
                 definition.OptionConstraint,
                 definition.Key);
         }
+
+        public static SettingsResult ValidateNumericConstraint(NumericConstraint numeric, SettingKey key = default)
+        {
+            if (IsNonFinite(numeric.MinInclusive) || IsNonFinite(numeric.MaxInclusive) || IsNonFinite(numeric.Step))
+            {
+                return SettingsResult.Fail(
+                    SettingsValidationCode.NonFiniteFloat,
+                    "Numeric constraint bounds and step must be finite.",
+                    key);
+            }
+
+            if (numeric.Step < 0)
+            {
+                return SettingsResult.Fail(
+                    SettingsValidationCode.InvalidStep,
+                    "Numeric step must not be negative.",
+                    key);
+            }
+
+            if (numeric.MinInclusive > numeric.MaxInclusive)
+            {
+                return SettingsResult.Fail(
+                    SettingsValidationCode.OutOfRange,
+                    "Numeric min must not exceed max.",
+                    key);
+            }
+
+            return SettingsResult.Success();
+        }
+
+        private static bool IsNonFinite(double value) => double.IsNaN(value) || double.IsInfinity(value);
 
         private static SettingsResult ValidateValue(
             SettingValueKind kind,

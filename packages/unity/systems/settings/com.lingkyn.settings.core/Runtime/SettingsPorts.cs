@@ -82,10 +82,10 @@ namespace Lingkyn.Settings.Core
         {
             Outcome = outcome;
             CommittedRevision = committedRevision;
-            Changes = changes ?? EmptyChanges;
+            Changes = SettingsReadOnly.FreezeList(changes ?? EmptyChanges);
             ValidationError = validationError;
             PrimaryFailure = primaryFailure;
-            RollbackDiagnostics = rollbackDiagnostics ?? EmptyDiagnostics;
+            RollbackDiagnostics = SettingsReadOnly.FreezeList(rollbackDiagnostics ?? EmptyDiagnostics);
             PersistenceMessage = persistenceMessage ?? string.Empty;
         }
 

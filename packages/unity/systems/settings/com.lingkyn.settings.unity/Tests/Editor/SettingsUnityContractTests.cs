@@ -31,19 +31,36 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
             var duplicateB = BuildDefinition("audio.mute", SettingValueKindRecord.Boolean);
             var invalidKind = BuildDefinition("audio.volume", SettingValueKindRecord.Float);
             invalidKind.numericConstraint.enabled = false;
-            catalog.definitions = new[] { duplicateA, duplicateB, invalidKind };
+            var invalidScope = BuildDefinition("audio.scope", SettingValueKindRecord.Boolean);
+            invalidScope.defaultScope = (SettingScopeRecord)99;
+            catalog.definitions = new[] { duplicateA, duplicateB, invalidKind, invalidScope };
 
             var issues = SettingsUnityValidator.ValidateCatalog(catalog);
-            Assert.That(issues.Count, Is.GreaterThanOrEqualTo(2));
+            Assert.That(issues.Count, Is.GreaterThanOrEqualTo(3));
             Assert.That(issues.Exists(i => i.Index == 1 && i.Key == "audio.mute"));
             Assert.That(issues.Exists(i => i.Index == 2 && i.Key == "audio.volume"));
+            Assert.That(issues.Exists(i => i.Index == 3 && i.Key == "audio.scope"));
         }
 
         [Test]
-        public void ProfileConversionRejectsDuplicateOverridesAndUnknownKeys()
+        public void ProfileConversionRejectsNullRegistryDuplicateLayersAndConstraintViolations()
         {
             var catalog = BuildValidCatalog();
             var registry = SettingsUnityConverter.ConvertCatalog(catalog).Value;
+            Assert.That(SettingsUnityConverter.ConvertProfile(null, registry).Succeeded, Is.False);
+            Assert.That(SettingsUnityConverter.ConvertProfile(ScriptableObject.CreateInstance<SettingsProfileAsset>(), null).Succeeded, Is.False);
+
+            var duplicateLayers = ScriptableObject.CreateInstance<SettingsProfileAsset>();
+            duplicateLayers.profileId = "demo";
+            duplicateLayers.layers = new[]
+            {
+                new ProfileLayerRecord { layerId = "layer-a" },
+                new ProfileLayerRecord { layerId = "layer-a" },
+            };
+            var duplicateResult = SettingsUnityConverter.ConvertProfile(duplicateLayers, registry);
+            Assert.That(duplicateResult.Succeeded, Is.False);
+            Assert.That(duplicateResult.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidProfileLayer));
+
             var profile = ScriptableObject.CreateInstance<SettingsProfileAsset>();
             profile.profileId = "demo";
             var definition = catalog.definitions[0];
@@ -69,14 +86,40 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
                     },
                 },
             };
+            var duplicateOverride = SettingsUnityConverter.ConvertProfile(profile, registry);
+            Assert.That(duplicateOverride.Succeeded, Is.False);
+            Assert.That(duplicateOverride.Error.Code, Is.EqualTo(SettingsValidationCode.DuplicateProfileOverride));
 
-            var duplicate = SettingsUnityConverter.ConvertProfile(profile, registry);
-            Assert.That(duplicate.Succeeded, Is.False);
-            Assert.That(duplicate.Error.Code, Is.EqualTo(SettingsValidationCode.DuplicateProfileOverride));
+            var violating = ScriptableObject.CreateInstance<SettingsProfileAsset>();
+            violating.profileId = "violating";
+            var volumeAsset = catalog.definitions[1];
+            violating.layers = new[]
+            {
+                new ProfileLayerRecord
+                {
+                    layerId = "layer-1",
+                    overrides = new[]
+                    {
+                        new ProfileOverrideRecord
+                        {
+                            definition = volumeAsset,
+                            kind = SettingValueKindRecord.Float,
+                            floatValue = 0.3f,
+                        },
+                    },
+                },
+            };
+            volumeAsset.numericConstraint.step = 0.5;
+            volumeAsset.numericConstraint.hasStep = true;
+            var violation = SettingsUnityConverter.ConvertProfile(violating, registry);
+            Assert.That(violation.Succeeded, Is.False);
+            Assert.That(violation.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidStep));
+            Assert.That(violation.Error.Message, Does.Contain("layer[0]"));
+            Assert.That(violation.Error.Message, Does.Contain("audio.volume"));
         }
 
         [Test]
-        public void FactoryRequiresExplicitApplicatorsAndDoesNotMutateAssets()
+        public void FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets()
         {
             var catalog = BuildValidCatalog();
             var originalMute = catalog.definitions[0].defaultBoolean;
@@ -90,10 +133,24 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
 
             var tx = created.Value.BeginTransaction();
             tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
-            var applied = created.Value.Apply(tx);
-            Assert.That(applied.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+            Assert.That(created.Value.Apply(tx).Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
             Assert.That(catalog.definitions[0].defaultBoolean, Is.EqualTo(originalMute));
             Assert.That(applicator.ApplyCount, Is.EqualTo(1));
+
+            var invalidRepo = new InvalidLoadedRepository(new SettingsSnapshot(
+                2,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    { new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.3) },
+                },
+                new Dictionary<string, SettingValue>()));
+            var rejected = SettingsUnityFactory.CreateCoordinator(new SettingsUnityFactoryConfig
+            {
+                Catalog = catalog,
+                Repository = invalidRepo,
+            });
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(rejected.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidStep));
         }
 
         [Test]
@@ -183,6 +240,16 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
 
             public SettingsApplicatorStepResult Rollback(IReadOnlyList<SettingChange> changes)
                 => SettingsApplicatorStepResult.Success();
+        }
+
+        private sealed class InvalidLoadedRepository : ISettingsSnapshotRepository
+        {
+            private readonly SettingsSnapshot _snapshot;
+
+            public InvalidLoadedRepository(SettingsSnapshot snapshot) => _snapshot = snapshot;
+
+            public SettingsResult<SettingsSnapshot> Load() => SettingsResult<SettingsSnapshot>.Success(_snapshot);
+            public SettingsPersistResult Save(SettingsSnapshot snapshot) => SettingsPersistResult.Success();
         }
     }
 }

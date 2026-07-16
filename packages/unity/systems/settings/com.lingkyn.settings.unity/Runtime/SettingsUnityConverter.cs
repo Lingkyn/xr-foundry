@@ -98,6 +98,14 @@ namespace Lingkyn.Settings.Unity
                     asset.numericConstraint.minInclusive,
                     asset.numericConstraint.maxInclusive,
                     asset.numericConstraint.hasStep ? asset.numericConstraint.step : 0);
+                var numericValidation = SettingDefinitionValidator.ValidateNumericConstraint(numeric.Value, keyResult.Value);
+                if (!numericValidation.Succeeded)
+                {
+                    return SettingsResult<SettingDefinition>.Fail(
+                        numericValidation.Error.Code,
+                        FormatIssue(assetPath, index, asset.key, numericValidation.Error.Message),
+                        keyResult.Value);
+                }
             }
 
             if (kind == SettingValueKind.String)
@@ -128,11 +136,20 @@ namespace Lingkyn.Settings.Unity
             }
 
             var accessibility = ConvertAccessibility(asset.accessibility);
+            var scope = ConvertScope(asset.defaultScope);
+            if (!scope.Succeeded)
+            {
+                return SettingsResult<SettingDefinition>.Fail(
+                    scope.Error.Code,
+                    FormatIssue(assetPath, index, asset.key, scope.Error.Message),
+                    keyResult.Value);
+            }
+
             return SettingDefinitionValidator.ValidateBuilt(
                 keyResult.Value,
                 kind,
                 defaultValueResult.Value,
-                ConvertScope(asset.defaultScope),
+                scope.Value,
                 asset.applicationOrder,
                 asset.requiresRestart,
                 numeric,
@@ -153,13 +170,49 @@ namespace Lingkyn.Settings.Unity
                     "Profile asset is required.");
             }
 
+            if (registry == null)
+            {
+                return SettingsResult<SettingsProfile>.Fail(
+                    SettingsValidationCode.InvalidProfileLayer,
+                    "Registry is required for profile conversion.");
+            }
+
             var path = assetPath ?? GetAssetPath(asset);
+            if (asset.layers == null)
+            {
+                return SettingsResult<SettingsProfile>.Fail(
+                    SettingsValidationCode.InvalidProfileLayer,
+                    $"{path}: profile layers are required.");
+            }
+
             var layers = new List<SettingsProfileLayer>();
-            for (var layerIndex = 0; layerIndex < (asset.layers?.Length ?? 0); layerIndex++)
+            var seenLayerIds = new HashSet<string>(StringComparer.Ordinal);
+            for (var layerIndex = 0; layerIndex < asset.layers.Length; layerIndex++)
             {
                 var layerRecord = asset.layers[layerIndex];
+                if (layerRecord == null)
+                {
+                    return SettingsResult<SettingsProfile>.Fail(
+                        SettingsValidationCode.InvalidProfileLayer,
+                        $"{path} layer[{layerIndex}]: layer is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(layerRecord.layerId))
+                {
+                    return SettingsResult<SettingsProfile>.Fail(
+                        SettingsValidationCode.InvalidProfileLayer,
+                        $"{path} layer[{layerIndex}]: layer id is required.");
+                }
+
+                if (!seenLayerIds.Add(layerRecord.layerId))
+                {
+                    return SettingsResult<SettingsProfile>.Fail(
+                        SettingsValidationCode.InvalidProfileLayer,
+                        $"{path} layer[{layerIndex}]: duplicate layer id '{layerRecord.layerId}'.");
+                }
+
                 var overrides = new Dictionary<SettingKey, SettingValue>();
-                var seen = new HashSet<string>(StringComparer.Ordinal);
+                var seenKeys = new HashSet<string>(StringComparer.Ordinal);
                 for (var overrideIndex = 0; overrideIndex < (layerRecord.overrides?.Length ?? 0); overrideIndex++)
                 {
                     var overrideRecord = layerRecord.overrides[overrideIndex];
@@ -170,17 +223,17 @@ namespace Lingkyn.Settings.Unity
                             $"{path} layer[{layerIndex}] override[{overrideIndex}]: definition reference is required.");
                     }
 
-                    var definitionResult = ConvertDefinition(overrideRecord.definition, path, overrideIndex);
-                    if (!definitionResult.Succeeded)
+                    var keyResult = SettingKey.TryCreate(overrideRecord.definition.key);
+                    if (!keyResult.Succeeded)
                     {
                         return SettingsResult<SettingsProfile>.Fail(
-                            definitionResult.Error.Code,
-                            $"{path} layer[{layerIndex}] override[{overrideIndex}]: {definitionResult.Error.Message}",
-                            definitionResult.Error.Key);
+                            keyResult.Error.Code,
+                            $"{path} layer[{layerIndex}] override[{overrideIndex}]: {keyResult.Error.Message}",
+                            keyResult.Error.Key);
                     }
 
-                    var key = definitionResult.Value.Key;
-                    if (!seen.Add(key.Value))
+                    var key = keyResult.Value;
+                    if (!seenKeys.Add(key.Value))
                     {
                         return SettingsResult<SettingsProfile>.Fail(
                             SettingsValidationCode.DuplicateProfileOverride,
@@ -188,7 +241,7 @@ namespace Lingkyn.Settings.Unity
                             key);
                     }
 
-                    if (!registry.TryGetDefinition(key, out _))
+                    if (!registry.TryGetDefinition(key, out var registeredDefinition))
                     {
                         return SettingsResult<SettingsProfile>.Fail(
                             SettingsValidationCode.InvalidKey,
@@ -196,12 +249,29 @@ namespace Lingkyn.Settings.Unity
                             key);
                     }
 
-                    var valueResult = ConvertOverrideValue(overrideRecord, definitionResult.Value.Kind, key, path, layerIndex, overrideIndex);
+                    var valueResult = ConvertOverrideValue(
+                        overrideRecord,
+                        registeredDefinition.Kind,
+                        key,
+                        path,
+                        layerIndex,
+                        overrideIndex);
                     if (!valueResult.Succeeded)
                     {
                         return SettingsResult<SettingsProfile>.Fail(
                             valueResult.Error.Code,
                             valueResult.Error.Message,
+                            key);
+                    }
+
+                    var constraintValidation = SettingDefinitionValidator.ValidateValue(
+                        registeredDefinition,
+                        valueResult.Value);
+                    if (!constraintValidation.Succeeded)
+                    {
+                        return SettingsResult<SettingsProfile>.Fail(
+                            constraintValidation.Error.Code,
+                            $"{path} layer[{layerIndex}] override[{overrideIndex}] key='{key.Value}': {constraintValidation.Error.Message}",
                             key);
                     }
 
@@ -383,9 +453,16 @@ namespace Lingkyn.Settings.Unity
             return (SettingValueKind)(int)kind;
         }
 
-        private static SettingScope ConvertScope(SettingScopeRecord scope)
+        private static SettingsResult<SettingScope> ConvertScope(SettingScopeRecord scope)
         {
-            return (SettingScope)(int)scope;
+            if (!Enum.IsDefined(typeof(SettingScopeRecord), scope))
+            {
+                return SettingsResult<SettingScope>.Fail(
+                    SettingsValidationCode.InvalidProfileLayer,
+                    "Scope is invalid.");
+            }
+
+            return SettingsResult<SettingScope>.Success((SettingScope)(int)scope);
         }
 
         private static string GetAssetPath(ScriptableObject asset)

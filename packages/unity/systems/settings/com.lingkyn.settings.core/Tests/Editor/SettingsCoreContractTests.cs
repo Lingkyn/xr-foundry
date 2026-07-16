@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -26,7 +27,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         }
 
         [Test]
-        public void DefinitionRejectsKindMismatchAndInvalidDefaults()
+        public void DefinitionRejectsKindMismatchInvalidDefaultsAndNonFiniteConstraints()
         {
             var key = MustKey("graphics.quality");
             var mismatch = SettingDefinitionValidator.ValidateBuilt(
@@ -43,7 +44,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             Assert.That(mismatch.Succeeded, Is.False);
             Assert.That(mismatch.Error.Code, Is.EqualTo(SettingsValidationCode.KindMismatch));
 
-            var nonFinite = SettingDefinitionValidator.ValidateBuilt(
+            var nonFiniteDefault = SettingDefinitionValidator.ValidateBuilt(
                 key,
                 SettingValueKind.Float,
                 SettingValue.FromFloat(double.NaN),
@@ -54,7 +55,26 @@ namespace Lingkyn.Settings.Core.Editor.Tests
                 null,
                 null,
                 default);
-            Assert.That(nonFinite.Succeeded, Is.False);
+            Assert.That(nonFiniteDefault.Succeeded, Is.False);
+            Assert.That(nonFiniteDefault.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidDefault));
+
+            var nanConstraint = SettingDefinitionValidator.ValidateBuilt(
+                key,
+                SettingValueKind.Float,
+                SettingValue.FromFloat(0.5),
+                SettingScope.User,
+                0,
+                false,
+                new NumericConstraint(double.NaN, 1, 0),
+                null,
+                null,
+                default);
+            Assert.That(nanConstraint.Succeeded, Is.False);
+            Assert.That(nanConstraint.Error.Code, Is.EqualTo(SettingsValidationCode.NonFiniteFloat));
+
+            var negativeStep = SettingDefinitionValidator.ValidateNumericConstraint(new NumericConstraint(0, 1, -0.1), key);
+            Assert.That(negativeStep.Succeeded, Is.False);
+            Assert.That(negativeStep.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidStep));
         }
 
         [Test]
@@ -96,7 +116,27 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         }
 
         [Test]
-        public void ProfileLayerRejectsDuplicateOverrides()
+        public void PublicCollectionsAreImmutableAgainstMutation()
+        {
+            var registry = MustRegistry(MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+            Assert.Throws<NotSupportedException>(() => ((IList)registry.Definitions).Add(null));
+
+            var layer = new SettingsProfileLayer("base", new Dictionary<SettingKey, SettingValue>
+            {
+                { MustKey("audio.mute"), SettingValue.FromBoolean(true) },
+            });
+            Assert.Throws<NotSupportedException>(() => ((IDictionary)layer.Overrides).Add(null, null));
+
+            var optionConstraint = new OptionConstraint(new[] { MustOption("kbm") });
+            Assert.Throws<NotSupportedException>(() => ((IList)optionConstraint.Allowed).Add(default));
+
+            var tx = new SettingsCoordinator(registry, SettingsSnapshot.CreateInitial(registry)).BeginTransaction();
+            tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
+            Assert.Throws<NotSupportedException>(() => ((IList)tx.Commands).Clear());
+        }
+
+        [Test]
+        public void ProfileLayerAndProfileRejectNullAndDuplicateLayerIds()
         {
             var key = MustKey("audio.mute");
             Assert.Throws<ArgumentException>(() =>
@@ -109,45 +149,70 @@ namespace Lingkyn.Settings.Core.Editor.Tests
                         { key, SettingValue.FromBoolean(false) },
                     });
             });
+
+            var nullLayer = SettingsProfile.Create("demo", new SettingsProfileLayer[] { null });
+            Assert.That(nullLayer.Succeeded, Is.False);
+            Assert.That(nullLayer.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidProfileLayer));
+
+            var duplicateLayerIds = SettingsProfile.Create(
+                "demo",
+                new[]
+                {
+                    new SettingsProfileLayer("layer-a", new Dictionary<SettingKey, SettingValue>()),
+                    new SettingsProfileLayer("layer-a", new Dictionary<SettingKey, SettingValue>()),
+                });
+            Assert.That(duplicateLayerIds.Succeeded, Is.False);
+            Assert.That(duplicateLayerIds.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidProfileLayer));
         }
 
         [Test]
-        public void ApplyRejectsStaleTransaction()
+        public void ApplyRejectsStaleTransactionAfterCommittedRevisionAdvances()
         {
             var coordinator = CreateCoordinator(out _);
-            var stale = coordinator.BeginTransaction();
-            coordinator.Apply(stale);
-            var result = coordinator.Apply(stale);
+            var committed = coordinator.BeginTransaction();
+            committed.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
+            var first = coordinator.Apply(committed);
+            Assert.That(first.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+            Assert.That(coordinator.CommittedSnapshot.Revision, Is.EqualTo(1));
+
+            var result = coordinator.Apply(committed);
             Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.StaleTransaction));
             Assert.That(result.CommittedRevision, Is.EqualTo(1));
         }
 
         [Test]
-        public void ResetScopeStagesDefaultsWithoutTouchingOtherScopes()
+        public void ResetScopeClearsScopedOverridesAndRestoresDefaultsWithoutTouchingOtherScopesOrUnknownValues()
         {
             var registry = MustRegistry(
                 MustDefinition("global.master", SettingValueKind.Boolean, SettingValue.FromBoolean(true), SettingScope.Global),
-                MustDefinition("user.subtitles", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+                MustDefinition("user.subtitles", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User),
+                MustDefinition("user.volume", SettingValueKind.Float, SettingValue.FromFloat(1.0), SettingScope.User, numeric: new NumericConstraint(0, 1, 0.25)));
             var known = new Dictionary<ScopedSettingKey, SettingValue>
             {
                 { new ScopedSettingKey(MustKey("global.master"), SettingScope.Global), SettingValue.FromBoolean(false) },
                 { new ScopedSettingKey(MustKey("user.subtitles"), SettingScope.User), SettingValue.FromBoolean(true) },
+                { new ScopedSettingKey(MustKey("user.volume"), SettingScope.User), SettingValue.FromFloat(0.75) },
             };
-            var coordinator = new SettingsCoordinator(registry, new SettingsSnapshot(0, known, new Dictionary<string, SettingValue>()));
+            var unknown = new Dictionary<string, SettingValue> { { "legacy.unknown", SettingValue.FromInteger(7) } };
+            var coordinator = new SettingsCoordinator(registry, new SettingsSnapshot(0, known, unknown));
             var tx = coordinator.BeginTransaction();
             tx.StageReset(SettingScope.User);
             var result = coordinator.Apply(tx);
             Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+
             coordinator.CommittedSnapshot.TryGetKnownValue(new ScopedSettingKey(MustKey("global.master"), SettingScope.Global), out var globalValue);
             coordinator.CommittedSnapshot.TryGetKnownValue(new ScopedSettingKey(MustKey("user.subtitles"), SettingScope.User), out var userValue);
+            coordinator.CommittedSnapshot.TryGetKnownValue(new ScopedSettingKey(MustKey("user.volume"), SettingScope.User), out var volumeValue);
             Assert.That(globalValue.BooleanValue, Is.False);
             Assert.That(userValue.BooleanValue, Is.False);
+            Assert.That(volumeValue.FloatValue, Is.EqualTo(1.0).Within(1e-6));
+            Assert.That(coordinator.CommittedSnapshot.TryGetUnknownValue("legacy.unknown", out _), Is.True);
         }
 
         [Test]
-        public void ProfileLayeringAppliesOrderedOverrides()
+        public void ProfileLayeringAppliesOrderedOverridesAndRejectsConstraintViolations()
         {
-            var coordinator = CreateCoordinator(out var registry);
+            var coordinator = CreateCoordinator(out _);
             var profile = SettingsProfile.Create(
                 "accessibility",
                 new[]
@@ -163,10 +228,20 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             tx.StageProfile(profile);
             var result = coordinator.Apply(tx);
             Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
-            coordinator.CommittedSnapshot.TryGetKnownValue(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), out var mute);
-            coordinator.CommittedSnapshot.TryGetKnownValue(new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), out var volume);
-            Assert.That(mute.BooleanValue, Is.True);
-            Assert.That(volume.FloatValue, Is.EqualTo(0.25).Within(1e-6));
+
+            var invalidProfile = SettingsProfile.Create(
+                "invalid",
+                new[]
+                {
+                    new SettingsProfileLayer(
+                        "layer-a",
+                        new Dictionary<SettingKey, SettingValue> { { MustKey("audio.volume"), SettingValue.FromFloat(0.3) } }),
+                }).Value;
+            var invalidTx = coordinator.BeginTransaction();
+            invalidTx.StageProfile(invalidProfile);
+            var invalid = coordinator.Apply(invalidTx);
+            Assert.That(invalid.Outcome, Is.EqualTo(SettingsApplyOutcome.ValidationFailed));
+            Assert.That(invalid.ValidationError.Code, Is.EqualTo(SettingsValidationCode.InvalidStep));
         }
 
         [Test]
@@ -174,10 +249,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         {
             var coordinator = CreateCoordinator(
                 out _,
-                constraints: new[]
-                {
-                    new DependentVolumeConstraint(),
-                });
+                constraints: new[] { new DependentVolumeConstraint() });
             var tx = coordinator.BeginTransaction();
             tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
             tx.StageSet(new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.5));
@@ -212,8 +284,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
 
             var failTx = coordinator.BeginTransaction();
             failTx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
-            var failResult = coordinator.Apply(failTx);
-            Assert.That(failResult.Outcome, Is.EqualTo(SettingsApplyOutcome.ApplicatorFailed));
+            Assert.That(coordinator.Apply(failTx).Outcome, Is.EqualTo(SettingsApplyOutcome.ApplicatorFailed));
             Assert.That(notifications, Is.EqualTo(0));
         }
 
@@ -222,7 +293,8 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         {
             var first = new RecordingApplicator("first", 0, MustKey("audio.mute"), failOnApply: true);
             var second = new RecordingApplicator("second", 1, MustKey("audio.volume"));
-            var coordinator = CreateCoordinator(out _, applicators: new ISettingApplicator[] { first, second });
+            var third = new RecordingApplicator("third", 2, MustKey("audio.mute"));
+            var coordinator = CreateCoordinator(out _, applicators: new ISettingApplicator[] { first, second, third });
             var tx = coordinator.BeginTransaction();
             tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
             tx.StageSet(new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.75));
@@ -231,49 +303,60 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             Assert.That(result.CommittedRevision, Is.EqualTo(0));
             Assert.That(first.ApplyCount, Is.EqualTo(1));
             Assert.That(second.ApplyCount, Is.EqualTo(0));
+            Assert.That(third.ApplyCount, Is.EqualTo(0));
             Assert.That(first.RollbackCount, Is.EqualTo(0));
-            Assert.That(second.RollbackCount, Is.EqualTo(0));
         }
 
         [Test]
-        public void ApplicatorFailureAfterIntermediateApplicatorRollsBackPriorEffects()
+        public void ApplicatorFailureAfterIntermediateApplicatorRollsBackPriorEffectsInReverseOrder()
         {
             var first = new RecordingApplicator("first", 0, MustKey("audio.mute"));
+            var second = new RecordingApplicator("second", 1, MustKey("audio.volume"));
+            var third = new RecordingApplicator("third", 2, MustKey("audio.mute"), failOnApply: true);
+            var coordinator = CreateCoordinator(out _, applicators: new ISettingApplicator[] { first, second, third });
+            var tx = coordinator.BeginTransaction();
+            tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
+            tx.StageSet(new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.75));
+            var result = coordinator.Apply(tx);
+            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.ApplicatorFailed));
+            Assert.That(result.PrimaryFailure.ApplicatorId, Is.EqualTo("third"));
+            Assert.That(first.ApplyCount, Is.EqualTo(1));
+            Assert.That(second.ApplyCount, Is.EqualTo(1));
+            Assert.That(third.ApplyCount, Is.EqualTo(1));
+            Assert.That(first.RollbackCount, Is.EqualTo(1));
+            Assert.That(second.RollbackCount, Is.EqualTo(1));
+            Assert.That(third.RollbackCount, Is.EqualTo(0));
+            Assert.That(coordinator.CommittedSnapshot.Revision, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void RollbackFailureOnPreviouslyAppliedApplicatorReturnsRollbackDiagnostics()
+        {
+            var first = new RecordingApplicator("first", 0, MustKey("audio.mute"), failOnRollback: true);
             var second = new RecordingApplicator("second", 1, MustKey("audio.volume"), failOnApply: true);
             var coordinator = CreateCoordinator(out _, applicators: new ISettingApplicator[] { first, second });
             var tx = coordinator.BeginTransaction();
             tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
             tx.StageSet(new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.75));
             var result = coordinator.Apply(tx);
-            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.ApplicatorFailed));
+            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.RollbackFailed));
             Assert.That(result.PrimaryFailure.ApplicatorId, Is.EqualTo("second"));
             Assert.That(first.ApplyCount, Is.EqualTo(1));
             Assert.That(second.ApplyCount, Is.EqualTo(1));
             Assert.That(first.RollbackCount, Is.EqualTo(1));
             Assert.That(second.RollbackCount, Is.EqualTo(0));
-            Assert.That(coordinator.CommittedSnapshot.Revision, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void RollbackFailureReturnsRollbackDiagnostics()
-        {
-            var first = new RecordingApplicator("first", 0, MustKey("audio.mute"));
-            var second = new RecordingApplicator("second", 1, MustKey("audio.volume"), failOnApply: true, failOnRollback: true);
-            var coordinator = CreateCoordinator(out _, applicators: new ISettingApplicator[] { first, second });
-            var tx = coordinator.BeginTransaction();
-            tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
-            tx.StageSet(new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.75));
-            var result = coordinator.Apply(tx);
-            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.RollbackFailed));
             Assert.That(result.RollbackDiagnostics.Count, Is.EqualTo(1));
             Assert.That(result.RollbackDiagnostics[0].ApplicatorId, Is.EqualTo("first"));
         }
 
         [Test]
-        public void PersistenceSuccessAbsenceAndAppliedNotPersisted()
+        public void PersistenceSuccessAbsenceAppliedNotPersistedAndLoadValidation()
         {
+            var registry = MustRegistry(
+                MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User),
+                MustDefinition("audio.volume", SettingValueKind.Float, SettingValue.FromFloat(1.0), SettingScope.User, numeric: new NumericConstraint(0, 1, 0.25)));
             var repo = new RecordingRepository(persistFail: false);
-            var withRepo = CreateCoordinator(out _, repository: repo);
+            var withRepo = new SettingsCoordinator(registry, SettingsSnapshot.CreateInitial(registry), repository: repo);
             var tx = withRepo.BeginTransaction();
             tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
             var applied = withRepo.Apply(tx);
@@ -283,8 +366,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             var withoutRepo = CreateCoordinator(out _, repository: null);
             var tx2 = withoutRepo.BeginTransaction();
             tx2.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(false));
-            var applied2 = withoutRepo.Apply(tx2);
-            Assert.That(applied2.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+            Assert.That(withoutRepo.Apply(tx2).Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
 
             var failRepo = new RecordingRepository(persistFail: true);
             var failCoordinator = CreateCoordinator(out _, repository: failRepo);
@@ -293,7 +375,21 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             var notPersisted = failCoordinator.Apply(tx3);
             Assert.That(notPersisted.Outcome, Is.EqualTo(SettingsApplyOutcome.AppliedNotPersisted));
             Assert.That(failCoordinator.CommittedSnapshot.Revision, Is.EqualTo(1));
-            Assert.That(failRepo.SaveCount, Is.EqualTo(1));
+
+            var invalidLoadRepo = new RecordingRepository(
+                snapshot: new SettingsSnapshot(
+                    2,
+                    new Dictionary<ScopedSettingKey, SettingValue>
+                    {
+                        { new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User), SettingValue.FromFloat(0.3) },
+                    },
+                    new Dictionary<string, SettingValue> { { "legacy.unknown", SettingValue.FromInteger(1) } }),
+                loadSucceeded: true);
+            var loadCoordinator = new SettingsCoordinator(registry, SettingsSnapshot.CreateInitial(registry), repository: invalidLoadRepo);
+            var loaded = loadCoordinator.LoadFromRepository();
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidStep));
+            Assert.That(loadCoordinator.CommittedSnapshot.Revision, Is.EqualTo(0));
         }
 
         [Test]
@@ -309,9 +405,24 @@ namespace Lingkyn.Settings.Core.Editor.Tests
 
             var tx = coordinator.BeginTransaction();
             tx.StageSet(new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User), SettingValue.FromBoolean(true));
-            var result = coordinator.Apply(tx);
-            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+            Assert.That(coordinator.Apply(tx).Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
             Assert.That(coordinator.CommittedSnapshot.TryGetUnknownValue("legacy.unknown", out _), Is.True);
+        }
+
+        [Test]
+        public void LoadedSnapshotRejectsUnregisteredKnownKeysWhilePreservingUnknownBucket()
+        {
+            var registry = MustRegistry(MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+            var snapshot = new SettingsSnapshot(
+                1,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    { new ScopedSettingKey(MustKey("ghost.key"), SettingScope.User), SettingValue.FromBoolean(true) },
+                },
+                new Dictionary<string, SettingValue> { { "legacy.unknown", SettingValue.FromInteger(3) } });
+            var validated = SettingsSnapshotValidator.ValidateLoaded(registry, snapshot);
+            Assert.That(validated.Succeeded, Is.False);
+            Assert.That(validated.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidKey));
         }
 
         [Test]
@@ -432,12 +543,15 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             public int Order { get; }
             public int ApplyCount { get; private set; }
             public int RollbackCount { get; private set; }
+            public IReadOnlyList<SettingChange> LastApplied { get; private set; }
+            public IReadOnlyList<SettingChange> LastRolledBack { get; private set; }
 
             public bool CanApply(SettingKey key) => key.Equals(_key);
 
             public SettingsApplicatorStepResult Apply(IReadOnlyList<SettingChange> changes)
             {
                 ApplyCount++;
+                LastApplied = changes;
                 return _failOnApply
                     ? SettingsApplicatorStepResult.Fail(ApplicatorId, "Injected apply failure.")
                     : SettingsApplicatorStepResult.Success();
@@ -446,6 +560,7 @@ namespace Lingkyn.Settings.Core.Editor.Tests
             public SettingsApplicatorStepResult Rollback(IReadOnlyList<SettingChange> changes)
             {
                 RollbackCount++;
+                LastRolledBack = changes;
                 return _failOnRollback
                     ? SettingsApplicatorStepResult.Fail(ApplicatorId, "Injected rollback failure.")
                     : SettingsApplicatorStepResult.Success();
@@ -455,11 +570,32 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         private sealed class RecordingRepository : ISettingsSnapshotRepository
         {
             private readonly bool _persistFail;
+            private readonly bool _loadSucceeded;
+            private readonly SettingsSnapshot _snapshot;
 
-            public RecordingRepository(bool persistFail) => _persistFail = persistFail;
+            public RecordingRepository(bool persistFail)
+            {
+                _persistFail = persistFail;
+                _loadSucceeded = false;
+            }
+
+            public RecordingRepository(SettingsSnapshot snapshot, bool loadSucceeded)
+            {
+                _snapshot = snapshot;
+                _loadSucceeded = loadSucceeded;
+            }
+
             public int SaveCount { get; private set; }
 
-            public SettingsResult<SettingsSnapshot> Load() => SettingsResult<SettingsSnapshot>.Fail(SettingsValidationCode.InvalidKey, "No load seed.");
+            public SettingsResult<SettingsSnapshot> Load()
+            {
+                if (!_loadSucceeded)
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(SettingsValidationCode.InvalidKey, "No load seed.");
+                }
+
+                return SettingsResult<SettingsSnapshot>.Success(_snapshot);
+            }
 
             public SettingsPersistResult Save(SettingsSnapshot snapshot)
             {

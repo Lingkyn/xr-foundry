@@ -46,7 +46,16 @@ namespace Lingkyn.Settings.Unity
                 var loaded = config.Repository.Load();
                 if (loaded.Succeeded)
                 {
-                    initialSnapshot = loaded.Value;
+                    var validated = SettingsSnapshotValidator.ValidateLoaded(registryResult.Value, loaded.Value);
+                    if (!validated.Succeeded)
+                    {
+                        return SettingsResult<SettingsCoordinator>.Fail(
+                            validated.Error.Code,
+                            validated.Error.Message,
+                            validated.Error.Key);
+                    }
+
+                    initialSnapshot = validated.Value;
                 }
                 else
                 {

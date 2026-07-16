@@ -19,7 +19,7 @@ namespace Lingkyn.Settings.Core
             }
         }
 
-        public IReadOnlyList<SettingDefinition> Definitions => _definitions;
+        public IReadOnlyList<SettingDefinition> Definitions => Array.AsReadOnly(_definitions);
 
         public bool TryGetDefinition(SettingKey key, out SettingDefinition definition)
             => _lookup.TryGetValue(key.Value, out definition);
@@ -61,7 +61,7 @@ namespace Lingkyn.Settings.Core
 
     public sealed class SettingsProfileLayer
     {
-        private readonly Dictionary<string, SettingValue> _overrides;
+        private readonly IReadOnlyDictionary<SettingKey, SettingValue> _overrides;
 
         public SettingsProfileLayer(string layerId, IReadOnlyDictionary<SettingKey, SettingValue> overrides)
         {
@@ -71,14 +71,14 @@ namespace Lingkyn.Settings.Core
                 throw new ArgumentException("Profile layer id is required.", nameof(layerId));
             }
 
-            _overrides = new Dictionary<string, SettingValue>(StringComparer.Ordinal);
+            var built = new Dictionary<SettingKey, SettingValue>();
             if (overrides != null)
             {
                 foreach (var pair in overrides)
                 {
-                    if (!_overrides.ContainsKey(pair.Key.Value))
+                    if (!built.ContainsKey(pair.Key))
                     {
-                        _overrides[pair.Key.Value] = pair.Value;
+                        built[pair.Key] = pair.Value;
                         continue;
                     }
 
@@ -87,62 +87,81 @@ namespace Lingkyn.Settings.Core
                         nameof(overrides));
                 }
             }
+
+            _overrides = SettingsReadOnly.FreezeDictionary(built);
         }
 
         public string LayerId { get; }
 
         public bool TryGetOverride(SettingKey key, out SettingValue value)
-            => _overrides.TryGetValue(key.Value, out value);
-
-        public IReadOnlyDictionary<SettingKey, SettingValue> Overrides
         {
-            get
+            foreach (var pair in _overrides)
             {
-                var result = new Dictionary<SettingKey, SettingValue>();
-                foreach (var pair in _overrides.OrderBy(p => p.Key, StringComparer.Ordinal))
+                if (pair.Key.Equals(key))
                 {
-                    var keyResult = SettingKey.TryCreate(pair.Key);
-                    if (keyResult.Succeeded)
-                    {
-                        result[keyResult.Value] = pair.Value;
-                    }
+                    value = pair.Value;
+                    return true;
                 }
-
-                return result;
             }
+
+            value = default;
+            return false;
         }
+
+        public IReadOnlyDictionary<SettingKey, SettingValue> Overrides => _overrides;
     }
 
     public sealed class SettingsProfile
     {
         private readonly SettingsProfileLayer[] _layers;
 
-        public SettingsProfile(string profileId, IEnumerable<SettingsProfileLayer> layers)
+        private SettingsProfile(string profileId, SettingsProfileLayer[] layers)
         {
-            ProfileId = profileId ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(ProfileId))
-            {
-                throw new ArgumentException("Profile id is required.", nameof(profileId));
-            }
-
-            _layers = layers?.ToArray() ?? Array.Empty<SettingsProfileLayer>();
+            ProfileId = profileId;
+            _layers = layers ?? Array.Empty<SettingsProfileLayer>();
         }
 
         public string ProfileId { get; }
-        public IReadOnlyList<SettingsProfileLayer> Layers => _layers;
+        public IReadOnlyList<SettingsProfileLayer> Layers => Array.AsReadOnly(_layers);
 
         public static SettingsResult<SettingsProfile> Create(string profileId, IEnumerable<SettingsProfileLayer> layers)
         {
-            try
-            {
-                return SettingsResult<SettingsProfile>.Success(new SettingsProfile(profileId, layers));
-            }
-            catch (ArgumentException ex)
+            if (string.IsNullOrWhiteSpace(profileId))
             {
                 return SettingsResult<SettingsProfile>.Fail(
-                    SettingsValidationCode.DuplicateProfileOverride,
-                    ex.Message);
+                    SettingsValidationCode.InvalidProfileLayer,
+                    "Profile id is required.");
             }
+
+            if (layers == null)
+            {
+                return SettingsResult<SettingsProfile>.Fail(
+                    SettingsValidationCode.InvalidProfileLayer,
+                    "Profile layers are required.");
+            }
+
+            var layerList = new List<SettingsProfileLayer>();
+            var seenLayerIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var layer in layers)
+            {
+                if (layer == null)
+                {
+                    return SettingsResult<SettingsProfile>.Fail(
+                        SettingsValidationCode.InvalidProfileLayer,
+                        "Profile layer must not be null.");
+                }
+
+                if (!seenLayerIds.Add(layer.LayerId))
+                {
+                    return SettingsResult<SettingsProfile>.Fail(
+                        SettingsValidationCode.InvalidProfileLayer,
+                        $"Duplicate profile layer id '{layer.LayerId}'.");
+                }
+
+                layerList.Add(layer);
+            }
+
+            return SettingsResult<SettingsProfile>.Success(new SettingsProfile(profileId, layerList.ToArray()));
         }
     }
 }

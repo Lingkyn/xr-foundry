@@ -55,7 +55,7 @@ namespace Lingkyn.Settings.Core
                     copy[pair.Key] = pair.Value;
                 }
 
-                return copy;
+                return SettingsReadOnly.FreezeDictionary(copy);
             }
         }
 
@@ -69,7 +69,7 @@ namespace Lingkyn.Settings.Core
                     copy[pair.Key] = pair.Value;
                 }
 
-                return copy;
+                return SettingsReadOnly.FreezeDictionary(copy);
             }
         }
 
@@ -92,6 +92,48 @@ namespace Lingkyn.Settings.Core
             }
 
             return new SettingsSnapshot(revision, known, new Dictionary<string, SettingValue>());
+        }
+    }
+
+    public static class SettingsSnapshotValidator
+    {
+        public static SettingsResult<SettingsSnapshot> ValidateLoaded(SettingsRegistry registry, SettingsSnapshot snapshot)
+        {
+            if (registry == null)
+            {
+                return SettingsResult<SettingsSnapshot>.Fail(
+                    SettingsValidationCode.InvalidKey,
+                    "Registry is required.");
+            }
+
+            if (snapshot == null)
+            {
+                return SettingsResult<SettingsSnapshot>.Fail(
+                    SettingsValidationCode.InvalidKey,
+                    "Snapshot is required.");
+            }
+
+            foreach (var pair in snapshot.KnownValues)
+            {
+                if (!registry.TryGetDefinition(pair.Key.Key, out var definition))
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(
+                        SettingsValidationCode.InvalidKey,
+                        $"Loaded snapshot contains unregistered key '{pair.Key.Key.Value}'.",
+                        pair.Key.Key);
+                }
+
+                var valueValidation = SettingDefinitionValidator.ValidateValue(definition, pair.Value);
+                if (!valueValidation.Succeeded)
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(
+                        valueValidation.Error.Code,
+                        valueValidation.Error.Message,
+                        pair.Key.Key);
+                }
+            }
+
+            return SettingsResult<SettingsSnapshot>.Success(snapshot);
         }
     }
 

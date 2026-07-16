@@ -44,7 +44,7 @@ namespace Lingkyn.Settings.Core
         internal SettingsTransaction(long baseRevision) => BaseRevision = baseRevision;
 
         public long BaseRevision { get; }
-        public IReadOnlyList<SettingsTransactionCommand> Commands => _commands;
+        public IReadOnlyList<SettingsTransactionCommand> Commands => SettingsReadOnly.FreezeList(_commands);
 
         public void StageSet(ScopedSettingKey scopedKey, SettingValue value)
             => _commands.Add(SettingsTransactionCommand.Set(scopedKey, value));

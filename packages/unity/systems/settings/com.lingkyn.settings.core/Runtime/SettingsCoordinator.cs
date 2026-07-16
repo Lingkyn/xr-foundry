@@ -22,7 +22,7 @@ namespace Lingkyn.Settings.Core
             _registry = registry ?? throw new ArgumentNullException(nameof(registry));
             _committed = initialSnapshot ?? throw new ArgumentNullException(nameof(initialSnapshot));
             _applicators = SortApplicators(applicators);
-            _constraints = (constraints ?? Array.Empty<ISettingsConstraint>()).ToArray();
+            _constraints = SettingsReadOnly.FreezeList(constraints ?? Array.Empty<ISettingsConstraint>());
             _repository = repository;
         }
 
@@ -67,7 +67,7 @@ namespace Lingkyn.Settings.Core
                 return SettingsApplyResult.ValidationFailed(_committed.Revision, validation.Error);
             }
 
-            var changes = ComputeChanges(_committed, candidate);
+            var changes = ComputeChanges(_registry, _committed, candidate);
             if (changes.Count == 0)
             {
                 return SettingsApplyResult.NoOp(_committed.Revision);
@@ -111,11 +111,20 @@ namespace Lingkyn.Settings.Core
                 return loaded;
             }
 
-            _committed = loaded.Value;
+            var validated = SettingsSnapshotValidator.ValidateLoaded(_registry, loaded.Value);
+            if (!validated.Succeeded)
+            {
+                return validated;
+            }
+
+            _committed = validated.Value;
             return SettingsResult<SettingsSnapshot>.Success(_committed);
         }
 
-        internal static List<SettingChange> ComputeChanges(SettingsSnapshot committed, SettingsSnapshot candidate)
+        internal static List<SettingChange> ComputeChanges(
+            SettingsRegistry registry,
+            SettingsSnapshot committed,
+            SettingsSnapshot candidate)
         {
             var changes = new List<SettingChange>();
             var keys = new HashSet<ScopedSettingKey>();
@@ -131,7 +140,7 @@ namespace Lingkyn.Settings.Core
                     continue;
                 }
 
-                if (!TryGetDefinition(scopedKey.Key, out var definition))
+                if (!registry.TryGetDefinition(scopedKey.Key, out var definition))
                 {
                     continue;
                 }
@@ -222,18 +231,18 @@ namespace Lingkyn.Settings.Core
                     }
                     case SettingsTransactionCommandKind.ResetScope:
                     {
-                        foreach (var definition in _registry.Definitions)
-                        {
-                            if (definition.DefaultScope == command.ResetScope)
-                            {
-                                known[new ScopedSettingKey(definition.Key, definition.DefaultScope)] = definition.DefaultValue;
-                            }
-                        }
-
+                        ResetScope(command.ResetScope, known);
                         break;
                     }
                     case SettingsTransactionCommandKind.ApplyProfile:
                     {
+                        if (command.Profile == null)
+                        {
+                            return SettingsResult<SettingsSnapshot>.Fail(
+                                SettingsValidationCode.InvalidProfileLayer,
+                                "Profile command requires a profile.");
+                        }
+
                         var profileResult = ApplyProfileLayers(command.Profile, known);
                         if (!profileResult.Succeeded)
                         {
@@ -256,12 +265,44 @@ namespace Lingkyn.Settings.Core
                 new SettingsSnapshot(transaction.BaseRevision, known, unknown));
         }
 
+        private void ResetScope(SettingScope scope, Dictionary<ScopedSettingKey, SettingValue> known)
+        {
+            var toRemove = new List<ScopedSettingKey>();
+            foreach (var pair in known)
+            {
+                if (pair.Key.Scope == scope)
+                {
+                    toRemove.Add(pair.Key);
+                }
+            }
+
+            for (var i = 0; i < toRemove.Count; i++)
+            {
+                known.Remove(toRemove[i]);
+            }
+
+            foreach (var definition in _registry.Definitions)
+            {
+                if (definition.DefaultScope == scope)
+                {
+                    known[new ScopedSettingKey(definition.Key, definition.DefaultScope)] = definition.DefaultValue;
+                }
+            }
+        }
+
         private SettingsResult ApplyProfileLayers(
             SettingsProfile profile,
             Dictionary<ScopedSettingKey, SettingValue> known)
         {
             foreach (var layer in profile.Layers)
             {
+                if (layer == null)
+                {
+                    return SettingsResult.Fail(
+                        SettingsValidationCode.InvalidProfileLayer,
+                        "Profile layer must not be null.");
+                }
+
                 foreach (var pair in layer.Overrides)
                 {
                     if (!TryGetDefinition(pair.Key, out var definition))
@@ -280,6 +321,12 @@ namespace Lingkyn.Settings.Core
                             pair.Key);
                     }
 
+                    var valueValidation = SettingDefinitionValidator.ValidateValue(definition, pair.Value);
+                    if (!valueValidation.Succeeded)
+                    {
+                        return valueValidation;
+                    }
+
                     known[new ScopedSettingKey(pair.Key, definition.DefaultScope)] = pair.Value;
                 }
             }
@@ -293,7 +340,10 @@ namespace Lingkyn.Settings.Core
             {
                 if (!TryGetDefinition(pair.Key.Key, out var definition))
                 {
-                    continue;
+                    return SettingsResult.Fail(
+                        SettingsValidationCode.InvalidKey,
+                        $"Candidate snapshot contains unregistered key '{pair.Key.Key.Value}'.",
+                        pair.Key.Key);
                 }
 
                 var valueValidation = SettingDefinitionValidator.ValidateValue(definition, pair.Value);
@@ -322,10 +372,11 @@ namespace Lingkyn.Settings.Core
 
         private static IReadOnlyList<ISettingApplicator> SortApplicators(IEnumerable<ISettingApplicator> applicators)
         {
-            return (applicators ?? Array.Empty<ISettingApplicator>())
+            return SettingsReadOnly.FreezeList(
+                (applicators ?? Array.Empty<ISettingApplicator>())
                 .OrderBy(a => a.Order)
                 .ThenBy(a => a.ApplicatorId, StringComparer.Ordinal)
-                .ToArray();
+                .ToArray());
         }
     }
 }

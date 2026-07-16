@@ -77,7 +77,10 @@ namespace Lingkyn.Settings.Unity
             var defaultValueResult = ConvertDefaultValue(asset, kind, keyResult.Value, assetPath, index);
             if (!defaultValueResult.Succeeded)
             {
-                return defaultValueResult;
+                return SettingsResult<SettingDefinition>.Fail(
+                    defaultValueResult.Error.Code,
+                    defaultValueResult.Error.Message,
+                    defaultValueResult.Error.Key);
             }
 
             NumericConstraint? numeric = null;

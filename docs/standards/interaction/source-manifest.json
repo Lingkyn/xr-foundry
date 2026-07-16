@@ -1,0 +1,162 @@
+{
+  "schema": "xr-foundry.interaction_source_manifest.v1",
+  "scope": "Engine-light semantic interaction routing with a thin Unity Input System adapter and explicit modality/device evidence boundaries",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "sources": [
+    {
+      "id": "openxr-1.1-actions",
+      "kind": "official_open_standard",
+      "authority": "Khronos Group",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#input",
+      "license_or_terms": "Khronos OpenXR specification terms; architecture facts only, no copied implementation",
+      "maintenance_evidence": "Current OpenXR 1.1 specification reviewed 2026-07-16",
+      "admitted_role": "Action identity, action-set context, typed input/output and runtime binding separation",
+      "admitted_claims": [
+        "Applications request semantic actions rather than querying one hardware button directly",
+        "Action sets group actions by application context and can be activated with priority",
+        "Suggested bindings are runtime-resolved hints and signal hardware tested by the application rather than universal device support"
+      ],
+      "excluded_uses": [
+        "Core does not copy OpenXR handles, paths, lifecycle, suppression, spaces or extension APIs",
+        "A generic or vendor interaction profile is not named-device evidence"
+      ]
+    },
+    {
+      "id": "openxr-1.1-interaction-profiles",
+      "kind": "official_open_standard",
+      "authority": "Khronos Group",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#interaction-profiles",
+      "license_or_terms": "Khronos OpenXR specification terms; capability facts only",
+      "maintenance_evidence": "Current OpenXR 1.1 interaction profiles and hand/gaze extension registry reviewed 2026-07-16",
+      "admitted_role": "Modality, component capability, user-path and interaction-profile evidence boundary",
+      "admitted_claims": [
+        "Interaction profiles describe physical arrangements and valid component paths separately from application action identity",
+        "Controller, hand-interaction and eye-gaze capabilities are extension/profile scoped and may be unavailable",
+        "Runtime binding choice can change according to user preference, device availability or accessibility settings"
+      ],
+      "excluded_uses": [
+        "No profile path becomes a universal Core modality implementation",
+        "No controller, hand or gaze support is claimed without exact runtime and device evidence"
+      ]
+    },
+    {
+      "id": "unity-input-system-1.14-actions",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/Actions.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity Input System 1.14.2 documentation reviewed 2026-07-16",
+      "admitted_role": "Unity semantic action identity and adapter lifecycle",
+      "admitted_claims": [
+        "Actions separate input purpose from the device controls that perform it",
+        "Action and action-map stable IDs survive display-name changes",
+        "Same-frame action callback order is undefined and consumers must not infer asset order"
+      ],
+      "excluded_uses": [
+        "Unity action objects and callbacks do not enter Core",
+        "An Input Action Asset does not prove any bound device is usable"
+      ]
+    },
+    {
+      "id": "unity-input-system-1.14-bindings",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.14/manual/ActionBindings.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity Input System 1.14.2 binding and rebinding documentation reviewed 2026-07-16",
+      "admitted_role": "Multiple bindings, control schemes, non-destructive overrides and persisted binding identity",
+      "admitted_claims": [
+        "One action can have multiple device bindings and composite bindings",
+        "Binding IDs can identify stored overrides independently of effective control paths",
+        "Interactions and processors belong to binding/action adaptation rather than application intent identity"
+      ],
+      "excluded_uses": [
+        "Core does not store Unity control paths, processors, interactions, composites or control schemes",
+        "The package does not ship a rebinding UI"
+      ]
+    },
+    {
+      "id": "unity-xri-action-based-guidance",
+      "kind": "official_engine_package_guidance",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.0/manual/general-setup.html",
+      "license_or_terms": "Unity documentation terms; boundary facts only",
+      "maintenance_evidence": "XR Interaction Toolkit 3.0 project setup, input mapping and scene requirements reviewed 2026-07-16",
+      "admitted_role": "Separate future XRI adapter and tracked-interaction validation boundary",
+      "admitted_claims": [
+        "XRI uses action-based input to separate logical and physical input across supported controllers",
+        "Interactor, interactable and interaction-manager behavior is a layer above semantic input actions",
+        "Tracked UI and 3D interaction require additional scene/runtime configuration"
+      ],
+      "excluded_uses": [
+        "The first Unity adapter does not depend on XRI or claim tracked interaction",
+        "Editor configuration does not prove headset behavior"
+      ]
+    },
+    {
+      "id": "epic-enhanced-input-5.8",
+      "kind": "official_shipped_engine_documentation",
+      "authority": "Epic Games",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/enhanced-input-in-unreal-engine?lang=en-US",
+      "license_or_terms": "Epic Developer Community documentation terms; architecture facts only, no copied implementation",
+      "maintenance_evidence": "Current Unreal Engine 5.8 Enhanced Input documentation reviewed 2026-07-16",
+      "admitted_role": "Professional action, mapping-context, priority, trigger and modifier separation",
+      "admitted_claims": [
+        "Input actions represent what a player can do and carry typed values",
+        "Mapping contexts can be added, removed and prioritized per player",
+        "Modifiers process raw values and triggers determine activation separately from action meaning"
+      ],
+      "excluded_uses": [
+        "No Unreal data asset, class hierarchy, macro, trigger or modifier API is copied",
+        "Unreal behavior does not prove Foundry conflict routing or Unity behavior"
+      ]
+    },
+    {
+      "id": "microsoft-xag-input-107",
+      "kind": "official_industry_accessibility_guidance",
+      "authority": "Microsoft Gaming",
+      "url": "https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107",
+      "license_or_terms": "Microsoft Learn terms; facts and barrier coverage only",
+      "maintenance_evidence": "Current XAG 107 reviewed 2026-07-16",
+      "admitted_role": "Action-level remapping, cancellation and alternative input policy boundary",
+      "admitted_claims": [
+        "Action-level remapping is more flexible than fixed control swapping",
+        "Prolonged, repeated, simultaneous, motion, speech and path-based input can create barriers and may need alternatives",
+        "Single-pointer activation should ordinarily support cancellation before completion and alternative digital routes for critical non-traditional input"
+      ],
+      "excluded_uses": [
+        "No guideline becomes an automatic compliance claim or mandatory Core feature",
+        "No device or assistive technology support is inferred"
+      ]
+    },
+    {
+      "id": "apple-hig-spatial-interaction",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/gestures",
+      "related_urls": [
+        "https://developer.apple.com/design/human-interface-guidelines/spatial-layout",
+        "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+      ],
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Gestures, Spatial Layout and Accessibility guidance reviewed 2026-07-16",
+      "admitted_role": "Hand/gaze, standard-gesture, alternative-route and ergonomic non-universality boundary",
+      "admitted_claims": [
+        "Standard semantic gestures can be expressed through touch, indirect spatial gestures or other input devices",
+        "Indirect gestures can reduce physical demand while direct and custom gestures need ergonomic testing and alternatives",
+        "Core functionality should remain accessible through more than one physical interaction where applicable"
+      ],
+      "excluded_uses": [
+        "Apple interaction patterns are not universal XR semantics or a Unity implementation prescription",
+        "No Vision Pro, hand, gaze, accessibility or comfort result transfers to another platform or device"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, compliance, comfort, platform or device authority",
+    "The first implementation is a semantic routing and Unity Input System adapter substrate, not a complete player interaction experience",
+    "Official ownership never substitutes for exact repository, consumer, runtime or device verification"
+  ]
+}

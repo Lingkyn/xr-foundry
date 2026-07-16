@@ -1,0 +1,40 @@
+{
+  "schema": "xr-foundry.interaction_standard.v1",
+  "maturity": "admitted_blueprint",
+  "implementation_issue": "https://github.com/Lingkyn/xr-foundry/issues/57",
+  "derivation_manifest": "docs/standards/interaction/source-manifest.json",
+  "coverage_matrix": "docs/standards/interaction/coverage-matrix.md",
+  "independent_source_review": "docs/standards/interaction/independent-source-review.json",
+  "admitted_blueprints": [
+    "docs/foundry/blueprints/interaction-core.v1.json",
+    "docs/foundry/blueprints/interaction-unity.v1.json"
+  ],
+  "planned_boundaries": [
+    {
+      "role": "engine_light_core",
+      "owns": ["intent, context, route, source and binding-suggestion identity", "typed values", "source modality and capabilities", "route admission", "context priority", "conflict diagnostics", "phases", "deterministic frame routing", "policy snapshots", "handler outcomes"],
+      "excludes": ["Unity", "Input System", "XRI", "OpenXR", "physical control paths", "renderers", "gameplay implementation", "vendor SDKs", "device claims"]
+    },
+    {
+      "role": "unity_input_system_adapter",
+      "owns": ["ScriptableObject authoring", "Input Action references", "Core conversion", "phase/value conversion", "binding display, suggestion and override seams", "validation"],
+      "excludes": ["scene search", "product gameplay", "runtime choices in assets", "rebinding UI", "XRI", "OpenXR", "vendor SDKs", "device claims"]
+    },
+    {
+      "role": "future_modality_adapters",
+      "owns": ["one explicit tracked-ray, hand, gaze, voice, assistive, XRI, OpenXR or vendor boundary per package and evidence tuple"],
+      "excludes": ["evidence transfer between modalities, renderers, runtimes, devices or package IDs"]
+    }
+  ],
+  "promotion_order": [
+    "source_gate",
+    "independent_source_review",
+    "admitted_blueprint",
+    "core_routing_tests",
+    "unity_input_adapter_tests",
+    "repository_contract",
+    "exact_consumer",
+    "independent_implementation_review",
+    "batch_release"
+  ]
+}

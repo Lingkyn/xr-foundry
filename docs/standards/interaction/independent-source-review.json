@@ -1,0 +1,39 @@
+{
+  "schema": "xr-foundry.independent_source_review.v1",
+  "subject": "docs/standards/interaction",
+  "reviewed_on": "2026-07-16",
+  "reviewer": {
+    "kind": "independent_agent_advisory",
+    "provider": "Cursor Agent",
+    "mode": "read_only",
+    "write_or_merge_authority": false
+  },
+  "verdict": "pass",
+  "initial_findings": [
+    "One Apple source identifier in the coverage matrix did not resolve to the source manifest.",
+    "Apple spatial-layout and accessibility claims needed directly traceable official URLs.",
+    "Unity XRI boundary guidance needed a package-specific setup source rather than only the package overview."
+  ],
+  "resolved_before_pass": [
+    "All eight source identifiers now resolve from the coverage matrix to the manifest.",
+    "Apple Gestures, Spatial Layout, and Accessibility URLs are recorded explicitly.",
+    "Unity XRI project setup is linked at the package guidance used for the boundary claim.",
+    "BindingSuggestionId and BindingSuggestion are explicit, inert, advisory concepts distinct from admitted routes and user overrides.",
+    "The Settings policy port remains an integration seam rather than a derivation source or package coupling."
+  ],
+  "final_checks": [
+    "intent, context, route, source, and binding-suggestion identity separation",
+    "context priority and fail-closed equal-priority collision behavior",
+    "typed values, phases, capabilities, cancellation, outcomes, and ordered ingress",
+    "thin Unity Input System adapter and deferred XRI/OpenXR/device boundaries",
+    "testable stable identity, conflicts, capability mismatch, multimodal routing, and conversion",
+    "no compliance, maturity, release, renderer, runtime, or device evidence transfer",
+    "no consumer project or private material used as derivation input"
+  ],
+  "maintainer_disposition": "accepted_for_blueprint_admission",
+  "non_claims": [
+    "This advisory review is not an implementation review.",
+    "It grants no package maturity, release, compatibility, accessibility, comfort, platform, or device claim.",
+    "It does not replace exact-consumer or Device Lab evidence."
+  ]
+}

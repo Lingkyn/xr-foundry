@@ -561,6 +561,7 @@ namespace Lingkyn.Persistence.Core
             }
 
             _edgeByFromVersion = new Dictionary<int, ISaveMigration<TState>>();
+            SaveErrorCode? graphError = null;
             foreach (var migration in migrations)
             {
                 if (migration == null)
@@ -570,18 +571,20 @@ namespace Lingkyn.Persistence.Core
 
                 if (migration.ToVersion <= migration.FromVersion)
                 {
-                    SetGraphError(SaveErrorCode.NonMonotonicMigration);
+                    graphError = SelectGraphError(graphError, SaveErrorCode.NonMonotonicMigration);
                     continue;
                 }
 
                 if (_edgeByFromVersion.ContainsKey(migration.FromVersion))
                 {
-                    SetGraphError(SaveErrorCode.AmbiguousMigration);
+                    graphError = SelectGraphError(graphError, SaveErrorCode.AmbiguousMigration);
                     continue;
                 }
 
                 _edgeByFromVersion[migration.FromVersion] = migration;
             }
+
+            _graphError = graphError;
         }
 
         public SaveResult<TState> Apply(int storedVersion, int targetVersion, TState state)
@@ -636,12 +639,14 @@ namespace Lingkyn.Persistence.Core
             return SaveResult<TState>.Success(currentState);
         }
 
-        private void SetGraphError(SaveErrorCode candidate)
+        private static SaveErrorCode? SelectGraphError(SaveErrorCode? current, SaveErrorCode candidate)
         {
-            if (!_graphError.HasValue || GetGraphErrorPriority(candidate) > GetGraphErrorPriority(_graphError.Value))
+            if (!current.HasValue || GetGraphErrorPriority(candidate) > GetGraphErrorPriority(current.Value))
             {
-                _graphError = candidate;
+                return candidate;
             }
+
+            return current;
         }
 
         private static int GetGraphErrorPriority(SaveErrorCode code)

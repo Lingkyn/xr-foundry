@@ -1,9 +1,9 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "agent-commons-public-workbench",
-  "revision": 9,
+  "revision": 10,
   "title": "Build the Agent Commons public workbench",
-  "state": "active",
+  "state": "closed",
   "objective": "Let people and fresh-context Agents discover, execute, verify, and hand off independently valuable public checkpoints without relying on private chat memory.",
   "scope": [
     "Versioned task, continuation, deliberation, recognition, entry-surface, and validation contracts",
@@ -516,7 +516,7 @@
       "non_goals": [
         "No package implementation, repository permission, secret, or self-acceptance change"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "depends_on": ["WB-01", "WB-01V", "WB-02", "WB-03", "WB-05"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -555,18 +555,33 @@
         { "id": "WB04-V1", "procedure": "Run the full repository validator, Python contract suite, leakage scan, and an independent terminal review.", "expected": "Every check passes with no unresolved high-risk finding.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "WB04-E1",
+          "kind": "test",
+          "location": "https://github.com/Lingkyn/xr-foundry/actions/runs/29496605509/job/87614915805",
+          "commit": "b551ed0ccc3c96969e862c51c7461bf80f60eca5",
+          "summary": "The exact public implementation passed repository validation, the 108-test contract suite with one Windows symlink-capability skip, leakage checks, and GitHub Actions."
+        },
+        {
+          "id": "WB04-E2",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991657156",
+          "commit": "b551ed0ccc3c96969e862c51c7461bf80f60eca5",
+          "summary": "A fresh-context read-only Cursor review found three gaps in the prior revision; two were resolved and the shared-maintainer Agent boundary was made explicit before the exact remediation commit received a PASS."
+        }
+      ],
       "waiting": null,
       "claim": {
-        "status": "active",
+        "status": "released",
         "adoptable": false,
         "github_identity": "Lingkyn",
         "previous_github_identity": null,
         "claimed_at": "2026-07-16T10:58:50Z",
         "expires_at": "2026-07-23T10:58:50Z",
-        "ended_at": null,
+        "ended_at": "2026-07-16T12:11:24Z",
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": null
+        "transition_reason": "The exact public remediation commit passed the full local gate and GitHub Actions, and an independent Cursor Agent confirmed all requested findings closed."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": {
@@ -575,12 +590,12 @@
         "branch": "codex/agent-commons-v1",
         "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/46",
         "base_commit": "d589bce07c76fe98352a1ad33848bb8f4b2fd843",
-        "head_commit": "d589bce07c76fe98352a1ad33848bb8f4b2fd843",
-        "published_at": "2026-07-16T10:58:50Z"
+        "head_commit": "b551ed0ccc3c96969e862c51c7461bf80f60eca5",
+        "published_at": "2026-07-16T12:11:24Z"
       },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Bind fan-in validation and structured independent-review evidence to the exact completed checkpoint revisions, run the complete adversarial suite, and resolve every high-risk finding before integration.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-16T12:11:24Z"
     }
   ],
   "integration": {

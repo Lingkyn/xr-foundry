@@ -1,0 +1,91 @@
+{
+  "schema": "xr-foundry.independent_review_receipt.v1",
+  "record_status": "accepted",
+  "repository": "https://github.com/Lingkyn/xr-foundry",
+  "task_id": "agent-commons-public-workbench",
+  "checkpoint_id": "WB-04",
+  "task_revision": 10,
+  "reviewed_commit": "b551ed0ccc3c96969e862c51c7461bf80f60eca5",
+  "executor": {
+    "github_identity": "Lingkyn",
+    "assisted_by": ["Codex (GPT-5)"]
+  },
+  "independent_review": {
+    "github_identity": "Lingkyn",
+    "assisted_by": ["Cursor Agent"],
+    "fresh_context": true,
+    "reviewed_own_output": false
+  },
+  "maintainer_decision": {
+    "github_identity": "Lingkyn",
+    "decision": "approved",
+    "decision_url": "https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991035393"
+  },
+  "scope": {
+    "allowed_paths": [
+      "scripts/validate_repository.py",
+      "tests/test_repository_contract.py",
+      "docs/validation/**"
+    ],
+    "acceptance_ids": ["WB04-AC1", "WB04-AC2"],
+    "excluded_claims": [
+      "No headset, controller, comfort, runtime-device, release, or merge acceptance"
+    ]
+  },
+  "checks": [
+    {
+      "id": "WB04-V1-LOCAL",
+      "command": "python scripts/validate_repository.py --json --run-contract-tests",
+      "status": "pass",
+      "evidence": "Repository validation passed; 108 contract tests passed with one Windows symlink-capability skip; process exit code 0."
+    },
+    {
+      "id": "WB04-V1-CI",
+      "command": "GitHub repository-contract check for b551ed0ccc3c96969e862c51c7461bf80f60eca5",
+      "status": "pass",
+      "evidence": "https://github.com/Lingkyn/xr-foundry/actions/runs/29496605509/job/87614915805"
+    },
+    {
+      "id": "WB04-V1-REVIEW",
+      "command": "Fresh-context read-only Cursor remediation review",
+      "status": "pass",
+      "evidence": "https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991657156"
+    }
+  ],
+  "findings": [
+    {
+      "id": "WB04-F1",
+      "severity": "high",
+      "status": "resolved",
+      "summary": "Completed high-risk checkpoints previously accepted review-shaped but zero or unreachable commit identifiers.",
+      "evidence": "Resolved at b551ed0ccc3c96969e862c51c7461bf80f60eca5 and independently confirmed in https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991657156"
+    },
+    {
+      "id": "WB04-F2",
+      "severity": "medium",
+      "status": "resolved",
+      "summary": "Rejected and superseded deliberations previously could retain executable task directives.",
+      "evidence": "Resolved at b551ed0ccc3c96969e862c51c7461bf80f60eca5 and independently confirmed in https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991657156"
+    },
+    {
+      "id": "WB04-F3",
+      "severity": "medium",
+      "status": "accepted_limit",
+      "summary": "One accountable GitHub identity may coordinate multiple Agents; independence is enforced through disjoint Agent assistance, fresh context, and no self-review.",
+      "evidence": "The explicit boundary is documented in docs/validation/fail-fast-validation.md and independently accepted in https://github.com/Lingkyn/xr-foundry/pull/46#issuecomment-4991657156"
+    }
+  ],
+  "conclusion": "pass",
+  "reviewed_at": "2026-07-16T12:11:24Z",
+  "limitations": [
+    "Cursor performed a static advisory remediation review and did not rerun the long suite.",
+    "The Windows symlink-capability test remains skipped where symlink creation is unavailable.",
+    "Device behavior remains outside this checkpoint."
+  ],
+  "authority": {
+    "review_grants_write_permission": false,
+    "review_grants_merge_permission": false,
+    "agent_review_replaces_maintainer_decision": false,
+    "device_claim_inferred": false
+  }
+}

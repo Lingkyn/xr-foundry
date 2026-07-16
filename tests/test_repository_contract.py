@@ -3053,7 +3053,10 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("duplicate task id" in error for error in duplicate_errors))
 
         mismatched = json.loads(json.dumps(registry))
-        mismatched["tasks"][0]["state"] = "closed"
+        current_state = mismatched["tasks"][0]["state"]
+        mismatched["tasks"][0]["state"] = (
+            "active" if current_state != "active" else "closed"
+        )
         mismatched["tasks"][0]["umbrella_issue"] = "https://github.com/Lingkyn/xr-foundry/issues/999"
         mismatch_errors = MODULE.validate_task_registry(ROOT, mismatched, "mismatched registry")
         self.assertTrue(any("contract state must equal" in error for error in mismatch_errors))

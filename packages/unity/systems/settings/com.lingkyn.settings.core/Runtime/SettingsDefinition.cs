@@ -152,6 +152,15 @@ namespace Lingkyn.Settings.Core
             OptionConstraint optionConstraint,
             AccessibilityMetadata accessibility)
         {
+            var scopeValidation = SettingScopeValidator.Validate(defaultScope);
+            if (!scopeValidation.Succeeded)
+            {
+                return SettingsResult<SettingDefinition>.Fail(
+                    scopeValidation.Error.Code,
+                    scopeValidation.Error.Message,
+                    key);
+            }
+
             if (defaultValue.Kind != kind)
             {
                 return SettingsResult<SettingDefinition>.Fail(

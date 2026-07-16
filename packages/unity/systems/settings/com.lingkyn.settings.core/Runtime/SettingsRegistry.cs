@@ -22,7 +22,15 @@ namespace Lingkyn.Settings.Core
         public IReadOnlyList<SettingDefinition> Definitions => Array.AsReadOnly(_definitions);
 
         public bool TryGetDefinition(SettingKey key, out SettingDefinition definition)
-            => _lookup.TryGetValue(key.Value, out definition);
+        {
+            definition = null;
+            if (string.IsNullOrEmpty(key.Value))
+            {
+                return false;
+            }
+
+            return _lookup.TryGetValue(key.Value, out definition);
+        }
 
         public static SettingsResult<SettingsRegistry> Create(IEnumerable<SettingDefinition> definitions)
         {

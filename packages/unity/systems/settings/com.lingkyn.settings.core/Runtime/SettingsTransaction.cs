@@ -30,7 +30,7 @@ namespace Lingkyn.Settings.Core
         public static SettingsTransactionCommand Set(ScopedSettingKey scopedKey, SettingValue value)
             => new SettingsTransactionCommand(SettingsTransactionCommandKind.Set, scopedKey, value, default, null);
 
-        public static SettingsTransactionCommand ResetScope(SettingScope scope)
+        public static SettingsTransactionCommand CreateResetScope(SettingScope scope)
             => new SettingsTransactionCommand(SettingsTransactionCommandKind.ResetScope, default, default, scope, null);
 
         public static SettingsTransactionCommand ApplyProfile(SettingsProfile profile)
@@ -50,7 +50,7 @@ namespace Lingkyn.Settings.Core
             => _commands.Add(SettingsTransactionCommand.Set(scopedKey, value));
 
         public void StageReset(SettingScope scope)
-            => _commands.Add(SettingsTransactionCommand.ResetScope(scope));
+            => _commands.Add(SettingsTransactionCommand.CreateResetScope(scope));
 
         public void StageProfile(SettingsProfile profile)
         {

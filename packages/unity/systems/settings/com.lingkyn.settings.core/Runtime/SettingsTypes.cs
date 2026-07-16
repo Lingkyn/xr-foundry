@@ -46,6 +46,7 @@ namespace Lingkyn.Settings.Core
         DuplicateProfileOverride,
         CrossConstraintViolation,
         InvalidProfileLayer,
+        InvalidScope,
     }
 
     public readonly struct SettingKey : IEquatable<SettingKey>, IComparable<SettingKey>
@@ -217,10 +218,52 @@ namespace Lingkyn.Settings.Core
         }
     }
 
+    public static class SettingScopeValidator
+    {
+        public static SettingsResult Validate(SettingScope scope)
+        {
+            if (!Enum.IsDefined(typeof(SettingScope), scope))
+            {
+                return SettingsResult.Fail(
+                    SettingsValidationCode.InvalidScope,
+                    "Setting scope is invalid.");
+            }
+
+            return SettingsResult.Success();
+        }
+    }
+
     public readonly struct ScopedSettingKey : IEquatable<ScopedSettingKey>, IComparable<ScopedSettingKey>
     {
         public SettingKey Key { get; }
         public SettingScope Scope { get; }
+
+        private ScopedSettingKey(SettingKey key, SettingScope scope)
+        {
+            Key = key;
+            Scope = scope;
+        }
+
+        public static SettingsResult<ScopedSettingKey> TryCreate(SettingKey key, SettingScope scope)
+        {
+            if (string.IsNullOrEmpty(key.Value))
+            {
+                return SettingsResult<ScopedSettingKey>.Fail(
+                    SettingsValidationCode.InvalidKey,
+                    "Setting key must not be empty.");
+            }
+
+            var scopeValidation = SettingScopeValidator.Validate(scope);
+            if (!scopeValidation.Succeeded)
+            {
+                return SettingsResult<ScopedSettingKey>.Fail(
+                    scopeValidation.Error.Code,
+                    scopeValidation.Error.Message,
+                    key);
+            }
+
+            return SettingsResult<ScopedSettingKey>.Success(new ScopedSettingKey(key, scope));
+        }
 
         public ScopedSettingKey(SettingKey key, SettingScope scope)
         {

@@ -119,6 +119,30 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
         }
 
         [Test]
+        public void FactoryPropagatesRepositoryLoadFailureByDefaultAndSupportsOptInFallback()
+        {
+            var catalog = BuildValidCatalog();
+            var failRepo = new FailLoadRepository();
+
+            var rejected = SettingsUnityFactory.CreateCoordinator(new SettingsUnityFactoryConfig
+            {
+                Catalog = catalog,
+                Repository = failRepo,
+            });
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(rejected.Error.Message, Does.Contain("read failed"));
+
+            var fallback = SettingsUnityFactory.CreateCoordinator(new SettingsUnityFactoryConfig
+            {
+                Catalog = catalog,
+                Repository = failRepo,
+                UseDefaultsOnRepositoryLoadFailure = true,
+            });
+            Assert.That(fallback.Succeeded, Is.True);
+            Assert.That(fallback.Value.CommittedSnapshot.Revision, Is.EqualTo(0));
+        }
+
+        [Test]
         public void FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets()
         {
             var catalog = BuildValidCatalog();
@@ -249,6 +273,14 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
             public InvalidLoadedRepository(SettingsSnapshot snapshot) => _snapshot = snapshot;
 
             public SettingsResult<SettingsSnapshot> Load() => SettingsResult<SettingsSnapshot>.Success(_snapshot);
+            public SettingsPersistResult Save(SettingsSnapshot snapshot) => SettingsPersistResult.Success();
+        }
+
+        private sealed class FailLoadRepository : ISettingsSnapshotRepository
+        {
+            public SettingsResult<SettingsSnapshot> Load()
+                => SettingsResult<SettingsSnapshot>.Fail(SettingsValidationCode.InvalidKey, "Repository read failed.");
+
             public SettingsPersistResult Save(SettingsSnapshot snapshot) => SettingsPersistResult.Success();
         }
     }

@@ -35,7 +35,7 @@ namespace Lingkyn.Settings.Core
                 return FreezeList(list);
             }
 
-            return Array.AsReadOnly(items is T[] array ? array : items.ToArray());
+            return Array.AsReadOnly(items.ToArray());
         }
 
         public static IReadOnlyDictionary<TKey, TValue> FreezeDictionary<TKey, TValue>(

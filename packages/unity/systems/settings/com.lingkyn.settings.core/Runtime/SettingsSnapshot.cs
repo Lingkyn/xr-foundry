@@ -115,6 +115,15 @@ namespace Lingkyn.Settings.Core
 
             foreach (var pair in snapshot.KnownValues)
             {
+                var scopeValidation = SettingScopeValidator.Validate(pair.Key.Scope);
+                if (!scopeValidation.Succeeded)
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(
+                        scopeValidation.Error.Code,
+                        $"Loaded snapshot contains invalid scope for key '{pair.Key.Key.Value}'.",
+                        pair.Key.Key);
+                }
+
                 if (!registry.TryGetDefinition(pair.Key.Key, out var definition))
                 {
                     return SettingsResult<SettingsSnapshot>.Fail(
@@ -139,10 +148,18 @@ namespace Lingkyn.Settings.Core
 
     public readonly struct SettingChange
     {
-        public SettingChange(ScopedSettingKey scopedKey, SettingValue oldValue, SettingValue newValue, SettingDefinition definition)
+        public SettingChange(
+            ScopedSettingKey scopedKey,
+            bool hadOldValue,
+            SettingValue oldValue,
+            bool hasNewValue,
+            SettingValue newValue,
+            SettingDefinition definition)
         {
             ScopedKey = scopedKey;
+            HadOldValue = hadOldValue;
             OldValue = oldValue;
+            HasNewValue = hasNewValue;
             NewValue = newValue;
             Definition = definition;
         }
@@ -150,7 +167,9 @@ namespace Lingkyn.Settings.Core
         public ScopedSettingKey ScopedKey { get; }
         public SettingKey Key => ScopedKey.Key;
         public SettingScope Scope => ScopedKey.Scope;
+        public bool HadOldValue { get; }
         public SettingValue OldValue { get; }
+        public bool HasNewValue { get; }
         public SettingValue NewValue { get; }
         public SettingDefinition Definition { get; }
     }

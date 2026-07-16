@@ -210,6 +210,97 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         }
 
         [Test]
+        public void ResetScopeChangeSetReportsRemovedFalseBooleanOverride()
+        {
+            var registry = MustRegistry(
+                MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+            var known = new Dictionary<ScopedSettingKey, SettingValue>
+            {
+                { new ScopedSettingKey(MustKey("audio.mute"), SettingScope.Session), SettingValue.FromBoolean(false) },
+            };
+            var coordinator = new SettingsCoordinator(registry, new SettingsSnapshot(0, known, new Dictionary<string, SettingValue>()));
+            var tx = coordinator.BeginTransaction();
+            tx.StageReset(SettingScope.Session);
+            var result = coordinator.Apply(tx);
+            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+            Assert.That(result.Changes.Count, Is.EqualTo(1));
+            Assert.That(result.Changes[0].HadOldValue, Is.True);
+            Assert.That(result.Changes[0].HasNewValue, Is.False);
+            Assert.That(result.Changes[0].OldValue.BooleanValue, Is.False);
+        }
+
+        [Test]
+        public void ResetScopeChangeSetReportsRemovedNonBooleanOverride()
+        {
+            var registry = MustRegistry(
+                MustDefinition(
+                    "audio.volume",
+                    SettingValueKind.Float,
+                    SettingValue.FromFloat(1.0),
+                    SettingScope.User,
+                    numeric: new NumericConstraint(0, 1, 0.25)));
+            var known = new Dictionary<ScopedSettingKey, SettingValue>
+            {
+                { new ScopedSettingKey(MustKey("audio.volume"), SettingScope.Session), SettingValue.FromFloat(0.75) },
+            };
+            var coordinator = new SettingsCoordinator(registry, new SettingsSnapshot(0, known, new Dictionary<string, SettingValue>()));
+            var tx = coordinator.BeginTransaction();
+            tx.StageReset(SettingScope.Session);
+            var result = coordinator.Apply(tx);
+            Assert.That(result.Outcome, Is.EqualTo(SettingsApplyOutcome.Applied));
+            Assert.That(result.Changes.Count, Is.EqualTo(1));
+            Assert.That(result.Changes[0].HadOldValue, Is.True);
+            Assert.That(result.Changes[0].HasNewValue, Is.False);
+            Assert.That(result.Changes[0].OldValue.FloatValue, Is.EqualTo(0.75).Within(1e-6));
+            Assert.That(result.Changes[0].Definition.Kind, Is.EqualTo(SettingValueKind.Float));
+        }
+
+        [Test]
+        public void InvalidScopeIsRejectedForResetAndLoadedSnapshots()
+        {
+            var coordinator = CreateCoordinator(out _);
+            var tx = coordinator.BeginTransaction();
+            tx.StageReset((SettingScope)99);
+            var reset = coordinator.Apply(tx);
+            Assert.That(reset.Outcome, Is.EqualTo(SettingsApplyOutcome.ValidationFailed));
+            Assert.That(reset.ValidationError.Code, Is.EqualTo(SettingsValidationCode.InvalidScope));
+
+            var registry = MustRegistry(MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+            var invalidSnapshot = new SettingsSnapshot(
+                1,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    { new ScopedSettingKey(MustKey("audio.mute"), (SettingScope)99), SettingValue.FromBoolean(true) },
+                },
+                new Dictionary<string, SettingValue>());
+            var validated = SettingsSnapshotValidator.ValidateLoaded(registry, invalidSnapshot);
+            Assert.That(validated.Succeeded, Is.False);
+            Assert.That(validated.Error.Code, Is.EqualTo(SettingsValidationCode.InvalidScope));
+        }
+
+        [Test]
+        public void RegistryLookupRejectsInvalidKeysWithoutThrowing()
+        {
+            var registry = MustRegistry(MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+            Assert.That(registry.TryGetDefinition(default, out _), Is.False);
+            var empty = SettingKey.TryCreate("   ");
+            Assert.That(empty.Succeeded, Is.False);
+            Assert.That(registry.TryGetDefinition(empty.Value, out _), Is.False);
+        }
+
+        [Test]
+        public void FreezeListCopiesCallerOwnedArrays()
+        {
+            var source = new[] { SettingsTransactionCommand.CreateResetScope(SettingScope.User) };
+            var frozen = SettingsReadOnly.FreezeList(source);
+            source[0] = SettingsTransactionCommand.Set(
+                new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                SettingValue.FromBoolean(true));
+            Assert.That(frozen.Count, Is.EqualTo(1));
+            Assert.That(frozen[0].Kind, Is.EqualTo(SettingsTransactionCommandKind.ResetScope));
+        }
+
+        [Test]
         public void ProfileLayeringAppliesOrderedOverridesAndRejectsConstraintViolations()
         {
             var coordinator = CreateCoordinator(out _);

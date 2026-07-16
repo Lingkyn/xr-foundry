@@ -458,7 +458,7 @@ namespace Lingkyn.Settings.Unity
             if (!Enum.IsDefined(typeof(SettingScopeRecord), scope))
             {
                 return SettingsResult<SettingScope>.Fail(
-                    SettingsValidationCode.InvalidProfileLayer,
+                    SettingsValidationCode.InvalidScope,
                     "Scope is invalid.");
             }
 

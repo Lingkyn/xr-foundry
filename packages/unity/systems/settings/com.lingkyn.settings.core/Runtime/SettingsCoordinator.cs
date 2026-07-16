@@ -133,9 +133,14 @@ namespace Lingkyn.Settings.Core
 
             foreach (var scopedKey in keys.OrderBy(k => k))
             {
-                committed.TryGetKnownValue(scopedKey, out var oldValue);
-                candidate.TryGetKnownValue(scopedKey, out var newValue);
-                if (oldValue.Equals(newValue))
+                var hadOldValue = committed.TryGetKnownValue(scopedKey, out var oldValue);
+                var hasNewValue = candidate.TryGetKnownValue(scopedKey, out var newValue);
+                if (!hadOldValue && !hasNewValue)
+                {
+                    continue;
+                }
+
+                if (hadOldValue && hasNewValue && oldValue.Equals(newValue))
                 {
                     continue;
                 }
@@ -145,7 +150,7 @@ namespace Lingkyn.Settings.Core
                     continue;
                 }
 
-                changes.Add(new SettingChange(scopedKey, oldValue, newValue, definition));
+                changes.Add(new SettingChange(scopedKey, hadOldValue, oldValue, hasNewValue, newValue, definition));
             }
 
             return changes;
@@ -218,6 +223,15 @@ namespace Lingkyn.Settings.Core
                 {
                     case SettingsTransactionCommandKind.Set:
                     {
+                        var scopedValidation = ScopedSettingKey.TryCreate(command.ScopedKey.Key, command.ScopedKey.Scope);
+                        if (!scopedValidation.Succeeded)
+                        {
+                            return SettingsResult<SettingsSnapshot>.Fail(
+                                scopedValidation.Error.Code,
+                                scopedValidation.Error.Message,
+                                scopedValidation.Error.Key);
+                        }
+
                         if (!TryGetDefinition(command.ScopedKey.Key, out _))
                         {
                             return SettingsResult<SettingsSnapshot>.Fail(
@@ -226,11 +240,19 @@ namespace Lingkyn.Settings.Core
                                 command.ScopedKey.Key);
                         }
 
-                        known[command.ScopedKey] = command.Value;
+                        known[scopedValidation.Value] = command.Value;
                         break;
                     }
                     case SettingsTransactionCommandKind.ResetScope:
                     {
+                        var scopeValidation = SettingScopeValidator.Validate(command.ResetScope);
+                        if (!scopeValidation.Succeeded)
+                        {
+                            return SettingsResult<SettingsSnapshot>.Fail(
+                                scopeValidation.Error.Code,
+                                scopeValidation.Error.Message);
+                        }
+
                         ResetScope(command.ResetScope, known);
                         break;
                     }
@@ -305,6 +327,13 @@ namespace Lingkyn.Settings.Core
 
                 foreach (var pair in layer.Overrides)
                 {
+                    if (string.IsNullOrEmpty(pair.Key.Value))
+                    {
+                        return SettingsResult.Fail(
+                            SettingsValidationCode.InvalidKey,
+                            "Profile override key must not be empty.");
+                    }
+
                     if (!TryGetDefinition(pair.Key, out var definition))
                     {
                         return SettingsResult.Fail(
@@ -338,6 +367,15 @@ namespace Lingkyn.Settings.Core
         {
             foreach (var pair in candidate.KnownValues)
             {
+                var scopeValidation = SettingScopeValidator.Validate(pair.Key.Scope);
+                if (!scopeValidation.Succeeded)
+                {
+                    return SettingsResult.Fail(
+                        scopeValidation.Error.Code,
+                        $"Candidate snapshot contains invalid scope for key '{pair.Key.Key.Value}'.",
+                        pair.Key.Key);
+                }
+
                 if (!TryGetDefinition(pair.Key.Key, out var definition))
                 {
                     return SettingsResult.Fail(

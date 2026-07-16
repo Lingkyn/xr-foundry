@@ -11,6 +11,7 @@ namespace Lingkyn.Settings.Unity
         public IReadOnlyList<ISettingsConstraint> Constraints { get; set; }
         public ISettingsSnapshotRepository Repository { get; set; }
         public long InitialRevision { get; set; }
+        public bool UseDefaultsOnRepositoryLoadFailure { get; set; }
     }
 
     public static class SettingsUnityFactory
@@ -57,9 +58,16 @@ namespace Lingkyn.Settings.Unity
 
                     initialSnapshot = validated.Value;
                 }
-                else
+                else if (config.UseDefaultsOnRepositoryLoadFailure)
                 {
                     initialSnapshot = SettingsSnapshot.CreateInitial(registryResult.Value, config.InitialRevision);
+                }
+                else
+                {
+                    return SettingsResult<SettingsCoordinator>.Fail(
+                        loaded.Error.Code,
+                        loaded.Error.Message,
+                        loaded.Error.Key);
                 }
             }
             else

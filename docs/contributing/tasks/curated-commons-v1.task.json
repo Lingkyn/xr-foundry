@@ -1,9 +1,9 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "curated-commons-v1",
-  "revision": 2,
+  "revision": 3,
   "title": "Curated Commons V1",
-  "state": "active",
+  "state": "waiting",
   "objective": "Connect maintainer plans and community proposals to one discoverable, claimable, resumable, and validated public work pipeline.",
   "scope": [
     "Public work map, roadmap and milestone projection, Task Hall registry, Project discovery surface, and repository validation"
@@ -32,7 +32,7 @@
       "non_goals": [
         "No package change or inference that appearing in a plan makes work Ready"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -76,24 +76,39 @@
         { "id": "CC01-V2", "procedure": "Review the public entry route from a fresh context.", "expected": "A new contributor can select one bounded checkpoint without private chat or consumer context.", "evidence_required": true }
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "CC01-E1",
+          "kind": "test",
+          "location": "https://github.com/Lingkyn/xr-foundry/actions/runs/29545752992/job/87777608631",
+          "commit": "6989fb4209f1fd10e39c5ac94b5c6c6667ed87f3",
+          "summary": "The public branch head passed the repository-contract CI job after the work-map schema, registry projection, negative drift tests, and privacy boundary were published."
+        },
+        {
+          "id": "CC01-E2",
+          "kind": "review",
+          "location": "https://github.com/Lingkyn/xr-foundry/issues/65#issuecomment-4997898221",
+          "commit": "6989fb4209f1fd10e39c5ac94b5c6c6667ed87f3",
+          "summary": "The maintainer-authored checkpoint comment records the exact public branch, pull request, validation result, and bounded CC-01 scope."
+        }
+      ],
       "waiting": null,
       "claim": {
-        "status": "active",
+        "status": "released",
         "adoptable": false,
         "github_identity": "Lingkyn",
         "previous_github_identity": null,
         "claimed_at": "2026-07-17T00:45:52Z",
         "expires_at": "2026-07-24T00:45:52Z",
-        "ended_at": null,
+        "ended_at": "2026-07-17T00:50:29Z",
         "confirmed_by_maintainer": "Lingkyn",
-        "transition_reason": null
+        "transition_reason": "CC-01 passed exact-commit CI and published its public work-map authority; the remaining saved-view and integration work is isolated in CC-02."
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
       "execution_anchor": { "status": "public", "repository": "https://github.com/Lingkyn/xr-foundry", "branch": "codex/curated-commons-v1", "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/80", "base_commit": "1b67c092b8c0f38e3c4fcf0b040a8807c97e701e", "head_commit": "bb66ae43335664f1ade0f3cfab0de097623fa0c2", "published_at": "2026-07-17T00:45:52Z" },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Review pull request #80, reproduce repository validation at the public head, and complete CC-01 only when CI is green.",
-      "completed_at": null
+      "exact_next_action": null,
+      "completed_at": "2026-07-17T00:50:29Z"
     },
     {
       "id": "CC-02",
@@ -102,7 +117,7 @@
       "non_goals": [
         "No automatic assignment, external permission grant, model scoring, or unverified device claim"
       ],
-      "status": "draft",
+      "status": "waiting_on_author",
       "depends_on": ["CC-01"],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -148,7 +163,11 @@
       ],
       "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
       "evidence": [],
-      "waiting": null,
+      "waiting": {
+        "reason": "GitHub Project saved-view creation is unavailable through the authenticated CLI/API, and the logged-in browser-control connection is unavailable in the current execution environment.",
+        "owner": "Lingkyn",
+        "resumes_when": "The eight required saved views exist in Project #2 and their filters are visually verified."
+      },
       "claim": {
         "status": "unclaimed",
         "adoptable": false,
@@ -161,9 +180,9 @@
         "transition_reason": null
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
-      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "execution_anchor": { "status": "public", "repository": "https://github.com/Lingkyn/xr-foundry", "branch": "codex/curated-commons-v1", "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/80", "base_commit": "1b67c092b8c0f38e3c4fcf0b040a8807c97e701e", "head_commit": "6989fb4209f1fd10e39c5ac94b5c6c6667ed87f3", "published_at": "2026-07-17T00:50:29Z" },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Wait for CC-01 completion, then request the integration lease and reconcile the live GitHub surfaces at the exact reviewed commit.",
+      "exact_next_action": "In GitHub Project #2, create and visually verify Start Here, Ready, Repo Only, Unity, Device, Maintainer Plans, Community Proposals, and Integration saved views; then record the view evidence on issue #66.",
       "completed_at": null
     }
   ],

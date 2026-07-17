@@ -1,8 +1,8 @@
 {
   "$schema": "docs/contributing/public-work-map.schema.json",
   "schema": "xr-foundry.public_work_map.v1",
-  "revision": 2,
-  "generated_at": "2026-07-17T00:45:52Z",
+  "revision": 3,
+  "generated_at": "2026-07-17T00:50:29Z",
   "authority": {
     "roadmap": "outcome_sequence",
     "milestone": "outcome_batch",
@@ -72,12 +72,12 @@
       "origin": "maintainer_plan",
       "system_family": "foundry",
       "priority": "P0",
-      "state": "active",
+      "state": "waiting",
       "milestone": "foundry-commons-v1",
       "execution_surfaces": ["repo_only"],
       "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/64",
       "task_contract": "docs/contributing/tasks/curated-commons-v1.task.json",
-      "exact_next_action": "Review pull request #80, reproduce repository validation at the public head, and complete CC-01 only when CI is green."
+      "exact_next_action": "Create and visually verify the eight required saved views in GitHub Project #2, record evidence on issue #66, and resume integration."
     },
     {
       "id": "standard-entry-v1",

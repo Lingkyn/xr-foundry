@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task_registry.v1",
-  "revision": 7,
-  "generated_at": "2026-07-17T00:27:56Z",
+  "revision": 8,
+  "generated_at": "2026-07-17T00:45:52Z",
   "coverage": {
     "mode": "explicit_registration",
     "unregistered_issue_contract": "issue_declared_claim_key"
@@ -23,7 +23,7 @@
       "task_id": "curated-commons-v1",
       "contract": "docs/contributing/tasks/curated-commons-v1.task.json",
       "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/64",
-      "state": "ready"
+      "state": "active"
     },
     {
       "task_id": "standard-entry-v1",

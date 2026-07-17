@@ -20,7 +20,7 @@ or merge authority.
 
 | Outcome | State | Execution surface | Start or continue |
 | --- | --- | --- | --- |
-| [Curated Commons V1](https://github.com/Lingkyn/xr-foundry/issues/64) | Ready | Repository only | [CC-01 #65](https://github.com/Lingkyn/xr-foundry/issues/65) |
+| [Curated Commons V1](https://github.com/Lingkyn/xr-foundry/issues/64) | Active | Repository only | [PR #80](https://github.com/Lingkyn/xr-foundry/pull/80) and [CC-01 #65](https://github.com/Lingkyn/xr-foundry/issues/65) |
 | [Complete standard-entry contract](https://github.com/Lingkyn/xr-foundry/issues/62) | Ready | Repository only | [SE-01 #67](https://github.com/Lingkyn/xr-foundry/issues/67) |
 | [Package Hardening V1](https://github.com/Lingkyn/xr-foundry/issues/69) | Ready | Repository or Unity, by checkpoint | [Inventory #10](https://github.com/Lingkyn/xr-foundry/issues/10), [Persistence #70](https://github.com/Lingkyn/xr-foundry/issues/70), [Settings #71](https://github.com/Lingkyn/xr-foundry/issues/71), or [Interaction #72](https://github.com/Lingkyn/xr-foundry/issues/72) |
 | [Device Lab Evidence V1](https://github.com/Lingkyn/xr-foundry/issues/73) | Ready | Repository, Android build, or named device | Choose a Ready child matching available tools or hardware |

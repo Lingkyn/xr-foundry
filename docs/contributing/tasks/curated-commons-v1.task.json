@@ -1,9 +1,9 @@
 {
   "schema": "xr-foundry.task.v1",
   "id": "curated-commons-v1",
-  "revision": 1,
+  "revision": 2,
   "title": "Curated Commons V1",
-  "state": "ready",
+  "state": "active",
   "objective": "Connect maintainer plans and community proposals to one discoverable, claimable, resumable, and validated public work pipeline.",
   "scope": [
     "Public work map, roadmap and milestone projection, Task Hall registry, Project discovery surface, and repository validation"
@@ -32,7 +32,7 @@
       "non_goals": [
         "No package change or inference that appearing in a plan makes work Ready"
       ],
-      "status": "ready",
+      "status": "in_progress",
       "depends_on": [],
       "write_mode": "bounded_paths",
       "allowed_paths": [
@@ -79,20 +79,20 @@
       "evidence": [],
       "waiting": null,
       "claim": {
-        "status": "unclaimed",
-        "adoptable": true,
-        "github_identity": null,
+        "status": "active",
+        "adoptable": false,
+        "github_identity": "Lingkyn",
         "previous_github_identity": null,
-        "claimed_at": null,
-        "expires_at": null,
+        "claimed_at": "2026-07-17T00:45:52Z",
+        "expires_at": "2026-07-24T00:45:52Z",
         "ended_at": null,
-        "confirmed_by_maintainer": null,
+        "confirmed_by_maintainer": "Lingkyn",
         "transition_reason": null
       },
       "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
-      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "execution_anchor": { "status": "public", "repository": "https://github.com/Lingkyn/xr-foundry", "branch": "codex/curated-commons-v1", "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/80", "base_commit": "1b67c092b8c0f38e3c4fcf0b040a8807c97e701e", "head_commit": "bb66ae43335664f1ade0f3cfab0de097623fa0c2", "published_at": "2026-07-17T00:45:52Z" },
       "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
-      "exact_next_action": "Comment /claim CC-01 on issue #65, obtain maintainer confirmation, and publish a branch or draft pull-request anchor before material work.",
+      "exact_next_action": "Review pull request #80, reproduce repository validation at the public head, and complete CC-01 only when CI is green.",
       "completed_at": null
     },
     {

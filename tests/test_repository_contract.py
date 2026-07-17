@@ -4333,7 +4333,10 @@ class RepositoryContractTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
         )
         drifted = copy.deepcopy(work_map)
-        drifted["initiatives"][0]["state"] = "waiting"
+        current_state = drifted["initiatives"][0]["state"]
+        drifted["initiatives"][0]["state"] = (
+            "active" if current_state != "active" else "waiting"
+        )
 
         errors = MODULE.validate_public_work_map(ROOT, drifted, registry, "drifted map")
 

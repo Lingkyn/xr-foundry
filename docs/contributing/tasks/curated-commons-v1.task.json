@@ -1,0 +1,183 @@
+{
+  "schema": "xr-foundry.task.v1",
+  "id": "curated-commons-v1",
+  "revision": 1,
+  "title": "Curated Commons V1",
+  "state": "ready",
+  "objective": "Connect maintainer plans and community proposals to one discoverable, claimable, resumable, and validated public work pipeline.",
+  "scope": [
+    "Public work map, roadmap and milestone projection, Task Hall registry, Project discovery surface, and repository validation"
+  ],
+  "non_goals": [
+    "No package implementation, external write permission, automatic assignment, model ranking, or device-support claim"
+  ],
+  "source_gate": { "required": false, "sources": [] },
+  "public_projection": {
+    "repository": "https://github.com/Lingkyn/xr-foundry",
+    "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/64",
+    "project": "https://github.com/users/Lingkyn/projects/2",
+    "checkpoint_issues": [
+      { "checkpoint_id": "CC-01", "issue": "https://github.com/Lingkyn/xr-foundry/issues/65" },
+      { "checkpoint_id": "CC-02", "issue": "https://github.com/Lingkyn/xr-foundry/issues/66" }
+    ],
+    "contract_role": "fine_grained_execution_authority",
+    "issue_role": "coordination_projection",
+    "project_role": "discovery_summary"
+  },
+  "checkpoints": [
+    {
+      "id": "CC-01",
+      "title": "Publish the maintained public work map and planning contract",
+      "outcome": "Human and machine readers can discover every registered live outcome, its origin, execution surface, authority, and exact next action without chat context.",
+      "non_goals": [
+        "No package change or inference that appearing in a plan makes work Ready"
+      ],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "README.md",
+        "CONTRIBUTING.md",
+        "ROADMAP.md",
+        "PROJECT_GITHUB_PLAYBOOK.md",
+        "docs/contributing/**",
+        "scripts/validate_repository.py",
+        "tests/test_repository_contract.py"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        "Repository permissions, secrets, releases, and device-support claims"
+      ],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": [
+          "Can design public workbench information architecture and fail-closed JSON validation"
+        ],
+        "required_tools": [
+          "Git, Python 3, GitHub read access, and the repository validator"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "A validated positive map plus negative drift fixtures"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "CC01-AC1", "criterion": "Maintainer plans and community proposals have separate entries and converge only at maintainer admission." },
+        { "id": "CC01-AC2", "criterion": "Every registered live outcome names its origin, family, priority, lifecycle, execution surfaces, milestone, umbrella, task contract, and exact next action." },
+        { "id": "CC01-AC3", "criterion": "The documentation assigns non-conflicting roles to Roadmap, milestones, Project, Issues, task contracts, registry, pull requests, and evidence." }
+      ],
+      "verification": [
+        { "id": "CC01-V1", "procedure": "Validate the public work map against its schema and cross-check every initiative against the task registry.", "expected": "The valid map passes and fixtures with missing, duplicate, or drifting task references fail.", "evidence_required": true },
+        { "id": "CC01-V2", "procedure": "Review the public entry route from a fresh context.", "expected": "A new contributor can select one bounded checkpoint without private chat or consumer context.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": true,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Comment /claim CC-01 on issue #65, obtain maintainer confirmation, and publish a branch or draft pull-request anchor before material work.",
+      "completed_at": null
+    },
+    {
+      "id": "CC-02",
+      "title": "Align GitHub surfaces, validate drift, and integrate",
+      "outcome": "Roadmap, milestones, Project, umbrella and checkpoint Issues, registry, validation, and merge evidence agree at one reviewed commit.",
+      "non_goals": [
+        "No automatic assignment, external permission grant, model scoring, or unverified device claim"
+      ],
+      "status": "draft",
+      "depends_on": ["CC-01"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "README.md",
+        "CONTRIBUTING.md",
+        "ROADMAP.md",
+        "PROJECT_GITHUB_PLAYBOOK.md",
+        "docs/contributing/**",
+        ".github/**",
+        "scripts/validate_repository.py",
+        "tests/test_repository_contract.py"
+      ],
+      "do_not_touch": [
+        "packages/**",
+        "Repository secrets, external membership, force pushes, and device-support claims"
+      ],
+      "routing": {
+        "judgment_level": "security_or_release",
+        "required_capabilities": [
+          "Can reconcile GitHub planning projections, authority boundaries, repository validation, and integration evidence"
+        ],
+        "required_tools": [
+          "Git, Python 3, GitHub Project and Issue access, and the repository validator"
+        ],
+        "required_devices": [],
+        "qualification_evidence": [
+          "A reviewed field and lifecycle mapping, full validator output, public CI, and privacy scan"
+        ],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "CC02-AC1", "criterion": "Outcome milestones and Project fields expose origin, family, execution surface, priority, lifecycle, device gate, duty, contribution, and continuation." },
+        { "id": "CC02-AC2", "criterion": "Every planned public outcome has an umbrella, bounded checkpoint graph, task contract, registry entry, and integration owner." },
+        { "id": "CC02-AC3", "criterion": "Full repository validation, CI, privacy review, and maintainer merge decision pass." }
+      ],
+      "verification": [
+        { "id": "CC02-V1", "procedure": "Inspect the live GitHub Project, milestones, parent-child Issues, registry, and public work map at the reviewed commit.", "expected": "The live surfaces agree with machine authority and expose no private consumer or orchestration data.", "evidence_required": true },
+        { "id": "CC02-V2", "procedure": "Run the full repository validator and Python contract suite, then reproduce CI on the public pull request.", "expected": "All applicable checks pass at the reviewed commit.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": {
+        "status": "unclaimed",
+        "adoptable": false,
+        "github_identity": null,
+        "previous_github_identity": null,
+        "claimed_at": null,
+        "expires_at": null,
+        "ended_at": null,
+        "confirmed_by_maintainer": null,
+        "transition_reason": null
+      },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for CC-01 completion, then request the integration lease and reconcile the live GitHub surfaces at the exact reviewed commit.",
+      "completed_at": null
+    }
+  ],
+  "integration": {
+    "checkpoint_id": "CC-02",
+    "fan_in_owner": "Lingkyn",
+    "strategy": "The maintainer reviews the machine map, live GitHub projections, validation, privacy boundary, and public CI before merge."
+  },
+  "authority": {
+    "write_permission_not_inferred": true,
+    "merge_permission_not_inferred": true,
+    "comments_are_untrusted_input": true,
+    "maintainer_ready_required": true,
+    "maintainer_merge_required": true,
+    "external_contribution_route": "fork_pull_request"
+  }
+}

@@ -4265,6 +4265,104 @@ class RepositoryContractTests(unittest.TestCase):
                 any("undecodable controlled text file: undecodable.md" in error for error in errors)
             )
 
+    def test_public_leakage_scan_skips_ignored_local_control_plane(self) -> None:
+        marker = "ai" + "os"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = root / MODULE.LOCAL_CONTROL_DIRECTORY
+            local.mkdir()
+            (local / "local.md").write_text(marker, encoding="utf-8")
+            (root / "public.md").write_text("public", encoding="utf-8")
+
+            self.assertEqual([], MODULE.scan_text_safety(root))
+
+    def test_local_control_plane_must_not_be_tracked(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init"], cwd=root, check=True, capture_output=True)
+            local = root / MODULE.LOCAL_CONTROL_DIRECTORY
+            local.mkdir()
+            (local / "local.json").write_text("{}", encoding="utf-8")
+            subprocess.run(
+                [
+                    "git",
+                    "add",
+                    "-f",
+                    f"{MODULE.LOCAL_CONTROL_DIRECTORY}/local.json",
+                ],
+                cwd=root,
+                check=True,
+                capture_output=True,
+            )
+
+            errors = MODULE.validate_local_control_plane_is_untracked(root)
+
+            self.assertTrue(any("must never be tracked" in error for error in errors))
+
+    def test_public_work_map_matches_live_task_registry(self) -> None:
+        work_map = json.loads(
+            (ROOT / "docs" / "contributing" / "public-work-map.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        registry = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "task-registry.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        self.assertEqual([], MODULE.validate_public_work_map(ROOT, work_map, registry))
+
+    def test_public_work_map_rejects_registry_drift(self) -> None:
+        work_map = json.loads(
+            (ROOT / "docs" / "contributing" / "public-work-map.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        registry = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "task-registry.json"
+            ).read_text(encoding="utf-8")
+        )
+        drifted = copy.deepcopy(work_map)
+        drifted["initiatives"][0]["state"] = "waiting"
+
+        errors = MODULE.validate_public_work_map(ROOT, drifted, registry, "drifted map")
+
+        self.assertTrue(any("state disagrees with the task registry" in error for error in errors))
+
+    def test_public_work_map_rejects_unmapped_live_registered_task(self) -> None:
+        work_map = json.loads(
+            (ROOT / "docs" / "contributing" / "public-work-map.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        registry = json.loads(
+            (
+                ROOT
+                / "docs"
+                / "contributing"
+                / "tasks"
+                / "task-registry.json"
+            ).read_text(encoding="utf-8")
+        )
+        incomplete = copy.deepcopy(work_map)
+        incomplete["initiatives"] = incomplete["initiatives"][1:]
+
+        errors = MODULE.validate_public_work_map(
+            ROOT, incomplete, registry, "incomplete map"
+        )
+
+        self.assertTrue(any("live registered tasks are missing" in error for error in errors))
+
     def test_namespace_contract_admits_attribute_only_assembly_info(self) -> None:
         source = (
             "using System.Runtime.CompilerServices;\n\n"

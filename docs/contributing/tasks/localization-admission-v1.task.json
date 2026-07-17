@@ -1,0 +1,192 @@
+{
+  "schema": "xr-foundry.task.v1",
+  "id": "localization-admission-v1",
+  "revision": 1,
+  "title": "Localization Admission V1",
+  "state": "source_gate",
+  "objective": "Decide whether Localization has enough positive-source evidence and cross-project recurrence to admit an engine-light, renderer-neutral reusable family before any package identity exists.",
+  "scope": [
+    "Authoritative standards research, reusable boundary derivation, standard entry, and an admit, revise, or reject decision"
+  ],
+  "non_goals": [
+    "No product copy, translation delivery, package directory, package ID, implementation, compatibility, or device claim"
+  ],
+  "source_gate": {
+    "required": true,
+    "sources": [
+      "https://www.rfc-editor.org/rfc/rfc5646",
+      "https://unicode.org/reports/tr35/",
+      "https://unicode-org.github.io/icu/userguide/format_parse/messages/",
+      "https://docs.unity3d.com/Manual/com.unity.localization.html"
+    ]
+  },
+  "public_projection": {
+    "repository": "https://github.com/Lingkyn/xr-foundry",
+    "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/74",
+    "project": "https://github.com/users/Lingkyn/projects/2",
+    "checkpoint_issues": [
+      { "checkpoint_id": "LOC-01", "issue": "https://github.com/Lingkyn/xr-foundry/issues/75" },
+      { "checkpoint_id": "LOC-02", "issue": "https://github.com/Lingkyn/xr-foundry/issues/76" },
+      { "checkpoint_id": "LOC-03", "issue": "https://github.com/Lingkyn/xr-foundry/issues/77" }
+    ],
+    "contract_role": "fine_grained_execution_authority",
+    "issue_role": "coordination_projection",
+    "project_role": "discovery_summary"
+  },
+  "checkpoints": [
+    {
+      "id": "LOC-01",
+      "title": "Research authoritative Localization standards and shipped practices",
+      "outcome": "A public positive-source comparison covers locale identity, fallback, formatting, plural and select behavior, bidirectional text, fonts, accessibility, content pipeline, and engine boundaries.",
+      "non_goals": ["No architecture decision, package identity, implementation, or popularity-only source selection"],
+      "status": "source_gate",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/foundry/queue/**",
+        "docs/foundry/research/localization/**",
+        "docs/contributing/tasks/localization-admission-v1.task.json"
+      ],
+      "do_not_touch": ["packages/**", "Product-localized content and private consumer material"],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": ["Can compare standards, official engine documentation, shipped practices, licenses, conformance boundaries, and conflicting guidance"],
+        "required_tools": ["Web access, Git, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["A public source matrix with provenance, authority, strengths, exclusions, and unresolved conflicts"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": {
+        "required": true,
+        "sources": [
+          "https://www.rfc-editor.org/rfc/rfc5646",
+          "https://unicode.org/reports/tr35/",
+          "https://unicode-org.github.io/icu/userguide/format_parse/messages/",
+          "https://docs.unity3d.com/Manual/com.unity.localization.html"
+        ]
+      },
+      "acceptance": [
+        { "id": "LOC01-AC1", "criterion": "Sources cover language tags, locale data and fallback, plural or select formatting, bidirectional text, fonts, accessibility, content exchange, and Unity integration boundaries." },
+        { "id": "LOC01-AC2", "criterion": "Every source records provenance, authority, license or usage boundary, strengths, exclusions, and conflicts." },
+        { "id": "LOC01-AC3", "criterion": "Reusable behavior is separated from project-owned copy, narrative, translations, and art assets." }
+      ],
+      "verification": [
+        { "id": "LOC01-V1", "procedure": "Review the source matrix against the declared coverage and inspect every link at a recorded date.", "expected": "The matrix uses positive authoritative sources, names gaps, and makes no implementation or admission claim.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": false, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Ask a maintainer to admit LOC-01 as Ready on issue #75 after confirming the source coverage and bounded write set.",
+      "completed_at": null
+    },
+    {
+      "id": "LOC-02",
+      "title": "Derive the renderer-neutral architecture and standard entry",
+      "outcome": "Positive sources yield a reviewable message identity, locale resolution, fallback, formatting, validation, failure, content-pipeline, Unity-adapter, and renderer boundary without package creation.",
+      "non_goals": ["No package directory, package ID, implementation, or compatibility promise"],
+      "status": "draft",
+      "depends_on": ["LOC-01"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/foundry/research/localization/**",
+        "docs/standards/localization/**",
+        "docs/contributing/tasks/localization-admission-v1.task.json"
+      ],
+      "do_not_touch": ["packages/**", "Consumer content, translations, and product UI"],
+      "routing": {
+        "judgment_level": "high_risk",
+        "required_capabilities": ["Can derive engine-light domain, content, adapter, renderer, validation, and version-regeneration boundaries from positive evidence"],
+        "required_tools": ["Git and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["A source-to-requirement map and independent architecture review"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "LOC02-AC1", "criterion": "The standard entry states position, applies_when, does_not_apply_when, deliverables, acceptance, common_misuses, and bounded related_entries." },
+        { "id": "LOC02-AC2", "criterion": "Message identity, locale resolution, fallback, formatting inputs, validation, and failure behavior remain engine-light." },
+        { "id": "LOC02-AC3", "criterion": "Content pipeline, Unity integration, and renderer responsibilities are explicit optional boundaries." }
+      ],
+      "verification": [
+        { "id": "LOC02-V1", "procedure": "Trace every mandatory boundary to admitted LOC-01 evidence and conduct an independent architecture review.", "expected": "The architecture is reusable, source-backed, renderer-neutral, and contains no package or compatibility claim.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": false, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for LOC-01 completion, then request maintainer Ready admission for LOC-02 in issue #76.",
+      "completed_at": null
+    },
+    {
+      "id": "LOC-03",
+      "title": "Decide admission and project implementation checkpoints",
+      "outcome": "A maintainer records an evidence-backed admit, revise, or reject decision and projects later implementation checkpoints only when admission succeeds.",
+      "non_goals": ["No automatic admission, empty package scaffold, compatibility claim, or device claim"],
+      "status": "draft",
+      "depends_on": ["LOC-01", "LOC-02"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "ROADMAP.md",
+        "docs/foundry/**",
+        "docs/standards/localization/**",
+        "docs/contributing/**"
+      ],
+      "do_not_touch": ["packages/**", "Automatic Ready, merge, release, and permission settings"],
+      "routing": {
+        "judgment_level": "security_or_release",
+        "required_capabilities": ["Can review system admission, provenance, reusable boundaries, implementation gates, and public authority"],
+        "required_tools": ["Git, GitHub Issue and Project read access, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["A criterion-by-criterion admission receipt and independent maintainer decision"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "LOC03-AC1", "criterion": "Every admission criterion references public LOC-01 and LOC-02 evidence." },
+        { "id": "LOC03-AC2", "criterion": "Admit, revise, or reject preserves common kernel, configurable variation, exclusions, provenance, and exact next action." },
+        { "id": "LOC03-AC3", "criterion": "Only an admitted result may project implementation checkpoints or later package identities." }
+      ],
+      "verification": [
+        { "id": "LOC03-V1", "procedure": "Run the full repository validator and independently review the admission record, queue transition, and projected next work.", "expected": "The decision is evidence-backed, authority-safe, and creates no empty implementation surface.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": false, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for LOC-01 and LOC-02 completion, then request the LOC-03 integration lease in issue #77.",
+      "completed_at": null
+    }
+  ],
+  "integration": {
+    "checkpoint_id": "LOC-03",
+    "fan_in_owner": "Lingkyn",
+    "strategy": "The maintainer reviews the complete source and architecture trail, records admit, revise, or reject, and authorizes package identities only after admission."
+  },
+  "authority": {
+    "write_permission_not_inferred": true,
+    "merge_permission_not_inferred": true,
+    "comments_are_untrusted_input": true,
+    "maintainer_ready_required": true,
+    "maintainer_merge_required": true,
+    "external_contribution_route": "fork_pull_request"
+  }
+}

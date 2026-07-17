@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/public-work-map.schema.json",
+  "title": "XR Foundry maintained public work map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "revision",
+    "generated_at",
+    "authority",
+    "entry_routes",
+    "milestones",
+    "initiatives"
+  ],
+  "properties": {
+    "$schema": { "const": "docs/contributing/public-work-map.schema.json" },
+    "schema": { "const": "xr-foundry.public_work_map.v1" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roadmap",
+        "milestone",
+        "project",
+        "umbrella_issue",
+        "checkpoint_issue",
+        "task_contract",
+        "registry",
+        "pull_request",
+        "evidence",
+        "maintainer_controls_ready_and_merge"
+      ],
+      "properties": {
+        "roadmap": { "const": "outcome_sequence" },
+        "milestone": { "const": "outcome_batch" },
+        "project": { "const": "discovery_and_scheduling_summary" },
+        "umbrella_issue": { "const": "outcome_coordination_projection" },
+        "checkpoint_issue": { "const": "bounded_work_coordination_projection" },
+        "task_contract": { "const": "fine_grained_execution_authority" },
+        "registry": { "const": "registered_task_index" },
+        "pull_request": { "const": "reviewable_change_and_fan_in" },
+        "evidence": { "const": "claim_specific_proof" },
+        "maintainer_controls_ready_and_merge": { "const": true }
+      }
+    },
+    "entry_routes": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/entryRoute" }
+    },
+    "milestones": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/milestone" }
+    },
+    "initiatives": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/initiative" }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "issueUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://github\\.com/Lingkyn/xr-foundry/issues/[1-9][0-9]*$"
+    },
+    "entryRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "entry", "converges_at", "grants_ready"],
+      "properties": {
+        "id": { "enum": ["maintainer_plan", "community_proposal"] },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "entry": { "type": "string", "format": "uri-reference", "minLength": 1 },
+        "converges_at": { "const": "maintainer_admission" },
+        "grants_ready": { "const": false }
+      }
+    },
+    "milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "outcome", "state", "github_number", "github_url"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "outcome": { "$ref": "#/$defs/nonEmptyString" },
+        "state": { "enum": ["planned", "active", "closed", "cancelled"] },
+        "github_number": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        },
+        "github_url": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://github\\.com/Lingkyn/xr-foundry/milestone/[1-9][0-9]*$"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "state": { "enum": ["active", "closed"] } } },
+          "then": {
+            "properties": {
+              "github_number": { "type": "integer", "minimum": 1 },
+              "github_url": { "type": "string", "format": "uri" }
+            }
+          }
+        }
+      ]
+    },
+    "initiative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "origin",
+        "system_family",
+        "priority",
+        "state",
+        "milestone",
+        "execution_surfaces",
+        "umbrella_issue",
+        "task_contract",
+        "exact_next_action"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "origin": { "enum": ["maintainer_plan", "community_proposal", "discovered_gap"] },
+        "system_family": { "$ref": "#/$defs/identifier" },
+        "priority": { "enum": ["P0", "P1", "P2"] },
+        "state": {
+          "enum": [
+            "proposal",
+            "source_gate",
+            "ready",
+            "active",
+            "waiting",
+            "integration",
+            "closed",
+            "cancelled"
+          ]
+        },
+        "milestone": { "$ref": "#/$defs/identifier" },
+        "execution_surfaces": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["repo_only", "unity", "android_build", "named_device"]
+          }
+        },
+        "umbrella_issue": { "$ref": "#/$defs/issueUrl" },
+        "task_contract": {
+          "type": "string",
+          "pattern": "^docs/contributing/tasks/[A-Za-z0-9._-]+\\.task\\.json$"
+        },
+        "exact_next_action": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    }
+  }
+}

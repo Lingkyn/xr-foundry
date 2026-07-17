@@ -24,6 +24,7 @@ evidence remain explicit gates.
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
 | Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| See planned, proposed, and active outcomes | [`Public work map`](docs/contributing/public-work-map.md) |
 | Find or claim bounded public work | [`Public Task Hall V1`](docs/contributing/task-hall.md) and the [live Project](https://github.com/users/Lingkyn/projects/2) |
 | Build the next reusable package family | [`Foundry V1 production line`](docs/foundry/README.md), [first batch](docs/foundry/batches/unity-first-batch.v1.json), and [next source-gate queue](docs/foundry/queue/next-batch.json) |
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |

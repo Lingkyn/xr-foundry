@@ -7,6 +7,7 @@ namespace Lingkyn.Inventory.UGUI
     public sealed class InventoryItemView : MonoBehaviour
     {
         [SerializeField] private Text label;
+        [SerializeField] private InventorySkin skin;
 
         public Text Label => label;
 
@@ -15,15 +16,27 @@ namespace Lingkyn.Inventory.UGUI
             if (model == null) throw new System.ArgumentNullException(nameof(model));
             if (label != null)
             {
-                label.text = model.DefinitionId.HasValue
+                var occupied = model.DefinitionId.HasValue;
+                label.text = occupied
                     ? $"{model.DefinitionId.Value} x{model.Quantity}"
                     : "Empty";
+                if (skin != null) label.color = occupied ? skin.textColor : skin.mutedTextColor;
             }
+        }
+
+        public void ApplySkin(InventorySkin value)
+        {
+            skin = value;
+            if (skin != null) InventorySkin.StyleText(label, skin.textColor, skin.font);
         }
 
         internal void Clear()
         {
-            if (label != null) label.text = "Empty";
+            if (label != null)
+            {
+                label.text = "Empty";
+                if (skin != null) label.color = skin.mutedTextColor;
+            }
         }
     }
 }

@@ -52,6 +52,14 @@ presentation contract. `com.lingkyn.inventory.ugui` and
 receipt proves the other. Do not invent a shared XR package or copy a Canvas
 validator into the UI Toolkit route.
 
+For any UI-bearing package, default to the shared
+[`XR Foundry UI Design Language`](standards/design-language/README.md) so the library
+stays visually coherent across systems and contributors. Keep visual vocabulary in the
+renderer adapter (never in the renderer-neutral presentation contract), expose one
+injectable skin/theme seam that maps the shared tokens, and ship a default skin with
+the canonical values. Vision Pro is the primary visual reference; PICO and Meta Horizon
+OS are the primary interaction references.
+
 Do not patch a shared package with product-specific types or scenes to make one
 consumer pass. Create a consumer adapter. If several consumers need the same seam,
 propose that seam upstream with generic tests and samples.

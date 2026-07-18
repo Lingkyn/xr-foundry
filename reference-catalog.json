@@ -75,6 +75,26 @@
       ]
     },
     {
+      "id": "xr-foundry-ui-design-language",
+      "kind": "system_standard",
+      "engine": "engine-neutral-presentation_with_renderer_adapters",
+      "path": "docs/standards/design-language",
+      "maturity": "incubating",
+      "use_modes": ["reference_only", "raw_material"],
+      "purpose": "Positive-source-only shared UI visual and interaction design language so every XR Foundry system and renderer adapter converges on one library-wide look and feel. Vision Pro is the primary visual reference; PICO and Meta Horizon OS are the primary interaction references.",
+      "evidence": [
+        "docs/standards/design-language/ui-design-language-standard.json",
+        "docs/standards/design-language/source-manifest.json",
+        "docs/standards/design-language/README.md"
+      ],
+      "non_claims": [
+        "The standard defines a shared visual/interaction vocabulary and neutral tokens, not a mandate to rebuild any existing package UI; adoption is per family through its own gate",
+        "No platform HIG (Apple visionOS, PICO, Meta Horizon OS) asset, shader, component, font, or numeric spec is copied; platform sources inform neutral roles and intent only",
+        "Vision Pro visual admission does not import Vision Pro gaze-and-pinch interaction; controller/ray interaction is derived from PICO and Meta",
+        "A renderer adapter's default skin is a code reference, not proof that any device renders it correctly; visual and comfort claims still require per-composition device evidence"
+      ]
+    },
+    {
       "id": "unity-inventory-authoring",
       "kind": "package_and_reference",
       "engine": "Unity",

@@ -1,0 +1,148 @@
+{
+  "schema": "xr-foundry.design_language_source_manifest.v1",
+  "scope": "A shared, renderer-neutral UI visual and interaction design language for XR Foundry systems, expressed as neutral design tokens, state model, and content/interaction principles that every renderer adapter maps to. Vision Pro is the primary visual reference; PICO and Meta Horizon OS are the primary interaction references.",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "reference_split_rationale": "Apple visionOS is admitted for spatial visual language only (materials, depth, layout spacing, typography). Its primary interaction paradigm is system-mediated gaze-and-pinch with no app-drawn pointer, which does not transfer to controller/ray XR runtimes such as PICO and Meta Horizon OS. Controller and ray interaction facts (pointer feedback, hit-target sizing, button emphasis and state) are therefore derived from PICO and Meta Horizon OS, which target the same controller-based headset class this foundation builds for.",
+  "sources": [
+    {
+      "id": "apple-visionos-hig-materials",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/materials",
+      "license_or_terms": "Apple Developer documentation terms; design facts only, no copied assets or implementation",
+      "maintenance_evidence": "visionOS Materials / Spatial Layout guidance reviewed 2026-07-18",
+      "admitted_role": "Spatial surface material, translucency, layering, and elevation vocabulary",
+      "admitted_claims": [
+        "Spatial UI surfaces use a translucent system glass material so the surrounding environment stays partially visible behind the panel",
+        "Layering thicker or lighter glass forward and thinner or darker glass back, with shadows and highlights, communicates depth and elevation",
+        "Surfaces provide the canvas that content and controls sit on top of, establishing hierarchy through material rather than heavy borders"
+      ],
+      "excluded_uses": [
+        "No Apple material shader, asset, blur radius, or private API is copied; only the neutral role of translucency and layering informs tokens",
+        "A glass appearance is not a claim of any device GPU cost, comfort, or legibility result",
+        "Apple visual language does not import Apple's gaze-and-pinch interaction model"
+      ]
+    },
+    {
+      "id": "apple-visionos-hig-spatial-layout",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/spatial-layout",
+      "license_or_terms": "Apple Developer documentation terms; design facts only",
+      "maintenance_evidence": "visionOS Spatial Layout guidance reviewed 2026-07-18",
+      "admitted_role": "Content centering, interactive spacing, and comfortable reach vocabulary",
+      "admitted_claims": [
+        "Important content is centered in the field of view and distracting high-contrast motion is kept out of the periphery",
+        "Interactive components need generous surrounding space so looking at or pointing at one element does not crowd its neighbors",
+        "Content should remain comfortably legible and interactive regardless of its distance from the viewer"
+      ],
+      "excluded_uses": [
+        "Apple's exact point spacing values are treated as descriptive spacing intent, not a copied numeric spec, and are reconciled with controller hit-target minimums from the interaction sources",
+        "No layout guidance is a claim about a specific runtime, renderer, or headset comfort result"
+      ]
+    },
+    {
+      "id": "apple-visionos-hig-typography",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/typography",
+      "license_or_terms": "Apple Developer documentation terms; design facts only",
+      "maintenance_evidence": "visionOS typography guidance reviewed 2026-07-18",
+      "admitted_role": "Spatial typography weight, hierarchy, and legibility vocabulary",
+      "admitted_claims": [
+        "Spatial text prefers flat 2D text because 3D or extruded text can warp and become hard to read across distances and angles",
+        "Body text uses a heavier weight than a comparable 2D screen and titles use bold to hold contrast against translucent surfaces",
+        "A primary, secondary, and tertiary emphasis hierarchy separates titles, body, and de-emphasized text rather than relying on many font families"
+      ],
+      "excluded_uses": [
+        "No Apple system font is bundled or required; the token font slot stays optional and consumer-provided",
+        "Typography facts do not claim a measured legibility result on any device"
+      ]
+    },
+    {
+      "id": "pico-controller-ui-canvas",
+      "kind": "official_platform_developer_documentation",
+      "authority": "PICO (Pico Technology)",
+      "url": "https://developer.picoxr.com/document/unity/create-interactive-ui/",
+      "related_urls": [
+        "https://github.com/Pico-Developer/InteractionSample-Unity"
+      ],
+      "license_or_terms": "PICO Developer documentation terms; integration facts only, no copied SDK code",
+      "maintenance_evidence": "PICO Unity controller-ray world-space UI guidance and Interaction Sample reviewed 2026-07-18",
+      "admitted_role": "Controller-ray world-space UI interaction boundary for the target headset class",
+      "admitted_claims": [
+        "World-space UI on this headset class is driven by a controller ray against a world-space canvas rather than a system-drawn cursor",
+        "Controller trigger is the conventional selection action, matched by the XR Interaction Toolkit select flow",
+        "Ray and direct/near interactions are separated so distant pointing and close touch do not fight over the same element"
+      ],
+      "excluded_uses": [
+        "No PICO SDK component, prefab, or scene is copied; only the interaction boundary informs the design language",
+        "PICO integration availability is not a claim that any specific device or SDK version was verified by this repository"
+      ]
+    },
+    {
+      "id": "meta-horizon-raycasting-bp",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta",
+      "url": "https://developers.meta.com/horizon/design/raycasting_bp/",
+      "license_or_terms": "Meta Horizon OS Developers documentation terms; design facts only",
+      "maintenance_evidence": "Meta Horizon OS ray casting best practices reviewed 2026-07-18 (page last updated 2026-03-13)",
+      "admitted_role": "Ray pointer feedback and targeting-comfort vocabulary",
+      "admitted_claims": [
+        "Every targeting and selection event should be confirmed with more than one feedback channel, such as visual ray or cursor plus audio and controller haptics",
+        "Interactive elements must not be too small or too closely packed, because small crowded targets cause accidental selection during natural hand movement",
+        "A standard hand or controller ray is preferred over using the head ray as the primary pointer, and distant ray interaction is combined with close direct interaction"
+      ],
+      "excluded_uses": [
+        "No Meta SDK, Interaction SDK asset, or UI Set component is copied",
+        "A best-practice does not become an automatic compliance or comfort claim for any composition or device"
+      ]
+    },
+    {
+      "id": "meta-horizon-hit-targets",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta",
+      "url": "https://developers.meta.com/horizon/design/styles_inputs_hit_targets/",
+      "license_or_terms": "Meta Horizon OS Developers documentation terms; sizing facts only",
+      "maintenance_evidence": "Meta Horizon OS inputs and hit targets guidance reviewed 2026-07-18",
+      "admitted_role": "Minimum interactive hit-target and hit-slop sizing vocabulary",
+      "admitted_claims": [
+        "Comfortable interactive hit targets are at least 48 dp square, and primary controls are at least 60 dp square to stay reliable for lower-precision input such as hand tracking",
+        "When a control's visible size is smaller than the minimum, invisible hit-slop padding extends the interactive area to the minimum without enlarging the visual",
+        "Hit-target sizing must be designed for the least precise supported input method and verified on real hardware"
+      ],
+      "excluded_uses": [
+        "Density-independent pixel minimums are recorded as design intent to reconcile at composition time, not as a rendered-size guarantee at an arbitrary distance",
+        "No sizing figure is a device usability or accessibility certification"
+      ]
+    },
+    {
+      "id": "meta-horizon-buttons-bp",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta",
+      "url": "https://developers.meta.com/horizon/design/buttons_bp/",
+      "license_or_terms": "Meta Horizon OS Developers documentation terms; design facts only",
+      "maintenance_evidence": "Meta Horizon OS buttons best practices reviewed 2026-07-18 (page last updated 2026-02-27)",
+      "admitted_role": "Action emphasis hierarchy, labeling, and interaction-state vocabulary",
+      "admitted_claims": [
+        "A view uses one primary action paired with secondary or borderless actions to establish a clear emphasis hierarchy, and a destructive style is reserved for data loss or session end",
+        "Button labels are short and specific to the action and avoid vague instructional phrasing",
+        "Controls provide clear hover, pressed, and disabled states so the current interaction state is always understandable, and the same variant is reused for the same kind of action across the experience"
+      ],
+      "excluded_uses": [
+        "No Meta button asset, color token, or component is copied; only the emphasis and state model informs the design language",
+        "State-model guidance is not a claim about any specific renderer's implementation being verified"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    "A downstream consumer UI iteration surfaced the generalizable lessons (no persistent instructional microcopy, selection visuals must clear when the underlying action stops, type-conveying iconography can replace redundant category text). These are treated as motivating context only; the admitted principles are grounded in the public sources above, not in any consumer project."
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, compliance, comfort, platform, or device authority",
+    "The design language is a shared visual and interaction vocabulary and neutral token set, not a complete UI framework, component library, or headset integration",
+    "Adopting the language does not transfer any device, comfort, or accessibility result across a renderer, runtime, device, or composition boundary",
+    "Official ownership never substitutes for exact repository, consumer, runtime, or device verification"
+  ]
+}

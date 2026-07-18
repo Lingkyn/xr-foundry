@@ -36,6 +36,13 @@ lives in `com.lingkyn.inventory.presentation`; UGUI and UI Toolkit are sibling
 adapters, with renderer-named XR compositions. Never transfer automated or device
 evidence from one renderer composition to the other.
 
+For any UI-bearing package, default to the shared UI design language in
+`docs/standards/design-language/` so the library stays visually coherent across
+systems and contributors: keep visual vocabulary in the renderer adapter, expose one
+injectable skin/theme seam that maps the shared tokens, and ship a default skin with
+the canonical values. Vision Pro is the primary visual reference; PICO and Meta
+Horizon OS are the primary interaction references.
+
 The reference architecture is version-adaptive, while every installable package
 revision is concrete. Read
 `docs/architecture/version-adaptive-reference-model.md`. A package manifest or one

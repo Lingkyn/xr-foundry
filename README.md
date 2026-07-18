@@ -84,6 +84,17 @@ and the machine-validatable
 PICO tracked-controller profile without adding a vendor dependency to the package,
 while keeping the same route available for other reviewed device profiles.
 
+A cross-cutting standard,
+[`XR Foundry UI Design Language`](docs/standards/design-language/README.md), gives
+every UI-bearing system one shared visual and interaction vocabulary so the library
+reads as a single product rather than one look per package. Vision Pro is the primary
+visual reference; PICO and Meta Horizon OS are the primary interaction references. Any
+package with UI defaults to it: keep visual vocabulary in the renderer adapter, expose
+one injectable skin/theme seam that maps the shared tokens, and ship a default skin
+with the canonical values. The Inventory UGUI adapter is the first target reference
+implementation; its injectable skin seam is proposed in
+[PR #81](https://github.com/Lingkyn/xr-foundry/pull/81) and not yet merged.
+
 `incubating` means a package is available for evaluation but does not yet promise
 API compatibility. Candidate promotion requires repository validation, tests, and
 a clean independent Unity consumer compile. XR behavior additionally needs real

@@ -1,0 +1,106 @@
+{
+  "schema": "xr-foundry.design_language_standard.v1",
+  "maturity": "incubating",
+  "status": "proposed_pending_independent_review",
+  "derivation_manifest": "docs/standards/design-language/source-manifest.json",
+  "overview": "One shared UI design language for every XR Foundry system so a multi-contributor, multi-agent library reads as a single product rather than one visual style per package. Vision Pro is the primary visual reference; PICO and Meta Horizon OS are the primary interaction references. The language is expressed as renderer-neutral tokens, a state model, and content/interaction principles that each renderer adapter maps to; the renderer-neutral presentation contract carries no visual vocabulary.",
+  "reference_hierarchy": {
+    "visual_primary": {
+      "reference": "Apple visionOS spatial design language",
+      "owns": ["translucent glass surfaces", "depth and layering", "content centering and spacing intent", "2D-first spatial typography and emphasis tiers"],
+      "sources": ["apple-visionos-hig-materials", "apple-visionos-hig-spatial-layout", "apple-visionos-hig-typography"]
+    },
+    "interaction_primary": {
+      "reference": "PICO and Meta Horizon OS controller/ray interaction",
+      "owns": ["controller-ray world-space UI", "multi-channel targeting/selection feedback", "hit-target and hit-slop sizing", "action emphasis and interaction states"],
+      "sources": ["pico-controller-ui-canvas", "meta-horizon-raycasting-bp", "meta-horizon-hit-targets", "meta-horizon-buttons-bp"],
+      "rationale": "visionOS interaction is system-mediated gaze-and-pinch with no app-drawn pointer and does not transfer to controller/ray headsets; the target headset class uses a controller ray, so interaction facts come from PICO and Meta."
+    }
+  },
+  "design_tokens": {
+    "note": "Canonical library target values that renderer adapters adopt so an un-themed install matches the shared look. These are XR Foundry's own chosen values, aligned with the spatial-glass palette of the Inventory UI Toolkit stylesheet; they are not copied from any platform, and they are the language's target, not a snapshot of any already-landed adapter. Colors are sRGB RGBA in 0..1.",
+    "surface": {
+      "panel": {"role": "outermost panel background", "rgba": [0.031, 0.094, 0.122, 0.96], "intent": "translucent spatial glass; alpha < 1 keeps the environment visible"},
+      "section": {"role": "grouped region background (grid, details, action bar)", "rgba": [0.055, 0.129, 0.153, 0.96]},
+      "accent": {"role": "primary action / emphasis", "rgba": [0.122, 0.592, 0.624, 1.0]}
+    },
+    "text": {
+      "primary": {"rgba": [0.886, 0.988, 1.0, 1.0]},
+      "muted": {"role": "secondary / de-emphasized (empty, hints)", "rgba": [0.439, 0.616, 0.639, 1.0]},
+      "prefer_2d": true,
+      "weight": {"body": "medium", "title": "bold"},
+      "emphasis_tiers": ["primary", "secondary", "tertiary"],
+      "font": {"slot": "optional_consumer_provided", "bundled": false}
+    },
+    "slot_states": {
+      "normal": {"rgba": [0.071, 0.212, 0.255, 1.0]},
+      "hover": {"rgba": [0.090, 0.345, 0.388, 1.0]},
+      "selected": {"rgba": [0.094, 0.494, 0.525, 1.0]},
+      "disabled": {"rgba": [0.071, 0.212, 0.255, 0.46], "intent": "dim the normal hue rather than recolor, so a disabled control reads as dimmed"}
+    },
+    "shape": {
+      "corner_radius_scale_px": {"small": 8, "medium": 16, "large": 24},
+      "rounded_via": "optional 9-slice sprite per surface; flat fill when no sprite is provided"
+    },
+    "elevation": {"technique": "layered translucency plus soft shadow/highlight to signal depth, not heavy opaque borders"},
+    "spacing": {"intent": "generous separation so pointing at one interactive element does not crowd neighbors"},
+    "hit_target_dp": {"minimum": 48, "primary_controls": 60, "small_visual_rule": "extend to minimum with invisible hit-slop rather than enlarging the visual"},
+    "motion": {"intent": "subtle; avoid bright high-contrast motion in the periphery"}
+  },
+  "state_model": {
+    "states": ["normal", "hover", "selected", "disabled"],
+    "feedback_channels": ["visual (ray/cursor, state color)", "audio", "controller haptic"],
+    "rules": [
+      "Every hover and selection event is confirmed on more than one channel.",
+      "The selected visual must reflect the underlying state: when the action a selection started (for example playback) stops or is toggled off, the selected visual clears in the same frame.",
+      "Disabled controls are dimmed, not recolored, and remain readable."
+    ]
+  },
+  "content_principles": [
+    "No persistent instructional microcopy on repeated elements (for example a per-cell 'tap to preview' line). Affordance comes from shape, iconography, and interaction feedback, with any teaching kept to onboarding.",
+    "An icon that conveys an item's type replaces a redundant category text label, especially when category is already expressed by structure such as tabs or grouping. Category stays backend metadata, not chrome.",
+    "Labels are short and specific to the action; a view has one primary action paired with secondary or borderless actions."
+  ],
+  "interaction_principles": [
+    "World-space UI is driven by a controller ray against a world-space canvas; controller trigger selects. Ray (distant) and direct/near (touch) interaction are separated so they do not fight over the same element.",
+    "Interactive targets are at least 48 dp, primary controls at least 60 dp, with hit-slop for smaller visuals; targets are not small or tightly packed.",
+    "The head ray is not used as the primary pointer.",
+    "Real-device verification is required before any comfort, precision, or usability claim; the language sets intent, not a device result."
+  ],
+  "renderer_adapter_contract": {
+    "principles": [
+      "The renderer-neutral presentation contract carries no visual vocabulary; all look-and-feel lives in the renderer adapter.",
+      "Each renderer adapter exposes a single injectable skin/theme seam that maps these tokens, so a consumer can restyle without forking prefabs or code.",
+      "The adapter ships a default skin populated with the canonical token values above, so an un-themed install already matches the shared library look.",
+      "Interaction-state visuals follow the state model; content follows the content principles."
+    ],
+    "reference_implementation": {
+      "package": "com.lingkyn.inventory.ugui",
+      "current_landed_version": "0.2.0",
+      "current_state": "The landed 0.2.0 adapter predates the injectable skin seam and does not yet map these tokens; it adopts the language through its own gate.",
+      "proposed_seam": {
+        "target_version": "0.3.0",
+        "seam": "InventorySkin (ScriptableObject) injected via InventoryShellView.ApplySkin, propagated to panel/grid/slot/details/action-menu views",
+        "pull_request": "https://github.com/Lingkyn/xr-foundry/pull/81",
+        "status": "open_not_merged",
+        "visual_evidence": "editor visual verification (rounded 9-slice sprite baking + State Gallery capture) tracked in https://github.com/Lingkyn/xr-foundry/issues/82"
+      },
+      "note": "The seam and 0.3.0 default palette are proposed in PR #81 (code-reviewed on that branch, blocked from merge by the editor evidence pass #82); they are not part of the currently landed 0.2.0 adapter. This standard defines the target the adapter converges to, not a completed implementation."
+    }
+  },
+  "promotion_order": [
+    "source_gate",
+    "independent_source_review",
+    "adapter_seam_reference_implementation",
+    "renderer_default_skin_editor_evidence",
+    "repository_contract",
+    "adopted_across_ui_bearing_families",
+    "device_evidence_per_composition"
+  ],
+  "non_derivation": [
+    "No platform HIG asset, shader, component, font, or numeric spec is copied; platform sources inform neutral roles and intent only.",
+    "Vision Pro visual admission does not import Vision Pro interaction; controller/ray interaction comes from PICO and Meta.",
+    "This standard does not mandate rebuilding any existing package UI; adoption is per family through its own gate.",
+    "No device usability, comfort, or accessibility result transfers across a renderer, runtime, device, or composition boundary."
+  ]
+}

@@ -10,6 +10,7 @@ namespace Lingkyn.Inventory.UGUI
         [SerializeField] private CanvasGroup group;
         [SerializeField] private Button primaryAction;
         [SerializeField] private Text label;
+        [SerializeField] private InventorySkin skin;
 
         public event Action PrimaryActionRequested;
 
@@ -39,6 +40,18 @@ namespace Lingkyn.Inventory.UGUI
             group.alpha = enabled ? 1f : 0.45f;
             if (primaryAction != null) primaryAction.interactable = enabled;
             if (label != null) label.text = enabled ? "Primary action" : "Unavailable";
+        }
+
+        public void ApplySkin(InventorySkin value)
+        {
+            skin = value;
+            if (skin == null) return;
+            InventorySkin.StyleBackground(GetComponent<Image>(), skin.sectionColor, skin.sectionSprite);
+            if (primaryAction != null)
+            {
+                InventorySkin.StyleBackground(primaryAction.targetGraphic as Image, skin.accentColor, skin.sectionSprite);
+            }
+            InventorySkin.StyleText(label, skin.textColor, skin.font);
         }
 
         private void OnPrimaryAction() => PrimaryActionRequested?.Invoke();

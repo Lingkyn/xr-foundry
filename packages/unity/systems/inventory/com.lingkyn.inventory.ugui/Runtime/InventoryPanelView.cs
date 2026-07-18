@@ -1,5 +1,6 @@
 using Lingkyn.Inventory.Presentation;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Lingkyn.Inventory.UGUI
 {
@@ -19,6 +20,14 @@ namespace Lingkyn.Inventory.UGUI
             if (grid != null) grid.Render(model);
             if (details != null) details.Render(model);
             if (actionMenu != null) actionMenu.Render(model);
+        }
+
+        public void ApplySkin(InventorySkin skin)
+        {
+            if (skin != null) InventorySkin.StyleBackground(GetComponent<Image>(), skin.panelColor, skin.panelSprite);
+            if (grid != null) grid.ApplySkin(skin);
+            if (details != null) details.ApplySkin(skin);
+            if (actionMenu != null) actionMenu.ApplySkin(skin);
         }
     }
 }

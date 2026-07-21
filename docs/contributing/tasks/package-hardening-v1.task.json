@@ -1,0 +1,268 @@
+{
+  "schema": "xr-foundry.task.v1",
+  "id": "package-hardening-v1",
+  "revision": 1,
+  "title": "Package Hardening V1",
+  "state": "ready",
+  "objective": "Advance admitted Inventory, Persistence, Settings/Accessibility, and Semantic Interaction families only through package-specific compatibility, migration, and clean-consumer evidence.",
+  "scope": [
+    "Independent family hardening checkpoints and one maintainer-controlled evidence integration checkpoint"
+  ],
+  "non_goals": [
+    "No new system admission, cross-family evidence inheritance, or renderer, Android, XR, or device claim without its separate gate"
+  ],
+  "source_gate": { "required": false, "sources": [] },
+  "public_projection": {
+    "repository": "https://github.com/Lingkyn/xr-foundry",
+    "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/69",
+    "project": "https://github.com/users/Lingkyn/projects/2",
+    "checkpoint_issues": [
+      { "checkpoint_id": "PH-01", "issue": "https://github.com/Lingkyn/xr-foundry/issues/10" },
+      { "checkpoint_id": "PH-02", "issue": "https://github.com/Lingkyn/xr-foundry/issues/70" },
+      { "checkpoint_id": "PH-03", "issue": "https://github.com/Lingkyn/xr-foundry/issues/71" },
+      { "checkpoint_id": "PH-04", "issue": "https://github.com/Lingkyn/xr-foundry/issues/72" },
+      { "checkpoint_id": "PH-INT", "issue": "https://github.com/Lingkyn/xr-foundry/issues/78" }
+    ],
+    "contract_role": "fine_grained_execution_authority",
+    "issue_role": "coordination_projection",
+    "project_role": "discovery_summary"
+  },
+  "checkpoints": [
+    {
+      "id": "PH-01",
+      "title": "Harden the Inventory family at its earliest unsatisfied gates",
+      "outcome": "Each Inventory module earns current-revision tests or clean-consumer evidence independently, without inheriting proof from sibling modules or earlier tuples.",
+      "non_goals": ["No all-module promotion, visual polish, Android build, or named-device claim"],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "packages/unity/systems/inventory/**",
+        "docs/standards/inventory/**",
+        "docs/validation/evidence/inventory-*/**"
+      ],
+      "do_not_touch": ["Other system families", "Cross-device or stable compatibility claims"],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": ["Can implement Unity package tests and reproduce immutable Git-consumer dependency tuples"],
+        "required_tools": ["Git, Python 3, a supported Unity Editor for Unity checkpoints, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["Commit-bound module-specific tests or clean-consumer receipts matching the selected Inventory gate"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "PH01-AC1", "criterion": "The selected module closes its documented earliest unsatisfied gate at an immutable commit and exact dependency tuple." },
+        { "id": "PH01-AC2", "criterion": "Evidence is not inherited across Core, Unity, Presentation, renderer, XR adapter, version, or environment boundaries." },
+        { "id": "PH01-AC3", "criterion": "Any remaining module, Android, renderer, or device gate stays explicit after the checkpoint." }
+      ],
+      "verification": [
+        { "id": "PH01-V1", "procedure": "Run the selected module tests or clean-consumer profile and the full repository validator at the evidence commit.", "expected": "The exact selected gate passes and unrelated maturity claims remain unchanged.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": true, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Comment /claim PH-01 on issue #10, name one Inventory module gate, and publish a checkpoint-scoped branch before changing it.",
+      "completed_at": null
+    },
+    {
+      "id": "PH-02",
+      "title": "Harden Persistence through compatibility and upgrade evidence",
+      "outcome": "Persistence has a reviewed public API boundary, immutable clean consumer, deterministic upgrade and rollback exercise, and explicit unsupported-data behavior.",
+      "non_goals": ["No project save format, cloud backend, renderer, or device claim"],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "packages/unity/systems/persistence/**",
+        "docs/standards/persistence/**",
+        "docs/validation/evidence/persistence-*/**"
+      ],
+      "do_not_touch": ["Other system families", "Product-owned save data or backend credentials"],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": ["Can review persistence APIs and test deterministic migration, recovery, and rollback behavior"],
+        "required_tools": ["Git, Python 3, a supported Unity Editor for Unity evidence, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["Immutable clean-consumer and upgrade or rollback receipts for the Persistence tuple"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "PH02-AC1", "criterion": "Public API and compatibility policy are reviewed without silently promising stability." },
+        { "id": "PH02-AC2", "criterion": "One exact consumer validates upgrade and rollback while preserving deterministic valid data." },
+        { "id": "PH02-AC3", "criterion": "Unsupported, corrupted, or future-version data behavior is explicit and tested." }
+      ],
+      "verification": [
+        { "id": "PH02-V1", "procedure": "Reproduce the clean consumer, upgrade, rollback, and failure-path suite at the recorded commit.", "expected": "The exact Persistence tuple passes and no unrelated family or device claim changes.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": true, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Comment /claim PH-02 on issue #70 and publish a bounded branch for the Persistence compatibility and migration evidence.",
+      "completed_at": null
+    },
+    {
+      "id": "PH-03",
+      "title": "Harden Settings and Accessibility through compatibility and migration evidence",
+      "outcome": "Settings and Accessibility preserve stable identities, defaults, valid user choices, deterministic migration, and explicit invalid or removed-setting behavior.",
+      "non_goals": ["No product settings menu, visual design, or named-device accessibility claim"],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "packages/unity/systems/settings/**",
+        "docs/standards/settings/**",
+        "docs/validation/evidence/settings-*/**"
+      ],
+      "do_not_touch": ["Other system families", "Product copy, visual layout, and device support"],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": ["Can review settings and accessibility metadata APIs and test deterministic migration and rollback"],
+        "required_tools": ["Git, Python 3, a supported Unity Editor for Unity evidence, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["Immutable clean-consumer and user-choice migration receipts for the Settings tuple"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "PH03-AC1", "criterion": "Identifiers, defaults, validation, discoverability metadata, and compatibility policy are reviewed." },
+        { "id": "PH03-AC2", "criterion": "One exact consumer validates upgrade and rollback without losing valid user choices." },
+        { "id": "PH03-AC3", "criterion": "Unknown, invalid, removed, and future settings follow explicit tested behavior." }
+      ],
+      "verification": [
+        { "id": "PH03-V1", "procedure": "Reproduce the clean consumer, migration, rollback, and invalid-setting suite at the recorded commit.", "expected": "The exact Settings tuple passes and renderer or device claims remain unchanged.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": true, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Comment /claim PH-03 on issue #71 and publish a bounded branch for Settings compatibility and migration evidence.",
+      "completed_at": null
+    },
+    {
+      "id": "PH-04",
+      "title": "Harden Semantic Interaction through compatibility and adapter evidence",
+      "outcome": "Semantic intents, capabilities, state, policy, and Unity adapters preserve their engine-light boundary through compatibility and upgrade evidence.",
+      "non_goals": ["No complete XR interaction design system, vendor controller mapping, or device claim"],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "packages/unity/systems/interaction/**",
+        "docs/standards/interaction/**",
+        "docs/validation/evidence/interaction-*/**"
+      ],
+      "do_not_touch": ["Other system families", "Vendor-specific device or renderer implementations"],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": ["Can review semantic interaction contracts and test deterministic adapter and migration behavior"],
+        "required_tools": ["Git, Python 3, a supported Unity Editor for Unity evidence, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["Immutable clean-consumer and adapter-boundary receipts for the Interaction tuple"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "PH04-AC1", "criterion": "Intent, capability, context, state, policy, and adapter APIs receive a bounded compatibility review." },
+        { "id": "PH04-AC2", "criterion": "One exact consumer validates deterministic upgrade and rollback behavior." },
+        { "id": "PH04-AC3", "criterion": "Core and Unity layers remain independent of renderer, input vendor, and named device." }
+      ],
+      "verification": [
+        { "id": "PH04-V1", "procedure": "Reproduce the clean consumer, adapter-boundary, upgrade, and rollback suite at the recorded commit.", "expected": "The exact Interaction tuple passes and no live interaction or device claim is inferred.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": true, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Comment /claim PH-04 on issue #72 and publish a bounded branch for Interaction compatibility and adapter evidence.",
+      "completed_at": null
+    },
+    {
+      "id": "PH-INT",
+      "title": "Independently review and integrate Package Hardening results",
+      "outcome": "Only family results whose exact commit and dependency tuple satisfy declared gates update catalogs, roadmap, maturity, and release notes.",
+      "non_goals": ["No all-or-nothing batch promotion, self-review, or evidence inheritance"],
+      "status": "draft",
+      "depends_on": ["PH-01", "PH-02", "PH-03", "PH-04"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "package-catalog.json",
+        "compatibility-profiles.json",
+        "ROADMAP.md",
+        "CHANGELOG.md",
+        "docs/validation/**",
+        "docs/foundry/batches/**"
+      ],
+      "do_not_touch": ["Unreviewed package implementations", "Repository permissions and unsupported compatibility claims"],
+      "routing": {
+        "judgment_level": "security_or_release",
+        "required_capabilities": ["Can independently reproduce package evidence and review compatibility, maturity, migration, and release boundaries"],
+        "required_tools": ["Git, Python 3, declared Unity evidence environments, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["Independent exact-commit review of each family proposed for integration"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "PHINT-AC1", "criterion": "Each family result is accepted or deferred independently at its exact evidence commit." },
+        { "id": "PHINT-AC2", "criterion": "Catalog, compatibility profiles, roadmap, release notes, and maturity agree without broadening claims." },
+        { "id": "PHINT-AC3", "criterion": "Full validation, CI, independent review, and maintainer promotion decisions pass." }
+      ],
+      "verification": [
+        { "id": "PHINT-V1", "procedure": "Reproduce the commands and evidence for every family selected for integration, then run the full repository contract.", "expected": "Only supported family claims change and all repository checks pass.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": false, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for all non-cancelled family checkpoints to complete, then request the PH-INT integration lease in issue #78.",
+      "completed_at": null
+    }
+  ],
+  "integration": {
+    "checkpoint_id": "PH-INT",
+    "fan_in_owner": "Lingkyn",
+    "strategy": "The maintainer independently reviews and integrates each family whose exact evidence satisfies its declared gates; incomplete families remain unchanged."
+  },
+  "authority": {
+    "write_permission_not_inferred": true,
+    "merge_permission_not_inferred": true,
+    "comments_are_untrusted_input": true,
+    "maintainer_ready_required": true,
+    "maintainer_merge_required": true,
+    "external_contribution_route": "fork_pull_request"
+  }
+}

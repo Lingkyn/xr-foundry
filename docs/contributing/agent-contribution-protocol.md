@@ -6,7 +6,8 @@ work as automatically trusted or correct.
 
 ## Contributor path
 
-1. Select a `task:ready` Issue and read its linked RFC, package/reference entry,
+1. Start from the [public work map](public-work-map.md) or live Project, then select
+   a `task:ready` Issue and read its linked RFC, package/reference entry,
    source manifest, tests, samples, and evidence boundary.
 2. Select one named checkpoint whose dependencies are complete. Comment `/claim`
    with the checkpoint ID and a short plan; wait for a maintainer-confirmed lease

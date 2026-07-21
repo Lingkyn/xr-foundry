@@ -1,5 +1,10 @@
 # Public Task Hall V1
 
+For the outcome-level entry before selecting a checkpoint, start with the
+maintained [public work map](public-work-map.md). It exposes both maintainer plans
+and community proposals, while this Task Hall defines how admitted work becomes
+claimable, durable, reviewable, and resumable.
+
 The Task Hall is XR Foundry's shared public workbench for people and their coding
 agents. It makes useful work discoverable without turning one large Issue into one
 indivisible unit. For a registered workstream, the parent Issue is the umbrella

@@ -1,0 +1,135 @@
+{
+  "$schema": "docs/contributing/public-work-map.schema.json",
+  "schema": "xr-foundry.public_work_map.v1",
+  "revision": 3,
+  "generated_at": "2026-07-17T00:50:29Z",
+  "authority": {
+    "roadmap": "outcome_sequence",
+    "milestone": "outcome_batch",
+    "project": "discovery_and_scheduling_summary",
+    "umbrella_issue": "outcome_coordination_projection",
+    "checkpoint_issue": "bounded_work_coordination_projection",
+    "task_contract": "fine_grained_execution_authority",
+    "registry": "registered_task_index",
+    "pull_request": "reviewable_change_and_fan_in",
+    "evidence": "claim_specific_proof",
+    "maintainer_controls_ready_and_merge": true
+  },
+  "entry_routes": [
+    {
+      "id": "maintainer_plan",
+      "label": "Maintainer Plan",
+      "entry": "../../ROADMAP.md",
+      "converges_at": "maintainer_admission",
+      "grants_ready": false
+    },
+    {
+      "id": "community_proposal",
+      "label": "Community Proposal",
+      "entry": "https://github.com/Lingkyn/xr-foundry/issues/new?template=package-proposal.yml",
+      "converges_at": "maintainer_admission",
+      "grants_ready": false
+    }
+  ],
+  "milestones": [
+    {
+      "id": "foundry-commons-v1",
+      "title": "M1 Foundry Commons V1",
+      "outcome": "One maintained public work pipeline connects plans and proposals to resumable checkpoints.",
+      "state": "active",
+      "github_number": 1,
+      "github_url": "https://github.com/Lingkyn/xr-foundry/milestone/1"
+    },
+    {
+      "id": "package-hardening-v1",
+      "title": "M2 Package Hardening V1",
+      "outcome": "Admitted package families advance only through independent compatibility and migration evidence.",
+      "state": "active",
+      "github_number": 2,
+      "github_url": "https://github.com/Lingkyn/xr-foundry/milestone/2"
+    },
+    {
+      "id": "device-lab-evidence-v1",
+      "title": "M3 Device Lab Evidence V1",
+      "outcome": "Research, artifact attestation, and named-device execution produce separately reviewable evidence.",
+      "state": "active",
+      "github_number": 3,
+      "github_url": "https://github.com/Lingkyn/xr-foundry/milestone/3"
+    },
+    {
+      "id": "localization-admission-v1",
+      "title": "M4 Localization Admission V1",
+      "outcome": "Localization receives an evidence-backed admit, revise, or reject decision before package creation.",
+      "state": "active",
+      "github_number": 4,
+      "github_url": "https://github.com/Lingkyn/xr-foundry/milestone/4"
+    }
+  ],
+  "initiatives": [
+    {
+      "id": "curated-commons-v1",
+      "title": "Curated Commons V1",
+      "origin": "maintainer_plan",
+      "system_family": "foundry",
+      "priority": "P0",
+      "state": "waiting",
+      "milestone": "foundry-commons-v1",
+      "execution_surfaces": ["repo_only"],
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/64",
+      "task_contract": "docs/contributing/tasks/curated-commons-v1.task.json",
+      "exact_next_action": "Create and visually verify the eight required saved views in GitHub Project #2, record evidence on issue #66, and resume integration."
+    },
+    {
+      "id": "standard-entry-v1",
+      "title": "Complete standard-entry contract",
+      "origin": "maintainer_plan",
+      "system_family": "foundry",
+      "priority": "P0",
+      "state": "ready",
+      "milestone": "foundry-commons-v1",
+      "execution_surfaces": ["repo_only"],
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/62",
+      "task_contract": "docs/contributing/tasks/standard-entry-v1.task.json",
+      "exact_next_action": "Claim SE-01 in issue #67 and freeze the machine-validated standard-entry contract."
+    },
+    {
+      "id": "package-hardening-v1",
+      "title": "Package Hardening V1",
+      "origin": "maintainer_plan",
+      "system_family": "package-hardening",
+      "priority": "P1",
+      "state": "ready",
+      "milestone": "package-hardening-v1",
+      "execution_surfaces": ["repo_only", "unity"],
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/69",
+      "task_contract": "docs/contributing/tasks/package-hardening-v1.task.json",
+      "exact_next_action": "Claim one family checkpoint (#10, #70, #71, or #72) whose required environment is available."
+    },
+    {
+      "id": "device-lab-evidence-v1",
+      "title": "Device Lab Evidence V1",
+      "origin": "maintainer_plan",
+      "system_family": "device-lab",
+      "priority": "P1",
+      "state": "ready",
+      "milestone": "device-lab-evidence-v1",
+      "execution_surfaces": ["repo_only", "android_build", "named_device"],
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/73",
+      "task_contract": "docs/contributing/tasks/device-lab-evidence-v1.task.json",
+      "exact_next_action": "Choose a Ready repo-only, artifact, or named-device checkpoint whose declared tools and hardware are available."
+    },
+    {
+      "id": "localization-admission-v1",
+      "title": "Localization Admission V1",
+      "origin": "maintainer_plan",
+      "system_family": "localization",
+      "priority": "P2",
+      "state": "source_gate",
+      "milestone": "localization-admission-v1",
+      "execution_surfaces": ["repo_only"],
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/74",
+      "task_contract": "docs/contributing/tasks/localization-admission-v1.task.json",
+      "exact_next_action": "Help mature LOC-01 in issue #75; a maintainer must admit it as Ready before anyone claims implementation work."
+    }
+  ]
+}

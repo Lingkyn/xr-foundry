@@ -47,6 +47,14 @@ is a time-limited coordination lease and grants no GitHub permission. External
 contributors normally use forks. Maintainers retain readiness, review, integration,
 promotion, release, repository-setting, and permission decisions.
 
+The maintained [public work map](docs/contributing/public-work-map.md) connects two
+entry routes: maintainer plans from the Roadmap and community reusable-system
+proposals. They converge only after maintainer admission. The Roadmap sequences
+outcomes; milestones batch outcomes; the Project summarizes discovery and
+scheduling; Issues coordinate umbrellas and checkpoints; registered task contracts
+hold fine-grained execution authority; pull requests fan in reviewed changes; and
+receipts prove exact claims. No one surface silently replaces another.
+
 Umbrella Issues preserve outcomes and dependency graphs; independently claimable
 checkpoints and sub-issues preserve execution state. A claim covers one checkpoint,
 not the whole umbrella. A pause, lease release, transfer, or adoption must preserve

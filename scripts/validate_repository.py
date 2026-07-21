@@ -24,6 +24,7 @@ from yaml.constructor import ConstructorError
 
 
 ROOT = Path(__file__).resolve().parents[1]
+LOCAL_CONTROL_DIRECTORY = "." + "ai" + "os"
 REQUIRED_ROOT_FILES = {
     "README.md", "LICENSE", "CHANGELOG.md", "ROADMAP.md", "CONTRIBUTING.md",
     "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md", "AGENTS.md", "CLAUDE.md",
@@ -115,6 +116,9 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/contributing/task-hall.md",
     "docs/contributing/task-hall.v1.json",
     "docs/contributing/task-hall.v1.schema.json",
+    "docs/contributing/public-work-map.md",
+    "docs/contributing/public-work-map.json",
+    "docs/contributing/public-work-map.schema.json",
     "docs/contributing/task-contract.schema.json",
     "docs/contributing/task-contract.example.json",
     "docs/contributing/work-continuation.schema.json",
@@ -231,6 +235,7 @@ def unity_external_dependency_is_satisfied(declared: Any, resolved: Any) -> bool
     return comparison is not None and comparison >= 0
 TASK_HALL_VERSION = "0.3.0"
 TASK_HALL_REGISTRY_PATH = "docs/contributing/tasks/task-registry.json"
+PUBLIC_WORK_MAP_PATH = "docs/contributing/public-work-map.json"
 TASK_HALL_PROJECT = "https://github.com/users/Lingkyn/projects/2"
 TASK_HALL_TASKS_DIR = "docs/contributing/tasks"
 TASK_HALL_UMBRELLA_STATES = [
@@ -525,7 +530,12 @@ def scan_text_safety(root: Path) -> list[str]:
     absolute_windows_path = re.compile(r"\b[A-Za-z]:\\(?:Users|Program Files|rrjm)\\", re.IGNORECASE)
     secret_pattern = re.compile(r"(api[_-]?key|access[_-]?token|client[_-]?secret)\s*[:=]\s*['\"][^'\"]+", re.IGNORECASE)
     for path in root.rglob("*"):
-        if not path.is_file() or ".git" in path.relative_to(root).parts:
+        relative = path.relative_to(root)
+        if (
+            not path.is_file()
+            or ".git" in relative.parts
+            or (relative.parts and relative.parts[0] == LOCAL_CONTROL_DIRECTORY)
+        ):
             continue
         text = decode_text_file(path)
         if text is None:
@@ -543,6 +553,28 @@ def scan_text_safety(root: Path) -> list[str]:
         if secret_pattern.search(text):
             errors.append(f"possible credential in live repository: {path.relative_to(root)}")
     return errors
+
+
+def validate_local_control_plane_is_untracked(root: Path) -> list[str]:
+    """Allow ignored local control data while failing if any of it enters Git."""
+
+    if not (root / ".git").exists():
+        return []
+    result = subprocess.run(
+        ["git", "ls-files", "--", LOCAL_CONTROL_DIRECTORY],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return ["unable to verify that local control-plane files are untracked"]
+    tracked = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if tracked:
+        return [
+            "local control-plane paths must never be tracked: " + ", ".join(tracked)
+        ]
+    return []
 
 
 def validate_ignore_scope(root: Path) -> list[str]:
@@ -2090,6 +2122,107 @@ def validate_task_registry(root: Path, payload: Any, label: str = "task registry
     return errors
 
 
+def validate_public_work_map(
+    root: Path,
+    payload: Any,
+    registry: Any,
+    label: str = "public work map",
+) -> list[str]:
+    schema_path = root / "docs" / "contributing" / "public-work-map.schema.json"
+    errors = validate_json_schema_instance(payload, schema_path, label)
+    if not isinstance(payload, dict):
+        return errors + [f"{label}: work map must be an object"]
+    if payload.get("schema") != "xr-foundry.public_work_map.v1":
+        errors.append(f"{label}: schema is invalid")
+
+    routes = payload.get("entry_routes")
+    route_ids = [
+        item.get("id")
+        for item in routes
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    ] if isinstance(routes, list) else []
+    if set(route_ids) != {"maintainer_plan", "community_proposal"}:
+        errors.append(
+            f"{label}: entry routes must contain maintainer_plan and community_proposal"
+        )
+    if len(route_ids) != len(set(route_ids)):
+        errors.append(f"{label}: entry routes contain duplicate ids")
+
+    milestones = payload.get("milestones")
+    milestone_ids: list[str] = []
+    if isinstance(milestones, list):
+        milestone_ids = [
+            item.get("id")
+            for item in milestones
+            if isinstance(item, dict) and isinstance(item.get("id"), str)
+        ]
+    if len(milestone_ids) != len(set(milestone_ids)):
+        errors.append(f"{label}: milestones contain duplicate ids")
+    known_milestones = set(milestone_ids)
+
+    registry_entries = registry.get("tasks") if isinstance(registry, dict) else None
+    registry_by_id = {
+        item.get("task_id"): item
+        for item in registry_entries
+        if isinstance(item, dict) and isinstance(item.get("task_id"), str)
+    } if isinstance(registry_entries, list) else {}
+
+    initiatives = payload.get("initiatives")
+    initiative_ids: list[str] = []
+    seen_contracts: set[str] = set()
+    seen_umbrellas: set[str] = set()
+    if isinstance(initiatives, list):
+        for index, item in enumerate(initiatives):
+            item_label = f"{label} initiatives[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{item_label}: must be an object")
+                continue
+            task_id = item.get("id")
+            if not isinstance(task_id, str):
+                continue
+            initiative_ids.append(task_id)
+            milestone_id = item.get("milestone")
+            if milestone_id not in known_milestones:
+                errors.append(f"{item_label}: milestone is not declared")
+            registry_entry = registry_by_id.get(task_id)
+            if not isinstance(registry_entry, dict):
+                errors.append(f"{item_label}: task is not registered")
+                continue
+            for field, registry_field in (
+                ("state", "state"),
+                ("umbrella_issue", "umbrella_issue"),
+                ("task_contract", "contract"),
+            ):
+                if item.get(field) != registry_entry.get(registry_field):
+                    errors.append(
+                        f"{item_label}: {field} disagrees with the task registry"
+                    )
+            contract = item.get("task_contract")
+            if isinstance(contract, str):
+                if contract in seen_contracts:
+                    errors.append(f"{label}: duplicate task contract projection {contract}")
+                seen_contracts.add(contract)
+            umbrella = item.get("umbrella_issue")
+            if isinstance(umbrella, str):
+                if umbrella in seen_umbrellas:
+                    errors.append(f"{label}: duplicate umbrella projection {umbrella}")
+                seen_umbrellas.add(umbrella)
+    if len(initiative_ids) != len(set(initiative_ids)):
+        errors.append(f"{label}: initiatives contain duplicate ids")
+
+    mapped_ids = set(initiative_ids)
+    live_registry_ids = {
+        task_id
+        for task_id, entry in registry_by_id.items()
+        if entry.get("state") not in {"closed", "cancelled"}
+    }
+    if missing := live_registry_ids - mapped_ids:
+        errors.append(f"{label}: live registered tasks are missing: {sorted(missing)}")
+    if extra := mapped_ids - set(registry_by_id):
+        errors.append(f"{label}: initiatives are not registered: {sorted(extra)}")
+    return errors
+
+
 def validate_task_hall_authority(payload: Any) -> list[str]:
     errors: list[str] = []
     if not isinstance(payload, dict):
@@ -2323,6 +2456,17 @@ def validate_task_hall_contract(root: Path) -> list[str]:
                     "Task Hall registry schema binding",
                 )
             )
+        public_work_map_path = root / PUBLIC_WORK_MAP_PATH
+        if public_work_map_path.exists():
+            errors.extend(
+                validate_public_work_map(
+                    root,
+                    load_json(public_work_map_path),
+                    registry_payload,
+                )
+            )
+        else:
+            errors.append(f"Public work map is missing: {PUBLIC_WORK_MAP_PATH}")
     elif TASK_HALL_REGISTRY_PATH in REQUIRED_AGENT_COMMONS_FILES:
         errors.append(f"Task Hall registry is missing: {TASK_HALL_REGISTRY_PATH}")
     if labels_path.exists():
@@ -6579,6 +6723,7 @@ def validate_reference_package_use_modes(reference_catalog: Any) -> list[str]:
 
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
+    errors.extend(validate_local_control_plane_is_untracked(root))
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_active_repository_path_references(root))
     errors.extend(validate_agent_guide_source_boundary(root))

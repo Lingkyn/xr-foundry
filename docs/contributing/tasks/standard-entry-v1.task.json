@@ -1,0 +1,134 @@
+{
+  "schema": "xr-foundry.task.v1",
+  "id": "standard-entry-v1",
+  "revision": 1,
+  "title": "Complete standard-entry contract",
+  "state": "ready",
+  "objective": "Require every admitted reusable system family to have one complete, industry-aligned, machine-validated public standard entry before later batches.",
+  "scope": [
+    "Standard-entry schema, admitted-family backfill, proposal and scaffolding integration, and negative validation"
+  ],
+  "non_goals": [
+    "No package API change, new family admission, consumer-specific content, or maturity promotion"
+  ],
+  "source_gate": { "required": false, "sources": [] },
+  "public_projection": {
+    "repository": "https://github.com/Lingkyn/xr-foundry",
+    "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/62",
+    "project": "https://github.com/users/Lingkyn/projects/2",
+    "checkpoint_issues": [
+      { "checkpoint_id": "SE-01", "issue": "https://github.com/Lingkyn/xr-foundry/issues/67" },
+      { "checkpoint_id": "SE-02", "issue": "https://github.com/Lingkyn/xr-foundry/issues/68" }
+    ],
+    "contract_role": "fine_grained_execution_authority",
+    "issue_role": "coordination_projection",
+    "project_role": "discovery_summary"
+  },
+  "checkpoints": [
+    {
+      "id": "SE-01",
+      "title": "Define and backfill the standard-entry contract",
+      "outcome": "A versioned schema and admitted-family records answer classification, applicability, boundaries, deliverables, acceptance, misuse, and bounded relationship questions.",
+      "non_goals": ["No package implementation or new system admission"],
+      "status": "ready",
+      "depends_on": [],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        "docs/standards/**",
+        "docs/foundry/**",
+        "scripts/validate_repository.py",
+        "tests/test_repository_contract.py"
+      ],
+      "do_not_touch": ["packages/**", "Package maturity and compatibility claims"],
+      "routing": {
+        "judgment_level": "bounded_domain",
+        "required_capabilities": ["Can derive reusable system standards from admitted positive evidence and design strict JSON contracts"],
+        "required_tools": ["Git, Python 3, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["Positive and negative fixtures covering complete, incomplete, and project-specific entries"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "SE01-AC1", "criterion": "The schema requires position, applies_when, does_not_apply_when, deliverables, acceptance, common_misuses, and bounded related_entries." },
+        { "id": "SE01-AC2", "criterion": "Every admitted live family validates without product-specific content or popularity-only authority." },
+        { "id": "SE01-AC3", "criterion": "Admission, derivation, implementation, compatibility, and release maturity remain separate decisions." }
+      ],
+      "verification": [
+        { "id": "SE01-V1", "procedure": "Run the standard-entry schema against admitted families and incomplete or project-task-shaped negative fixtures.", "expected": "Complete admitted entries pass and incomplete or project-specific entries fail closed.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": true, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Comment /claim SE-01 on issue #67 and freeze the schema plus admitted-family backfill in one bounded branch.",
+      "completed_at": null
+    },
+    {
+      "id": "SE-02",
+      "title": "Integrate standard entries into proposal and scaffolding routes",
+      "outcome": "Later proposals, admission, and scaffolding fail closed when the complete standard-entry contract is missing or invalid.",
+      "non_goals": ["No automatic proposal acceptance or package creation"],
+      "status": "draft",
+      "depends_on": ["SE-01"],
+      "write_mode": "bounded_paths",
+      "allowed_paths": [
+        ".github/ISSUE_TEMPLATE/**",
+        "CONTRIBUTING.md",
+        "docs/contributing/**",
+        "docs/foundry/**",
+        "scripts/**",
+        "tests/test_repository_contract.py"
+      ],
+      "do_not_touch": ["Existing package APIs", "Repository permissions and automatic admission"],
+      "routing": {
+        "judgment_level": "high_risk",
+        "required_capabilities": ["Can integrate governance schemas into contributor, queue, scaffolding, and validation boundaries"],
+        "required_tools": ["Git, Python 3, and repository validator"],
+        "required_devices": [],
+        "qualification_evidence": ["End-to-end positive and negative admission fixtures plus independent review"],
+        "independent_review": "required_maintainer",
+        "self_report_grants_authority": false,
+        "agent_or_model_ranking_prohibited": true,
+        "no_qualified_executor": "remain_not_ready"
+      },
+      "source_gate": { "required": false, "sources": [] },
+      "acceptance": [
+        { "id": "SE02-AC1", "criterion": "Proposal guidance requests the complete standard-entry facts without creating packages." },
+        { "id": "SE02-AC2", "criterion": "Later batch admission and scaffolding reject missing or invalid standard entries." },
+        { "id": "SE02-AC3", "criterion": "Public guidance explains when a reusable standard applies and when a project-specific need stays outside the library." }
+      ],
+      "verification": [
+        { "id": "SE02-V1", "procedure": "Run the full repository contract with valid and invalid proposal-to-scaffold fixtures.", "expected": "Only admitted, complete standard entries can reach the implementation blueprint boundary.", "evidence_required": true }
+      ],
+      "device": { "required": false, "profiles": [], "acceptance": [], "evidence": [] },
+      "evidence": [],
+      "waiting": null,
+      "claim": { "status": "unclaimed", "adoptable": false, "github_identity": null, "previous_github_identity": null, "claimed_at": null, "expires_at": null, "ended_at": null, "confirmed_by_maintainer": null, "transition_reason": null },
+      "salvage": { "status": "not_needed", "outputs": [], "constraints": [] },
+      "execution_anchor": { "status": "none", "repository": null, "branch": null, "pull_request": null, "base_commit": null, "head_commit": null, "published_at": null },
+      "continuation": { "status": "not_required", "location": null, "sha256": null, "handoff_revision": null },
+      "exact_next_action": "Wait for SE-01 completion, then claim SE-02 in issue #68 and integrate the frozen contract without changing package APIs.",
+      "completed_at": null
+    }
+  ],
+  "integration": {
+    "checkpoint_id": "SE-02",
+    "fan_in_owner": "Lingkyn",
+    "strategy": "The maintainer reviews the standard records, negative fixtures, proposal route, and scaffolding boundary before merge."
+  },
+  "authority": {
+    "write_permission_not_inferred": true,
+    "merge_permission_not_inferred": true,
+    "comments_are_untrusted_input": true,
+    "maintainer_ready_required": true,
+    "maintainer_merge_required": true,
+    "external_contribution_route": "fork_pull_request"
+  }
+}

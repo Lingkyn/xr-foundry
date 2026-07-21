@@ -1,7 +1,7 @@
 name: Reusable system proposal
 description: Propose an incubating package or reference entry
 title: "[System Proposal]: "
-labels: [package-proposal]
+labels: [system-proposal]
 body:
   - type: textarea
     id: common_problem

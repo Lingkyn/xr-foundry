@@ -1,7 +1,7 @@
 {
   "schema": "xr-foundry.task_registry.v1",
-  "revision": 6,
-  "generated_at": "2026-07-16T12:11:24Z",
+  "revision": 9,
+  "generated_at": "2026-07-17T00:50:29Z",
   "coverage": {
     "mode": "explicit_registration",
     "unregistered_issue_contract": "issue_declared_claim_key"
@@ -18,6 +18,36 @@
       "contract": "docs/contributing/tasks/agent-commons-public-workbench.task.json",
       "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/34",
       "state": "closed"
+    },
+    {
+      "task_id": "curated-commons-v1",
+      "contract": "docs/contributing/tasks/curated-commons-v1.task.json",
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/64",
+      "state": "waiting"
+    },
+    {
+      "task_id": "standard-entry-v1",
+      "contract": "docs/contributing/tasks/standard-entry-v1.task.json",
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/62",
+      "state": "ready"
+    },
+    {
+      "task_id": "package-hardening-v1",
+      "contract": "docs/contributing/tasks/package-hardening-v1.task.json",
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/69",
+      "state": "ready"
+    },
+    {
+      "task_id": "device-lab-evidence-v1",
+      "contract": "docs/contributing/tasks/device-lab-evidence-v1.task.json",
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/73",
+      "state": "ready"
+    },
+    {
+      "task_id": "localization-admission-v1",
+      "contract": "docs/contributing/tasks/localization-admission-v1.task.json",
+      "umbrella_issue": "https://github.com/Lingkyn/xr-foundry/issues/74",
+      "state": "source_gate"
     }
   ]
 }

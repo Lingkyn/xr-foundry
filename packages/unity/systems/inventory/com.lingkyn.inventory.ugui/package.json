@@ -1,6 +1,6 @@
 {
   "name": "com.lingkyn.inventory.ugui",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "Lingkyn Inventory UGUI",
   "description": "UGUI views and input adapters for the renderer-neutral Lingkyn Inventory Presentation contract.",
   "unity": "6000.0",

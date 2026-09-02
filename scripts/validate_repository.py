@@ -172,6 +172,11 @@ UNITY_EDITOR_VERSION_PATTERN = re.compile(
 EXACT_RUNTIME_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)(?:\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*"
 )
+VALIDATOR_PYTHON_VERSIONS = ["3.11", "3.12", "3.13"]
+CONTRACT_REQUIREMENTS_PATH = "scripts/contract-requirements.txt"
+CANONICAL_VALIDATION_COMMAND = (
+    "python scripts/validate_repository.py --json --run-contract-tests"
+)
 
 
 def parse_semver_precedence(
@@ -4092,6 +4097,177 @@ def validate_workflow_security(root: Path) -> list[str]:
     return errors
 
 
+def validate_repository_automation_contract(root: Path) -> list[str]:
+    """Keep the public CI and dependency-maintenance foundation reproducible."""
+
+    errors: list[str] = []
+    workflow_path = root / ".github" / "workflows" / "validate.yml"
+    if not workflow_path.exists():
+        return ["repository automation: .github/workflows/validate.yml is missing"]
+    try:
+        workflow = load_workflow(workflow_path)
+    except (yaml.YAMLError, UnicodeDecodeError) as error:
+        return [f"repository automation: validation workflow cannot be parsed safely: {error}"]
+    if not isinstance(workflow, dict):
+        return ["repository automation: validation workflow root must be a mapping"]
+
+    triggers = workflow.get("on")
+    trigger_names = set(triggers) if isinstance(triggers, dict) else set()
+    required_triggers = {"pull_request", "push", "workflow_dispatch"}
+    missing_triggers = sorted(required_triggers - trigger_names)
+    if missing_triggers:
+        errors.append(
+            "repository automation: validation workflow is missing required triggers: "
+            f"{missing_triggers}"
+        )
+    push = triggers.get("push") if isinstance(triggers, dict) else None
+    if not isinstance(push, dict) or push.get("branches") != ["main"]:
+        errors.append("repository automation: validation pushes must target only main")
+
+    jobs = workflow.get("jobs")
+    job = jobs.get("python-contract-matrix") if isinstance(jobs, dict) else None
+    if not isinstance(job, dict):
+        return errors + ["repository automation: python-contract-matrix job is missing"]
+    if job.get("runs-on") != "ubuntu-latest":
+        errors.append("repository automation: python-contract-matrix must use ubuntu-latest")
+    timeout = job.get("timeout-minutes")
+    if not isinstance(timeout, int) or timeout < 1 or timeout > 10:
+        errors.append("repository automation: python-contract-matrix timeout must be between 1 and 10 minutes")
+
+    strategy = job.get("strategy")
+    if not isinstance(strategy, dict) or strategy.get("fail-fast") is not False:
+        errors.append("repository automation: Python matrix must set fail-fast=false")
+    matrix = strategy.get("matrix") if isinstance(strategy, dict) else None
+    python_versions = matrix.get("python-version") if isinstance(matrix, dict) else None
+    if python_versions != VALIDATOR_PYTHON_VERSIONS:
+        errors.append(
+            "repository automation: Python matrix must equal "
+            f"{VALIDATOR_PYTHON_VERSIONS}, got {python_versions!r}"
+        )
+
+    steps = job.get("steps")
+    if not isinstance(steps, list):
+        return errors + ["repository automation: python-contract-matrix steps must be a list"]
+    checkout_step: dict[str, Any] | None = None
+    setup_python_step: dict[str, Any] | None = None
+    run_lines: list[str] = []
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        uses = step.get("uses")
+        if isinstance(uses, str):
+            action = uses.split("@", 1)[0].casefold()
+            if action == "actions/checkout":
+                checkout_step = step
+            elif action == "actions/setup-python":
+                setup_python_step = step
+        run = step.get("run")
+        if isinstance(run, str):
+            run_lines.extend(line.strip() for line in run.splitlines() if line.strip())
+
+    checkout_with = checkout_step.get("with") if isinstance(checkout_step, dict) else None
+    if not isinstance(checkout_with, dict) or checkout_with.get("fetch-depth") != 0:
+        errors.append("repository automation: checkout must fetch full history for public-revision evidence")
+    setup_with = setup_python_step.get("with") if isinstance(setup_python_step, dict) else None
+    if not isinstance(setup_with, dict):
+        errors.append("repository automation: actions/setup-python step is missing")
+    else:
+        if setup_with.get("python-version") != "${{ matrix.python-version }}":
+            errors.append("repository automation: setup-python must consume matrix.python-version")
+        if setup_with.get("cache") != "pip":
+            errors.append("repository automation: setup-python must enable the pip cache")
+        if setup_with.get("cache-dependency-path") != CONTRACT_REQUIREMENTS_PATH:
+            errors.append(
+                "repository automation: pip cache must bind scripts/contract-requirements.txt"
+            )
+
+    install_command = (
+        "python -m pip install --disable-pip-version-check "
+        f"-r {CONTRACT_REQUIREMENTS_PATH}"
+    )
+    if install_command not in run_lines:
+        errors.append("repository automation: pinned contract dependency install command is missing")
+    if CANONICAL_VALIDATION_COMMAND not in run_lines:
+        errors.append("repository automation: canonical full validation command is missing")
+
+    aggregate = jobs.get("repository-contract") if isinstance(jobs, dict) else None
+    if not isinstance(aggregate, dict):
+        errors.append("repository automation: stable repository-contract aggregate job is missing")
+    else:
+        if aggregate.get("name") != "repository-contract":
+            errors.append("repository automation: aggregate check name must remain repository-contract")
+        if aggregate.get("needs") != "python-contract-matrix":
+            errors.append("repository automation: aggregate check must need python-contract-matrix")
+        if aggregate.get("if") != "${{ always() }}":
+            errors.append("repository automation: aggregate check must run with always()")
+        aggregate_permissions = aggregate.get("permissions")
+        if aggregate_permissions != {"contents": "none"}:
+            errors.append("repository automation: aggregate check must override contents=none")
+        aggregate_steps = aggregate.get("steps")
+        aggregate_step = (
+            aggregate_steps[0]
+            if isinstance(aggregate_steps, list)
+            and len(aggregate_steps) == 1
+            and isinstance(aggregate_steps[0], dict)
+            else None
+        )
+        aggregate_env = aggregate_step.get("env") if isinstance(aggregate_step, dict) else None
+        if not isinstance(aggregate_env, dict) or aggregate_env.get(
+            "CONTRACT_MATRIX_RESULT"
+        ) != "${{ needs.python-contract-matrix.result }}":
+            errors.append("repository automation: aggregate check must bind the matrix result")
+        if not isinstance(aggregate_step, dict) or aggregate_step.get("run") != (
+            'test "$CONTRACT_MATRIX_RESULT" = success'
+        ):
+            errors.append("repository automation: aggregate check must fail unless the matrix passes")
+
+    dependabot_path = root / ".github" / "dependabot.yml"
+    if not dependabot_path.exists():
+        return errors + ["repository automation: .github/dependabot.yml is missing"]
+    try:
+        dependabot = load_workflow(dependabot_path)
+    except (yaml.YAMLError, UnicodeDecodeError) as error:
+        return errors + [f"repository automation: Dependabot config cannot be parsed safely: {error}"]
+    if not isinstance(dependabot, dict) or dependabot.get("version") != 2:
+        errors.append("repository automation: Dependabot config must use version 2")
+        updates: list[Any] = []
+    else:
+        raw_updates = dependabot.get("updates")
+        updates = raw_updates if isinstance(raw_updates, list) else []
+
+    expected_directories = {
+        "github-actions": "/",
+        "pip": "/scripts",
+    }
+    for ecosystem, directory in expected_directories.items():
+        matches = [
+            update
+            for update in updates
+            if isinstance(update, dict) and update.get("package-ecosystem") == ecosystem
+        ]
+        if len(matches) != 1:
+            errors.append(
+                f"repository automation: Dependabot requires one {ecosystem} update entry"
+            )
+            continue
+        update = matches[0]
+        if update.get("directory") != directory:
+            errors.append(
+                f"repository automation: Dependabot {ecosystem} directory must be {directory}"
+            )
+        schedule = update.get("schedule")
+        if not isinstance(schedule, dict) or schedule.get("interval") != "monthly":
+            errors.append(
+                f"repository automation: Dependabot {ecosystem} schedule must be monthly"
+            )
+        open_limit = update.get("open-pull-requests-limit")
+        if not isinstance(open_limit, int) or not 1 <= open_limit <= 5:
+            errors.append(
+                f"repository automation: Dependabot {ecosystem} open PR limit must be 1..5"
+            )
+    return errors
+
+
 def validate_inventory_source_manifest(path: Path) -> list[str]:
     errors: list[str] = []
     if not path.exists():
@@ -6586,6 +6762,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_device_lab_contract(root))
     errors.extend(validate_workflow_security(root))
+    errors.extend(validate_repository_automation_contract(root))
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))

@@ -4235,6 +4235,74 @@ class RepositoryContractTests(unittest.TestCase):
 
             self.assertTrue(any("workflow-level permissions must be an explicit mapping" in error for error in errors))
 
+    def test_repository_automation_contract_accepts_current_configuration(self) -> None:
+        self.assertEqual([], MODULE.validate_repository_automation_contract(ROOT))
+
+    def test_repository_automation_contract_rejects_matrix_and_dependabot_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "validate.yml").write_text(
+                """name: Validate packages
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  python-contract-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: [\"3.12\"]
+    steps:
+      - uses: actions/checkout@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        with:
+          python-version: \"3.12\"
+      - run: python scripts/validate_repository.py --json
+  repository-contract:
+    name: repository-contract
+    if: ${{ always() }}
+    needs: python-contract-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: none
+    steps:
+      - env:
+          CONTRACT_MATRIX_RESULT: ${{ needs.python-contract-matrix.result }}
+        run: exit 0
+""",
+                encoding="utf-8",
+            )
+            (root / ".github" / "dependabot.yml").write_text(
+                """version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+""",
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_repository_automation_contract(root)
+
+            self.assertTrue(any("missing required triggers" in error for error in errors))
+            self.assertTrue(any("Python matrix must equal" in error for error in errors))
+            self.assertTrue(any("fetch full history" in error for error in errors))
+            self.assertTrue(any("canonical full validation command" in error for error in errors))
+            self.assertTrue(any("matrix passes" in error for error in errors))
+            self.assertTrue(any("one pip update entry" in error for error in errors))
+
     def test_public_leakage_scan_covers_all_decodable_text_and_skips_binary(self) -> None:
         marker = "vr" + "soundscape"
         with tempfile.TemporaryDirectory() as directory:

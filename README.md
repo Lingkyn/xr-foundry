@@ -192,6 +192,12 @@ python scripts/validate_repository.py --json --fast-structure
 python scripts/validate_repository.py --json --run-contract-tests
 ```
 
+The repository contract supports Python `3.11`, `3.12`, and `3.13`. Pull requests,
+pushes to `main`, and manual workflow runs execute the full contract across that
+matrix. GitHub Actions and the exactly pinned Python contract dependencies are both
+checked monthly by Dependabot; changes remain reviewable pull requests and do not
+gain merge authority from automation.
+
 The fast structure command is iteration feedback and cannot support promotion or
 release. The full command runs repository validation first and skips the test
 suite if that first stage fails.

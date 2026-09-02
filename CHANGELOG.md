@@ -5,6 +5,10 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Hardened the repository foundation with a manually runnable Python 3.11-3.13
+  validation matrix, dependency-aware pip caching, one canonical full contract
+  command, a stable branch-protection aggregate check, monthly Python dependency
+  updates, and validator tests that reject CI or Dependabot drift.
 - Added the renderer-neutral Settings family: typed definitions and values,
   profiles, scoped transactions, whole-snapshot constraints, deterministic
   apply/reverse rollback, persistence seams, accessibility discoverability

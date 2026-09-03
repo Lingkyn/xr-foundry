@@ -30,7 +30,7 @@ evidence remain explicit gates.
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
 | Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
 | See how contributions are recognized | [`Recognition policy`](docs/contributing/recognition-policy.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md) |
-| Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), and [`RFC 0004`](docs/rfcs/0004-progressive-governance.md) |
+| Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), [`RFC 0004`](docs/rfcs/0004-progressive-governance.md), and proposed [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
 
@@ -254,6 +254,11 @@ smart contract, on-chain action, organization transfer, or remote settings chang
 See [`GOVERNANCE.md`](GOVERNANCE.md) for the human-readable boundary and
 [`governance-model.v1.json`](docs/governance/governance-model.v1.json) for the
 machine-enforced contract.
+
+RFC 0006 adds a proposed Agent maturity axis without activating Agent membership.
+The observed state remains `G0 x A0`; `G0 x A1` is a review target with accountable
+principals, declared lineage, evidence-bound capabilities, revocable mandates, and
+human maintainer authority.
 
 ## Public workbench for people and Agents
 

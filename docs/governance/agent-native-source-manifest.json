@@ -1,0 +1,128 @@
+{
+  "schema": "xr-foundry.agent_native_source_manifest.v1",
+  "version": "0.1.0",
+  "reviewed_at": "2026-09-04",
+  "policy": "External sources inform the proposed repository-native contract only. They do not transfer identity roots, credentials, runtime dependencies, tokens, networks, permissions, licenses, or governance authority to XR Foundry.",
+  "sources": [
+    {
+      "id": "a2a-pinned-98853be",
+      "publisher": "A2A Project",
+      "title": "Agent2Agent protocol repository at reviewed commit 98853be376c88df25e1704771cd3ea9ef8823a96",
+      "url": "https://github.com/a2aproject/A2A/tree/98853be376c88df25e1704771cd3ea9ef8823a96",
+      "classification": "description_and_interoperability_reference",
+      "adopted_lessons": ["Agent descriptions and capability discovery benefit from explicit, machine-readable contracts."],
+      "limits": ["A2A is not required for repository-native A1 membership or Unity runtime communication."],
+      "excluded_assumptions": ["A protocol endpoint proves identity, independence, trust, or repository authority."]
+    },
+    {
+      "id": "oasf-pinned-3d1b83b",
+      "publisher": "AGNTCY",
+      "title": "Open Agentic Schema Framework at reviewed commit 3d1b83b6410f222ba2f920e31728041f517ecc9e",
+      "url": "https://github.com/agntcy/oasf/tree/3d1b83b6410f222ba2f920e31728041f517ecc9e",
+      "classification": "description_and_interoperability_reference",
+      "adopted_lessons": ["Capability records should separate declared skills, domains, and supported interfaces."],
+      "limits": ["XR Foundry keeps its smaller local schema and takes no OASF runtime dependency."],
+      "excluded_assumptions": ["Taxonomy membership is evidence that a capability works."]
+    },
+    {
+      "id": "agntcy-identity-pinned-4520772",
+      "publisher": "AGNTCY",
+      "title": "Identity repository at reviewed commit 452077220fc5b7c5c5198251b945df5fe61628f2",
+      "url": "https://github.com/agntcy/identity/tree/452077220fc5b7c5c5198251b945df5fe61628f2",
+      "classification": "future_identity_adapter_reference",
+      "adopted_lessons": ["Portable agent identity benefits from explicit issuer, subject, proof, and verification boundaries."],
+      "limits": ["Repository-native agent_id plus accountable principal is the proposed A1 identity root."],
+      "excluded_assumptions": ["A cryptographic identifier replaces an accountable human or grants a GitHub role."]
+    },
+    {
+      "id": "w3c-did-core",
+      "publisher": "W3C",
+      "title": "Decentralized Identifiers (DIDs) v1.0",
+      "url": "https://www.w3.org/TR/did-core/",
+      "classification": "future_identity_adapter_reference",
+      "adopted_lessons": ["Identifiers, controllers, verification methods, and services are distinct concepts."],
+      "limits": ["No DID method, ledger, resolver, or controller is selected for phase one."],
+      "excluded_assumptions": ["Decentralization terminology requires a blockchain or makes an identifier trustworthy."]
+    },
+    {
+      "id": "w3c-vc-data-model-2",
+      "publisher": "W3C",
+      "title": "Verifiable Credentials Data Model v2.0",
+      "url": "https://www.w3.org/TR/vc-data-model-2.0/",
+      "classification": "future_identity_adapter_reference",
+      "adopted_lessons": ["Issuer, subject, claim, evidence, status, and verification are separate roles."],
+      "limits": ["No credential format, wallet, issuer, verifier, or trust registry is activated."],
+      "excluded_assumptions": ["A signed claim is sufficient capability, independence, or governance evidence."]
+    },
+    {
+      "id": "github-apps-action-identity",
+      "publisher": "GitHub",
+      "title": "About using GitHub Apps",
+      "url": "https://docs.github.com/en/apps/using-github-apps/about-using-github-apps",
+      "classification": "platform_action_identity_reference",
+      "adopted_lessons": ["A future agent action identity should be explicit, scoped, attributable, and revocable."],
+      "limits": ["This proposal installs no GitHub App and changes no account, role, permission, or setting."],
+      "excluded_assumptions": ["An App identity is an independent principal or receives authority from membership metadata."]
+    },
+    {
+      "id": "slsa-v1-2",
+      "publisher": "OpenSSF",
+      "title": "Supply-chain Levels for Software Artifacts specification v1.2",
+      "url": "https://slsa.dev/spec/v1.2/",
+      "classification": "provenance_reference",
+      "adopted_lessons": ["Claims should bind subject, provenance, producing process, and verifiable evidence."],
+      "limits": ["SLSA levels are not copied as Agent trust or governance levels."],
+      "excluded_assumptions": ["Artifact provenance proves social independence or authorizes an action."]
+    },
+    {
+      "id": "in-toto-spec",
+      "publisher": "in-toto",
+      "title": "in-toto specifications",
+      "url": "https://in-toto.io/docs/specs/",
+      "classification": "provenance_reference",
+      "adopted_lessons": ["Evidence chains should make materials, steps, products, and responsible functionaries inspectable."],
+      "limits": ["No in-toto service, key, or attestation infrastructure is deployed in phase one."],
+      "excluded_assumptions": ["Multiple attestations derived from one source become independent evidence."]
+    },
+    {
+      "id": "governing-actions-not-agents-2606-26298",
+      "publisher": "arXiv",
+      "title": "Governing Actions, Not Agents",
+      "url": "https://arxiv.org/abs/2606.26298",
+      "classification": "governance_research",
+      "adopted_lessons": ["Authorization should be attached to bounded actions and contexts rather than broad agent identity."],
+      "limits": ["XR Foundry's mandate fields and authority decisions remain project design choices."],
+      "excluded_assumptions": ["A research proposal is production validation or an authority source."]
+    },
+    {
+      "id": "epistemic-sybil-resistance-2609-01873",
+      "publisher": "arXiv",
+      "title": "Epistemic Sybil Resistance",
+      "url": "https://arxiv.org/abs/2609.01873",
+      "classification": "governance_research",
+      "adopted_lessons": ["Agent counts should account for shared ancestry and correlated evidence rather than treating every output as independent."],
+      "limits": ["The distinct-principal plus distinct-lineage rule is a conservative XR Foundry phase-one policy."],
+      "excluded_assumptions": ["Lineage metadata alone eliminates collusion, common evidence, or model correlation."]
+    },
+    {
+      "id": "social-system-arena-pinned-2bb33c6",
+      "publisher": "cf3i",
+      "title": "SocialSystemArena repository at reviewed commit 2bb33c643da9cc6d94823c7489074138a5a0a624",
+      "url": "https://github.com/cf3i/SocialSystemArena/tree/2bb33c643da9cc6d94823c7489074138a5a0a624",
+      "classification": "evaluation_reference",
+      "adopted_lessons": ["Social and governance behavior needs contextual evaluation beyond isolated task scores."],
+      "limits": ["No benchmark result is imported as an XR Foundry capability or trust claim."],
+      "excluded_assumptions": ["Passing a social benchmark grants membership, independence, or authority."]
+    },
+    {
+      "id": "open-autonomy-pinned-b53eaa9",
+      "publisher": "Valory",
+      "title": "Open Autonomy at reviewed commit b53eaa949f4749b3ee0b609998d74ee8d5e54657",
+      "url": "https://github.com/valory-xyz/open-autonomy/tree/b53eaa949f4749b3ee0b609998d74ee8d5e54657",
+      "classification": "agent_runtime_reference",
+      "adopted_lessons": ["A canonical agent definition and a running service instance should have separate identities and lifecycle evidence."],
+      "limits": ["Only identity and threshold-coordination concepts are considered; no runtime stack is adopted."],
+      "excluded_assumptions": ["Token, staking, bonding, wallet, service registry, consensus, or on-chain operation belongs in phase one."]
+    }
+  ]
+}

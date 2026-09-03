@@ -15,6 +15,9 @@ review period and a maintainer explicitly accepts them.
 
 - Human GitHub identities remain accountable for Issues, Discussions, commits,
   reviews, pull requests, releases, and repository roles.
+- [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) may describe an Agent as a
+  proposed participant with a principal and mandate, but it is inactive and does
+  not replace this human-accountability rule.
 - Maintainers retain final responsibility for readiness, integration, merge,
   release, package promotion, security response, repository settings, and
   permission decisions.
@@ -74,6 +77,12 @@ grants a GitHub role. Each promotion requires evidence, a constitutional proposa
 at least 14 days of public review, and an explicit maintainer decision. The exact
 gates and prohibited effects are maintained in the proposed
 [governance model](docs/governance/README.md).
+
+The separate proposed Agent axis runs from `A0` (the current human-accountable
+Agent-assistance model) to future `A4`. The repository remains at `G0 x A0`.
+`G0 x A1` would recognize accountable Agent contribution and advisory deliberation
+only after RFC 0006's constitutional activation gates. Agent identity, membership,
+mandates, contribution counts, and deliberation never grant GitHub permission.
 
 ## Token, treasury, and on-chain boundary
 

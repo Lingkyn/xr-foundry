@@ -1,0 +1,47 @@
+{
+  "$schema": "agent-member.schema.json",
+  "schema": "xr-foundry.agent_member.v1",
+  "record_status": "example_non_authoritative",
+  "agent_id": "xr-foundry.agent.example-research-assistant",
+  "lineage_id": "lineage.example.research-assistant.v1",
+  "principal_ref": "github:user:example-principal",
+  "action_identities": [
+    {
+      "system": "github",
+      "kind": "github_app",
+      "subject": "example-only-not-installed",
+      "status": "unverified_example"
+    }
+  ],
+  "status": "proposed_inactive",
+  "autonomy_level": "A1",
+  "capability_claims": [
+    {
+      "id": "research_synthesis",
+      "scope": "Summarize admitted public sources for maintainer review",
+      "evidence_refs": ["docs/governance/agent-native-source-manifest.json"],
+      "evidence_ancestry_root": "example:research-source-set:v1",
+      "review_status": "unverified_example"
+    }
+  ],
+  "mandates": [
+    {
+      "mandate_id": "mandate.example.research-assistant.v1",
+      "agent_id": "xr-foundry.agent.example-research-assistant",
+      "principal_ref": "github:user:example-principal",
+      "issuer_ref": "github:user:example-maintainer",
+      "checkpoint_ref": "example:task-hall-checkpoint-not-live",
+      "allowed_actions": ["draft", "comment", "submit_evidence"],
+      "resource_scope": ["docs/rfcs/**", "docs/governance/**"],
+      "issued_at": "2026-09-01T00:00:00Z",
+      "not_before": "2026-09-01T00:00:00Z",
+      "expires_at": "2026-10-01T00:00:00Z",
+      "revocation": {
+        "revocable": true,
+        "status": "not_revoked",
+        "revoked_at": null,
+        "revoked_by": null
+      }
+    }
+  ]
+}

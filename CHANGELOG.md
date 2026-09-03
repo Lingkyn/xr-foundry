@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added proposed RFC 0006 and an inactive Agent-native membership foundation:
+  `G0 x A0` current truth, `G0 x A1` phase-one target, AgentMember identity and
+  mandate schemas, principal-and-lineage independence, evidence ancestry controls,
+  a pinned Research-Lite manifest, and fail-closed authority boundaries. No Agent
+  registry, account, GitHub App, wallet, token, chain, MCP service, or remote setting
+  was activated.
 - Added XFCM v0.1: RFC 0005, component/capability/composition schemas, colocated
   manifests for all 15 Unity packages, explicit renderer/XR variant slots, a
   deterministic 13-component Unity reference lock, consumer-owned lifecycle rules,

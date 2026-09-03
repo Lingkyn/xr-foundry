@@ -2684,6 +2684,135 @@ class RepositoryContractTests(unittest.TestCase):
             any("emergency classification has drifted" in error for error in emergency_errors)
         )
 
+    def test_agent_membership_contract_is_proposed_inactive_and_a1_bounded(self) -> None:
+        self.assertEqual([], MODULE.validate_agent_membership_contract(ROOT))
+        model = MODULE.load_json(
+            ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        )
+        self.assertEqual("proposed", model["status"])
+        self.assertEqual("G0xA0", model["current_cell"])
+        self.assertEqual("G0xA1", model["phase_one_target"])
+        self.assertFalse(model["activation"]["active_policy"])
+        self.assertFalse(model["activation"]["active_agent_membership"])
+        self.assertEqual("A1", model["activation"]["maximum_activatable_stage"])
+        self.assertEqual(MODULE.AGENT_EXTERNAL_EFFECTS, model["external_effects"])
+
+    def test_agent_member_requires_principal_lineage_action_identity_and_mandate(self) -> None:
+        example_path = ROOT / "docs" / "governance" / "agent-member.example.json"
+        original_load_json = MODULE.load_json
+        example = original_load_json(example_path)
+        for field in ("principal_ref", "lineage_id", "action_identities", "mandates"):
+            with self.subTest(field=field):
+                unsafe = copy.deepcopy(example)
+                del unsafe[field]
+
+                def load_without_field(candidate: Path) -> dict:
+                    if Path(candidate) == example_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_without_field):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any(field in error for error in errors), errors)
+
+    def test_agent_membership_rejects_early_a2_to_a4_activation(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        for stage_id in ("A2", "A3", "A4"):
+            with self.subTest(stage_id=stage_id):
+                unsafe = copy.deepcopy(model)
+                stage = next(item for item in unsafe["agent_stages"] if item["id"] == stage_id)
+                stage["activation_allowed"] = True
+
+                def load_with_active_stage(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_active_stage):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any("A2-A4" in error for error in errors), errors)
+
+    def test_agent_membership_rejects_authority_and_external_effect_drift(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        unsafe_cases = (
+            ("authority_boundaries", "membership_grants_write", "authority boundary"),
+            ("authority_boundaries", "contribution_grants_write", "authority boundary"),
+            ("authority_boundaries", "deliberation_grants_write", "authority boundary"),
+            ("authority_boundaries", "membership_grants_merge", "authority boundary"),
+            ("authority_boundaries", "membership_grants_release", "authority boundary"),
+            ("authority_boundaries", "membership_grants_admin", "authority boundary"),
+            ("authority_boundaries", "token_grants_authority", "authority boundary"),
+            ("external_effects", "account_operation", "external effects"),
+            ("external_effects", "wallet", "external effects"),
+            ("external_effects", "treasury", "external effects"),
+            ("external_effects", "token", "external effects"),
+            ("external_effects", "smart_contract", "external effects"),
+            ("external_effects", "onchain_execution", "external effects"),
+            ("external_effects", "remote_settings_change", "external effects"),
+        )
+        for section, field, expected in unsafe_cases:
+            with self.subTest(section=section, field=field):
+                unsafe = copy.deepcopy(model)
+                unsafe[section][field] = True
+
+                def load_with_unsafe(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_unsafe):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_agent_membership_rejects_false_independence_and_evidence_multiplication(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        unsafe_cases = (
+            (
+                "independence_policy",
+                "same_principal_counts_as_independent",
+                "principal-and-lineage independence",
+            ),
+            (
+                "independence_policy",
+                "same_lineage_counts_as_independent",
+                "principal-and-lineage independence",
+            ),
+            (
+                "independence_policy",
+                "same_principal_formal_review",
+                "principal-and-lineage independence",
+            ),
+            (
+                "independence_policy",
+                "same_lineage_formal_review",
+                "principal-and-lineage independence",
+            ),
+            (
+                "evidence_policy",
+                "same_ancestry_multiplies_evidence",
+                "evidence ancestry",
+            ),
+        )
+        for section, field, expected in unsafe_cases:
+            with self.subTest(section=section, field=field):
+                unsafe = copy.deepcopy(model)
+                unsafe[section][field] = True
+
+                def load_with_unsafe(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_unsafe):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
     def test_governance_deliberation_metadata_enforces_complete_review_windows(self) -> None:
         schema = ROOT / "docs" / "contributing" / "deliberation-record.schema.json"
         open_record = MODULE.load_json(

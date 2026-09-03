@@ -145,6 +145,14 @@ REQUIRED_GOVERNANCE_FILES = {
     "docs/governance/source-manifest.json",
     "docs/rfcs/0004-progressive-governance.md",
 }
+REQUIRED_AGENT_MEMBERSHIP_FILES = {
+    "docs/governance/agent-member.example.json",
+    "docs/governance/agent-member.schema.json",
+    "docs/governance/agent-membership-model.schema.json",
+    "docs/governance/agent-membership-model.v1.json",
+    "docs/governance/agent-native-source-manifest.json",
+    "docs/rfcs/0006-agent-native-xr-dao.md",
+}
 GOVERNANCE_STAGE_IDS = ["G0", "G1", "G2", "G3", "G4"]
 GOVERNANCE_DECISION_WINDOWS = {
     "routine_change": 0,
@@ -185,6 +193,77 @@ GOVERNANCE_ACTIVATION = {
     "adoption_requires": "resolved_deliberation_and_explicit_maintainer_decision",
     "minimum_public_review_days": 14,
     "implementation_requires_task_hall_checkpoint": True,
+}
+AGENT_STAGE_IDS = ["A0", "A1", "A2", "A3", "A4"]
+AGENT_IDENTITY_REQUIRED_FIELDS = [
+    "agent_id",
+    "lineage_id",
+    "principal_ref",
+    "action_identities",
+    "status",
+    "autonomy_level",
+    "capability_claims",
+    "mandates",
+]
+AGENT_MANDATE_REQUIRED_FIELDS = [
+    "mandate_id",
+    "agent_id",
+    "principal_ref",
+    "issuer_ref",
+    "checkpoint_ref",
+    "allowed_actions",
+    "resource_scope",
+    "issued_at",
+    "not_before",
+    "expires_at",
+    "revocation",
+]
+AGENT_AUTHORITY_BOUNDARIES = {
+    "membership_grants_write": False,
+    "membership_grants_merge": False,
+    "membership_grants_release": False,
+    "membership_grants_admin": False,
+    "contribution_grants_write": False,
+    "deliberation_grants_write": False,
+    "token_grants_authority": False,
+    "mandate_grants_github_role": False,
+}
+AGENT_INDEPENDENCE_POLICY = {
+    "distinct_principal_required": True,
+    "distinct_lineage_required": True,
+    "same_principal_counts_as_independent": False,
+    "same_lineage_counts_as_independent": False,
+    "same_principal_formal_review": False,
+    "same_lineage_formal_review": False,
+}
+AGENT_EVIDENCE_POLICY = {
+    "capability_claims_require_evidence": True,
+    "ancestry_root_required": True,
+    "same_ancestry_multiplies_evidence": False,
+    "independent_primary_evidence_required_for_additional_count": True,
+}
+AGENT_EXTERNAL_EFFECTS = {
+    "account_operation": False,
+    "github_app_installation": False,
+    "organization_transfer": False,
+    "wallet": False,
+    "treasury": False,
+    "multisig": False,
+    "token": False,
+    "smart_contract": False,
+    "onchain_execution": False,
+    "remote_settings_change": False,
+}
+AGENT_ACTIVATION = {
+    "active_policy": False,
+    "active_agent_membership": False,
+    "maximum_activatable_stage": "A1",
+    "requires_constitutional_review_days": 14,
+    "requires_resolved_deliberation": True,
+    "requires_explicit_maintainer_decision": True,
+    "requires_task_hall_checkpoint": True,
+    "requires_revocation_exercise": True,
+    "requires_independent_review": True,
 }
 REQUIRED_FOUNDRY_FILES = {
     "docs/foundry/README.md",
@@ -1855,6 +1934,72 @@ def validate_governance_source_manifest(root: Path) -> list[str]:
     return errors
 
 
+def validate_agent_native_source_manifest(root: Path) -> list[str]:
+    errors: list[str] = []
+    path = root / "docs" / "governance" / "agent-native-source-manifest.json"
+    if not path.exists():
+        return ["Agent-native source manifest is missing"]
+    payload = load_json(path)
+    if payload.get("schema") != "xr-foundry.agent_native_source_manifest.v1":
+        errors.append("Agent-native source manifest schema is invalid")
+    if payload.get("version") != "0.1.0":
+        errors.append("Agent-native source manifest version must remain 0.1.0")
+    if not str(payload.get("policy", "")).strip():
+        errors.append("Agent-native source manifest must state its transfer boundary")
+    sources = payload.get("sources")
+    if not isinstance(sources, list) or not sources:
+        return errors + ["Agent-native source manifest must contain public sources"]
+    required_ids = {
+        "a2a-pinned-98853be",
+        "oasf-pinned-3d1b83b",
+        "agntcy-identity-pinned-4520772",
+        "w3c-did-core",
+        "w3c-vc-data-model-2",
+        "github-apps-action-identity",
+        "slsa-v1-2",
+        "in-toto-spec",
+        "governing-actions-not-agents-2606-26298",
+        "epistemic-sybil-resistance-2609-01873",
+        "social-system-arena-pinned-2bb33c6",
+        "open-autonomy-pinned-b53eaa9",
+    }
+    allowed_classifications = {
+        "description_and_interoperability_reference",
+        "future_identity_adapter_reference",
+        "platform_action_identity_reference",
+        "provenance_reference",
+        "governance_research",
+        "evaluation_reference",
+        "agent_runtime_reference",
+    }
+    ids: set[str] = set()
+    for source in sources:
+        if not isinstance(source, dict):
+            errors.append("Agent-native sources must be objects")
+            continue
+        source_id = str(source.get("id", ""))
+        if not source_id or source_id in ids:
+            errors.append(f"Agent-native source id is missing or duplicated: {source_id}")
+        ids.add(source_id)
+        if not str(source.get("url", "")).startswith("https://"):
+            errors.append(f"Agent-native source must use public HTTPS: {source_id}")
+        for field in ("publisher", "title", "classification"):
+            if not str(source.get(field, "")).strip():
+                errors.append(f"Agent-native source must state {field}: {source_id}")
+        if source.get("classification") not in allowed_classifications:
+            errors.append(f"Agent-native source classification is invalid: {source_id}")
+        for field in ("adopted_lessons", "limits", "excluded_assumptions"):
+            value = source.get(field)
+            if not isinstance(value, list) or not value or not all(
+                isinstance(item, str) and item.strip() for item in value
+            ):
+                errors.append(f"Agent-native source must state non-empty {field}: {source_id}")
+    missing = required_ids - ids
+    if missing:
+        errors.append(f"Agent-native source manifest lacks required sources: {sorted(missing)}")
+    return errors
+
+
 def _parse_governance_timestamp(
     value: Any,
     label: str,
@@ -2087,6 +2232,133 @@ def validate_governance_contract(root: Path) -> list[str]:
                 errors.append("Governance proposal form is missing required decision fields")
             if template.get("labels") != ["rfc"]:
                 errors.append("Governance proposal form must route to the rfc label")
+    return errors
+
+
+def validate_agent_membership_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_AGENT_MEMBERSHIP_FILES):
+        if not (root / relative).exists():
+            errors.append(f"Agent-native membership foundation is missing {relative}")
+    errors.extend(validate_agent_native_source_manifest(root))
+
+    model_path = root / "docs" / "governance" / "agent-membership-model.v1.json"
+    model_schema_path = root / "docs" / "governance" / "agent-membership-model.schema.json"
+    example_path = root / "docs" / "governance" / "agent-member.example.json"
+    member_schema_path = root / "docs" / "governance" / "agent-member.schema.json"
+    if not model_path.exists() or not example_path.exists():
+        return errors
+
+    model = load_json(model_path)
+    example = load_json(example_path)
+    errors.extend(
+        validate_json_schema_instance(model, model_schema_path, "Agent membership model")
+    )
+    errors.extend(validate_json_schema_instance(example, member_schema_path, "Agent member example"))
+
+    if model.get("schema") != "xr-foundry.agent_membership_model.v1":
+        errors.append("Agent membership model schema identifier is invalid")
+    if model.get("version") != "0.1.0":
+        errors.append("Agent membership model version must remain 0.1.0")
+    if model.get("status") != "proposed":
+        errors.append("Agent membership model must remain proposed until adoption")
+    if model.get("current_cell") != "G0xA0" or model.get("phase_one_target") != "G0xA1":
+        errors.append("Agent maturity must remain at current G0xA0 with proposed G0xA1 target")
+
+    stages = model.get("agent_stages", [])
+    stage_ids = [stage.get("id") for stage in stages if isinstance(stage, dict)]
+    stage_orders = [stage.get("order") for stage in stages if isinstance(stage, dict)]
+    if stage_ids != AGENT_STAGE_IDS or stage_orders != list(range(5)):
+        errors.append("Agent maturity stages or their order have drifted")
+    stage_by_id = {
+        str(stage.get("id")): stage for stage in stages if isinstance(stage, dict)
+    }
+    if stage_by_id.get("A0", {}).get("status") != "observed_current":
+        errors.append("A0 must remain the only observed current Agent stage")
+    if stage_by_id.get("A1", {}).get("status") != "proposed_phase_one":
+        errors.append("A1 must remain the proposed phase-one Agent stage")
+    if any(
+        stage_by_id.get(stage_id, {}).get("status") != "future_only"
+        or stage_by_id.get(stage_id, {}).get("activation_allowed") is not False
+        for stage_id in ("A2", "A3", "A4")
+    ):
+        errors.append("A2-A4 Agent stages must remain future-only and inactive")
+    if stage_by_id.get("A1", {}).get("activation_allowed") is not False:
+        errors.append("A1 must remain inactive until constitutional adoption")
+
+    identity_contract = model.get("identity_contract", {})
+    if identity_contract.get("required_fields") != AGENT_IDENTITY_REQUIRED_FIELDS:
+        errors.append("Agent identity required fields have drifted")
+    if identity_contract.get("identity_grants_authority") is not False:
+        errors.append("Agent identity must not grant authority")
+    mandate_contract = model.get("mandate_contract", {})
+    if mandate_contract.get("required_fields") != AGENT_MANDATE_REQUIRED_FIELDS:
+        errors.append("Agent mandate required fields have drifted")
+    if mandate_contract.get("delegated_repository_authority") is not False:
+        errors.append("A1 mandate must not grant delegated repository authority")
+
+    if model.get("authority_boundaries") != AGENT_AUTHORITY_BOUNDARIES:
+        errors.append("Agent membership, contribution, deliberation, token, or mandate authority boundary has drifted")
+    if model.get("independence_policy") != AGENT_INDEPENDENCE_POLICY:
+        errors.append("Agent principal-and-lineage independence policy has drifted")
+    if model.get("evidence_policy") != AGENT_EVIDENCE_POLICY:
+        errors.append("Agent evidence ancestry policy has drifted")
+    if model.get("external_effects") != AGENT_EXTERNAL_EFFECTS:
+        errors.append("Agent-native external effects must remain disabled in phase one")
+    if model.get("activation") != AGENT_ACTIVATION:
+        errors.append("Proposed Agent membership must remain inactive through A1 only")
+    if model.get("registry_policy") != {
+        "live_registry_created": False,
+        "example_is_authoritative": False,
+    }:
+        errors.append("Agent member registry and example must remain non-live and non-authoritative")
+
+    for field in AGENT_IDENTITY_REQUIRED_FIELDS:
+        if field not in example:
+            errors.append(f"Agent member example is missing required identity field: {field}")
+    if example.get("record_status") != "example_non_authoritative":
+        errors.append("Agent member example must remain explicitly non-authoritative")
+    if example.get("status") != "proposed_inactive" or example.get("autonomy_level") != "A1":
+        errors.append("Agent member example must remain proposed, inactive, and A1-only")
+    for mandate in example.get("mandates", []):
+        if not isinstance(mandate, dict):
+            continue
+        if mandate.get("agent_id") != example.get("agent_id"):
+            errors.append("Agent mandate agent_id must match its member record")
+        if mandate.get("principal_ref") != example.get("principal_ref"):
+            errors.append("Agent mandate principal_ref must match its member record")
+        for field in AGENT_MANDATE_REQUIRED_FIELDS:
+            if field not in mandate:
+                errors.append(f"Agent mandate is missing required field: {field}")
+        parsed_times: dict[str, datetime] = {}
+        for field in ("issued_at", "not_before", "expires_at"):
+            parsed, time_errors = _parse_governance_timestamp(
+                mandate.get(field), "Agent mandate", field
+            )
+            errors.extend(time_errors)
+            if parsed is not None:
+                parsed_times[field] = parsed
+        if all(field in parsed_times for field in ("issued_at", "not_before", "expires_at")):
+            if parsed_times["issued_at"] > parsed_times["not_before"]:
+                errors.append("Agent mandate issued_at must not follow not_before")
+            if parsed_times["not_before"] >= parsed_times["expires_at"]:
+                errors.append("Agent mandate expires_at must follow not_before")
+
+    source_refs = model.get("source_refs", [])
+    if isinstance(source_refs, list):
+        for relative in source_refs:
+            if not isinstance(relative, str) or not (root / relative).is_file():
+                errors.append(f"Agent membership source reference is missing: {relative}")
+
+    rfc_path = root / "docs" / "rfcs" / "0006-agent-native-xr-dao.md"
+    if rfc_path.exists():
+        rfc_text = rfc_path.read_text(encoding="utf-8")
+        if "Status: **Proposed**" not in rfc_text:
+            errors.append("RFC 0006 must remain Proposed until public adoption")
+        if "Activation: **inactive; current observed state remains G0 x A0**" not in rfc_text:
+            errors.append("RFC 0006 must preserve the inactive G0 x A0 current-state boundary")
+        if "Public deliberation: **not opened by this local implementation**" not in rfc_text:
+            errors.append("RFC 0006 must not claim that local implementation opened public review")
     return errors
 
 
@@ -7884,6 +8156,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_active_repository_path_references(root))
     errors.extend(validate_agent_guide_source_boundary(root))
     errors.extend(validate_governance_contract(root))
+    errors.extend(validate_agent_membership_contract(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_component_model(root))

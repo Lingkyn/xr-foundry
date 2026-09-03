@@ -5,6 +5,11 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the proposed DAO-ready XR Open Commons foundation: RFC 0004, a G0-G4
+  governance maturity model, 7-day policy and 14-day constitutional review windows,
+  emergency review bounds, a governance proposal form, source manifest, and
+  machine checks that keep activation, automatic promotion, tokens, wallets,
+  treasury, on-chain execution, organization transfer, and remote settings off.
 - Hardened the repository foundation with a manually runnable Python 3.11-3.13
   validation matrix, dependency-aware pip caching, one canonical full contract
   command, a stable branch-protection aggregate check, monthly Python dependency

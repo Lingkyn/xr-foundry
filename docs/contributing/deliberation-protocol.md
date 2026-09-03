@@ -28,6 +28,35 @@ the repository-specific authority and self-improvement boundary.
    execution state is `ready`, and a separate Task Hall checkpoint grants bounded
    execution authority. The deliberation record never grants repository access.
 
+## Governance review metadata
+
+[RFC 0004](../rfcs/0004-progressive-governance.md) reuses this protocol for
+governance decisions instead of creating a second voting or proposal database. A
+governance record adds all four optional fields together:
+
+- `decision_class`: `routine_change`, `governance_policy`,
+  `constitutional_change`, or `security_emergency`;
+- `governance_stage`: the stage whose authority applies, currently `G0`;
+- `review_opened_at`: the public review start time; and
+- `review_not_before`: the earliest permitted decision time.
+
+Governance-policy review stays open for at least 7 days. Constitutional,
+authority, permission, treasury, on-chain, and stage-transition proposals stay
+open for at least 14 days. These are minimum decision windows, not deadlines or
+automatic acceptance. A maintainer may extend review, reject a proposal, or record
+that more evidence is needed. No metric, vote count, contribution total, payment,
+or token balance can close the review or grant a role.
+
+A security emergency may be contained immediately. The safe public or private
+record is created within 72 hours and a retrospective is completed within 7 days;
+the emergency route cannot permanently amend governance. Sensitive disclosure may
+be delayed under [`SECURITY.md`](../../SECURITY.md).
+
+The schema enforces that the four metadata fields travel together. Repository
+validation additionally checks the time interval and prevents a resolved decision
+from predating `review_not_before`. Records without governance metadata remain
+valid for ordinary Task Hall deliberation.
+
 ## Stable kernel, experiments, and adapters
 
 - The **stable kernel** is the currently adopted Task Hall authority, security,

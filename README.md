@@ -29,6 +29,7 @@ evidence remain explicit gates.
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
 | Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
 | See how contributions are recognized | [`Recognition policy`](docs/contributing/recognition-policy.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md) |
+| Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), and [`RFC 0004`](docs/rfcs/0004-progressive-governance.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
 
@@ -218,6 +219,20 @@ permissions or merge authority.
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.
+
+## DAO-ready Open Commons
+
+XR Foundry is being prepared as public infrastructure that can support progressively
+broader stewardship without pretending a DAO already exists. The current observed
+stage is maintainer-led `G0`; the progressive model and RFC 0004 are proposed and
+inactive until public deliberation and an explicit maintainer decision adopt them.
+Participation, recognition, payment, tokens, and repository permission remain
+separate. This phase creates no wallet, treasury, multisig, token governance,
+smart contract, on-chain action, organization transfer, or remote settings change.
+
+See [`GOVERNANCE.md`](GOVERNANCE.md) for the human-readable boundary and
+[`governance-model.v1.json`](docs/governance/governance-model.v1.json) for the
+machine-enforced contract.
 
 ## Public workbench for people and Agents
 

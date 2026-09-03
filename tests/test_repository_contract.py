@@ -2406,6 +2406,181 @@ class RepositoryContractTests(unittest.TestCase):
             ),
         )
 
+    def test_governance_contract_is_proposed_inactive_and_token_neutral(self) -> None:
+        self.assertEqual([], MODULE.validate_governance_contract(ROOT))
+        model = MODULE.load_json(
+            ROOT / "docs" / "governance" / "governance-model.v1.json"
+        )
+
+        self.assertEqual("proposed", model["status"])
+        self.assertEqual("G0", model["current_stage"])
+        self.assertFalse(model["activation"]["active_policy"])
+        self.assertFalse(model["promotion_policy"]["automatic_promotion"])
+        self.assertEqual(MODULE.GOVERNANCE_TOKEN_POLICY, model["token_policy"])
+        self.assertEqual(MODULE.GOVERNANCE_EXTERNAL_EFFECTS, model["external_effects"])
+        self.assertEqual(
+            ["G0", "G1", "G2", "G3", "G4"],
+            [stage["id"] for stage in model["stages"]],
+        )
+
+    def test_governance_contract_rejects_authority_and_external_effect_drift(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "governance-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        unsafe_cases = (
+            ("external_effects", "wallet", True, "external effects must remain disabled"),
+            ("token_policy", "token_balance_grants_vote", True, "token-neutral"),
+            ("authority", "stage_eligibility_grants_role", True, "authority boundary"),
+            ("activation", "active_policy", True, "remain inactive"),
+        )
+        for section, field, value, expected in unsafe_cases:
+            with self.subTest(section=section, field=field):
+                unsafe = copy.deepcopy(model)
+                unsafe[section][field] = value
+
+                def load_with_unsafe(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_unsafe):
+                    errors = MODULE.validate_governance_contract(ROOT)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_governance_contract_rejects_window_and_stage_drift(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "governance-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+
+        unsafe_window = copy.deepcopy(model)
+        unsafe_window["decision_classes"][1]["minimum_review_days"] = 6
+
+        def load_with_window(candidate: Path) -> dict:
+            if Path(candidate) == model_path:
+                return unsafe_window
+            return original_load_json(candidate)
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_window):
+            window_errors = MODULE.validate_governance_contract(ROOT)
+        self.assertTrue(any("review window has drifted" in error for error in window_errors))
+
+        unsafe_stage = copy.deepcopy(model)
+        unsafe_stage["stages"][1]["order"] = 2
+
+        def load_with_stage(candidate: Path) -> dict:
+            if Path(candidate) == model_path:
+                return unsafe_stage
+            return original_load_json(candidate)
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_stage):
+            stage_errors = MODULE.validate_governance_contract(ROOT)
+        self.assertTrue(any("stages or their order have drifted" in error for error in stage_errors))
+
+        unsafe_emergency = copy.deepcopy(model)
+        unsafe_emergency["decision_classes"][0]["emergency"] = True
+
+        def load_with_emergency(candidate: Path) -> dict:
+            if Path(candidate) == model_path:
+                return unsafe_emergency
+            return original_load_json(candidate)
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_emergency):
+            emergency_errors = MODULE.validate_governance_contract(ROOT)
+        self.assertTrue(
+            any("emergency classification has drifted" in error for error in emergency_errors)
+        )
+
+    def test_governance_deliberation_metadata_enforces_complete_review_windows(self) -> None:
+        schema = ROOT / "docs" / "contributing" / "deliberation-record.schema.json"
+        open_record = MODULE.load_json(
+            ROOT / "docs" / "contributing" / "deliberation-record.open.example.json"
+        )
+        valid = copy.deepcopy(open_record)
+        valid.update(
+            {
+                "decision_class": "governance_policy",
+                "governance_stage": "G0",
+                "review_opened_at": "2026-09-03T12:00:00Z",
+                "review_not_before": "2026-09-10T12:00:00Z",
+            }
+        )
+        self.assertEqual(
+            [], MODULE.validate_json_schema_instance(valid, schema, "valid governance review")
+        )
+        self.assertEqual(
+            [], MODULE.validate_governance_deliberation_metadata(valid, "valid governance review")
+        )
+
+        partial = copy.deepcopy(open_record)
+        partial["decision_class"] = "governance_policy"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(partial, schema, "partial governance review")
+        )
+        self.assertTrue(
+            any(
+                "all-or-none" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    partial, "partial governance review"
+                )
+            )
+        )
+
+        short_policy = copy.deepcopy(valid)
+        short_policy["review_not_before"] = "2026-09-10T11:59:59Z"
+        self.assertTrue(
+            any(
+                "at least 7 days" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    short_policy, "short policy review"
+                )
+            )
+        )
+
+        non_utc = copy.deepcopy(valid)
+        non_utc["review_opened_at"] = "2026-09-03T13:00:00+01:00"
+        non_utc["review_not_before"] = "2026-09-10T13:00:00+01:00"
+        self.assertTrue(
+            any(
+                "must use UTC" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    non_utc, "non-UTC governance review"
+                )
+            )
+        )
+
+        short_constitution = copy.deepcopy(valid)
+        short_constitution["decision_class"] = "constitutional_change"
+        short_constitution["review_not_before"] = "2026-09-17T11:59:59Z"
+        self.assertTrue(
+            any(
+                "at least 14 days" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    short_constitution, "short constitutional review"
+                )
+            )
+        )
+
+        resolved = MODULE.load_json(
+            ROOT / "docs" / "contributing" / "deliberation-record.resolved.example.json"
+        )
+        resolved.update(
+            {
+                "decision_class": "constitutional_change",
+                "governance_stage": "G0",
+                "review_opened_at": "2026-09-03T12:00:00Z",
+                "review_not_before": "2026-09-17T12:00:00Z",
+            }
+        )
+        resolved["decision"]["decided_at"] = "2026-09-17T11:59:59Z"
+        self.assertTrue(
+            any(
+                "predates review_not_before" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    resolved, "early resolved governance review"
+                )
+            )
+        )
+
     def test_deliberation_terminal_states_fail_closed(self) -> None:
         schema = ROOT / "docs" / "contributing" / "deliberation-record.schema.json"
         open_record = json.loads(

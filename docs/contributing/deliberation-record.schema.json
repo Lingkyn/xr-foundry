@@ -17,6 +17,17 @@
     "status": { "enum": ["open", "resolved", "rejected", "superseded"] },
     "objective": { "type": "string", "minLength": 1, "maxLength": 500 },
     "current_question": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "decision_class": {
+      "enum": [
+        "routine_change",
+        "governance_policy",
+        "constitutional_change",
+        "security_emergency"
+      ]
+    },
+    "governance_stage": { "enum": ["G0", "G1", "G2", "G3", "G4"] },
+    "review_opened_at": { "type": "string", "format": "date-time" },
+    "review_not_before": { "type": "string", "format": "date-time" },
     "assumptions": {
       "type": "array",
       "items": { "$ref": "#/$defs/claim" },
@@ -83,6 +94,12 @@
         "private_chain_of_thought_required": { "const": false }
       }
     }
+  },
+  "dependentRequired": {
+    "decision_class": ["governance_stage", "review_opened_at", "review_not_before"],
+    "governance_stage": ["decision_class", "review_opened_at", "review_not_before"],
+    "review_opened_at": ["decision_class", "governance_stage", "review_not_before"],
+    "review_not_before": ["decision_class", "governance_stage", "review_opened_at"]
   },
   "$defs": {
     "strings": {

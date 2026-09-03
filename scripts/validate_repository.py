@@ -14,7 +14,7 @@ import sys
 import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -134,6 +134,56 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/validation/independent-review-receipt.example.json",
     "docs/validation/independent-review-receipt.schema.json",
     "scripts/contract-requirements.txt",
+}
+REQUIRED_GOVERNANCE_FILES = {
+    "GOVERNANCE.md",
+    ".github/ISSUE_TEMPLATE/governance-proposal.yml",
+    "docs/governance/README.md",
+    "docs/governance/governance-model.schema.json",
+    "docs/governance/governance-model.v1.json",
+    "docs/governance/source-manifest.json",
+    "docs/rfcs/0004-progressive-governance.md",
+}
+GOVERNANCE_STAGE_IDS = ["G0", "G1", "G2", "G3", "G4"]
+GOVERNANCE_DECISION_WINDOWS = {
+    "routine_change": 0,
+    "governance_policy": 7,
+    "constitutional_change": 14,
+    "security_emergency": 0,
+}
+GOVERNANCE_EXTERNAL_EFFECTS = {
+    "organization_transfer": False,
+    "wallet": False,
+    "treasury": False,
+    "multisig": False,
+    "token_governance": False,
+    "smart_contract": False,
+    "onchain_execution": False,
+    "remote_settings_change": False,
+}
+GOVERNANCE_TOKEN_POLICY = {
+    "status": "token_neutral",
+    "governance_dependency": False,
+    "token_balance_grants_vote": False,
+    "token_balance_grants_repository_permission": False,
+    "payment_grants_authority": False,
+    "contribution_volume_grants_authority": False,
+    "credit_grants_authority": False,
+}
+GOVERNANCE_AUTHORITY = {
+    "maintainer_final_authority": True,
+    "public_participation_is_advisory": True,
+    "proposal_grants_repository_permission": False,
+    "deliberation_grants_execution_authority": False,
+    "stage_eligibility_grants_role": False,
+    "onchain_result_controls_github_permission": False,
+}
+GOVERNANCE_ACTIVATION = {
+    "active_policy": False,
+    "observed_topology_only": True,
+    "adoption_requires": "resolved_deliberation_and_explicit_maintainer_decision",
+    "minimum_public_review_days": 14,
+    "implementation_requires_task_hall_checkpoint": True,
 }
 REQUIRED_FOUNDRY_FILES = {
     "docs/foundry/README.md",
@@ -963,6 +1013,320 @@ def validate_agent_commons_source_manifest(root: Path) -> list[str]:
     missing = required_ids - ids
     if missing:
         errors.append(f"Agent Commons source manifest lacks required sources: {sorted(missing)}")
+    return errors
+
+
+def validate_governance_source_manifest(root: Path) -> list[str]:
+    errors: list[str] = []
+    path = root / "docs" / "governance" / "source-manifest.json"
+    if not path.exists():
+        return ["Governance source manifest is missing"]
+    payload = load_json(path)
+    if payload.get("schema") != "xr-foundry.governance_source_manifest.v1":
+        errors.append("Governance source manifest schema is invalid")
+    if payload.get("version") != "0.1.0":
+        errors.append("Governance source manifest version must remain 0.1.0")
+    if not str(payload.get("policy", "")).strip():
+        errors.append("Governance source manifest must state its transfer boundary")
+    sources = payload.get("sources")
+    if not isinstance(sources, list) or not sources:
+        return errors + ["Governance source manifest must contain public sources"]
+    required_ids = {
+        "xr-foundry-rfc-0001",
+        "xr-foundry-rfc-0002",
+        "xr-foundry-deliberation-v1",
+        "github-repository-roles",
+        "github-codeowners",
+        "kubernetes-roles-responsibilities",
+        "folo-pinned-465b997",
+    }
+    allowed_classifications = {
+        "governance_basis",
+        "platform_authority_reference",
+        "responsibility_ladder_reference",
+        "community_operations_reference",
+    }
+    ids: set[str] = set()
+    source_by_id: dict[str, dict[str, Any]] = {}
+    for source in sources:
+        if not isinstance(source, dict):
+            errors.append("Governance sources must be objects")
+            continue
+        source_id = str(source.get("id", ""))
+        if not source_id or source_id in ids:
+            errors.append(f"Governance source id is missing or duplicated: {source_id}")
+        ids.add(source_id)
+        source_by_id[source_id] = source
+        if not str(source.get("url", "")).startswith("https://"):
+            errors.append(f"Governance source must use public HTTPS: {source_id}")
+        for field in ("publisher", "title", "classification"):
+            if not str(source.get(field, "")).strip():
+                errors.append(f"Governance source must state {field}: {source_id}")
+        if source.get("classification") not in allowed_classifications:
+            errors.append(f"Governance source classification is invalid: {source_id}")
+        for field in ("adopted_lessons", "limits", "excluded_assumptions"):
+            value = source.get(field)
+            if not isinstance(value, list) or not value or not all(
+                isinstance(item, str) and item.strip() for item in value
+            ):
+                errors.append(f"Governance source must state non-empty {field}: {source_id}")
+    missing = required_ids - ids
+    if missing:
+        errors.append(f"Governance source manifest lacks required sources: {sorted(missing)}")
+    folo = source_by_id.get("folo-pinned-465b997", {})
+    if folo:
+        expected_folo_url = (
+            "https://github.com/RSSNext/Folo/tree/"
+            "465b997e89bde007fcac32257baec6a2ded73164"
+        )
+        if folo.get("url") != expected_folo_url:
+            errors.append("Folo governance reference must stay pinned to the reviewed commit")
+        if folo.get("classification") != "community_operations_reference":
+            errors.append("Folo must remain a community operations reference")
+        boundary_text = " ".join(
+            str(item)
+            for field in ("limits", "excluded_assumptions")
+            for item in folo.get(field, [])
+        ).casefold()
+        if "not used as a dao" not in boundary_text:
+            errors.append("Folo must be explicitly excluded as DAO authority precedent")
+        if "deferred" not in boundary_text or "wallet" not in boundary_text:
+            errors.append("Folo limits must keep phase-two adaptation and wallet reuse out of scope")
+    return errors
+
+
+def _parse_governance_timestamp(
+    value: Any,
+    label: str,
+    field: str,
+) -> tuple[datetime | None, list[str]]:
+    if not isinstance(value, str):
+        return None, [f"{label}: {field} must be an RFC 3339 timestamp"]
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None, [f"{label}: {field} must be an RFC 3339 timestamp"]
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None, [f"{label}: {field} must include a timezone"]
+    if parsed.utcoffset() != timedelta(0):
+        return None, [f"{label}: {field} must use UTC"]
+    return parsed, []
+
+
+def validate_governance_deliberation_metadata(
+    payload: dict[str, Any],
+    label: str,
+) -> list[str]:
+    fields = (
+        "decision_class",
+        "governance_stage",
+        "review_opened_at",
+        "review_not_before",
+    )
+    present = [field for field in fields if field in payload]
+    if not present:
+        return []
+    if len(present) != len(fields):
+        missing = sorted(set(fields) - set(present))
+        return [f"{label}: governance review metadata is all-or-none; missing {missing}"]
+
+    errors: list[str] = []
+    decision_class = payload.get("decision_class")
+    governance_stage = payload.get("governance_stage")
+    if decision_class not in GOVERNANCE_DECISION_WINDOWS:
+        errors.append(f"{label}: governance decision class is invalid")
+    if governance_stage not in GOVERNANCE_STAGE_IDS:
+        errors.append(f"{label}: governance stage is invalid")
+    opened, opened_errors = _parse_governance_timestamp(
+        payload.get("review_opened_at"), label, "review_opened_at"
+    )
+    not_before, not_before_errors = _parse_governance_timestamp(
+        payload.get("review_not_before"), label, "review_not_before"
+    )
+    errors.extend(opened_errors)
+    errors.extend(not_before_errors)
+    if (
+        opened is not None
+        and not_before is not None
+        and decision_class in GOVERNANCE_DECISION_WINDOWS
+    ):
+        minimum = opened + timedelta(days=GOVERNANCE_DECISION_WINDOWS[decision_class])
+        if not_before < minimum:
+            errors.append(
+                f"{label}: {decision_class} review_not_before must be at least "
+                f"{GOVERNANCE_DECISION_WINDOWS[decision_class]} days after review_opened_at"
+            )
+    decision = payload.get("decision")
+    if payload.get("status") == "resolved" and isinstance(decision, dict):
+        decided_at, decided_errors = _parse_governance_timestamp(
+            decision.get("decided_at"), label, "decision.decided_at"
+        )
+        errors.extend(decided_errors)
+        if decided_at is not None and not_before is not None and decided_at < not_before:
+            errors.append(f"{label}: resolved governance decision predates review_not_before")
+    return errors
+
+
+def validate_governance_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_GOVERNANCE_FILES):
+        if not (root / relative).exists():
+            errors.append(f"Governance foundation is missing {relative}")
+    errors.extend(validate_governance_source_manifest(root))
+
+    model_path = root / "docs" / "governance" / "governance-model.v1.json"
+    schema_path = root / "docs" / "governance" / "governance-model.schema.json"
+    if not model_path.exists():
+        return errors
+    model = load_json(model_path)
+    errors.extend(validate_json_schema_instance(model, schema_path, "Governance model"))
+    if model.get("schema") != "xr-foundry.governance_model.v1":
+        errors.append("Governance model schema identifier is invalid")
+    if model.get("version") != "0.1.0":
+        errors.append("Governance model version must remain 0.1.0")
+    if model.get("status") != "proposed":
+        errors.append("Governance model must remain proposed until adoption")
+    if model.get("current_stage") != "G0":
+        errors.append("Governance current stage must remain the observed G0 topology")
+
+    decision_classes = model.get("decision_classes", [])
+    decision_ids = [item.get("id") for item in decision_classes if isinstance(item, dict)]
+    if decision_ids != list(GOVERNANCE_DECISION_WINDOWS):
+        errors.append("Governance decision classes or their order have drifted")
+    for item in decision_classes:
+        if not isinstance(item, dict):
+            continue
+        decision_id = item.get("id")
+        if decision_id in GOVERNANCE_DECISION_WINDOWS and item.get(
+            "minimum_review_days"
+        ) != GOVERNANCE_DECISION_WINDOWS[decision_id]:
+            errors.append(f"Governance review window has drifted: {decision_id}")
+        if item.get("decision_authority") != "maintainer":
+            errors.append(f"Governance decision authority has drifted: {decision_id}")
+        expected_emergency = decision_id == "security_emergency"
+        if item.get("emergency") is not expected_emergency:
+            errors.append(f"Governance emergency classification has drifted: {decision_id}")
+        if not expected_emergency and any(
+            field in item for field in ("record_within_hours", "retrospective_within_days")
+        ):
+            errors.append(f"Non-emergency governance class has emergency timing: {decision_id}")
+    security_decision = next(
+        (
+            item
+            for item in decision_classes
+            if isinstance(item, dict) and item.get("id") == "security_emergency"
+        ),
+        {},
+    )
+    if (
+        security_decision.get("emergency") is not True
+        or security_decision.get("record_within_hours") != 72
+        or security_decision.get("retrospective_within_days") != 7
+    ):
+        errors.append("Security emergency review bounds have drifted")
+
+    stages = model.get("stages", [])
+    stage_ids = [item.get("id") for item in stages if isinstance(item, dict)]
+    stage_orders = [item.get("order") for item in stages if isinstance(item, dict)]
+    if stage_ids != GOVERNANCE_STAGE_IDS or stage_orders != list(range(5)):
+        errors.append("Governance maturity stages or their order have drifted")
+    stage_by_id = {
+        str(item.get("id")): item for item in stages if isinstance(item, dict)
+    }
+    if stage_by_id.get("G0", {}).get("status") != "observed_current" or any(
+        stage_by_id.get(stage_id, {}).get("status") != "proposed_future"
+        for stage_id in GOVERNANCE_STAGE_IDS[1:]
+    ):
+        errors.append("Only G0 may be observed current; later governance stages stay proposed")
+    expected_thresholds = {
+        "G1": {
+            "minimum_observation_days": 90,
+            "minimum_distinct_human_contributors": 3,
+            "minimum_non_maintainer_contributors": 2,
+            "minimum_contribution_types": 2,
+            "minimum_resolved_public_deliberations": 2,
+        },
+        "G2": {
+            "minimum_observation_days": 180,
+            "minimum_distinct_human_contributors": 3,
+            "minimum_non_maintainer_contributors": 2,
+            "minimum_contribution_types": 2,
+            "minimum_resolved_public_deliberations": 3,
+        },
+    }
+    for stage_id, expected in expected_thresholds.items():
+        criteria = stage_by_id.get(stage_id, {}).get("entry_criteria", {})
+        if any(criteria.get(field) != value for field, value in expected.items()):
+            errors.append(f"Governance {stage_id} mixed-evidence thresholds have drifted")
+
+    promotion = model.get("promotion_policy", {})
+    required_promotion = {
+        "gate_model": "mixed_evidence",
+        "thresholds_are_eligibility_only": True,
+        "automatic_promotion": False,
+        "explicit_maintainer_decision": True,
+        "constitutional_review_days": 14,
+        "requires_resolved_deliberation": True,
+        "permission_changes_are_separate": True,
+        "rollback_supported": True,
+    }
+    if promotion != required_promotion:
+        errors.append("Governance promotion policy must stay explicit, evidence-gated, and reversible")
+    if model.get("token_policy") != GOVERNANCE_TOKEN_POLICY:
+        errors.append("Governance token-neutral authority boundary has drifted")
+    if model.get("external_effects") != GOVERNANCE_EXTERNAL_EFFECTS:
+        errors.append("Governance external effects must remain disabled in phase one")
+    if model.get("authority") != GOVERNANCE_AUTHORITY:
+        errors.append("Governance maintainer and public authority boundary has drifted")
+    if model.get("activation") != GOVERNANCE_ACTIVATION:
+        errors.append("Proposed governance must remain inactive until explicit adoption")
+
+    source_refs = model.get("source_refs", [])
+    if isinstance(source_refs, list):
+        for relative in source_refs:
+            if not isinstance(relative, str) or not (root / relative).is_file():
+                errors.append(f"Governance model source reference is missing: {relative}")
+    role_ids = [item.get("id") for item in model.get("roles", []) if isinstance(item, dict)]
+    if role_ids != ["public_contributor", "maintainer", "security_responder"]:
+        errors.append("Governance phase-one roles or their order have drifted")
+
+    rfc_path = root / "docs" / "rfcs" / "0004-progressive-governance.md"
+    if rfc_path.exists():
+        rfc_text = rfc_path.read_text(encoding="utf-8")
+        if "Status: **Proposed**" not in rfc_text:
+            errors.append("RFC 0004 must remain Proposed until public adoption")
+        if "Public deliberation: **not opened by this local implementation**" not in rfc_text:
+            errors.append("RFC 0004 must not claim that local implementation opened public review")
+    template_path = root / ".github" / "ISSUE_TEMPLATE" / "governance-proposal.yml"
+    if template_path.exists():
+        try:
+            template = load_workflow(template_path)
+        except (ConstructorError, yaml.YAMLError) as error:
+            errors.append(f"Governance proposal form is invalid YAML: {error}")
+        else:
+            body = template.get("body", []) if isinstance(template, dict) else []
+            ids = {
+                str(item.get("id"))
+                for item in body
+                if isinstance(item, dict) and item.get("id")
+            }
+            required_form_ids = {
+                "decision_class",
+                "governance_stage",
+                "proposal_or_rfc",
+                "problem",
+                "proposed_change",
+                "alternatives",
+                "authority_boundary",
+                "review_opened_at",
+                "review_not_before",
+                "adoption_and_execution",
+                "safety_acknowledgements",
+            }
+            if not required_form_ids.issubset(ids):
+                errors.append("Governance proposal form is missing required decision fields")
+            if template.get("labels") != ["rfc"]:
+                errors.append("Governance proposal form must route to the rfc label")
     return errors
 
 
@@ -2284,6 +2648,7 @@ def validate_task_hall_contract(root: Path) -> list[str]:
             errors.extend(
                 validate_json_schema_instance(deliberation, deliberation_schema_path, label)
             )
+            errors.extend(validate_governance_deliberation_metadata(deliberation, label))
             if deliberation.get("status") != expected_status:
                 errors.append(f"{label}: status must remain {expected_status}")
     if review_schema_path.exists():
@@ -6758,6 +7123,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_active_repository_path_references(root))
     errors.extend(validate_agent_guide_source_boundary(root))
+    errors.extend(validate_governance_contract(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_device_lab_contract(root))

@@ -1,0 +1,222 @@
+{
+  "schema": "xr-foundry.composition_lock.v1",
+  "model_version": "0.1.0",
+  "composition": {
+    "id": "xr-foundry.unity.reference-system",
+    "version": "0.1.0",
+    "path": "compositions/unity/reference-system/foundry.project.json"
+  },
+  "engine": "unity",
+  "input_digests": {
+    "composition_sha256": "5e6b22ff2b13614758e19855ce2de5b73d890277836b540b0a44e785f628610e",
+    "component_catalog_sha256": "4741482c143f04cff49a4a97aac3e457ed40547602270b0681d32de3aad4bc85",
+    "capability_registry_sha256": "57a8e63abdc0039a8ddf4f29b2b563eb4322333f74bd1114f584fe45f263fd66"
+  },
+  "resolution": {
+    "components": [
+      {
+        "id": "com.lingkyn.interaction.core",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/interaction/com.lingkyn.interaction.core/foundry.component.json",
+        "manifest_sha256": "86a321782bdb614ea31fdfe977c10c8d57781fdd71911f4386398f2618688c3a"
+      },
+      {
+        "id": "com.lingkyn.interaction.unity",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity/foundry.component.json",
+        "manifest_sha256": "4f9c9d8cf967fb37f50fe63ed2cdac90be25e020b1d0845b36d8a3d8fcc6e60c"
+      },
+      {
+        "id": "com.lingkyn.inventory.core",
+        "version": "0.1.1",
+        "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.core/foundry.component.json",
+        "manifest_sha256": "99da0e288acf9ab7f0dc92b85fa01560e51a2319e42d519c57814b381f8965a0"
+      },
+      {
+        "id": "com.lingkyn.inventory.presentation",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/foundry.component.json",
+        "manifest_sha256": "5fd9b357c41683f7fc88f2e0d62dc8e7e7c1b068f12ec8e867b17a35ecb367da"
+      },
+      {
+        "id": "com.lingkyn.inventory.ugui",
+        "version": "0.2.0",
+        "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/foundry.component.json",
+        "manifest_sha256": "e71986c9aee9cd4d6acd14c7e362bd76809f5a721dffb01ba70f3dcc58378982"
+      },
+      {
+        "id": "com.lingkyn.inventory.unity",
+        "version": "0.1.1",
+        "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.unity/foundry.component.json",
+        "manifest_sha256": "c9502c2c4d8213bb36b6854e4d06da5f357c008ced0dfa677a845502830a68ed"
+      },
+      {
+        "id": "com.lingkyn.inventory.xr.ugui",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/foundry.component.json",
+        "manifest_sha256": "82879877e5d2107f2e1bbaac7b75fd5b19345667a4b48cccc992135622c04118"
+      },
+      {
+        "id": "com.lingkyn.persistence.core",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/persistence/com.lingkyn.persistence.core/foundry.component.json",
+        "manifest_sha256": "b07c8cc674b64ca990a2c17928c42e50950debf8960df77a6646b43fd913c064"
+      },
+      {
+        "id": "com.lingkyn.persistence.unity",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity/foundry.component.json",
+        "manifest_sha256": "477263bbf372bc13c7f3adfc3b16adb8776aa8f7e45e388595e05a12c459f4c6"
+      },
+      {
+        "id": "com.lingkyn.project-initializer",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/foundations/com.lingkyn.project-initializer/foundry.component.json",
+        "manifest_sha256": "19c004d9c91f6d1a69e18d0d0260dee8f276d9838d2d5fa086a2f09975f30857"
+      },
+      {
+        "id": "com.lingkyn.settings.core",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/settings/com.lingkyn.settings.core/foundry.component.json",
+        "manifest_sha256": "92ed49b2ddbedf26a791cc84782974e5a0e637d01dd19ea6578cb7cfbea264af"
+      },
+      {
+        "id": "com.lingkyn.settings.unity",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/systems/settings/com.lingkyn.settings.unity/foundry.component.json",
+        "manifest_sha256": "bb63eb940d3346a14312dc324d634632a3c550e40483d9713c0c567c36cd6086"
+      },
+      {
+        "id": "com.lingkyn.xr-baseline",
+        "version": "0.1.0",
+        "manifest_path": "packages/unity/foundations/com.lingkyn.xr-baseline/foundry.component.json",
+        "manifest_sha256": "0b73f0ed40b9274f7553a60d3944c6a46374499b1a8f9a7609ca8a0e3c93c533"
+      }
+    ],
+    "capabilities": [
+      {
+        "id": "xr-foundry.interaction.semantic",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.interaction.core"
+      },
+      {
+        "id": "xr-foundry.interaction.unity-input",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.interaction.unity"
+      },
+      {
+        "id": "xr-foundry.inventory.domain",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.core"
+      },
+      {
+        "id": "xr-foundry.inventory.presentation",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.presentation"
+      },
+      {
+        "id": "xr-foundry.inventory.renderer",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.ugui"
+      },
+      {
+        "id": "xr-foundry.inventory.renderer.ugui",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.ugui"
+      },
+      {
+        "id": "xr-foundry.inventory.unity-authoring",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.unity"
+      },
+      {
+        "id": "xr-foundry.inventory.xr-surface",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.xr.ugui"
+      },
+      {
+        "id": "xr-foundry.persistence.contract",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.persistence.core"
+      },
+      {
+        "id": "xr-foundry.persistence.unity-storage",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.persistence.unity"
+      },
+      {
+        "id": "xr-foundry.project.initialization",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.project-initializer"
+      },
+      {
+        "id": "xr-foundry.settings.domain",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.settings.core"
+      },
+      {
+        "id": "xr-foundry.settings.unity-authoring",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.settings.unity"
+      },
+      {
+        "id": "xr-foundry.xr.baseline",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.xr-baseline"
+      }
+    ],
+    "selections": [
+      {
+        "slot": "inventory.renderer",
+        "component": "com.lingkyn.inventory.ugui",
+        "version": "0.2.0"
+      },
+      {
+        "slot": "inventory.xr-surface",
+        "component": "com.lingkyn.inventory.xr.ugui",
+        "version": "0.1.0"
+      }
+    ],
+    "bindings": [
+      {
+        "id": "interaction-to-inventory-intent",
+        "from_provider": "com.lingkyn.interaction.core",
+        "to_provider": "com.lingkyn.inventory.presentation",
+        "implementation": "consumer_owned_adapter_pending"
+      },
+      {
+        "id": "inventory-to-persistence",
+        "from_provider": "com.lingkyn.inventory.core",
+        "to_provider": "com.lingkyn.persistence.core",
+        "implementation": "consumer_owned_adapter_pending"
+      },
+      {
+        "id": "settings-to-interaction-policy",
+        "from_provider": "com.lingkyn.settings.core",
+        "to_provider": "com.lingkyn.interaction.core",
+        "implementation": "consumer_owned_adapter_pending"
+      }
+    ],
+    "dependency_order": [
+      "com.lingkyn.interaction.core",
+      "com.lingkyn.interaction.unity",
+      "com.lingkyn.inventory.core",
+      "com.lingkyn.inventory.presentation",
+      "com.lingkyn.inventory.ugui",
+      "com.lingkyn.inventory.unity",
+      "com.lingkyn.inventory.xr.ugui",
+      "com.lingkyn.persistence.core",
+      "com.lingkyn.persistence.unity",
+      "com.lingkyn.project-initializer",
+      "com.lingkyn.settings.core",
+      "com.lingkyn.settings.unity",
+      "com.lingkyn.xr-baseline"
+    ]
+  },
+  "claims": {
+    "structural_resolution": "resolved",
+    "runtime_ready": false,
+    "unity_compile": "not_claimed_for_this_composition",
+    "device_runtime": "not_claimed"
+  }
+}

@@ -30,6 +30,7 @@ SCAFFOLD_SPEC = importlib.util.spec_from_file_location(
 assert SCAFFOLD_SPEC and SCAFFOLD_SPEC.loader
 SCAFFOLD_MODULE = importlib.util.module_from_spec(SCAFFOLD_SPEC)
 SCAFFOLD_SPEC.loader.exec_module(SCAFFOLD_MODULE)
+COMPOSE_SCRIPT = ROOT / "scripts" / "compose_system.py"
 
 
 def current_device_profiles() -> dict[str, dict]:
@@ -989,6 +990,199 @@ class RepositoryContractTests(unittest.TestCase):
         )
         errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
         self.assertTrue(any("target_path leaf must equal package.id" in error for error in errors))
+
+    def test_component_model_resolves_deterministically_and_lock_is_current(self) -> None:
+        self.assertEqual([], MODULE.validate_component_model(ROOT))
+        first_lock, first_errors = MODULE.build_composition_lock(ROOT)
+        second_lock, second_errors = MODULE.build_composition_lock(ROOT)
+
+        self.assertEqual([], first_errors)
+        self.assertEqual([], second_errors)
+        self.assertEqual(first_lock, second_lock)
+        self.assertIsNotNone(first_lock)
+        assert first_lock is not None
+        self.assertEqual(13, len(first_lock["resolution"]["components"]))
+        self.assertFalse(first_lock["claims"]["runtime_ready"])
+        self.assertEqual(
+            15,
+            len(list(ROOT.glob("packages/unity/**/foundry.component.json"))),
+        )
+
+        result = subprocess.run(
+            [sys.executable, str(COMPOSE_SCRIPT), "--check", "--json"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
+        report = json.loads(result.stdout)
+        self.assertEqual("pass", report["status"])
+        self.assertEqual(13, report["component_count"])
+        self.assertFalse(report["runtime_ready"])
+
+    def test_composition_rejects_missing_and_incompatible_capability(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        composition = MODULE.load_json(composition_path)
+        composition["required_capabilities"].append(
+            {
+                "id": "xr-foundry.inventory.renderer.uitoolkit",
+                "version": "1.0.0",
+            }
+        )
+
+        _, missing_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, composition
+        )
+
+        self.assertTrue(
+            any(
+                "missing capability provider for "
+                "xr-foundry.inventory.renderer.uitoolkit@1.0.0" in error
+                for error in missing_errors
+            )
+        )
+
+        incompatible = MODULE.load_json(composition_path)
+        domain_requirement = next(
+            item
+            for item in incompatible["required_capabilities"]
+            if item["id"] == "xr-foundry.inventory.domain"
+        )
+        domain_requirement["version"] = "2.0.0"
+
+        _, incompatible_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, incompatible
+        )
+
+        self.assertTrue(
+            any(
+                "missing capability provider for xr-foundry.inventory.domain@2.0.0"
+                in error
+                for error in incompatible_errors
+            )
+        )
+
+    def test_composition_rejects_ambiguous_variant_provider(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        composition = MODULE.load_json(composition_path)
+        composition["components"].append(
+            {"id": "com.lingkyn.inventory.uitoolkit", "version": "0.1.0"}
+        )
+
+        _, errors = MODULE.build_composition_lock(ROOT, composition_path, composition)
+
+        self.assertTrue(
+            any(
+                "xr-foundry.inventory.renderer@1.0.0 requires exactly one provider"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_composition_rejects_dependency_cycle(self) -> None:
+        manifest_path = (
+            ROOT
+            / "packages/unity/systems/interaction/com.lingkyn.interaction.core"
+            / "foundry.component.json"
+        )
+        original_loader = MODULE.load_json
+        cyclic_manifest = original_loader(manifest_path)
+        cyclic_manifest["requires"].append(
+            {"id": "xr-foundry.interaction.unity-input", "version": "1.0.0"}
+        )
+
+        def load_with_cycle(path: Path) -> dict:
+            return (
+                copy.deepcopy(cyclic_manifest)
+                if Path(path) == manifest_path
+                else original_loader(Path(path))
+            )
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_cycle):
+            _, errors = MODULE.build_composition_lock(ROOT)
+
+        self.assertTrue(any("dependency cycle detected" in error for error in errors))
+
+    def test_component_model_rejects_package_dependency_and_lock_drift(self) -> None:
+        manifest_path = (
+            ROOT
+            / "packages/unity/systems/interaction/com.lingkyn.interaction.unity"
+            / "foundry.component.json"
+        )
+        lock_path = (
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        original_loader = MODULE.load_json
+        drifted_manifest = original_loader(manifest_path)
+        drifted_manifest["requires"] = []
+        drifted_lock = original_loader(lock_path)
+        drifted_lock["resolution"]["dependency_order"] = list(
+            reversed(drifted_lock["resolution"]["dependency_order"])
+        )
+
+        def load_with_drift(path: Path) -> dict:
+            if Path(path) == manifest_path:
+                return copy.deepcopy(drifted_manifest)
+            if Path(path) == lock_path:
+                return copy.deepcopy(drifted_lock)
+            return original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_drift):
+            errors = MODULE.validate_component_model(ROOT)
+
+        self.assertTrue(
+            any("requirements must match internal package dependencies" in error for error in errors)
+        )
+        self.assertTrue(any("composition lock is stale" in error for error in errors))
+
+    def test_component_model_rejects_runtime_promotion_without_new_contract(self) -> None:
+        composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)
+        composition["bindings"][0]["implementation"] = "component_provided"
+        composition_errors = MODULE.validate_json_schema_instance(
+            composition,
+            ROOT / MODULE.COMPOSITION_MANIFEST_SCHEMA_PATH,
+            "composition manifest",
+        )
+
+        lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock["claims"]["runtime_ready"] = True
+        lock_errors = MODULE.validate_json_schema_instance(
+            lock,
+            ROOT / MODULE.COMPOSITION_LOCK_SCHEMA_PATH,
+            "composition lock",
+        )
+
+        self.assertTrue(any("consumer_owned_adapter_pending" in error for error in composition_errors))
+        self.assertTrue(any("False was expected" in error for error in lock_errors))
+
+    def test_component_model_rejects_internal_dependency_version_drift(self) -> None:
+        package_manifest_path = (
+            ROOT
+            / "packages/unity/systems/interaction/com.lingkyn.interaction.unity"
+            / "package.json"
+        )
+        original_loader = MODULE.load_json
+        drifted_package_manifest = original_loader(package_manifest_path)
+        drifted_package_manifest["dependencies"]["com.lingkyn.interaction.core"] = "9.9.9"
+
+        def load_with_dependency_drift(path: Path) -> dict:
+            return (
+                copy.deepcopy(drifted_package_manifest)
+                if Path(path) == package_manifest_path
+                else original_loader(Path(path))
+            )
+
+        with mock.patch.object(
+            MODULE, "load_json", side_effect=load_with_dependency_drift
+        ):
+            errors = MODULE.validate_component_model(ROOT)
+
+        self.assertTrue(
+            any("internal package dependency version" in error for error in errors)
+        )
 
     def test_current_repository_passes(self) -> None:
         self.assertEqual([], MODULE.validate_repository(ROOT))

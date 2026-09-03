@@ -12,7 +12,9 @@ release, or device status.
 
 ## Operating sequence
 
-1. Read `reference-catalog.json` to select the smallest relevant artifact.
+1. Read `reference-catalog.json` to select the smallest relevant artifact. For
+   multi-package work, also read `component-catalog.json`,
+   `capability-registry.json`, and the selected `foundry.project.json`.
 2. Record the consumer's exact engine, renderer, dependency, build, XR/input, and
    device tuple; compare it with `compatibility-profiles.json`.
 3. Read the artifact's manifest, README, documentation, tests, samples, changelog,
@@ -23,8 +25,9 @@ release, or device status.
 5. Keep consumer-specific assemblies, scenes, content, branding, platform adapters,
    and secrets in the consuming repository.
 6. Pin installs to a reviewed immutable commit or release.
-7. Run `python scripts/validate_repository.py --json`, the repository tests, and
-   the consuming project's own resolution/compile/tests.
+7. Run `python scripts/compose_system.py --check --json` when a composition is
+   involved, then `python scripts/validate_repository.py --json`, the repository
+   tests, and the consuming project's own resolution/compile/tests.
 8. Require real-device evidence before claiming XR runtime, controller, comfort,
    spatial-audio, or headset behavior. For Inventory XR, use Device Lab plan
    `docs/device-lab/test-plans/inventory-world-space-ui-v1.json`, start from
@@ -35,6 +38,14 @@ For Inventory presentation, select the renderer explicitly. The neutral contract
 lives in `com.lingkyn.inventory.presentation`; UGUI and UI Toolkit are sibling
 adapters, with renderer-named XR compositions. Never transfer automated or device
 evidence from one renderer composition to the other.
+
+Every new package must join the XFCM graph deliberately: add its colocated
+`foundry.component.json`, register each provided or required capability, update the
+component catalog, and prove at least one coherent composition. Do not hide
+cross-family dependencies in a global event bus, service locator, renderer, scene
+search, or reflection discovery. Runtime traffic stays strongly typed and in
+process; JSON manifests and an optional future MCP adapter belong to the
+composition/control plane.
 
 For any UI-bearing package, default to the shared UI design language in
 `docs/standards/design-language/` so the library stays visually coherent across

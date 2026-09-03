@@ -12,6 +12,9 @@ license, maturity, compatibility, extension, and evidence boundaries.
 | `AGENTS.md` | Compact repository map and operating contract |
 | `reference-catalog.json` | Machine-readable selection and evidence index |
 | `package-catalog.json` | Unity package versions and maturity |
+| `component-catalog.json` | One component declaration per package, lifecycle policy, and selectable variant slots |
+| `capability-registry.json` | Versioned semantic capabilities and their admitted providers |
+| `compositions/` | Explicit system requests and deterministic locks |
 | `compatibility-profiles.json` | Exact tested tuples and version-adaptation claim boundaries |
 | `CLAUDE.md` | Thin import for Claude Code project instructions |
 | `.cursor/rules/xr-foundry.mdc` | Thin Cursor project rule |
@@ -63,6 +66,11 @@ OS are the primary interaction references.
 Do not patch a shared package with product-specific types or scenes to make one
 consumer pass. Create a consumer adapter. If several consumers need the same seam,
 propose that seam upstream with generic tests and samples.
+
+For multi-package work, resolve the XFCM composition before changing code. Treat a
+passing lock as structural evidence only, follow its provider-before-consumer
+lifecycle order, and keep pending cross-family bindings visible. Do not use MCP,
+JSON messages, or an untyped global event bus as the per-frame Unity data plane.
 
 ## Evidence boundary
 

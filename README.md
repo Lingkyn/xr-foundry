@@ -20,6 +20,7 @@ evidence remain explicit gates.
 | Need | Entry point |
 | --- | --- |
 | Choose an available system or package | [`package-catalog.json`](package-catalog.json) |
+| Compose packages as one system | [`XFCM v0.1`](docs/architecture/component-composition-model.md), [`component-catalog.json`](component-catalog.json), and the [Unity reference composition](compositions/unity/reference-system/) |
 | Find reusable reference material | [`reference-catalog.json`](reference-catalog.json) |
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
@@ -56,6 +57,25 @@ person or Agent progressively disclose the installable modules. The machine-read
 separately because dependency, version, maturity, and evidence gates remain
 module-specific.
 
+## One composable system
+
+Every current Unity package also has a colocated `foundry.component.json`. The
+[`component catalog`](component-catalog.json) and
+[`capability registry`](capability-registry.json) turn those independent modules
+into one versioned product-line graph. A consumer composition selects fixed
+components plus exactly one renderer and XR-surface variant, then resolves the graph
+into a deterministic lock.
+
+The first [Unity reference composition](compositions/unity/reference-system/)
+selects the UGUI route and structurally resolves 13 components. UI Toolkit remains
+a peer option rather than an accidental cumulative dependency. Three cross-family
+adapter boundaries remain explicitly pending, so the lock says `runtime_ready:
+false`; it does not invent whole-system Unity or device evidence.
+
+XFCM keeps runtime communication strongly typed and in process. JSON manifests are
+the composition/control plane. MCP may later expose that control plane to editors
+or coding Agents, but it is not a global runtime event bus.
+
 ## Incubating system standards
 
 The first reusable game-system candidate is the
@@ -71,7 +91,7 @@ consumer evidence, and each XR renderer/device tuple needs its own real-device
 receipt. No old package path or renderer-ambiguous XR compatibility layer is part
 of the active repository surface.
 
-These nine packages form the
+The cataloged Unity packages form the
 [`Unity first batch`](docs/foundry/batches/unity-first-batch.v1.json). A batch
 release is an immutable discovery/install surface; it does not promote package
 maturity or inherit device claims. The
@@ -189,6 +209,7 @@ Run the local checks:
 
 ```powershell
 python -m pip install -r scripts/contract-requirements.txt
+python scripts/compose_system.py --check --json
 python scripts/validate_repository.py --json --fast-structure
 python scripts/validate_repository.py --json --run-contract-tests
 ```

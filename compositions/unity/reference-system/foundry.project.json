@@ -1,0 +1,79 @@
+{
+  "schema": "xr-foundry.composition_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "xr-foundry.unity.reference-system",
+  "version": "0.1.0",
+  "engine": "unity",
+  "component_catalog": "component-catalog.json",
+  "capability_registry": "capability-registry.json",
+  "components": [
+    {"id": "com.lingkyn.project-initializer", "version": "0.1.0"},
+    {"id": "com.lingkyn.xr-baseline", "version": "0.1.0"},
+    {"id": "com.lingkyn.interaction.core", "version": "0.1.0"},
+    {"id": "com.lingkyn.interaction.unity", "version": "0.1.0"},
+    {"id": "com.lingkyn.inventory.core", "version": "0.1.1"},
+    {"id": "com.lingkyn.inventory.unity", "version": "0.1.1"},
+    {"id": "com.lingkyn.inventory.presentation", "version": "0.1.0"},
+    {"id": "com.lingkyn.persistence.core", "version": "0.1.0"},
+    {"id": "com.lingkyn.persistence.unity", "version": "0.1.0"},
+    {"id": "com.lingkyn.settings.core", "version": "0.1.0"},
+    {"id": "com.lingkyn.settings.unity", "version": "0.1.0"}
+  ],
+  "selections": [
+    {
+      "slot": "inventory.renderer",
+      "component": "com.lingkyn.inventory.ugui",
+      "version": "0.2.0"
+    },
+    {
+      "slot": "inventory.xr-surface",
+      "component": "com.lingkyn.inventory.xr.ugui",
+      "version": "0.1.0"
+    }
+  ],
+  "required_capabilities": [
+    {"id": "xr-foundry.project.initialization", "version": "1.0.0"},
+    {"id": "xr-foundry.xr.baseline", "version": "1.0.0"},
+    {"id": "xr-foundry.interaction.semantic", "version": "1.0.0"},
+    {"id": "xr-foundry.interaction.unity-input", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.domain", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.unity-authoring", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.presentation", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.renderer", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.xr-surface", "version": "1.0.0"},
+    {"id": "xr-foundry.persistence.contract", "version": "1.0.0"},
+    {"id": "xr-foundry.persistence.unity-storage", "version": "1.0.0"},
+    {"id": "xr-foundry.settings.domain", "version": "1.0.0"},
+    {"id": "xr-foundry.settings.unity-authoring", "version": "1.0.0"}
+  ],
+  "bindings": [
+    {
+      "id": "interaction-to-inventory-intent",
+      "from_capability": {"id": "xr-foundry.interaction.semantic", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.inventory.presentation", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": "consumer_owned_adapter_pending"
+    },
+    {
+      "id": "inventory-to-persistence",
+      "from_capability": {"id": "xr-foundry.inventory.domain", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.persistence.contract", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": "consumer_owned_adapter_pending"
+    },
+    {
+      "id": "settings-to-interaction-policy",
+      "from_capability": {"id": "xr-foundry.settings.domain", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.interaction.semantic", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": "consumer_owned_adapter_pending"
+    }
+  ],
+  "lock_path": "compositions/unity/reference-system/foundry.lock.json",
+  "claims": {
+    "structural_resolution": "verified_by_repository_contract",
+    "runtime_integration": "not_claimed",
+    "unity_compile": "not_claimed_for_this_composition",
+    "device_runtime": "not_claimed"
+  }
+}

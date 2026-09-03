@@ -28,7 +28,8 @@ REQUIRED_ROOT_FILES = {
     "README.md", "LICENSE", "CHANGELOG.md", "ROADMAP.md", "CONTRIBUTING.md",
     "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md", "AGENTS.md", "CLAUDE.md",
     "SKILL.md", "package-catalog.json", "reference-catalog.json",
-    "compatibility-profiles.json",
+    "compatibility-profiles.json", "component-catalog.json",
+    "capability-registry.json",
 }
 REQUIRED_PACKAGE_ENTRIES = {
     "package.json", "README.md", "CHANGELOG.md", "LICENSE.md",
@@ -206,6 +207,42 @@ REQUIRED_FOUNDRY_FILES = {
     "docs/rfcs/0003-foundry-production-line.md",
     "scripts/scaffold_unity_package.py",
 }
+REQUIRED_COMPONENT_MODEL_FILES = {
+    "component-catalog.json",
+    "capability-registry.json",
+    "docs/architecture/component-manifest.schema.json",
+    "docs/architecture/component-catalog.schema.json",
+    "docs/architecture/capability-registry.schema.json",
+    "docs/architecture/composition-manifest.schema.json",
+    "docs/architecture/composition-lock.schema.json",
+    "docs/architecture/component-composition-model.md",
+    "docs/rfcs/0005-xr-foundry-component-composition-model.md",
+    "compositions/unity/reference-system/README.md",
+    "compositions/unity/reference-system/foundry.project.json",
+    "compositions/unity/reference-system/foundry.lock.json",
+    "scripts/compose_system.py",
+}
+COMPONENT_MODEL_VERSION = "0.1.0"
+COMPONENT_CATALOG_PATH = Path("component-catalog.json")
+CAPABILITY_REGISTRY_PATH = Path("capability-registry.json")
+COMPONENT_MANIFEST_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "component-manifest.schema.json"
+)
+COMPONENT_CATALOG_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "component-catalog.schema.json"
+)
+CAPABILITY_REGISTRY_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "capability-registry.schema.json"
+)
+COMPOSITION_MANIFEST_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-manifest.schema.json"
+)
+COMPOSITION_LOCK_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-lock.schema.json"
+)
+REFERENCE_COMPOSITION_PATH = (
+    Path("compositions") / "unity" / "reference-system" / "foundry.project.json"
+)
 PUBLIC_REPOSITORY = "https://github.com/Lingkyn/xr-foundry"
 FULL_SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
@@ -542,6 +579,729 @@ def validate_json_schema_instance(
     ):
         location = ".".join(str(part) for part in issue.absolute_path) or "$"
         errors.append(f"{label}: JSON Schema violation at {location}: {issue.message}")
+    return errors
+
+
+def safe_repository_path(root: Path, relative: Any) -> Path | None:
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        return None
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        return None
+    try:
+        resolved = (root / candidate).resolve()
+        resolved.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved
+
+
+def capability_key(reference: Any) -> tuple[str, str] | None:
+    if not isinstance(reference, dict):
+        return None
+    capability_id = reference.get("id")
+    version = reference.get("version")
+    if not isinstance(capability_id, str) or not isinstance(version, str):
+        return None
+    return capability_id, version
+
+
+def load_component_manifests(
+    root: Path,
+    component_catalog: Any,
+) -> tuple[dict[str, dict[str, Any]], dict[str, Path], list[str]]:
+    errors: list[str] = []
+    manifests: dict[str, dict[str, Any]] = {}
+    manifest_paths: dict[str, Path] = {}
+    if not isinstance(component_catalog, dict):
+        return manifests, manifest_paths, ["component catalog must be an object"]
+    components = component_catalog.get("components")
+    if not isinstance(components, list):
+        return manifests, manifest_paths, ["component catalog components must be an array"]
+    seen_component_ids: set[str] = set()
+    for index, item in enumerate(components):
+        label = f"component catalog components[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{label}: entry must be an object")
+            continue
+        component_id = item.get("id")
+        if not isinstance(component_id, str) or not component_id:
+            errors.append(f"{label}: id must be a non-empty string")
+            continue
+        if component_id in seen_component_ids:
+            errors.append(f"component catalog contains duplicate id: {component_id}")
+            continue
+        seen_component_ids.add(component_id)
+        manifest_path = safe_repository_path(root, item.get("manifest_path"))
+        if manifest_path is None:
+            errors.append(f"{component_id}: manifest_path must stay inside the repository")
+            continue
+        if not manifest_path.exists():
+            errors.append(f"{component_id}: component manifest is missing: {item.get('manifest_path')}")
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{component_id}: component manifest is invalid JSON: {error}")
+            continue
+        if not isinstance(manifest, dict):
+            errors.append(f"{component_id}: component manifest must be an object")
+            continue
+        manifests[component_id] = manifest
+        manifest_paths[component_id] = manifest_path
+    return manifests, manifest_paths, errors
+
+
+def capability_provider_map(
+    manifests: dict[str, dict[str, Any]],
+) -> dict[tuple[str, str], list[str]]:
+    providers: dict[tuple[str, str], list[str]] = {}
+    for component_id, manifest in manifests.items():
+        provides = manifest.get("provides", [])
+        if not isinstance(provides, list):
+            continue
+        for reference in provides:
+            key = capability_key(reference)
+            if key is not None:
+                providers.setdefault(key, []).append(component_id)
+    return {
+        key: sorted(set(component_ids))
+        for key, component_ids in providers.items()
+    }
+
+
+def deterministic_dependency_order(
+    dependencies: dict[str, set[str]],
+) -> tuple[list[str], list[str]]:
+    remaining = {
+        component_id: set(required)
+        for component_id, required in dependencies.items()
+    }
+    ready = sorted(
+        component_id
+        for component_id, required in remaining.items()
+        if not required
+    )
+    order: list[str] = []
+    while ready:
+        component_id = ready.pop(0)
+        if component_id in order:
+            continue
+        order.append(component_id)
+        for consumer_id in sorted(remaining):
+            if component_id not in remaining[consumer_id]:
+                continue
+            remaining[consumer_id].remove(component_id)
+            if not remaining[consumer_id] and consumer_id not in order:
+                ready.append(consumer_id)
+                ready.sort()
+    cyclic = sorted(
+        component_id
+        for component_id, required in remaining.items()
+        if required
+    )
+    return order, cyclic
+
+
+def build_composition_lock(
+    root: Path,
+    composition_path: Path = REFERENCE_COMPOSITION_PATH,
+    composition_payload: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    errors: list[str] = []
+    root = root.resolve()
+    absolute_composition_path = (
+        composition_path
+        if composition_path.is_absolute()
+        else root / composition_path
+    ).resolve()
+    try:
+        relative_composition_path = absolute_composition_path.relative_to(root).as_posix()
+    except ValueError:
+        return None, ["composition manifest must stay inside the repository"]
+    if composition_payload is None:
+        if not absolute_composition_path.exists():
+            return None, [f"composition manifest is missing: {relative_composition_path}"]
+        try:
+            composition_payload = load_json(absolute_composition_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            return None, [f"composition manifest is invalid JSON: {error}"]
+    if not isinstance(composition_payload, dict):
+        return None, ["composition manifest must be an object"]
+
+    catalog_path = safe_repository_path(root, composition_payload.get("component_catalog"))
+    registry_path = safe_repository_path(root, composition_payload.get("capability_registry"))
+    if catalog_path is None or not catalog_path.exists():
+        errors.append("composition component catalog path is missing or unsafe")
+    if registry_path is None or not registry_path.exists():
+        errors.append("composition capability registry path is missing or unsafe")
+    if errors:
+        return None, errors
+    assert catalog_path is not None
+    assert registry_path is not None
+    try:
+        component_catalog = load_json(catalog_path)
+        capability_registry = load_json(registry_path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        return None, [f"composition input is invalid JSON: {error}"]
+
+    manifests, manifest_paths, manifest_errors = load_component_manifests(
+        root, component_catalog
+    )
+    errors.extend(manifest_errors)
+    raw_catalog_slots = component_catalog.get("slots", [])
+    if not isinstance(raw_catalog_slots, list):
+        errors.append("component catalog slots must be an array")
+        raw_catalog_slots = []
+    catalog_slots = {
+        str(item.get("id", "")): item
+        for item in raw_catalog_slots
+        if isinstance(item, dict) and item.get("id")
+    }
+    selected_versions: dict[str, str] = {}
+    direct_components = composition_payload.get("components", [])
+    if not isinstance(direct_components, list):
+        errors.append("composition components must be an array")
+        direct_components = []
+    for item in direct_components:
+        if not isinstance(item, dict):
+            errors.append("composition component selections must be objects")
+            continue
+        component_id = str(item.get("id", ""))
+        version = str(item.get("version", ""))
+        if component_id in selected_versions:
+            errors.append(f"composition selects component more than once: {component_id}")
+        selected_versions[component_id] = version
+
+    selections = composition_payload.get("selections", [])
+    if not isinstance(selections, list):
+        errors.append("composition selections must be an array")
+        selections = []
+    selections_by_slot: dict[str, list[dict[str, Any]]] = {}
+    for selection in selections:
+        if not isinstance(selection, dict):
+            errors.append("composition slot selections must be objects")
+            continue
+        slot_id = str(selection.get("slot", ""))
+        selections_by_slot.setdefault(slot_id, []).append(selection)
+    for slot_id, slot in catalog_slots.items():
+        selected_for_slot = selections_by_slot.get(slot_id, [])
+        if len(selected_for_slot) != 1:
+            errors.append(
+                f"composition slot {slot_id} must have exactly one selection"
+            )
+            continue
+        selection = selected_for_slot[0]
+        component_id = str(selection.get("component", ""))
+        version = str(selection.get("version", ""))
+        candidates = slot.get("candidates", [])
+        if not isinstance(candidates, list):
+            errors.append(f"composition slot {slot_id} candidates must be an array")
+            candidates = []
+        if component_id not in candidates:
+            errors.append(
+                f"composition slot {slot_id} rejects non-candidate component {component_id}"
+            )
+        if component_id in selected_versions:
+            errors.append(f"composition selects component more than once: {component_id}")
+        selected_versions[component_id] = version
+    for slot_id in sorted(set(selections_by_slot) - set(catalog_slots)):
+        errors.append(f"composition selects unknown slot: {slot_id}")
+    for slot_id, selected_for_slot in selections_by_slot.items():
+        if len(selected_for_slot) > 1:
+            errors.append(f"composition slot {slot_id} must have exactly one selection")
+
+    for component_id, version in selected_versions.items():
+        manifest = manifests.get(component_id)
+        if manifest is None:
+            errors.append(f"composition selects unknown component: {component_id}")
+            continue
+        if manifest.get("version") != version:
+            errors.append(
+                f"composition component version mismatch for {component_id}: "
+                f"selected {version}, manifest {manifest.get('version')}"
+            )
+
+    selected_manifests = {
+        component_id: manifests[component_id]
+        for component_id in selected_versions
+        if component_id in manifests
+    }
+    selected_provider_map = capability_provider_map(selected_manifests)
+    raw_registry_capabilities = capability_registry.get("capabilities", [])
+    if not isinstance(raw_registry_capabilities, list):
+        errors.append("capability registry capabilities must be an array")
+        raw_registry_capabilities = []
+    registry_capabilities = {
+        capability_key(item)
+        for item in raw_registry_capabilities
+        if capability_key(item) is not None
+    }
+    resolved_capabilities: dict[tuple[str, str], str] = {}
+
+    def resolve(reference: Any, label: str) -> str | None:
+        key = capability_key(reference)
+        if key is None:
+            errors.append(f"{label}: capability reference must contain id and version")
+            return None
+        capability_id, version = key
+        if key not in registry_capabilities:
+            errors.append(
+                f"{label}: capability is not registered: {capability_id}@{version}"
+            )
+        providers = selected_provider_map.get(key, [])
+        if not providers:
+            errors.append(
+                f"{label}: missing capability provider for {capability_id}@{version}"
+            )
+            return None
+        if len(providers) != 1:
+            errors.append(
+                f"{label}: capability {capability_id}@{version} requires exactly one "
+                f"provider; selected providers={providers}"
+            )
+            return None
+        provider = providers[0]
+        previous = resolved_capabilities.get(key)
+        if previous is not None and previous != provider:
+            errors.append(
+                f"{label}: capability {capability_id}@{version} resolved inconsistently"
+            )
+            return None
+        resolved_capabilities[key] = provider
+        return provider
+
+    dependencies = {
+        component_id: set()
+        for component_id in selected_manifests
+    }
+    for component_id, manifest in selected_manifests.items():
+        requires = manifest.get("requires", [])
+        if not isinstance(requires, list):
+            errors.append(f"{component_id}: requires must be an array")
+            continue
+        for reference in requires:
+            provider = resolve(reference, f"{component_id} requirement")
+            if provider is None:
+                continue
+            if provider == component_id:
+                errors.append(f"{component_id}: component cannot require itself")
+            else:
+                dependencies[component_id].add(provider)
+
+    required_capabilities = composition_payload.get("required_capabilities", [])
+    if not isinstance(required_capabilities, list):
+        errors.append("composition required_capabilities must be an array")
+        required_capabilities = []
+    for reference in required_capabilities:
+        resolve(reference, "composition root requirement")
+
+    locked_bindings: list[dict[str, Any]] = []
+    bindings = composition_payload.get("bindings", [])
+    if not isinstance(bindings, list):
+        errors.append("composition bindings must be an array")
+        bindings = []
+    for binding in bindings:
+        if not isinstance(binding, dict):
+            errors.append("composition bindings must be objects")
+            continue
+        binding_id = str(binding.get("id", ""))
+        from_provider = resolve(
+            binding.get("from_capability"), f"binding {binding_id} source"
+        )
+        to_provider = resolve(
+            binding.get("to_capability"), f"binding {binding_id} target"
+        )
+        if from_provider is not None and to_provider is not None:
+            locked_bindings.append(
+                {
+                    "id": binding_id,
+                    "from_provider": from_provider,
+                    "to_provider": to_provider,
+                    "implementation": binding.get("implementation"),
+                }
+            )
+
+    dependency_order, cyclic = deterministic_dependency_order(dependencies)
+    if cyclic:
+        errors.append(
+            "composition dependency cycle detected among: " + ", ".join(cyclic)
+        )
+    if errors:
+        return None, errors
+
+    locked_components = []
+    for component_id in sorted(selected_manifests):
+        manifest_path = manifest_paths[component_id]
+        locked_components.append(
+            {
+                "id": component_id,
+                "version": selected_manifests[component_id]["version"],
+                "manifest_path": manifest_path.relative_to(root).as_posix(),
+                "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+            }
+        )
+    lock = {
+        "schema": "xr-foundry.composition_lock.v1",
+        "model_version": COMPONENT_MODEL_VERSION,
+        "composition": {
+            "id": composition_payload.get("id"),
+            "version": composition_payload.get("version"),
+            "path": relative_composition_path,
+        },
+        "engine": composition_payload.get("engine"),
+        "input_digests": {
+            "composition_sha256": hashlib.sha256(
+                absolute_composition_path.read_bytes()
+            ).hexdigest(),
+            "component_catalog_sha256": hashlib.sha256(
+                catalog_path.read_bytes()
+            ).hexdigest(),
+            "capability_registry_sha256": hashlib.sha256(
+                registry_path.read_bytes()
+            ).hexdigest(),
+        },
+        "resolution": {
+            "components": locked_components,
+            "capabilities": [
+                {
+                    "id": capability_id,
+                    "version": version,
+                    "provider": provider,
+                }
+                for (capability_id, version), provider in sorted(
+                    resolved_capabilities.items()
+                )
+            ],
+            "selections": sorted(
+                [
+                    {
+                        "slot": str(item.get("slot", "")),
+                        "component": str(item.get("component", "")),
+                        "version": str(item.get("version", "")),
+                    }
+                    for item in selections
+                    if isinstance(item, dict)
+                ],
+                key=lambda item: item["slot"],
+            ),
+            "bindings": sorted(locked_bindings, key=lambda item: item["id"]),
+            "dependency_order": dependency_order,
+        },
+        "claims": {
+            "structural_resolution": "resolved",
+            "runtime_ready": False,
+            "unity_compile": "not_claimed_for_this_composition",
+            "device_runtime": "not_claimed",
+        },
+    }
+    return lock, []
+
+
+def validate_component_model(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_COMPONENT_MODEL_FILES):
+        if not (root / relative).exists():
+            errors.append(f"component model required file is missing: {relative}")
+
+    instance_specs = [
+        (COMPONENT_CATALOG_PATH, COMPONENT_CATALOG_SCHEMA_PATH, "component catalog"),
+        (CAPABILITY_REGISTRY_PATH, CAPABILITY_REGISTRY_SCHEMA_PATH, "capability registry"),
+        (REFERENCE_COMPOSITION_PATH, COMPOSITION_MANIFEST_SCHEMA_PATH, "reference composition"),
+    ]
+    loaded: dict[Path, dict[str, Any]] = {}
+    for instance_path, schema_path, label in instance_specs:
+        absolute_instance = root / instance_path
+        absolute_schema = root / schema_path
+        if not absolute_instance.exists() or not absolute_schema.exists():
+            continue
+        try:
+            payload = load_json(absolute_instance)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        loaded[instance_path] = payload
+        errors.extend(validate_json_schema_instance(payload, absolute_schema, label))
+
+    component_catalog = loaded.get(COMPONENT_CATALOG_PATH)
+    capability_registry = loaded.get(CAPABILITY_REGISTRY_PATH)
+    composition = loaded.get(REFERENCE_COMPOSITION_PATH)
+    if component_catalog is None or capability_registry is None:
+        return errors
+
+    manifests, manifest_paths, manifest_errors = load_component_manifests(
+        root, component_catalog
+    )
+    errors.extend(manifest_errors)
+    component_schema = root / COMPONENT_MANIFEST_SCHEMA_PATH
+    for component_id, manifest in manifests.items():
+        errors.extend(
+            validate_json_schema_instance(
+                manifest, component_schema, f"component manifest {component_id}"
+            )
+        )
+
+    raw_catalog_entries = component_catalog.get("components", [])
+    if not isinstance(raw_catalog_entries, list):
+        raw_catalog_entries = []
+    catalog_entries = {
+        str(item.get("id", "")): item
+        for item in raw_catalog_entries
+        if isinstance(item, dict) and item.get("id")
+    }
+    package_catalog_path = root / "package-catalog.json"
+    package_catalog = load_json(package_catalog_path) if package_catalog_path.exists() else {}
+    if package_catalog.get("component_catalog") != COMPONENT_CATALOG_PATH.as_posix():
+        errors.append("package catalog must point to component-catalog.json")
+    if package_catalog.get("capability_registry") != CAPABILITY_REGISTRY_PATH.as_posix():
+        errors.append("package catalog must point to capability-registry.json")
+    reference_catalog_path = root / "reference-catalog.json"
+    reference_catalog = (
+        load_json(reference_catalog_path) if reference_catalog_path.exists() else {}
+    )
+    if reference_catalog.get("component_catalog") != COMPONENT_CATALOG_PATH.as_posix():
+        errors.append("reference catalog must point to component-catalog.json")
+    if reference_catalog.get("capability_registry") != CAPABILITY_REGISTRY_PATH.as_posix():
+        errors.append("reference catalog must point to capability-registry.json")
+    package_entries = {
+        str(item.get("id", "")): item
+        for item in package_catalog.get("packages", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    if set(catalog_entries) != set(package_entries):
+        errors.append(
+            "component catalog must describe every live package exactly once: "
+            f"components={sorted(catalog_entries)} packages={sorted(package_entries)}"
+        )
+    discovered_manifest_paths = {
+        path.relative_to(root).as_posix()
+        for path in root.glob("packages/unity/**/foundry.component.json")
+        if path.is_file()
+    }
+    declared_manifest_paths = {
+        str(item.get("manifest_path", ""))
+        for item in catalog_entries.values()
+    }
+    if discovered_manifest_paths != declared_manifest_paths:
+        errors.append(
+            "component catalog/live manifest mismatch: "
+            f"catalog={sorted(declared_manifest_paths)} live={sorted(discovered_manifest_paths)}"
+        )
+
+    for component_id, entry in catalog_entries.items():
+        package_entry = package_entries.get(component_id)
+        manifest = manifests.get(component_id)
+        package_path = str(entry.get("package_path", ""))
+        manifest_path = str(entry.get("manifest_path", ""))
+        if manifest_path != f"{package_path}/foundry.component.json":
+            errors.append(
+                f"{component_id}: component manifest must be colocated with its package"
+            )
+        if package_entry is None or manifest is None:
+            continue
+        if package_entry.get("path") != package_path:
+            errors.append(f"{component_id}: component/package catalog path mismatch")
+        if manifest.get("id") != component_id:
+            errors.append(f"{component_id}: component manifest id mismatch")
+        if manifest.get("version") != package_entry.get("version"):
+            errors.append(f"{component_id}: component/package version mismatch")
+        if manifest.get("maturity") != package_entry.get("maturity"):
+            errors.append(f"{component_id}: component/package maturity mismatch")
+        package_manifest_path = root / package_path / "package.json"
+        if package_manifest_path.exists():
+            package_manifest = load_json(package_manifest_path)
+            if package_manifest.get("name") != component_id:
+                errors.append(f"{component_id}: component/package.json identity mismatch")
+            if package_manifest.get("version") != manifest.get("version"):
+                errors.append(f"{component_id}: component/package.json version mismatch")
+        contract_refs = manifest.get("contract_refs", [])
+        if not isinstance(contract_refs, list):
+            contract_refs = []
+        for contract_ref in contract_refs:
+            contract_path = safe_repository_path(root, contract_ref)
+            if contract_path is None or not contract_path.exists():
+                errors.append(
+                    f"{component_id}: contract reference is missing or unsafe: {contract_ref}"
+                )
+
+    provider_map = capability_provider_map(manifests)
+    registry_entries: dict[tuple[str, str], dict[str, Any]] = {}
+    capabilities = capability_registry.get("capabilities", [])
+    if not isinstance(capabilities, list):
+        capabilities = []
+    for capability in capabilities:
+        key = capability_key(capability)
+        if key is None:
+            continue
+        if key in registry_entries:
+            errors.append(
+                f"capability registry contains duplicate capability: {key[0]}@{key[1]}"
+            )
+            continue
+        registry_entries[key] = capability
+        raw_declared_providers = capability.get("providers", [])
+        declared_providers = (
+            sorted(set(raw_declared_providers))
+            if isinstance(raw_declared_providers, list)
+            else []
+        )
+        actual_providers = provider_map.get(key, [])
+        if declared_providers != actual_providers:
+            errors.append(
+                f"capability registry provider drift for {key[0]}@{key[1]}: "
+                f"declared={declared_providers} manifests={actual_providers}"
+            )
+        contract_refs = capability.get("contract_refs", [])
+        if not isinstance(contract_refs, list):
+            contract_refs = []
+        for contract_ref in contract_refs:
+            contract_path = safe_repository_path(root, contract_ref)
+            if contract_path is None or not contract_path.exists():
+                errors.append(
+                    f"capability {key[0]}@{key[1]} contract reference is missing or unsafe: "
+                    f"{contract_ref}"
+                )
+    for key in sorted(set(provider_map) - set(registry_entries)):
+        errors.append(f"component provides unregistered capability: {key[0]}@{key[1]}")
+
+    all_dependencies: dict[str, set[str]] = {
+        component_id: set() for component_id in manifests
+    }
+    for component_id, manifest in manifests.items():
+        resolved_dependency_components: set[str] = set()
+        seen_references: set[tuple[str, str]] = set()
+        required_capabilities = manifest.get("requires", [])
+        if not isinstance(required_capabilities, list):
+            required_capabilities = []
+        for reference in required_capabilities:
+            key = capability_key(reference)
+            if key is None:
+                continue
+            if key in seen_references:
+                errors.append(
+                    f"{component_id}: duplicate required capability {key[0]}@{key[1]}"
+                )
+                continue
+            seen_references.add(key)
+            if key not in registry_entries:
+                errors.append(
+                    f"{component_id}: requires unregistered capability {key[0]}@{key[1]}"
+                )
+            providers = provider_map.get(key, [])
+            if len(providers) != 1:
+                errors.append(
+                    f"{component_id}: required capability {key[0]}@{key[1]} must have "
+                    f"one unambiguous catalog provider; providers={providers}"
+                )
+                continue
+            provider = providers[0]
+            if provider == component_id:
+                errors.append(f"{component_id}: component cannot require itself")
+            else:
+                resolved_dependency_components.add(provider)
+                all_dependencies[component_id].add(provider)
+        package_path = manifest_paths.get(component_id)
+        if package_path is None:
+            continue
+        package_manifest_path = package_path.parent / "package.json"
+        if not package_manifest_path.exists():
+            continue
+        package_manifest = load_json(package_manifest_path)
+        dependencies = package_manifest.get("dependencies", {})
+        internal_dependencies = {
+            dependency_id
+            for dependency_id in dependencies
+            if isinstance(dependency_id, str) and dependency_id.startswith("com.lingkyn.")
+        } if isinstance(dependencies, dict) else set()
+        for dependency_id in sorted(internal_dependencies):
+            provider_manifest = manifests.get(dependency_id)
+            if provider_manifest is None:
+                continue
+            if dependencies.get(dependency_id) != provider_manifest.get("version"):
+                errors.append(
+                    f"{component_id}: internal package dependency version for "
+                    f"{dependency_id} must match provider component version "
+                    f"{provider_manifest.get('version')}"
+                )
+        if internal_dependencies != resolved_dependency_components:
+            errors.append(
+                f"{component_id}: component requirements must match internal package "
+                f"dependencies: requirements={sorted(resolved_dependency_components)} "
+                f"package={sorted(internal_dependencies)}"
+            )
+
+    _, cyclic = deterministic_dependency_order(all_dependencies)
+    if cyclic:
+        errors.append(
+            "component catalog dependency cycle detected among: " + ", ".join(cyclic)
+        )
+
+    slot_ids: set[str] = set()
+    slot_candidates_seen: set[str] = set()
+    slots = component_catalog.get("slots", [])
+    if not isinstance(slots, list):
+        slots = []
+    for slot in slots:
+        if not isinstance(slot, dict):
+            continue
+        slot_id = str(slot.get("id", ""))
+        if slot_id in slot_ids:
+            errors.append(f"component catalog contains duplicate slot: {slot_id}")
+        slot_ids.add(slot_id)
+        capability_id = str(slot.get("capability", ""))
+        matching_keys = [key for key in provider_map if key[0] == capability_id]
+        if len(matching_keys) != 1:
+            errors.append(
+                f"component slot {slot_id} must name exactly one registered capability version"
+            )
+            continue
+        expected_candidates = provider_map[matching_keys[0]]
+        raw_candidates = slot.get("candidates", [])
+        candidates = (
+            sorted(set(raw_candidates))
+            if isinstance(raw_candidates, list)
+            else []
+        )
+        if candidates != expected_candidates:
+            errors.append(
+                f"component slot {slot_id} candidate/provider drift: "
+                f"candidates={candidates} providers={expected_candidates}"
+            )
+        overlap = slot_candidates_seen.intersection(candidates)
+        if overlap:
+            errors.append(
+                f"component slot candidates must belong to one slot only: {sorted(overlap)}"
+            )
+        slot_candidates_seen.update(candidates)
+
+    if composition is not None:
+        expected_lock, lock_errors = build_composition_lock(
+            root, REFERENCE_COMPOSITION_PATH, composition
+        )
+        errors.extend(lock_errors)
+        lock_path = safe_repository_path(root, composition.get("lock_path"))
+        if lock_path is None:
+            errors.append("reference composition lock path is unsafe")
+        elif lock_path.exists():
+            try:
+                actual_lock = load_json(lock_path)
+            except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                errors.append(f"reference composition lock is invalid JSON: {error}")
+            else:
+                errors.extend(
+                    validate_json_schema_instance(
+                        actual_lock,
+                        root / COMPOSITION_LOCK_SCHEMA_PATH,
+                        "reference composition lock",
+                    )
+                )
+                if expected_lock is not None and actual_lock != expected_lock:
+                    errors.append(
+                        "reference composition lock is stale; run "
+                        "python scripts/compose_system.py --write-lock"
+                    )
+        else:
+            errors.append("reference composition lock is missing")
     return errors
 
 
@@ -7126,6 +7886,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_governance_contract(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
+    errors.extend(validate_component_model(root))
     errors.extend(validate_device_lab_contract(root))
     errors.extend(validate_workflow_security(root))
     errors.extend(validate_repository_automation_contract(root))
@@ -7237,6 +7998,7 @@ def validate_fast_structure(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_foundry_contract(root))
+    errors.extend(validate_component_model(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")

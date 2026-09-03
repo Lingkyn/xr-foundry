@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added XFCM v0.1: RFC 0005, component/capability/composition schemas, colocated
+  manifests for all 15 Unity packages, explicit renderer/XR variant slots, a
+  deterministic 13-component Unity reference lock, consumer-owned lifecycle rules,
+  visible pending cross-family adapters, and fail-closed composition validation.
+- Kept the runtime data plane strongly typed and in process; MCP is reserved for a
+  future optional external control-plane adapter. No whole-composition Unity,
+  runtime, headset, or named-device evidence is claimed by structural resolution.
 - Added the proposed DAO-ready XR Open Commons foundation: RFC 0004, a G0-G4
   governance maturity model, 7-day policy and 14-day constitutional review windows,
   emergency review bounds, a governance proposal form, source manifest, and

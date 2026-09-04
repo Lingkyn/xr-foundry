@@ -1,0 +1,21 @@
+{
+  "name": "XRFoundry.ReferenceSystem",
+  "rootNamespace": "XRFoundry.ReferenceSystem",
+  "references": [
+    "Lingkyn.Interaction.Core",
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Persistence.Core",
+    "Lingkyn.Settings.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}
+

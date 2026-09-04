@@ -64,7 +64,11 @@ namespace XRFoundry.ReferenceSystem.Tests
                     selection.Handle);
 
                 Assert.That(disabled.Events, Is.Empty);
-                Assert.That(disabled.Dispatches, Is.Empty);
+                var rejected = disabled.Dispatches.Single();
+                Assert.That(rejected.Status, Is.EqualTo(InteractionDispatchStatus.Rejected));
+                Assert.That(rejected.HandlerOutcome, Is.Null);
+                Assert.That(rejected.RouteId, Is.EqualTo(interaction.RouteId));
+                Assert.That(rejected.Phase, Is.EqualTo(InteractionPhase.Started));
                 Assert.That(disabled.Diagnostics.Single().Code, Is.EqualTo(InteractionValidationCode.DisabledRoute));
                 Assert.That(presenter.Current.Slots.All(slot => !slot.Selected), Is.True);
 

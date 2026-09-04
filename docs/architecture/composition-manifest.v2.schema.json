@@ -22,7 +22,7 @@
   "properties": {
     "schema": {"const": "xr-foundry.composition_manifest.v2"},
     "model_version": {"const": "0.2.0"},
-    "id": {"type": "string", "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
+    "id": {"type": "string", "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"},
     "version": {"$ref": "#/$defs/semver"},
     "engine": {"const": "unity"},
     "component_catalog": {"const": "component-catalog.json"},
@@ -42,8 +42,8 @@
         "additionalProperties": false,
         "required": ["slot", "component", "version"],
         "properties": {
-          "slot": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
-          "component": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"},
+          "slot": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"},
+          "component": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+(?![\\s\\S])"},
           "version": {"$ref": "#/$defs/semver"}
         }
       }
@@ -61,7 +61,7 @@
         "additionalProperties": false,
         "required": ["id", "from_capability", "to_capability", "owner", "implementation"],
         "properties": {
-          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"},
           "from_capability": {"$ref": "#/$defs/capabilityReference"},
           "to_capability": {"$ref": "#/$defs/capabilityReference"},
           "owner": {"const": "consumer_composition_root"},
@@ -69,7 +69,10 @@
         }
       }
     },
-    "lock_path": {"type": "string", "minLength": 1},
+    "lock_path": {
+      "type": "string",
+      "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+foundry\\.lock\\.json(?![\\s\\S])"
+    },
     "claims": {
       "type": "object",
       "additionalProperties": false,
@@ -85,11 +88,11 @@
   "$defs": {
     "semver": {
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(?![\\s\\S])"
     },
     "capabilityId": {
       "type": "string",
-      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
     },
     "capabilityReference": {
       "type": "object",
@@ -105,7 +108,7 @@
       "additionalProperties": false,
       "required": ["id", "version"],
       "properties": {
-        "id": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"},
+        "id": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+(?![\\s\\S])"},
         "version": {"$ref": "#/$defs/semver"}
       }
     },
@@ -129,9 +132,12 @@
             "status": {"const": "implemented"},
             "source_path": {
               "type": "string",
-              "pattern": "^consumer/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.cs$"
+              "pattern": "^consumer/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.cs(?![\\s\\S])"
             },
-            "assembly": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"}
+            "assembly": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*(?![\\s\\S])"
+            }
           }
         }
       ]

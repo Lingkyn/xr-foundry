@@ -361,6 +361,13 @@ SEMVER_PATTERN = re.compile(
     r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
 )
+COMPOSITION_ID_PATTERN = re.compile(
+    r"xr-foundry\.[a-z0-9]+(?:[.-][a-z0-9]+)*"
+)
+COMPOSITION_BINDING_ID_PATTERN = re.compile(
+    r"[a-z0-9]+(?:[.-][a-z0-9]+)*"
+)
+COMPOSITION_ASSEMBLY_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")
 UNITY_EDITOR_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)[abfp](?:0|[1-9][0-9]*)"
 )
@@ -963,6 +970,18 @@ def build_composition_lock(
         return None, contract_errors
     is_v2 = composition_payload.get("schema") == "xr-foundry.composition_manifest.v2"
     if is_v2:
+        composition_id = composition_payload.get("id")
+        composition_version = composition_payload.get("version")
+        if (
+            not isinstance(composition_id, str)
+            or COMPOSITION_ID_PATTERN.fullmatch(composition_id) is None
+        ):
+            errors.append("v2 composition id must be an exact canonical identifier")
+        if (
+            not isinstance(composition_version, str)
+            or SEMVER_PATTERN.fullmatch(composition_version) is None
+        ):
+            errors.append("v2 composition version must be exact SemVer")
         expected_lock_file = absolute_composition_path.parent / "foundry.lock.json"
         expected_lock_path = expected_lock_file.relative_to(root).as_posix()
         if composition_payload.get("lock_path") != expected_lock_path:
@@ -1160,8 +1179,21 @@ def build_composition_lock(
         if not isinstance(binding, dict):
             errors.append("composition bindings must be objects")
             continue
-        binding_id = str(binding.get("id", ""))
-        if binding_id in seen_binding_ids:
+        raw_binding_id = binding.get("id", "")
+        binding_id = (
+            raw_binding_id
+            if isinstance(raw_binding_id, str)
+            else str(raw_binding_id)
+        )
+        if is_v2 and (
+            not isinstance(raw_binding_id, str)
+            or COMPOSITION_BINDING_ID_PATTERN.fullmatch(raw_binding_id) is None
+        ):
+            errors.append(
+                f"v2 composition binding id must be an exact canonical identifier: "
+                f"{raw_binding_id!r}"
+            )
+        if is_v2 and binding_id in seen_binding_ids:
             errors.append(f"composition contains duplicate binding id: {binding_id}")
         seen_binding_ids.add(binding_id)
         from_provider = resolve(
@@ -1203,9 +1235,13 @@ def build_composition_lock(
                         )
                         continue
                     assembly = implementation.get("assembly")
-                    if not isinstance(assembly, str) or not assembly:
+                    if (
+                        not isinstance(assembly, str)
+                        or COMPOSITION_ASSEMBLY_PATTERN.fullmatch(assembly) is None
+                    ):
                         errors.append(
-                            f"binding {binding_id}: implemented adapter assembly is required"
+                            f"binding {binding_id}: implemented adapter assembly must be "
+                            "an exact ASCII assembly name"
                         )
                         continue
                     locked_implementation = {

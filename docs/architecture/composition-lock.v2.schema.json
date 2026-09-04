@@ -13,9 +13,12 @@
       "additionalProperties": false,
       "required": ["id", "version", "path"],
       "properties": {
-        "id": {"type": "string"},
+        "id": {"$ref": "#/$defs/compositionId"},
         "version": {"$ref": "#/$defs/semver"},
-        "path": {"type": "string"}
+        "path": {
+          "type": "string",
+          "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+foundry\\.project\\.json(?![\\s\\S])"
+        }
       }
     },
     "engine": {"const": "unity"},
@@ -42,9 +45,12 @@
             "additionalProperties": false,
             "required": ["id", "version", "manifest_path", "manifest_sha256"],
             "properties": {
-              "id": {"type": "string"},
+              "id": {"$ref": "#/$defs/componentId"},
               "version": {"$ref": "#/$defs/semver"},
-              "manifest_path": {"type": "string"},
+              "manifest_path": {
+                "type": "string",
+                "pattern": "^packages/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+foundry\\.component\\.json(?![\\s\\S])"
+              },
               "manifest_sha256": {"$ref": "#/$defs/sha256"}
             }
           }
@@ -57,9 +63,9 @@
             "additionalProperties": false,
             "required": ["id", "version", "provider"],
             "properties": {
-              "id": {"type": "string"},
+              "id": {"$ref": "#/$defs/capabilityId"},
               "version": {"$ref": "#/$defs/semver"},
-              "provider": {"type": "string"}
+              "provider": {"$ref": "#/$defs/componentId"}
             }
           }
         },
@@ -70,8 +76,8 @@
             "additionalProperties": false,
             "required": ["slot", "component", "version"],
             "properties": {
-              "slot": {"type": "string"},
-              "component": {"type": "string"},
+              "slot": {"$ref": "#/$defs/tokenId"},
+              "component": {"$ref": "#/$defs/componentId"},
               "version": {"$ref": "#/$defs/semver"}
             }
           }
@@ -83,9 +89,9 @@
             "additionalProperties": false,
             "required": ["id", "from_provider", "to_provider", "implementation"],
             "properties": {
-              "id": {"type": "string"},
-              "from_provider": {"type": "string"},
-              "to_provider": {"type": "string"},
+              "id": {"$ref": "#/$defs/tokenId"},
+              "from_provider": {"$ref": "#/$defs/componentId"},
+              "to_provider": {"$ref": "#/$defs/componentId"},
               "implementation": {"$ref": "#/$defs/bindingImplementation"}
             }
           }
@@ -94,7 +100,7 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"type": "string"}
+          "items": {"$ref": "#/$defs/componentId"}
         }
       }
     },
@@ -114,9 +120,28 @@
   "$defs": {
     "semver": {
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(?![\\s\\S])"
     },
-    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+    },
+    "compositionId": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
+    },
+    "componentId": {
+      "type": "string",
+      "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+(?![\\s\\S])"
+    },
+    "tokenId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
+    },
     "bindingImplementation": {
       "oneOf": [
         {
@@ -137,9 +162,12 @@
             "status": {"const": "implemented"},
             "source_path": {
               "type": "string",
-              "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+consumer/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.cs$"
+              "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+consumer/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.cs(?![\\s\\S])"
             },
-            "assembly": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"},
+            "assembly": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*(?![\\s\\S])"
+            },
             "source_sha256": {"$ref": "#/$defs/sha256"}
           }
         }

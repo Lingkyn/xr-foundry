@@ -1108,6 +1108,29 @@ class RepositoryContractTests(unittest.TestCase):
             any("non-empty POSIX path" in error for error in control_errors)
         )
 
+        invalid_assembly = copy.deepcopy(original)
+        invalid_assembly["bindings"][0]["implementation"]["assembly"] = (
+            "XRFoundry.ReferenceSystem\n"
+        )
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(invalid_assembly)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(
+                invalid_assembly,
+                ROOT / manifest_schema_path,
+                "v2 composition manifest",
+            )
+        )
+        _, assembly_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, invalid_assembly
+        )
+        self.assertTrue(
+            any("exact ASCII assembly name" in error for error in assembly_errors)
+        )
+
         symlinked = copy.deepcopy(original)
         source_path = (
             composition_path.parent
@@ -1183,9 +1206,10 @@ class RepositoryContractTests(unittest.TestCase):
         )
 
     def test_v2_lock_schema_rejects_noncanonical_source_path(self) -> None:
-        lock = MODULE.load_json(
+        original_lock = MODULE.load_json(
             ROOT / "compositions/unity/reference-system/foundry.lock.json"
         )
+        lock = copy.deepcopy(original_lock)
         lock["resolution"]["bindings"][0]["implementation"]["source_path"] = (
             "compositions/example/consumer/../../secret.cs"
         )
@@ -1198,6 +1222,17 @@ class RepositoryContractTests(unittest.TestCase):
             "v2 composition lock",
         )
         self.assertTrue(schema_errors)
+
+        invalid_assembly_lock = copy.deepcopy(original_lock)
+        invalid_assembly_lock["resolution"]["bindings"][0]["implementation"][
+            "assembly"
+        ] = "XRFoundry.ReferenceSystem\n"
+        assembly_schema_errors = MODULE.validate_json_schema_instance(
+            invalid_assembly_lock,
+            ROOT / lock_schema_path,
+            "v2 composition lock",
+        )
+        self.assertTrue(assembly_schema_errors)
 
     def test_composition_schema_dispatch_fails_closed(self) -> None:
         composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)
@@ -1215,6 +1250,101 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertTrue(any("unsupported composition manifest schema" in error for error in unknown_errors))
 
+    def test_v2_canonical_metadata_rejects_terminal_control_characters(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        original_composition = MODULE.load_json(composition_path)
+        manifest_paths = {
+            "composition.id": ("id",),
+            "composition.version": ("version",),
+            "binding.id": ("bindings", 0, "id"),
+            "binding.assembly": ("bindings", 0, "implementation", "assembly"),
+        }
+
+        def append_lf(payload: dict, path: tuple[object, ...]) -> None:
+            cursor: object = payload
+            for part in path[:-1]:
+                if isinstance(part, int):
+                    assert isinstance(cursor, list)
+                    cursor = cursor[part]
+                else:
+                    assert isinstance(cursor, dict)
+                    cursor = cursor[part]
+            key = path[-1]
+            assert isinstance(cursor, dict)
+            assert isinstance(key, str)
+            cursor[key] += "\n"
+
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(original_composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+        for label, field_path in manifest_paths.items():
+            with self.subTest(contract="manifest-and-builder", field=label):
+                mutated = copy.deepcopy(original_composition)
+                append_lf(mutated, field_path)
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        mutated,
+                        ROOT / manifest_schema_path,
+                        "v2 composition manifest",
+                    )
+                )
+                lock, build_errors = MODULE.build_composition_lock(
+                    ROOT, composition_path, mutated
+                )
+                self.assertIsNone(lock)
+                self.assertTrue(build_errors)
+
+        non_string_binding_id = copy.deepcopy(original_composition)
+        non_string_binding_id["bindings"][0]["id"] = 123
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(
+                non_string_binding_id,
+                ROOT / manifest_schema_path,
+                "v2 composition manifest",
+            )
+        )
+        lock, build_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, non_string_binding_id
+        )
+        self.assertIsNone(lock)
+        self.assertTrue(
+            any("binding id must be" in error for error in build_errors)
+        )
+
+        original_lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock_paths = {
+            "composition.id": ("composition", "id"),
+            "composition.version": ("composition", "version"),
+            "binding.id": ("resolution", "bindings", 0, "id"),
+            "binding.assembly": (
+                "resolution",
+                "bindings",
+                0,
+                "implementation",
+                "assembly",
+            ),
+        }
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            original_lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        assert lock_schema_path is not None
+        for label, field_path in lock_paths.items():
+            with self.subTest(contract="lock", field=label):
+                mutated = copy.deepcopy(original_lock)
+                append_lf(mutated, field_path)
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        mutated,
+                        ROOT / lock_schema_path,
+                        "v2 composition lock",
+                    )
+                )
+
     def test_v1_pending_composition_remains_supported(self) -> None:
         composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
         v1_composition = MODULE.load_json(composition_path)
@@ -1222,6 +1352,10 @@ class RepositoryContractTests(unittest.TestCase):
         v1_composition["model_version"] = "0.1.0"
         for binding in v1_composition["bindings"]:
             binding["implementation"] = "consumer_owned_adapter_pending"
+        duplicate_binding_id = v1_composition["bindings"][0]["id"]
+        v1_composition["bindings"].append(
+            copy.deepcopy(v1_composition["bindings"][0])
+        )
 
         manifest_schema_path, dispatch_errors = (
             MODULE.composition_manifest_schema_path(v1_composition)
@@ -1259,6 +1393,13 @@ class RepositoryContractTests(unittest.TestCase):
                 binding["implementation"] == "consumer_owned_adapter_pending"
                 for binding in v1_lock["resolution"]["bindings"]
             )
+        )
+        self.assertEqual(
+            2,
+            sum(
+                binding["id"] == duplicate_binding_id
+                for binding in v1_lock["resolution"]["bindings"]
+            ),
         )
         lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
             v1_lock

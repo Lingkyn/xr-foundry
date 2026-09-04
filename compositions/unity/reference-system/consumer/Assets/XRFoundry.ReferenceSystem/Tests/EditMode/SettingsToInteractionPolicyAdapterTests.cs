@@ -179,6 +179,10 @@ namespace XRFoundry.ReferenceSystem.Tests
                 new ISettingApplicator[] { adapter, later });
             Assert.That(adapter.Initialize(settings).Succeeded, Is.True);
             var originalPolicy = interaction.Coordinator.Policy;
+            var inFlight = interaction.Coordinator.RouteFrame(
+                MustFrame(Signal(interaction, InteractionPhase.Started, 10)));
+            Assert.That(inFlight.Events.Single().Phase, Is.EqualTo(InteractionPhase.Started));
+            Assert.That(interaction.Coordinator.State.PendingPhases, Has.Count.EqualTo(1));
 
             var failing = settings.BeginTransaction();
             failing.StageSet(Scoped(routeEnabled), SettingValue.FromBoolean(false));
@@ -186,6 +190,13 @@ namespace XRFoundry.ReferenceSystem.Tests
             Assert.That(settings.Apply(failing).Outcome, Is.EqualTo(SettingsApplyOutcome.ApplicatorFailed));
             Assert.That(interaction.Coordinator.Policy, Is.SameAs(originalPolicy));
             Assert.That(settings.CommittedSnapshot.Revision, Is.EqualTo(0));
+            Assert.That(interaction.Coordinator.State.PendingPhases, Is.Empty,
+                "Policy rollback must not resurrect lifecycle state canceled by the attempted change.");
+            var stalePerformed = interaction.Coordinator.RouteFrame(
+                MustFrame(Signal(interaction, InteractionPhase.Performed, 11)));
+            Assert.That(stalePerformed.Events, Is.Empty);
+            Assert.That(stalePerformed.Diagnostics.Single().Code,
+                Is.EqualTo(InteractionValidationCode.InvalidPhaseTransition));
 
             var retry = settings.BeginTransaction();
             retry.StageSet(Scoped(routeEnabled), SettingValue.FromBoolean(false));

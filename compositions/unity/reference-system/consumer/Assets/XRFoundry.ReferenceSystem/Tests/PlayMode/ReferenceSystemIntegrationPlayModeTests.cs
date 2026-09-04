@@ -58,9 +58,15 @@ namespace XRFoundry.ReferenceSystem.Tests
                 var initialized = settingsAdapter.Initialize(settings);
                 Assert.That(initialized.Succeeded, Is.True, initialized.Diagnostic.Message);
 
+                var inFlight = interaction.Coordinator.RouteFrame(
+                    MustFrame(Signal(interaction, InteractionPhase.Started, 10)),
+                    selection.Handle);
+                Assert.That(inFlight.Events.Single().Phase, Is.EqualTo(InteractionPhase.Started));
+                Assert.That(interaction.Coordinator.State.PendingPhases, Has.Count.EqualTo(1));
+
                 ApplyBoolean(settings, scopedRouteEnabled, false);
                 var disabled = interaction.Coordinator.RouteFrame(
-                    MustFrame(Signal(interaction, InteractionPhase.Started, 10)),
+                    MustFrame(Signal(interaction, InteractionPhase.Performed, 11)),
                     selection.Handle);
 
                 Assert.That(disabled.Events, Is.Empty);
@@ -68,8 +74,9 @@ namespace XRFoundry.ReferenceSystem.Tests
                 Assert.That(rejected.Status, Is.EqualTo(InteractionDispatchStatus.Rejected));
                 Assert.That(rejected.HandlerOutcome, Is.Null);
                 Assert.That(rejected.RouteId, Is.EqualTo(interaction.RouteId));
-                Assert.That(rejected.Phase, Is.EqualTo(InteractionPhase.Started));
+                Assert.That(rejected.Phase, Is.EqualTo(InteractionPhase.Performed));
                 Assert.That(disabled.Diagnostics.Single().Code, Is.EqualTo(InteractionValidationCode.DisabledRoute));
+                Assert.That(interaction.Coordinator.State.PendingPhases, Is.Empty);
                 Assert.That(presenter.Current.Slots.All(slot => !slot.Selected), Is.True);
 
                 yield return null;
@@ -82,7 +89,9 @@ namespace XRFoundry.ReferenceSystem.Tests
                     MustFrame(Signal(interaction, InteractionPhase.Performed, 21)),
                     selection.Handle);
 
+                Assert.That(started.Diagnostics, Is.Empty, "The canceled lifecycle must not return as DuplicatePhase.");
                 Assert.That(started.Events.Single().Phase, Is.EqualTo(InteractionPhase.Started));
+                Assert.That(performed.Events.Single().Phase, Is.EqualTo(InteractionPhase.Performed));
                 Assert.That(performed.Dispatches.Single().HandlerOutcome,
                     Is.EqualTo(InteractionHandlerOutcome.Accepted));
                 Assert.That(Slot(presenter, FirstSlot).Selected, Is.True);

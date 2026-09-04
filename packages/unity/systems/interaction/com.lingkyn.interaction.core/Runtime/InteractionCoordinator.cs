@@ -24,14 +24,102 @@ namespace Lingkyn.Interaction.Core
         public InteractionRoutingState State => _state;
         public IReadOnlyList<ContextId> ActiveContexts => _activeContexts;
         public InteractionPolicySnapshot Policy => _policy;
-        public void SetActiveContexts(IEnumerable<ContextId> value) =>
-            _activeContexts = InteractionReadOnly.FreezeList((value ?? Array.Empty<ContextId>()).OrderBy(x => x));
-        public void SetPolicy(InteractionPolicySnapshot value) => _policy = value ?? InteractionPolicySnapshot.Empty;
+        public void SetActiveContexts(IEnumerable<ContextId> value)
+        {
+            var next = InteractionReadOnly.FreezeList((value ?? Array.Empty<ContextId>()).OrderBy(x => x));
+            var previous = new HashSet<ContextId>(_activeContexts);
+            var retained = new HashSet<ContextId>(next);
+            var removed = new HashSet<ContextId>(_activeContexts.Where(contextId => !retained.Contains(contextId)));
+            var added = new HashSet<ContextId>(next.Where(contextId => !previous.Contains(contextId)));
+            if (removed.Count > 0 || added.Count > 0)
+            {
+                var affectedIntents = new HashSet<IntentId>(_registry.Routes
+                    .Where(route => removed.Contains(route.ContextId))
+                    .Select(route => route.IntentId));
+                var resetToggles = new HashSet<IntentId>(affectedIntents
+                    .Where(intentId => !HasActiveEnabledRoute(_policy, intentId, next)));
+                ReconcileState(
+                    // A newly active context can change arbitration for any in-flight observation.
+                    phase => added.Count == 0 && !removed.Contains(phase.ContextId),
+                    toggle => !resetToggles.Contains(toggle.IntentId));
+            }
+            _activeContexts = next;
+        }
+
+        public void SetPolicy(InteractionPolicySnapshot value)
+        {
+            var next = value ?? InteractionPolicySnapshot.Empty;
+            var changedIntentPolicies = new HashSet<IntentId>();
+            var changedRoutePolicies = new HashSet<RouteId>();
+            var resetToggles = new HashSet<IntentId>();
+
+            foreach (var intent in _registry.Intents)
+            {
+                if (!EffectiveIntentPolicy(_policy, intent.Id).Equals(EffectiveIntentPolicy(next, intent.Id)))
+                {
+                    changedIntentPolicies.Add(intent.Id);
+                    resetToggles.Add(intent.Id);
+                }
+            }
+            foreach (var route in _registry.Routes)
+            {
+                if (!EffectiveRoutePolicy(_policy, route.Id).Equals(EffectiveRoutePolicy(next, route.Id)))
+                {
+                    changedRoutePolicies.Add(route.Id);
+                    if (!HasActiveEnabledRoute(next, route.IntentId, _activeContexts))
+                        resetToggles.Add(route.IntentId);
+                }
+            }
+
+            if (changedIntentPolicies.Count > 0 || changedRoutePolicies.Count > 0 || resetToggles.Count > 0)
+            {
+                ReconcileState(
+                    phase => !changedRoutePolicies.Contains(phase.RouteId)
+                        && (!_registry.TryGetRoute(phase.RouteId, out var route)
+                            || !changedIntentPolicies.Contains(route.IntentId)),
+                    toggle => !resetToggles.Contains(toggle.IntentId));
+            }
+            _policy = next;
+        }
+
         public InteractionRoutingResult RouteFrame(InteractionFrame frame, InteractionIntentHandler handler = null)
         {
             var result = _router.Route(_registry, _activeContexts, _policy, frame, _state, handler);
             _state = result.NextState;
             return result;
+        }
+
+        private void ReconcileState(
+            Func<InteractionRoutePhaseState, bool> retainPhase,
+            Func<InteractionToggleState, bool> retainToggle)
+        {
+            var phases = _state.PendingPhases.Where(retainPhase).ToArray();
+            var toggles = _state.ToggleStates.Where(retainToggle).ToArray();
+            if (phases.Length != _state.PendingPhases.Count || toggles.Length != _state.ToggleStates.Count)
+                _state = new InteractionRoutingState(phases, toggles);
+        }
+
+        private static IntentPolicyEntry EffectiveIntentPolicy(InteractionPolicySnapshot policy, IntentId intentId) =>
+            policy.TryGetIntentPolicy(intentId, out var configured)
+                ? configured
+                : new IntentPolicyEntry(intentId, InteractionActivationMode.Momentary, true);
+
+        private static RoutePolicyEntry EffectiveRoutePolicy(InteractionPolicySnapshot policy, RouteId routeId) =>
+            policy.TryGetRoutePolicy(routeId, out var configured)
+                ? configured
+                : new RoutePolicyEntry(routeId, true, 1.0, false);
+
+        private bool HasActiveEnabledRoute(
+            InteractionPolicySnapshot policy,
+            IntentId intentId,
+            IEnumerable<ContextId> activeContexts)
+        {
+            if (!EffectiveIntentPolicy(policy, intentId).Enabled)
+                return false;
+            var active = new HashSet<ContextId>(activeContexts ?? Array.Empty<ContextId>());
+            return _registry.Routes.Any(route => route.IntentId.Equals(intentId)
+                && active.Contains(route.ContextId)
+                && EffectiveRoutePolicy(policy, route.Id).Enabled);
         }
     }
 }

@@ -1,14 +1,14 @@
 {
-  "schema": "xr-foundry.composition_lock.v1",
-  "model_version": "0.1.0",
+  "schema": "xr-foundry.composition_lock.v2",
+  "model_version": "0.2.0",
   "composition": {
     "id": "xr-foundry.unity.reference-system",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "compositions/unity/reference-system/foundry.project.json"
   },
   "engine": "unity",
   "input_digests": {
-    "composition_sha256": "5e6b22ff2b13614758e19855ce2de5b73d890277836b540b0a44e785f628610e",
+    "composition_sha256": "1608d36b629f07930c639251392adf7fa7705b69fef4aa040bbafcb22ec6a08c",
     "component_catalog_sha256": "4741482c143f04cff49a4a97aac3e457ed40547602270b0681d32de3aad4bc85",
     "capability_registry_sha256": "57a8e63abdc0039a8ddf4f29b2b563eb4322333f74bd1114f584fe45f263fd66"
   },
@@ -182,19 +182,37 @@
         "id": "interaction-to-inventory-intent",
         "from_provider": "com.lingkyn.interaction.core",
         "to_provider": "com.lingkyn.inventory.presentation",
-        "implementation": "consumer_owned_adapter_pending"
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/InteractionToInventoryIntentAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "3d6b47c1116acda22069a8b0621954e9bd33ae2c57c8048a64b22c5f5ce348c1"
+        }
       },
       {
         "id": "inventory-to-persistence",
         "from_provider": "com.lingkyn.inventory.core",
         "to_provider": "com.lingkyn.persistence.core",
-        "implementation": "consumer_owned_adapter_pending"
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/InventoryToPersistenceAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "122683dd02a3793e0865cebd11f0ffca5758ecbcef3647f5ed7ee2212ee510da"
+        }
       },
       {
         "id": "settings-to-interaction-policy",
         "from_provider": "com.lingkyn.settings.core",
         "to_provider": "com.lingkyn.interaction.core",
-        "implementation": "consumer_owned_adapter_pending"
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/SettingsToInteractionPolicyAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "4bb6a4ab6339d1a6819fbfe7989f2ef320c9c22c84790d81042bad009f43a68e"
+        }
       }
     ],
     "dependency_order": [
@@ -215,6 +233,7 @@
   },
   "claims": {
     "structural_resolution": "resolved",
+    "bindings_implemented": true,
     "runtime_ready": false,
     "unity_compile": "not_claimed_for_this_composition",
     "device_runtime": "not_claimed"

@@ -294,6 +294,8 @@ REQUIRED_COMPONENT_MODEL_FILES = {
     "docs/architecture/capability-registry.schema.json",
     "docs/architecture/composition-manifest.schema.json",
     "docs/architecture/composition-lock.schema.json",
+    "docs/architecture/composition-manifest.v2.schema.json",
+    "docs/architecture/composition-lock.v2.schema.json",
     "docs/architecture/component-composition-model.md",
     "docs/rfcs/0005-xr-foundry-component-composition-model.md",
     "compositions/unity/reference-system/README.md",
@@ -319,6 +321,33 @@ COMPOSITION_MANIFEST_SCHEMA_PATH = (
 COMPOSITION_LOCK_SCHEMA_PATH = (
     Path("docs") / "architecture" / "composition-lock.schema.json"
 )
+COMPOSITION_MANIFEST_V2_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-manifest.v2.schema.json"
+)
+COMPOSITION_LOCK_V2_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-lock.v2.schema.json"
+)
+COMPOSITION_MANIFEST_CONTRACTS = {
+    "xr-foundry.composition_manifest.v1": {
+        "model_version": "0.1.0",
+        "schema_path": COMPOSITION_MANIFEST_SCHEMA_PATH,
+        "lock_schema": "xr-foundry.composition_lock.v1",
+        "lock_schema_path": COMPOSITION_LOCK_SCHEMA_PATH,
+    },
+    "xr-foundry.composition_manifest.v2": {
+        "model_version": "0.2.0",
+        "schema_path": COMPOSITION_MANIFEST_V2_SCHEMA_PATH,
+        "lock_schema": "xr-foundry.composition_lock.v2",
+        "lock_schema_path": COMPOSITION_LOCK_V2_SCHEMA_PATH,
+    },
+}
+COMPOSITION_LOCK_CONTRACTS = {
+    contract["lock_schema"]: {
+        "model_version": contract["model_version"],
+        "schema_path": contract["lock_schema_path"],
+    }
+    for contract in COMPOSITION_MANIFEST_CONTRACTS.values()
+}
 REFERENCE_COMPOSITION_PATH = (
     Path("compositions") / "unity" / "reference-system" / "foundry.project.json"
 )
@@ -675,6 +704,125 @@ def safe_repository_path(root: Path, relative: Any) -> Path | None:
     return resolved
 
 
+def composition_manifest_contract(
+    payload: Any,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    """Select a manifest contract from its explicit schema/model pair."""
+
+    if not isinstance(payload, dict):
+        return None, ["composition manifest must be an object"]
+    schema = payload.get("schema")
+    model_version = payload.get("model_version")
+    if not isinstance(schema, str) or schema not in COMPOSITION_MANIFEST_CONTRACTS:
+        return None, [f"unsupported composition manifest schema: {schema!r}"]
+    contract = COMPOSITION_MANIFEST_CONTRACTS[schema]
+    if model_version != contract["model_version"]:
+        return None, [
+            "composition manifest schema/model mismatch: "
+            f"{schema} requires model_version {contract['model_version']}, "
+            f"got {model_version!r}"
+        ]
+    return contract, []
+
+
+def composition_manifest_schema_path(
+    payload: Any,
+) -> tuple[Path | None, list[str]]:
+    contract, errors = composition_manifest_contract(payload)
+    if contract is None:
+        return None, errors
+    return contract["schema_path"], []
+
+
+def composition_lock_contract(
+    payload: Any,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    """Select a lock contract from its explicit schema/model pair."""
+
+    if not isinstance(payload, dict):
+        return None, ["composition lock must be an object"]
+    schema = payload.get("schema")
+    model_version = payload.get("model_version")
+    if not isinstance(schema, str) or schema not in COMPOSITION_LOCK_CONTRACTS:
+        return None, [f"unsupported composition lock schema: {schema!r}"]
+    contract = COMPOSITION_LOCK_CONTRACTS[schema]
+    if model_version != contract["model_version"]:
+        return None, [
+            "composition lock schema/model mismatch: "
+            f"{schema} requires model_version {contract['model_version']}, "
+            f"got {model_version!r}"
+        ]
+    return contract, []
+
+
+def composition_lock_schema_path(
+    payload: Any,
+) -> tuple[Path | None, list[str]]:
+    contract, errors = composition_lock_contract(payload)
+    if contract is None:
+        return None, errors
+    return contract["schema_path"], []
+
+
+def resolve_composition_adapter_source(
+    root: Path,
+    composition_path: Path,
+    source_path: Any,
+) -> tuple[Path | None, str | None]:
+    """Resolve a v2 adapter source inside the composition-owned consumer tree."""
+
+    if (
+        not isinstance(source_path, str)
+        or not source_path
+        or "\\" in source_path
+        or any(unicodedata.category(character).startswith("C") for character in source_path)
+    ):
+        return None, "adapter source_path must be a non-empty POSIX path"
+    pure_path = PurePosixPath(source_path)
+    if (
+        pure_path.is_absolute()
+        or pure_path.as_posix() != source_path
+        or not pure_path.parts
+        or pure_path.parts[0] != "consumer"
+        or any(part in {"", ".", ".."} for part in pure_path.parts)
+    ):
+        return None, "adapter source_path must be canonical and start with consumer/"
+
+    consumer = composition_path.parent / "consumer"
+    if consumer.is_symlink():
+        return None, "composition consumer directory must not be a symbolic link"
+    try:
+        consumer_mode = consumer.lstat().st_mode
+    except (OSError, ValueError):
+        return None, "composition consumer directory is missing"
+    if not stat.S_ISDIR(consumer_mode):
+        return None, "composition consumer path must be a directory"
+
+    cursor = consumer
+    for part in pure_path.parts[1:-1]:
+        cursor /= part
+        if cursor.is_symlink():
+            return None, "adapter source_path ancestry must not contain symbolic links"
+
+    candidate = composition_path.parent.joinpath(*pure_path.parts)
+    if candidate.is_symlink():
+        return None, "adapter source_path must not be a symbolic link"
+    try:
+        mode = candidate.lstat().st_mode
+    except (OSError, ValueError):
+        return None, "adapter source_path is missing"
+    if not stat.S_ISREG(mode):
+        return None, "adapter source_path must be a regular file"
+    try:
+        resolved_candidate = candidate.resolve(strict=True)
+        resolved_consumer = consumer.resolve(strict=True)
+        resolved_candidate.relative_to(resolved_consumer)
+        resolved_candidate.relative_to(root.resolve())
+    except (OSError, RuntimeError, ValueError):
+        return None, "adapter source_path escapes the composition consumer directory"
+    return resolved_candidate, None
+
+
 def capability_key(reference: Any) -> tuple[str, str] | None:
     if not isinstance(reference, dict):
         return None
@@ -807,6 +955,33 @@ def build_composition_lock(
             return None, [f"composition manifest is invalid JSON: {error}"]
     if not isinstance(composition_payload, dict):
         return None, ["composition manifest must be an object"]
+
+    composition_contract, contract_errors = composition_manifest_contract(
+        composition_payload
+    )
+    if composition_contract is None:
+        return None, contract_errors
+    is_v2 = composition_payload.get("schema") == "xr-foundry.composition_manifest.v2"
+    if is_v2:
+        expected_lock_file = absolute_composition_path.parent / "foundry.lock.json"
+        expected_lock_path = expected_lock_file.relative_to(root).as_posix()
+        if composition_payload.get("lock_path") != expected_lock_path:
+            errors.append(
+                "v2 composition lock_path must name its sibling foundry.lock.json: "
+                f"expected {expected_lock_path}"
+            )
+        elif expected_lock_file.is_symlink():
+            errors.append("v2 composition lock must not be a symbolic link")
+        else:
+            try:
+                lock_mode = expected_lock_file.lstat().st_mode
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError) as error:
+                errors.append(f"v2 composition lock target is invalid: {error}")
+            else:
+                if not stat.S_ISREG(lock_mode):
+                    errors.append("v2 composition lock target must be a regular file")
 
     catalog_path = safe_repository_path(root, composition_payload.get("component_catalog"))
     registry_path = safe_repository_path(root, composition_payload.get("capability_registry"))
@@ -980,11 +1155,15 @@ def build_composition_lock(
     if not isinstance(bindings, list):
         errors.append("composition bindings must be an array")
         bindings = []
+    seen_binding_ids: set[str] = set()
     for binding in bindings:
         if not isinstance(binding, dict):
             errors.append("composition bindings must be objects")
             continue
         binding_id = str(binding.get("id", ""))
+        if binding_id in seen_binding_ids:
+            errors.append(f"composition contains duplicate binding id: {binding_id}")
+        seen_binding_ids.add(binding_id)
         from_provider = resolve(
             binding.get("from_capability"), f"binding {binding_id} source"
         )
@@ -992,12 +1171,62 @@ def build_composition_lock(
             binding.get("to_capability"), f"binding {binding_id} target"
         )
         if from_provider is not None and to_provider is not None:
+            implementation = binding.get("implementation")
+            locked_implementation: Any = implementation
+            if is_v2:
+                if not isinstance(implementation, dict):
+                    errors.append(
+                        f"binding {binding_id}: v2 implementation must be an object"
+                    )
+                    continue
+                kind = implementation.get("kind")
+                status_value = implementation.get("status")
+                if kind != "consumer_owned_adapter":
+                    errors.append(
+                        f"binding {binding_id}: unsupported implementation kind {kind!r}"
+                    )
+                    continue
+                if status_value == "pending":
+                    locked_implementation = {
+                        "kind": "consumer_owned_adapter",
+                        "status": "pending",
+                    }
+                elif status_value == "implemented":
+                    source, source_error = resolve_composition_adapter_source(
+                        root,
+                        absolute_composition_path,
+                        implementation.get("source_path"),
+                    )
+                    if source_error is not None or source is None:
+                        errors.append(
+                            f"binding {binding_id}: {source_error or 'adapter source is invalid'}"
+                        )
+                        continue
+                    assembly = implementation.get("assembly")
+                    if not isinstance(assembly, str) or not assembly:
+                        errors.append(
+                            f"binding {binding_id}: implemented adapter assembly is required"
+                        )
+                        continue
+                    locked_implementation = {
+                        "kind": "consumer_owned_adapter",
+                        "status": "implemented",
+                        "source_path": source.relative_to(root).as_posix(),
+                        "assembly": assembly,
+                        "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                    }
+                else:
+                    errors.append(
+                        f"binding {binding_id}: unsupported implementation status "
+                        f"{status_value!r}"
+                    )
+                    continue
             locked_bindings.append(
                 {
                     "id": binding_id,
                     "from_provider": from_provider,
                     "to_provider": to_provider,
-                    "implementation": binding.get("implementation"),
+                    "implementation": locked_implementation,
                 }
             )
 
@@ -1021,8 +1250,8 @@ def build_composition_lock(
             }
         )
     lock = {
-        "schema": "xr-foundry.composition_lock.v1",
-        "model_version": COMPONENT_MODEL_VERSION,
+        "schema": composition_contract["lock_schema"],
+        "model_version": composition_contract["model_version"],
         "composition": {
             "id": composition_payload.get("id"),
             "version": composition_payload.get("version"),
@@ -1074,6 +1303,18 @@ def build_composition_lock(
             "device_runtime": "not_claimed",
         },
     }
+    if is_v2:
+        lock["claims"] = {
+            "structural_resolution": "resolved",
+            "bindings_implemented": bool(locked_bindings) and all(
+                isinstance(binding.get("implementation"), dict)
+                and binding["implementation"].get("status") == "implemented"
+                for binding in locked_bindings
+            ),
+            "runtime_ready": False,
+            "unity_compile": "not_claimed_for_this_composition",
+            "device_runtime": "not_claimed",
+        }
     return lock, []
 
 
@@ -1086,7 +1327,6 @@ def validate_component_model(root: Path) -> list[str]:
     instance_specs = [
         (COMPONENT_CATALOG_PATH, COMPONENT_CATALOG_SCHEMA_PATH, "component catalog"),
         (CAPABILITY_REGISTRY_PATH, CAPABILITY_REGISTRY_SCHEMA_PATH, "capability registry"),
-        (REFERENCE_COMPOSITION_PATH, COMPOSITION_MANIFEST_SCHEMA_PATH, "reference composition"),
     ]
     loaded: dict[Path, dict[str, Any]] = {}
     for instance_path, schema_path, label in instance_specs:
@@ -1101,6 +1341,29 @@ def validate_component_model(root: Path) -> list[str]:
             continue
         loaded[instance_path] = payload
         errors.extend(validate_json_schema_instance(payload, absolute_schema, label))
+
+    absolute_composition = root / REFERENCE_COMPOSITION_PATH
+    if absolute_composition.exists():
+        try:
+            composition_payload = load_json(absolute_composition)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"reference composition: invalid JSON: {error}")
+        else:
+            loaded[REFERENCE_COMPOSITION_PATH] = composition_payload
+            schema_path, dispatch_errors = composition_manifest_schema_path(
+                composition_payload
+            )
+            errors.extend(
+                f"reference composition: {error}" for error in dispatch_errors
+            )
+            if schema_path is not None:
+                errors.extend(
+                    validate_json_schema_instance(
+                        composition_payload,
+                        root / schema_path,
+                        "reference composition",
+                    )
+                )
 
     component_catalog = loaded.get(COMPONENT_CATALOG_PATH)
     capability_registry = loaded.get(CAPABILITY_REGISTRY_PATH)
@@ -1367,13 +1630,32 @@ def validate_component_model(root: Path) -> list[str]:
             except (json.JSONDecodeError, UnicodeDecodeError) as error:
                 errors.append(f"reference composition lock is invalid JSON: {error}")
             else:
-                errors.extend(
-                    validate_json_schema_instance(
-                        actual_lock,
-                        root / COMPOSITION_LOCK_SCHEMA_PATH,
-                        "reference composition lock",
-                    )
+                lock_schema_path, dispatch_errors = composition_lock_schema_path(
+                    actual_lock
                 )
+                errors.extend(
+                    f"reference composition lock: {error}"
+                    for error in dispatch_errors
+                )
+                if lock_schema_path is not None:
+                    errors.extend(
+                        validate_json_schema_instance(
+                            actual_lock,
+                            root / lock_schema_path,
+                            "reference composition lock",
+                        )
+                    )
+                manifest_contract, _ = composition_manifest_contract(composition)
+                if manifest_contract is not None and (
+                    not isinstance(actual_lock, dict)
+                    or actual_lock.get("schema") != manifest_contract["lock_schema"]
+                    or actual_lock.get("model_version")
+                    != manifest_contract["model_version"]
+                ):
+                    errors.append(
+                        "reference composition lock schema/model does not match "
+                        "the manifest contract"
+                    )
                 if expected_lock is not None and actual_lock != expected_lock:
                     errors.append(
                         "reference composition lock is stale; run "

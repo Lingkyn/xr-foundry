@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/composition-lock.v2.schema.json",
+  "title": "XR Foundry deterministic composition lock v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "model_version", "composition", "engine", "input_digests", "resolution", "claims"],
+  "properties": {
+    "schema": {"const": "xr-foundry.composition_lock.v2"},
+    "model_version": {"const": "0.2.0"},
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "path"],
+      "properties": {
+        "id": {"type": "string"},
+        "version": {"$ref": "#/$defs/semver"},
+        "path": {"type": "string"}
+      }
+    },
+    "engine": {"const": "unity"},
+    "input_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["composition_sha256", "component_catalog_sha256", "capability_registry_sha256"],
+      "properties": {
+        "composition_sha256": {"$ref": "#/$defs/sha256"},
+        "component_catalog_sha256": {"$ref": "#/$defs/sha256"},
+        "capability_registry_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["components", "capabilities", "selections", "bindings", "dependency_order"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "version", "manifest_path", "manifest_sha256"],
+            "properties": {
+              "id": {"type": "string"},
+              "version": {"$ref": "#/$defs/semver"},
+              "manifest_path": {"type": "string"},
+              "manifest_sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "version", "provider"],
+            "properties": {
+              "id": {"type": "string"},
+              "version": {"$ref": "#/$defs/semver"},
+              "provider": {"type": "string"}
+            }
+          }
+        },
+        "selections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slot", "component", "version"],
+            "properties": {
+              "slot": {"type": "string"},
+              "component": {"type": "string"},
+              "version": {"$ref": "#/$defs/semver"}
+            }
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "from_provider", "to_provider", "implementation"],
+            "properties": {
+              "id": {"type": "string"},
+              "from_provider": {"type": "string"},
+              "to_provider": {"type": "string"},
+              "implementation": {"$ref": "#/$defs/bindingImplementation"}
+            }
+          }
+        },
+        "dependency_order": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["structural_resolution", "bindings_implemented", "runtime_ready", "unity_compile", "device_runtime"],
+      "properties": {
+        "structural_resolution": {"const": "resolved"},
+        "bindings_implemented": {"type": "boolean"},
+        "runtime_ready": {"const": false},
+        "unity_compile": {"const": "not_claimed_for_this_composition"},
+        "device_runtime": {"const": "not_claimed"}
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "bindingImplementation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "status"],
+          "properties": {
+            "kind": {"const": "consumer_owned_adapter"},
+            "status": {"const": "pending"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "status", "source_path", "assembly", "source_sha256"],
+          "properties": {
+            "kind": {"const": "consumer_owned_adapter"},
+            "status": {"const": "implemented"},
+            "source_path": {
+              "type": "string",
+              "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+consumer/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.cs$"
+            },
+            "assembly": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"},
+            "source_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
+    }
+  }
+}

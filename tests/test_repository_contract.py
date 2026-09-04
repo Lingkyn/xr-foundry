@@ -1001,8 +1001,26 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(first_lock, second_lock)
         self.assertIsNotNone(first_lock)
         assert first_lock is not None
+        self.assertEqual("xr-foundry.composition_lock.v2", first_lock["schema"])
+        self.assertEqual("0.2.0", first_lock["model_version"])
         self.assertEqual(13, len(first_lock["resolution"]["components"]))
+        self.assertTrue(first_lock["claims"]["bindings_implemented"])
         self.assertFalse(first_lock["claims"]["runtime_ready"])
+        self.assertEqual(
+            "not_claimed_for_this_composition",
+            first_lock["claims"]["unity_compile"],
+        )
+        self.assertEqual("not_claimed", first_lock["claims"]["device_runtime"])
+        self.assertEqual(3, len(first_lock["resolution"]["bindings"]))
+        for binding in first_lock["resolution"]["bindings"]:
+            implementation = binding["implementation"]
+            self.assertEqual("implemented", implementation["status"])
+            source = ROOT / implementation["source_path"]
+            self.assertTrue(source.is_file())
+            self.assertEqual(
+                hashlib.sha256(source.read_bytes()).hexdigest(),
+                implementation["source_sha256"],
+            )
         self.assertEqual(
             15,
             len(list(ROOT.glob("packages/unity/**/foundry.component.json"))),
@@ -1019,7 +1037,242 @@ class RepositoryContractTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual("pass", report["status"])
         self.assertEqual(13, report["component_count"])
+        self.assertTrue(report["bindings_implemented"])
         self.assertFalse(report["runtime_ready"])
+
+    def test_v2_composition_lock_tracks_adapter_source_bytes(self) -> None:
+        lock_path = ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        current_lock = MODULE.load_json(lock_path)
+        implementation = current_lock["resolution"]["bindings"][0]["implementation"]
+        source_path = ROOT / implementation["source_path"]
+        path_type = type(source_path)
+        original_read_bytes = path_type.read_bytes
+
+        def read_with_adapter_mutation(path: Path) -> bytes:
+            content = original_read_bytes(path)
+            if Path(path) == source_path:
+                return content + b"\n// source-byte mutation\n"
+            return content
+
+        with mock.patch.object(path_type, "read_bytes", new=read_with_adapter_mutation):
+            rebuilt_lock, build_errors = MODULE.build_composition_lock(ROOT)
+            validation_errors = MODULE.validate_component_model(ROOT)
+
+        self.assertEqual([], build_errors)
+        self.assertIsNotNone(rebuilt_lock)
+        assert rebuilt_lock is not None
+        rebuilt_implementation = rebuilt_lock["resolution"]["bindings"][0][
+            "implementation"
+        ]
+        self.assertNotEqual(
+            implementation["source_sha256"],
+            rebuilt_implementation["source_sha256"],
+        )
+        self.assertNotEqual(current_lock, rebuilt_lock)
+        self.assertTrue(
+            any("composition lock is stale" in error for error in validation_errors)
+        )
+
+    def test_v2_composition_rejects_unsafe_adapter_sources(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        original = MODULE.load_json(composition_path)
+
+        missing = copy.deepcopy(original)
+        missing["bindings"][0]["implementation"]["source_path"] = (
+            "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/MissingAdapter.cs"
+        )
+        _, missing_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, missing
+        )
+        self.assertTrue(any("source_path is missing" in error for error in missing_errors))
+
+        escaping = copy.deepcopy(original)
+        escaping["bindings"][0]["implementation"]["source_path"] = (
+            "../foundry.project.json"
+        )
+        _, escaping_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, escaping
+        )
+        self.assertTrue(
+            any("canonical and start with consumer/" in error for error in escaping_errors)
+        )
+
+        control_character = copy.deepcopy(original)
+        control_character["bindings"][0]["implementation"]["source_path"] = (
+            "consumer/Adapter\x00.cs"
+        )
+        _, control_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, control_character
+        )
+        self.assertTrue(
+            any("non-empty POSIX path" in error for error in control_errors)
+        )
+
+        symlinked = copy.deepcopy(original)
+        source_path = (
+            composition_path.parent
+            / symlinked["bindings"][0]["implementation"]["source_path"]
+        )
+        path_type = type(source_path)
+        original_is_symlink = path_type.is_symlink
+
+        def mark_adapter_as_symlink(path: Path) -> bool:
+            if Path(path) == source_path:
+                return True
+            return original_is_symlink(path)
+
+        with mock.patch.object(path_type, "is_symlink", new=mark_adapter_as_symlink):
+            _, symlink_errors = MODULE.build_composition_lock(
+                ROOT, composition_path, symlinked
+            )
+        self.assertTrue(
+            any("must not be a symbolic link" in error for error in symlink_errors)
+        )
+
+        consumer_path = composition_path.parent / "consumer"
+
+        def mark_consumer_as_symlink(path: Path) -> bool:
+            if Path(path) == consumer_path:
+                return True
+            return original_is_symlink(path)
+
+        with mock.patch.object(
+            path_type, "is_symlink", new=mark_consumer_as_symlink
+        ):
+            _, consumer_symlink_errors = MODULE.build_composition_lock(
+                ROOT, composition_path, original
+            )
+        self.assertTrue(
+            any(
+                "consumer directory must not be a symbolic link" in error
+                for error in consumer_symlink_errors
+            )
+        )
+
+    def test_v2_composition_rejects_duplicate_binding_and_unsafe_lock_path(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        duplicate = MODULE.load_json(composition_path)
+        duplicate["bindings"].append(copy.deepcopy(duplicate["bindings"][0]))
+        _, duplicate_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, duplicate
+        )
+        self.assertTrue(any("duplicate binding id" in error for error in duplicate_errors))
+
+        unsafe_lock = MODULE.load_json(composition_path)
+        unsafe_lock["lock_path"] = "foundry.lock.json"
+        _, lock_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, unsafe_lock
+        )
+        self.assertTrue(any("sibling foundry.lock.json" in error for error in lock_errors))
+
+        lock_target = composition_path.parent / "foundry.lock.json"
+        path_type = type(lock_target)
+        original_is_symlink = path_type.is_symlink
+
+        def mark_lock_as_symlink(path: Path) -> bool:
+            if Path(path) == lock_target:
+                return True
+            return original_is_symlink(path)
+
+        with mock.patch.object(path_type, "is_symlink", new=mark_lock_as_symlink):
+            _, symlink_lock_errors = MODULE.build_composition_lock(
+                ROOT, composition_path, MODULE.load_json(composition_path)
+            )
+        self.assertTrue(
+            any("lock must not be a symbolic link" in error for error in symlink_lock_errors)
+        )
+
+    def test_v2_lock_schema_rejects_noncanonical_source_path(self) -> None:
+        lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock["resolution"]["bindings"][0]["implementation"]["source_path"] = (
+            "compositions/example/consumer/../../secret.cs"
+        )
+        lock_schema_path, dispatch_errors = MODULE.composition_lock_schema_path(lock)
+        self.assertEqual([], dispatch_errors)
+        assert lock_schema_path is not None
+        schema_errors = MODULE.validate_json_schema_instance(
+            lock,
+            ROOT / lock_schema_path,
+            "v2 composition lock",
+        )
+        self.assertTrue(schema_errors)
+
+    def test_composition_schema_dispatch_fails_closed(self) -> None:
+        composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)
+        mismatched = copy.deepcopy(composition)
+        mismatched["model_version"] = "0.1.0"
+        _, mismatch_errors = MODULE.build_composition_lock(
+            ROOT, MODULE.REFERENCE_COMPOSITION_PATH, mismatched
+        )
+        self.assertTrue(any("schema/model mismatch" in error for error in mismatch_errors))
+
+        unknown = copy.deepcopy(composition)
+        unknown["schema"] = "xr-foundry.composition_manifest.v99"
+        _, unknown_errors = MODULE.build_composition_lock(
+            ROOT, MODULE.REFERENCE_COMPOSITION_PATH, unknown
+        )
+        self.assertTrue(any("unsupported composition manifest schema" in error for error in unknown_errors))
+
+    def test_v1_pending_composition_remains_supported(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        v1_composition = MODULE.load_json(composition_path)
+        v1_composition["schema"] = "xr-foundry.composition_manifest.v1"
+        v1_composition["model_version"] = "0.1.0"
+        for binding in v1_composition["bindings"]:
+            binding["implementation"] = "consumer_owned_adapter_pending"
+
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(v1_composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        self.assertEqual(MODULE.COMPOSITION_MANIFEST_SCHEMA_PATH, manifest_schema_path)
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(
+                v1_composition,
+                ROOT / manifest_schema_path,
+                "v1 composition manifest",
+            ),
+        )
+
+        v1_lock, build_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, v1_composition
+        )
+        self.assertEqual([], build_errors)
+        self.assertIsNotNone(v1_lock)
+        assert v1_lock is not None
+        self.assertEqual("xr-foundry.composition_lock.v1", v1_lock["schema"])
+        self.assertEqual("0.1.0", v1_lock["model_version"])
+        self.assertEqual(
+            {
+                "structural_resolution": "resolved",
+                "runtime_ready": False,
+                "unity_compile": "not_claimed_for_this_composition",
+                "device_runtime": "not_claimed",
+            },
+            v1_lock["claims"],
+        )
+        self.assertTrue(
+            all(
+                binding["implementation"] == "consumer_owned_adapter_pending"
+                for binding in v1_lock["resolution"]["bindings"]
+            )
+        )
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            v1_lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        self.assertEqual(MODULE.COMPOSITION_LOCK_SCHEMA_PATH, lock_schema_path)
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(
+                v1_lock,
+                ROOT / lock_schema_path,
+                "v1 composition lock",
+            ),
+        )
 
     def test_composition_rejects_missing_and_incompatible_capability(self) -> None:
         composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
@@ -1138,10 +1391,18 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_component_model_rejects_runtime_promotion_without_new_contract(self) -> None:
         composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)
-        composition["bindings"][0]["implementation"] = "component_provided"
+        composition["bindings"][0]["implementation"] = {
+            "kind": "component_provided",
+            "status": "implemented",
+        }
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
         composition_errors = MODULE.validate_json_schema_instance(
             composition,
-            ROOT / MODULE.COMPOSITION_MANIFEST_SCHEMA_PATH,
+            ROOT / manifest_schema_path,
             "composition manifest",
         )
 
@@ -1149,13 +1410,18 @@ class RepositoryContractTests(unittest.TestCase):
             ROOT / "compositions/unity/reference-system/foundry.lock.json"
         )
         lock["claims"]["runtime_ready"] = True
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        assert lock_schema_path is not None
         lock_errors = MODULE.validate_json_schema_instance(
             lock,
-            ROOT / MODULE.COMPOSITION_LOCK_SCHEMA_PATH,
+            ROOT / lock_schema_path,
             "composition lock",
         )
 
-        self.assertTrue(any("consumer_owned_adapter_pending" in error for error in composition_errors))
+        self.assertTrue(composition_errors)
         self.assertTrue(any("False was expected" in error for error in lock_errors))
 
     def test_component_model_rejects_internal_dependency_version_drift(self) -> None:

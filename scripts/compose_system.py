@@ -93,29 +93,46 @@ def main() -> int:
         report = report_payload("fail", errors=[f"invalid composition JSON: {error}"])
         print(json.dumps(report, indent=2))
         return 1
-    schema_errors = VALIDATOR.validate_json_schema_instance(
-        composition,
-        ROOT / VALIDATOR.COMPOSITION_MANIFEST_SCHEMA_PATH,
-        "composition manifest",
+    manifest_schema_path, dispatch_errors = (
+        VALIDATOR.composition_manifest_schema_path(composition)
     )
+    schema_errors = list(dispatch_errors)
+    if manifest_schema_path is not None:
+        schema_errors.extend(
+            VALIDATOR.validate_json_schema_instance(
+                composition,
+                ROOT / manifest_schema_path,
+                "composition manifest",
+            )
+        )
     lock, build_errors = VALIDATOR.build_composition_lock(
         ROOT, composition_path, composition
     )
     errors = schema_errors + build_errors
     if lock is not None:
-        errors.extend(
-            VALIDATOR.validate_json_schema_instance(
-                lock,
-                ROOT / VALIDATOR.COMPOSITION_LOCK_SCHEMA_PATH,
-                "generated composition lock",
-            )
+        lock_schema_path, lock_dispatch_errors = (
+            VALIDATOR.composition_lock_schema_path(lock)
         )
+        errors.extend(lock_dispatch_errors)
+        if lock_schema_path is not None:
+            errors.extend(
+                VALIDATOR.validate_json_schema_instance(
+                    lock,
+                    ROOT / lock_schema_path,
+                    "generated composition lock",
+                )
+            )
     if errors or lock is None:
         report = report_payload("fail", errors=errors)
         print(json.dumps(report, indent=2))
         return 1
 
-    lock_path = VALIDATOR.safe_repository_path(ROOT, composition.get("lock_path"))
+    if composition.get("schema") == "xr-foundry.composition_manifest.v2":
+        lock_path = composition_path.parent / "foundry.lock.json"
+    else:
+        lock_path = VALIDATOR.safe_repository_path(
+            ROOT, composition.get("lock_path")
+        )
     if lock_path is None:
         report = report_payload("fail", errors=["composition lock path is unsafe"])
         print(json.dumps(report, indent=2))
@@ -141,23 +158,31 @@ def main() -> int:
             )
             print(json.dumps(report, indent=2))
             return 1
-        report = report_payload(
-            "pass",
-            composition=composition.get("id"),
-            lock_path=lock_path.relative_to(ROOT).as_posix(),
-            component_count=len(lock["resolution"]["components"]),
-            runtime_ready=lock["claims"]["runtime_ready"],
-        )
+        report_values = {
+            "composition": composition.get("id"),
+            "lock_path": lock_path.relative_to(ROOT).as_posix(),
+            "component_count": len(lock["resolution"]["components"]),
+            "runtime_ready": lock["claims"]["runtime_ready"],
+        }
+        if "bindings_implemented" in lock["claims"]:
+            report_values["bindings_implemented"] = lock["claims"][
+                "bindings_implemented"
+            ]
+        report = report_payload("pass", **report_values)
     elif args.write_lock:
         write_json_atomically(lock_path, lock)
-        report = report_payload(
-            "pass",
-            action="lock_written",
-            composition=composition.get("id"),
-            lock_path=lock_path.relative_to(ROOT).as_posix(),
-            component_count=len(lock["resolution"]["components"]),
-            runtime_ready=lock["claims"]["runtime_ready"],
-        )
+        report_values = {
+            "action": "lock_written",
+            "composition": composition.get("id"),
+            "lock_path": lock_path.relative_to(ROOT).as_posix(),
+            "component_count": len(lock["resolution"]["components"]),
+            "runtime_ready": lock["claims"]["runtime_ready"],
+        }
+        if "bindings_implemented" in lock["claims"]:
+            report_values["bindings_implemented"] = lock["claims"][
+                "bindings_implemented"
+            ]
+        report = report_payload("pass", **report_values)
     else:
         report = lock
 

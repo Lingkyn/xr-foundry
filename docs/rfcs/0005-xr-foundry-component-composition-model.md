@@ -19,7 +19,7 @@ selects components and mutually exclusive variants, resolves them deterministica
 and commits an exact lock. Repository validation rejects missing, incompatible,
 ambiguous, cyclic, drifted, or falsely evidenced compositions.
 
-The model is named the **XR Foundry Component and Composition Model (XFCM)**. V0.1
+The model is named the **XR Foundry Component and Composition Model (XFCM)**. V0.2
 is a local architectural contract, not a claim to be a universal industry protocol.
 
 ## Problem
@@ -53,9 +53,9 @@ Adopt the following architecture:
 9. Reserve MCP for an optional external composition/control adapter.
 
 The normative details are in the
-[XFCM v0.1 architecture contract](../architecture/component-composition-model.md).
+[XFCM v0.2 architecture contract](../architecture/component-composition-model.md).
 
-## Phase-one deliverables
+## Phase-one deliverables (v0.1 baseline)
 
 This implementation introduces:
 
@@ -64,13 +64,31 @@ This implementation introduces:
 - a capability registry that agrees with those manifests;
 - explicit Inventory renderer and XR-surface slots;
 - a Unity reference composition using the UGUI route;
-- three visible pending cross-family adapter boundaries;
+- three visible pending cross-family adapter boundaries, later implemented by the
+  v0.2 slice;
 - a deterministic resolver and committed lock; and
 - repository and negative contract tests.
 
 Phase one does not add account access, remote settings, wallets, a treasury,
 tokens, smart contracts, on-chain execution, a package registry, or a networked
 runtime service.
+
+## V0.2 implementation update
+
+The bounded v0.2 slice turns the three declared boundaries into consumer-owned,
+strongly typed C# adapters. The manifest records each adapter's composition-local
+source path and assembly. The deterministic lock records the canonical
+repository-relative source path and SHA-256, and becomes stale when an adapter
+source changes. The resolver rejects missing, escaping, linked, non-regular, or
+non-canonical sources and unsafe lock paths. V0.1 manifests and locks remain
+supported for their original pending-binding semantics. This local safety contract
+assumes serialized lock generation in a non-adversarial worktree; it does not yet
+claim cross-process compare-and-swap or same-privilege TOCTOU resistance.
+
+A clean eight-package endpoint consumer exercises the adapters without claiming
+that the full 13-component reference composition ran. Its local experiment and
+the defects found during repeated execution are recorded in the
+[double-loop result receipt](../validation/experiments/2026-09-04-xag-xfcm-01-double-loop-result.md).
 
 ## Runtime and MCP
 
@@ -119,10 +137,11 @@ product line discoverable while keeping any concrete runtime choice coherent.
 
 ## Compatibility and migration
 
-XFCM model version `0.1.0` is incubating. Additive schema fields require an explicit
+XFCM model version `0.2.0` is incubating. Additive schema fields require an explicit
 model update and validator support. Breaking capability behavior creates a new
 capability major version. Package SemVer does not silently change a capability
-contract version.
+contract version. The validator dispatches exact v0.1 and v0.2 schema/model pairs;
+unknown or mismatched pairs fail closed.
 
 Existing package APIs are not changed by this RFC. The first lock records current
 package versions and manifest hashes. A manifest, registry, selection, or
@@ -131,15 +150,16 @@ regenerated.
 
 ## Evidence and non-claims
 
-The first reference lock proves that 13 selected components, including one choice
-from each current variant slot, have a complete acyclic capability graph. It also
-records three unimplemented consumer-owned bindings and therefore
-`runtime_ready: false`.
+The current reference lock proves that 13 selected components, including one
+choice from each current variant slot, have a complete acyclic capability graph.
+It also proves that all three declared bindings point to exact adapter source
+bytes. It deliberately retains `runtime_ready: false`: source-bound adapters and
+an eight-package endpoint test do not establish execution of the full selection.
 
 This RFC does not claim:
 
-- a clean Unity consumer compile for the complete locked set;
-- a working cross-family runtime integration;
+- a Unity import/compile or player build for the complete locked set;
+- runtime integration of components outside the eight-package endpoint consumer;
 - frame-time, memory, comfort, or usability performance;
 - any OpenXR runtime, controller, headset, or device result; or
 - compatibility for Unreal Engine or Godot.

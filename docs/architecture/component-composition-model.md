@@ -1,6 +1,7 @@
-# XR Foundry Component and Composition Model v0.1
+# XR Foundry Component and Composition Model v0.2
 
-Status: implemented structural contract; runtime integration evidence is pending.
+Status: implemented structural and source-bound adapter contract; full-composition
+runtime and device evidence are pending.
 
 The XR Foundry Component and Composition Model (XFCM) makes independently
 installable packages behave as one governed product line. It gives every package a
@@ -8,9 +9,10 @@ machine-readable identity, names the capability contracts between packages, make
 variant selection explicit, and resolves a consumer-owned system definition into a
 deterministic lock.
 
-XFCM v0.1 proves **structural closure**. It does not claim that the complete
-composition has compiled in Unity, run on a headset, or implemented every
-cross-family binding. Those stronger claims require their own exact evidence.
+XFCM v0.2 proves **structural closure** and can bind an implemented
+consumer-owned adapter to its exact source bytes. It does not infer that the
+complete composition compiled, ran as a player, reached an XR runtime, or passed
+on a device. Those stronger claims require their own exact evidence.
 
 ## The system boundary
 
@@ -60,7 +62,7 @@ use the `xr-foundry.<domain>.<role>` namespace and carry an independent SemVer
 contract version. Package versions and capability versions deliberately differ:
 a package may ship implementation fixes without breaking its public capability.
 
-XFCM v0.1 uses exact capability versions. A breaking semantic change introduces a
+XFCM uses exact capability versions. A breaking semantic change introduces a
 new capability major version and a migration path. The resolver fails closed when:
 
 - no selected component provides a required `id@version`;
@@ -97,7 +99,10 @@ Resolution is intentionally static and deterministic:
 5. resolve the declared cross-family binding endpoints;
 6. reject dependency cycles;
 7. sort providers before consumers, with lexical ordering as the stable tie-break;
-8. lock component versions, manifest paths, manifest SHA-256 values, capability
+8. for each v0.2 implemented binding, reject unsafe, linked, escaping, missing, or
+   non-regular adapter source paths and bind its repository-relative path,
+   assembly, and source SHA-256; and
+9. lock component versions, manifest paths, manifest SHA-256 values, capability
    providers, slot choices, bindings, input digests and dependency order.
 
 No timestamp, machine path, account, branch name, or mutable remote reference is
@@ -120,9 +125,13 @@ python scripts/compose_system.py --write-lock --json
 The full repository contract must still pass. A generated lock is not self-
 approving evidence.
 
+The original v0.1 manifest and lock schemas remain accepted for existing pending
+bindings. V0.2 adds a structured `pending` or `implemented` binding state and
+source binding; it does not silently promote or reinterpret a v0.1 lock.
+
 ## Lifecycle
 
-V0.1 defines one lifecycle policy:
+V0.2 retains one declared lifecycle policy:
 
 ```text
 configure -> start -> stop
@@ -131,7 +140,7 @@ configure -> start -> stop
 The consumer composition root owns the lifecycle. Configure and start follow the
 locked dependency order; stop follows reverse dependency order. Packages must not
 discover one another by scanning loaded assemblies, hidden singletons, or scene
-objects. A package may expose its own typed lifecycle API, but XFCM v0.1 does not
+objects. A package may expose its own typed lifecycle API, but XFCM v0.2 does not
 pretend that all current packages already implement one shared runtime interface.
 
 ## Cross-family bindings
@@ -141,19 +150,22 @@ Cross-family behavior belongs in a named binding or, once reusable, a dedicated
 adapter component. It must not be hidden inside a renderer, global service locator,
 or concrete domain dependency.
 
-The Unity reference composition currently declares three consumer-owned adapter
-boundaries:
+The Unity reference composition declares and implements three consumer-owned
+adapter boundaries:
 
 - semantic interaction to Inventory intents;
 - Inventory state to the persistence contract; and
 - Settings policy to semantic interaction.
 
-Their endpoints resolve, but their implementations are explicitly
-`consumer_owned_adapter_pending`. Therefore the lock correctly records
-`runtime_ready: false`. The next implementation phase should turn each durable
-boundary into a small typed adapter with contract tests, then introduce a reviewed
-model revision and change the binding state only alongside exact Unity consumer
-evidence.
+Each implementation is a small, explicit C# adapter under the composition's
+consumer root. The v0.2 resolver confines that source to the same composition,
+rejects symbolic links and non-canonical paths, and records its exact source hash.
+`bindings_implemented: true` therefore means that all declared binding records have
+source-bound implementations. It does **not** mean that all selected packages or
+runtime paths were executed. The lock still records `runtime_ready: false`. These
+filesystem checks assume one serialized writer and no hostile same-privilege actor
+mutating the worktree during a resolver run; cross-writer locking and descriptor-
+based TOCTOU hardening remain future work.
 
 ## Evidence ladder
 
@@ -166,8 +178,14 @@ XFCM keeps these claims separate:
 4. **Runtime integrated:** binding tests pass in the exact consumer composition.
 5. **Device verified:** named runtime, input, renderer and device evidence passes.
 
-The committed reference system is at level 2. Existing evidence for an individual
-package does not automatically promote the whole composition.
+The committed 13-component reference system remains at level 2. A separate
+eight-package endpoint consumer has local Editor import/compilation and binding
+integration evidence for one exact source revision, including a backup-recovery
+path. That bounded level-3/4 evidence is recorded in the
+[double-loop experiment receipt](../validation/experiments/2026-09-04-xag-xfcm-01-double-loop-result.md)
+and does not promote the unexecuted components or the whole composition. Existing
+evidence for an individual package likewise does not automatically promote a
+composition.
 
 ## MCP boundary
 
@@ -211,10 +229,12 @@ cost before the current Unity graph has proved its typed integration seams.
 
 The next safe slices are:
 
-1. implement the three pending Unity binding adapters and composition-level tests;
-2. produce an exact clean-consumer manifest, Unity lock and compile receipt for the
-   reference composition;
-3. add a composition-level runtime receipt without inheriting package-only claims;
+1. expand the clean consumer from the eight binding-endpoint packages to the exact
+   13-component lock and bind its generated Unity package lock;
+2. make lifecycle configuration, start, failure rollback, and reverse stop an
+   executable composition contract;
+3. add composition-level player/runtime evidence without inheriting package-only
+   or subset claims;
 4. expose the resolver through an optional read-mostly MCP control adapter; and
 5. generalize the manifest only after a real second engine implementation exists.
 

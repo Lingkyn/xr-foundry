@@ -20,7 +20,7 @@ evidence remain explicit gates.
 | Need | Entry point |
 | --- | --- |
 | Choose an available system or package | [`package-catalog.json`](package-catalog.json) |
-| Compose packages as one system | [`XFCM v0.1`](docs/architecture/component-composition-model.md), [`component-catalog.json`](component-catalog.json), and the [Unity reference composition](compositions/unity/reference-system/) |
+| Compose packages as one system | [`XFCM v0.2`](docs/architecture/component-composition-model.md), [`component-catalog.json`](component-catalog.json), and the [Unity reference composition](compositions/unity/reference-system/) |
 | Find reusable reference material | [`reference-catalog.json`](reference-catalog.json) |
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
@@ -68,9 +68,14 @@ into a deterministic lock.
 
 The first [Unity reference composition](compositions/unity/reference-system/)
 selects the UGUI route and structurally resolves 13 components. UI Toolkit remains
-a peer option rather than an accidental cumulative dependency. Three cross-family
-adapter boundaries remain explicitly pending, so the lock says `runtime_ready:
-false`; it does not invent whole-system Unity or device evidence.
+a peer option rather than an accidental cumulative dependency. Its three
+cross-family boundaries now resolve to consumer-owned typed adapter sources, and
+the v0.2 lock binds each source path, assembly, and SHA-256. A separate clean
+consumer exercises the eight packages needed at those binding endpoints. That
+bounded evidence includes one production `LocalFileSaveStore` zero-byte-primary
+backup-recovery path in a temporary directory. It does not cover all 13
+components, general filesystem durability, a player build, XR input, rendering,
+or a device, so the composition deliberately keeps `runtime_ready: false`.
 
 XFCM keeps runtime communication strongly typed and in process. JSON manifests are
 the composition/control plane. MCP may later expose that control plane to editors

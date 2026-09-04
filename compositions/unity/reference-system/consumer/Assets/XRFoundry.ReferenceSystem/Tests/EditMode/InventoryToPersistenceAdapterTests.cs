@@ -62,10 +62,13 @@ namespace XRFoundry.ReferenceSystem.Tests
             Assert.That(load.Value.InventorySchemaVersion, Is.EqualTo(InventoryPersistence.CurrentSchemaVersion));
             Assert.That(codec.LastDecodedOuterSchemaVersion, Is.EqualTo(InventoryToPersistenceAdapter.OuterPersistenceSchemaVersion));
             Assert.That(codec.LastDecodedOuterSchemaVersion, Is.Not.EqualTo(load.Value.InventorySchemaVersion));
+            Assert.That(codec.LastDecodedDto.InventoryState.Containers[0].Slots[0].InstanceId, Is.EqualTo(string.Empty));
             Assert.That(inventory.Revision, Is.EqualTo(savedRevision));
 
             var snapshot = inventory.GetSnapshot();
-            Assert.That(snapshot.Get(new SlotAddress(BagId, 0)).Quantity, Is.EqualTo(3));
+            var potion = snapshot.Get(new SlotAddress(BagId, 0));
+            Assert.That(potion.Quantity, Is.EqualTo(3));
+            Assert.That(potion.InstanceId, Is.Null);
             var sword = snapshot.Get(new SlotAddress(BagId, 1));
             Assert.That(sword.InstanceId.Value.Value, Is.EqualTo("sword-001"));
             Assert.That(sword.TryGetState(fragmentCodec.TypeId, out var restoredFragment), Is.True);
@@ -137,6 +140,31 @@ namespace XRFoundry.ReferenceSystem.Tests
             Assert.That(result.Succeeded, Is.False);
             Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Validate));
             Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ValidateRejected));
+            Assert.That(Describe(inventory), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void NonEmptyWhitespaceOptionalInstanceIdIsRejectedWithoutMutation()
+        {
+            var inventory = CreateInventory();
+            SeedPotion(inventory, 2);
+            var codec = new JsonUtilityInventoryPersistenceCodec();
+            var store = new InMemoryInventoryPersistenceStore();
+            var coordinator = CreateCoordinator(codec, store);
+            var adapter = new InventoryToPersistenceAdapter(inventory, coordinator);
+            var slot = MustSlot("inventory_whitespace_instance");
+            Assert.That(adapter.Save(slot).Committed, Is.True);
+            var whitespaceInstance = InventoryPersistenceDtoMapper.FromSnapshot(inventory.GetSnapshot());
+            whitespaceInstance.InventoryState.Containers[0].Slots[0].InstanceId = " ";
+            codec.DecodeOverride = whitespaceInstance;
+            var before = Describe(inventory);
+
+            var result = adapter.Load(slot);
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Validate));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ValidateRejected));
+            StringAssert.Contains("instance id cannot be whitespace", result.Error.Message);
             Assert.That(Describe(inventory), Is.EqualTo(before));
         }
 
@@ -432,6 +460,7 @@ namespace XRFoundry.ReferenceSystem.Tests
     {
         public bool ReturnDecodeFailure { get; set; }
         public int LastDecodedOuterSchemaVersion { get; private set; } = -1;
+        public InventoryPersistenceDto LastDecodedDto { get; private set; }
         public InventoryPersistenceDto DecodeOverride { get; set; }
 
         public SaveResult<byte[]> Encode(InventoryPersistenceDto snapshot)
@@ -470,12 +499,14 @@ namespace XRFoundry.ReferenceSystem.Tests
 
             if (DecodeOverride != null)
             {
+                LastDecodedDto = DecodeOverride;
                 return SaveResult<InventoryPersistenceDto>.Success(DecodeOverride);
             }
 
             try
             {
                 var dto = JsonUtility.FromJson<InventoryPersistenceDto>(Encoding.UTF8.GetString(bytes.ToArray()));
+                LastDecodedDto = dto;
                 return dto == null
                     ? SaveResult<InventoryPersistenceDto>.Fail(
                         SaveStage.Decode,

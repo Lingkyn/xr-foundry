@@ -340,7 +340,7 @@ namespace XRFoundry.ReferenceSystem.Bindings
                 return Invalid($"Inventory container '{containerId}' slot[{slotIndex}] quantity must be positive.");
             }
 
-            if (slot.InstanceId != null && string.IsNullOrWhiteSpace(slot.InstanceId))
+            if (!string.IsNullOrEmpty(slot.InstanceId) && string.IsNullOrWhiteSpace(slot.InstanceId))
             {
                 return Invalid($"Inventory container '{containerId}' slot[{slotIndex}] instance id cannot be whitespace.");
             }

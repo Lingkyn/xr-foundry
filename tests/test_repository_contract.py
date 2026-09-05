@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import importlib.util
 import copy
+import contextlib
 import hashlib
+import io
+import importlib.util
 import json
 import os
 import struct
@@ -31,6 +33,10 @@ assert SCAFFOLD_SPEC and SCAFFOLD_SPEC.loader
 SCAFFOLD_MODULE = importlib.util.module_from_spec(SCAFFOLD_SPEC)
 SCAFFOLD_SPEC.loader.exec_module(SCAFFOLD_MODULE)
 COMPOSE_SCRIPT = ROOT / "scripts" / "compose_system.py"
+COMPOSE_SPEC = importlib.util.spec_from_file_location("compose_system", COMPOSE_SCRIPT)
+assert COMPOSE_SPEC and COMPOSE_SPEC.loader
+COMPOSE_MODULE = importlib.util.module_from_spec(COMPOSE_SPEC)
+COMPOSE_SPEC.loader.exec_module(COMPOSE_MODULE)
 
 
 def current_device_profiles() -> dict[str, dict]:
@@ -733,6 +739,179 @@ def attach_device_runtime_receipt(
 
 
 class RepositoryContractTests(unittest.TestCase):
+    def test_authoritative_json_loader_rejects_nested_duplicate_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            document_path = Path(directory) / "nested-duplicate.json"
+            document_path.write_text(
+                '{"outer":{"safe":1,"deeper":{"duplicate":2,"duplicate":3}}}',
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(json.JSONDecodeError) as raised:
+                MODULE.load_json(document_path)
+
+            message = str(raised.exception)
+            self.assertIn(str(document_path), message)
+            self.assertIn("duplicate key 'duplicate'", message)
+
+    def test_compose_cli_reports_duplicate_json_key_without_last_wins(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        failure = json.JSONDecodeError(
+            f"{composition_path}: duplicate key 'key'", "{}", 0
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(COMPOSE_MODULE.VALIDATOR, "load_json", side_effect=failure),
+            mock.patch.object(
+                sys,
+                "argv",
+                [str(COMPOSE_SCRIPT), str(composition_path), "--json"],
+            ),
+            contextlib.redirect_stdout(output),
+        ):
+            status = COMPOSE_MODULE.main()
+
+        self.assertEqual(1, status)
+        report = json.loads(output.getvalue())
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(
+            any(
+                str(composition_path) in error and "duplicate key 'key'" in error
+                for error in report["errors"]
+            )
+        )
+
+    def test_compose_check_reports_invalid_existing_lock_without_traceback(self) -> None:
+        lock_path = ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        failure = json.JSONDecodeError(
+            f"{lock_path}: duplicate key 'claims'", "{}", 0
+        )
+        original_load_json = COMPOSE_MODULE.VALIDATOR.load_json
+
+        def fail_only_existing_lock(path: Path) -> object:
+            if Path(path) == lock_path:
+                raise failure
+            return original_load_json(Path(path))
+
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                COMPOSE_MODULE.VALIDATOR,
+                "load_json",
+                side_effect=fail_only_existing_lock,
+            ),
+            mock.patch.object(
+                sys,
+                "argv",
+                [str(COMPOSE_SCRIPT), "--check", "--json"],
+            ),
+            contextlib.redirect_stdout(output),
+        ):
+            status = COMPOSE_MODULE.main()
+
+        self.assertEqual(1, status)
+        report = json.loads(output.getvalue())
+        self.assertEqual("fail", report["status"])
+        self.assertEqual(
+            "compositions/unity/reference-system/foundry.lock.json",
+            report["lock_path"],
+        )
+        self.assertTrue(
+            any(
+                str(lock_path) in error and "duplicate key 'claims'" in error
+                for error in report["errors"]
+            )
+        )
+
+    def test_repository_cli_reports_json_decode_failure_without_traceback(self) -> None:
+        failure = json.JSONDecodeError(
+            "/tmp/authority.json: duplicate key 'authority'", "{}", 0
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(MODULE, "validate_repository", side_effect=failure),
+            mock.patch.object(sys, "argv", [str(SCRIPT)]),
+            contextlib.redirect_stdout(output),
+        ):
+            status = MODULE.main()
+
+        self.assertEqual(1, status)
+        report = json.loads(output.getvalue())
+        self.assertEqual("fail", report["status"])
+        self.assertEqual(
+            ["repository JSON is invalid: " + str(failure)], report["errors"]
+        )
+
+    def test_device_lab_cli_reports_invalid_profile_or_plan_without_traceback(
+        self,
+    ) -> None:
+        receipt_path = ROOT / "docs/device-lab/device-receipt.template.json"
+        original_load_json = MODULE.load_json
+        cases = (
+            (
+                "profiles",
+                "profile_id",
+                "Device Lab profile is invalid JSON",
+            ),
+            (
+                "test-plans",
+                "test_plan_id",
+                "Device Lab test plan is invalid JSON",
+            ),
+        )
+        for directory_name, duplicate_key, expected_prefix in cases:
+            with self.subTest(directory=directory_name):
+                failed_path: Path | None = None
+
+                def fail_selected_authority(path: Path) -> object:
+                    nonlocal failed_path
+                    candidate = Path(path)
+                    if candidate == receipt_path:
+                        return {}
+                    if candidate.parent.name == directory_name:
+                        failed_path = candidate
+                        raise json.JSONDecodeError(
+                            f"{candidate}: duplicate key {duplicate_key!r}", "{}", 0
+                        )
+                    return original_load_json(candidate)
+
+                output = io.StringIO()
+                with (
+                    mock.patch.object(MODULE, "validate_repository", return_value=[]),
+                    mock.patch.object(
+                        MODULE, "load_json", side_effect=fail_selected_authority
+                    ),
+                    mock.patch.object(
+                        MODULE, "validate_device_lab_execution_receipt"
+                    ) as receipt_validator,
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            str(SCRIPT),
+                            "--device-lab-receipt",
+                            str(receipt_path),
+                            "--json",
+                        ],
+                    ),
+                    contextlib.redirect_stdout(output),
+                ):
+                    status = MODULE.main()
+
+                self.assertEqual(1, status)
+                self.assertIsNotNone(failed_path)
+                receipt_validator.assert_not_called()
+                report = json.loads(output.getvalue())
+                self.assertEqual("fail", report["status"])
+                self.assertTrue(
+                    any(
+                        error.startswith(expected_prefix)
+                        and str(failed_path) in error
+                        and f"duplicate key '{duplicate_key}'" in error
+                        for error in report["errors"]
+                    )
+                )
+
 
     def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
         self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
@@ -1172,6 +1351,129 @@ class RepositoryContractTests(unittest.TestCase):
             )
         )
 
+    def test_v2_adapter_source_must_match_nearest_unity_assembly(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        composition = MODULE.load_json(composition_path)
+        implementation = composition["bindings"][0]["implementation"]
+        implementation["source_path"] = (
+            "consumer/Assets/XRFoundry.ReferenceSystem/Tests/PlayMode/"
+            "ReferenceSystemIntegrationPlayModeTests.cs"
+        )
+        implementation["assembly"] = "Made.Up.Assembly"
+
+        lock, errors = MODULE.build_composition_lock(
+            ROOT, composition_path, composition
+        )
+
+        self.assertIsNone(lock)
+        self.assertTrue(
+            any(
+                "XRFoundry.ReferenceSystem.PlayMode.Tests" in error
+                and "Made.Up.Assembly" in error
+                for error in errors
+            )
+        )
+
+        implementation["assembly"] = "XRFoundry.ReferenceSystem.PlayMode.Tests"
+        lock, errors = MODULE.build_composition_lock(
+            ROOT, composition_path, composition
+        )
+        self.assertEqual([], errors)
+        self.assertIsNotNone(lock)
+
+    def test_adapter_assembly_scope_fails_closed_on_ambiguous_or_unsafe_metadata(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            composition_path = (
+                root / "compositions" / "unity" / "sample" / "foundry.project.json"
+            )
+            source_path = (
+                composition_path.parent
+                / "consumer/Assets/Sample/Runtime/Bindings/Adapter.cs"
+            )
+            source_path.parent.mkdir(parents=True)
+            source_path.write_text("internal sealed class Adapter {}\n", encoding="utf-8")
+            source, source_error = MODULE.resolve_composition_adapter_source(
+                root,
+                composition_path,
+                "consumer/Assets/Sample/Runtime/Bindings/Adapter.cs",
+            )
+            self.assertIsNone(source_error)
+            assert source is not None
+
+            missing_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("no Unity assembly definition", missing_error)
+
+            runtime_directory = source_path.parent.parent
+            asmdef_path = runtime_directory / "Sample.Runtime.asmdef"
+            asmdef_path.write_text('{"name":"Wrong.Runtime"}', encoding="utf-8")
+            wrong_name_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("Wrong.Runtime", wrong_name_error)
+            self.assertIn("Sample.Runtime", wrong_name_error)
+
+            asmdef_path.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            shadow_path = source_path.parent / "Shadow.asmdef"
+            shadow_path.write_text('{"name":"Shadow.Runtime"}', encoding="utf-8")
+            shadow_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("Shadow.Runtime", shadow_error)
+            shadow_path.unlink()
+
+            duplicate_asmdef = runtime_directory / "Second.asmdef"
+            duplicate_asmdef.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            duplicate_scope_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("exactly one .asmdef", duplicate_scope_error)
+            duplicate_asmdef.unlink()
+
+            asmdef_path.write_text('{"name":', encoding="utf-8")
+            malformed_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("invalid JSON", malformed_error)
+
+            asmdef_path.write_text(
+                '{"name":"Sample.Runtime","nested":{"key":1,"key":2}}',
+                encoding="utf-8",
+            )
+            duplicate_key_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("duplicate key 'key'", duplicate_key_error)
+
+            asmdef_path.unlink()
+            asmdef_path.mkdir()
+            nonregular_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("regular file", nonregular_error)
+            asmdef_path.rmdir()
+
+            outside_asmdef = root / "outside.asmdef"
+            outside_asmdef.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            asmdef_path.symlink_to(outside_asmdef)
+            symlink_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("symbolic link", symlink_error)
+            asmdef_path.unlink()
+
+            asmdef_path.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            asmref_path = source_path.parent / "Redirect.asmref"
+            asmref_path.write_text('{"reference":"Sample.Runtime"}', encoding="utf-8")
+            asmref_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("asmref is unsupported", asmref_error)
+
     def test_v2_composition_rejects_duplicate_binding_and_unsafe_lock_path(self) -> None:
         composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
         duplicate = MODULE.load_json(composition_path)
@@ -1233,6 +1535,125 @@ class RepositoryContractTests(unittest.TestCase):
             "v2 composition lock",
         )
         self.assertTrue(assembly_schema_errors)
+
+    def test_v2_semver_matches_semver_2_numeric_prerelease_rules(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        original_composition = MODULE.load_json(composition_path)
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(original_composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+
+        original_lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            original_lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        assert lock_schema_path is not None
+
+        valid_versions = (
+            "0.2.0-0",
+            "0.2.0-alpha.1",
+            "0.2.0-0A",
+            "0.2.0+001",
+            "1.2.3-alpha.1+001",
+        )
+        for version in valid_versions:
+            with self.subTest(valid=version):
+                self.assertIsNotNone(MODULE.SEMVER_V2_PATTERN.fullmatch(version))
+                composition = copy.deepcopy(original_composition)
+                composition["version"] = version
+                self.assertEqual(
+                    [],
+                    MODULE.validate_json_schema_instance(
+                        composition,
+                        ROOT / manifest_schema_path,
+                        "v2 composition manifest",
+                    ),
+                )
+                lock, build_errors = MODULE.build_composition_lock(
+                    ROOT, composition_path, composition
+                )
+                self.assertEqual([], build_errors)
+                self.assertIsNotNone(lock)
+                schema_lock = copy.deepcopy(original_lock)
+                schema_lock["composition"]["version"] = version
+                self.assertEqual(
+                    [],
+                    MODULE.validate_json_schema_instance(
+                        schema_lock,
+                        ROOT / lock_schema_path,
+                        "v2 composition lock",
+                    ),
+                )
+
+        invalid_versions = (
+            "0.2.0-01",
+            "0.2.0-alpha.01",
+            "01.2.3",
+        )
+        for version in invalid_versions:
+            with self.subTest(invalid=version):
+                self.assertIsNone(MODULE.SEMVER_V2_PATTERN.fullmatch(version))
+                composition = copy.deepcopy(original_composition)
+                composition["version"] = version
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        composition,
+                        ROOT / manifest_schema_path,
+                        "v2 composition manifest",
+                    )
+                )
+                lock, build_errors = MODULE.build_composition_lock(
+                    ROOT, composition_path, composition
+                )
+                self.assertIsNone(lock)
+                self.assertTrue(
+                    any("version must be exact SemVer" in error for error in build_errors)
+                )
+                schema_lock = copy.deepcopy(original_lock)
+                schema_lock["composition"]["version"] = version
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        schema_lock,
+                        ROOT / lock_schema_path,
+                        "v2 composition lock",
+                    )
+                )
+
+    def test_v1_semver_contract_remains_byte_compatible(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        v1_composition = MODULE.load_json(composition_path)
+        v1_composition["schema"] = "xr-foundry.composition_manifest.v1"
+        v1_composition["model_version"] = "0.1.0"
+        v1_composition["version"] = "0.2.0-01"
+        for binding in v1_composition["bindings"]:
+            binding["implementation"] = "consumer_owned_adapter_pending"
+
+        schema_path, dispatch_errors = MODULE.composition_manifest_schema_path(
+            v1_composition
+        )
+        self.assertEqual([], dispatch_errors)
+        self.assertEqual(MODULE.COMPOSITION_MANIFEST_SCHEMA_PATH, schema_path)
+        assert schema_path is not None
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(
+                v1_composition,
+                ROOT / schema_path,
+                "v1 composition manifest",
+            ),
+        )
+        lock, build_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, v1_composition
+        )
+        self.assertEqual([], build_errors)
+        self.assertIsNotNone(lock)
+        assert lock is not None
+        self.assertEqual("0.2.0-01", lock["composition"]["version"])
 
     def test_composition_schema_dispatch_fails_closed(self) -> None:
         composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)

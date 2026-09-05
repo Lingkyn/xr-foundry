@@ -148,7 +148,17 @@ def main() -> int:
             )
             print(json.dumps(report, indent=2))
             return 1
-        actual_lock = VALIDATOR.load_json(lock_path)
+        try:
+            actual_lock = VALIDATOR.load_json(lock_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            report = report_payload(
+                "fail",
+                composition=composition.get("id"),
+                lock_path=lock_path.relative_to(ROOT).as_posix(),
+                errors=[f"existing composition lock is invalid JSON: {error}"],
+            )
+            print(json.dumps(report, indent=2))
+            return 1
         if actual_lock != lock:
             report = report_payload(
                 "fail",

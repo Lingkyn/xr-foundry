@@ -361,6 +361,14 @@ SEMVER_PATTERN = re.compile(
     r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
 )
+SEMVER_V2_PATTERN = re.compile(
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+)
 COMPOSITION_ID_PATTERN = re.compile(
     r"xr-foundry\.[a-z0-9]+(?:[.-][a-z0-9]+)*"
 )
@@ -585,8 +593,24 @@ def forbidden_public_markers() -> list[str]:
     return ["".join(parts).casefold() for parts in fragments]
 
 
-def load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+def decode_json_document(document: str, source: str) -> Any:
+    """Decode JSON without permitting duplicate keys at any object depth."""
+
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        decoded: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in decoded:
+                raise json.JSONDecodeError(
+                    f"{source}: duplicate key {key!r}", document, 0
+                )
+            decoded[key] = value
+        return decoded
+
+    return json.loads(document, object_pairs_hook=reject_duplicate_keys)
+
+
+def load_json(path: Path) -> Any:
+    return decode_json_document(path.read_text(encoding="utf-8"), str(path))
 
 
 def read_decodable_text(path: Path) -> str | None:
@@ -830,6 +854,80 @@ def resolve_composition_adapter_source(
     return resolved_candidate, None
 
 
+def validate_composition_adapter_assembly(
+    root: Path,
+    composition_path: Path,
+    source: Path,
+    declared_assembly: str,
+) -> str | None:
+    """Bind a consumer adapter to the nearest Unity assembly definition."""
+
+    try:
+        consumer = (composition_path.parent / "consumer").resolve(strict=True)
+        cursor = source.parent.resolve(strict=True)
+        cursor.relative_to(consumer)
+    except (OSError, RuntimeError, ValueError):
+        return "adapter source assembly scope escapes the composition consumer directory"
+
+    while True:
+        try:
+            scope_entries = sorted(cursor.iterdir(), key=lambda candidate: candidate.name)
+            asmrefs = [
+                candidate
+                for candidate in scope_entries
+                if candidate.suffix.casefold() == ".asmref"
+            ]
+            asmdefs = sorted(
+                (
+                    candidate
+                    for candidate in scope_entries
+                    if candidate.suffix.casefold() == ".asmdef"
+                ),
+                key=lambda candidate: candidate.name,
+            )
+        except (OSError, ValueError) as error:
+            return f"adapter Unity assembly scope cannot be inspected: {error}"
+        if asmrefs:
+            return (
+                "asmref is unsupported for adapter source binding; found "
+                f"{[candidate.name for candidate in asmrefs]}"
+            )
+        if asmdefs:
+            if len(asmdefs) != 1:
+                return (
+                    "adapter source nearest Unity assembly scope must contain exactly "
+                    f"one .asmdef; found {[candidate.name for candidate in asmdefs]}"
+                )
+            asmdef = asmdefs[0]
+            if asmdef.is_symlink():
+                return "adapter source Unity assembly definition must not be a symbolic link"
+            try:
+                asmdef_mode = asmdef.lstat().st_mode
+            except (OSError, ValueError):
+                return "adapter source Unity assembly definition is missing"
+            if not stat.S_ISREG(asmdef_mode):
+                return "adapter source Unity assembly definition must be a regular file"
+            try:
+                asmdef_payload = load_json(asmdef)
+            except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                return f"adapter source Unity assembly definition is invalid JSON: {error}"
+            if not isinstance(asmdef_payload, dict):
+                return "adapter source Unity assembly definition must be a JSON object"
+            actual_assembly = asmdef_payload.get("name")
+            if actual_assembly != declared_assembly:
+                return (
+                    "adapter source resolves to Unity assembly "
+                    f"{actual_assembly!r}, not declared assembly {declared_assembly!r}"
+                )
+            return None
+        if cursor == consumer:
+            return "adapter source has no Unity assembly definition in its consumer scope"
+        parent = cursor.parent
+        if parent == cursor:
+            return "adapter source has no Unity assembly definition in its consumer scope"
+        cursor = parent
+
+
 def capability_key(reference: Any) -> tuple[str, str] | None:
     if not isinstance(reference, dict):
         return None
@@ -979,7 +1077,7 @@ def build_composition_lock(
             errors.append("v2 composition id must be an exact canonical identifier")
         if (
             not isinstance(composition_version, str)
-            or SEMVER_PATTERN.fullmatch(composition_version) is None
+            or SEMVER_V2_PATTERN.fullmatch(composition_version) is None
         ):
             errors.append("v2 composition version must be exact SemVer")
         expected_lock_file = absolute_composition_path.parent / "foundry.lock.json"
@@ -1243,6 +1341,15 @@ def build_composition_lock(
                             f"binding {binding_id}: implemented adapter assembly must be "
                             "an exact ASCII assembly name"
                         )
+                        continue
+                    assembly_error = validate_composition_adapter_assembly(
+                        root,
+                        absolute_composition_path,
+                        source,
+                        assembly,
+                    )
+                    if assembly_error is not None:
+                        errors.append(f"binding {binding_id}: {assembly_error}")
                         continue
                     locked_implementation = {
                         "kind": "consumer_owned_adapter",
@@ -5052,7 +5159,10 @@ def validate_device_lab_execution_receipt(
             package_manifest: dict[str, Any] | None = None
             if manifest_result is not None and manifest_result.returncode == 0:
                 try:
-                    decoded = json.loads(manifest_result.stdout.decode("utf-8"))
+                    decoded = decode_json_document(
+                        manifest_result.stdout.decode("utf-8"),
+                        f"{commit_sha}:{package_path}/package.json",
+                    )
                     if isinstance(decoded, dict):
                         package_manifest = decoded
                 except (UnicodeDecodeError, json.JSONDecodeError):
@@ -6965,7 +7075,9 @@ def load_json_at_git_revision(
     if result.returncode != 0:
         return None
     try:
-        payload = json.loads(result.stdout.decode("utf-8"))
+        payload = decode_json_document(
+            result.stdout.decode("utf-8"), f"{commit_sha}:{repository_path}"
+        )
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
     return payload if isinstance(payload, dict) else None
@@ -7443,7 +7555,9 @@ def validate_compatibility_profile_payload(
         if result.returncode != 0:
             return None
         try:
-            payload_at_commit = json.loads(result.stdout.decode("utf-8"))
+            payload_at_commit = decode_json_document(
+                result.stdout.decode("utf-8"), f"{commit_sha}:{repository_path}"
+            )
         except (UnicodeDecodeError, json.JSONDecodeError):
             return None
         return payload_at_commit if isinstance(payload_at_commit, dict) else None
@@ -8680,7 +8794,14 @@ def main() -> int:
     if args.fast_structure and (args.run_contract_tests or args.device_lab_receipt is not None):
         parser.error("--fast-structure cannot be combined with full tests or Device Lab receipt validation")
     root = args.root.resolve()
-    errors = validate_fast_structure(root) if args.fast_structure else validate_repository(root)
+    try:
+        errors = (
+            validate_fast_structure(root)
+            if args.fast_structure
+            else validate_repository(root)
+        )
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        errors = [f"repository JSON is invalid: {error}"]
     device_lab_receipt_path: Path | None = None
     if args.device_lab_receipt is not None:
         device_lab_receipt_path = args.device_lab_receipt
@@ -8695,24 +8816,37 @@ def main() -> int:
             except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                 errors.append(f"Device Lab receipt is invalid JSON: {exc}")
             else:
-                profiles = {
-                    str(payload.get("profile_id", "")): payload
-                    for path in (root / "docs" / "device-lab" / "profiles").glob("*.json")
-                    if isinstance(payload := load_json(path), dict)
-                }
-                plans = {
-                    str(payload.get("test_plan_id", "")): payload
-                    for path in (root / "docs" / "device-lab" / "test-plans").glob("*.json")
-                    if isinstance(payload := load_json(path), dict)
-                }
-                errors.extend(
-                    validate_device_lab_execution_receipt(
-                        receipt,
-                        profiles,
-                        plans,
-                        "Device Lab CLI receipt",
+                profiles: dict[str, dict[str, Any]] | None = None
+                plans: dict[str, dict[str, Any]] | None = None
+                try:
+                    profiles = {
+                        str(payload.get("profile_id", "")): payload
+                        for path in (
+                            root / "docs" / "device-lab" / "profiles"
+                        ).glob("*.json")
+                        if isinstance(payload := load_json(path), dict)
+                    }
+                except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                    errors.append(f"Device Lab profile is invalid JSON: {exc}")
+                try:
+                    plans = {
+                        str(payload.get("test_plan_id", "")): payload
+                        for path in (
+                            root / "docs" / "device-lab" / "test-plans"
+                        ).glob("*.json")
+                        if isinstance(payload := load_json(path), dict)
+                    }
+                except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                    errors.append(f"Device Lab test plan is invalid JSON: {exc}")
+                if profiles is not None and plans is not None:
+                    errors.extend(
+                        validate_device_lab_execution_receipt(
+                            receipt,
+                            profiles,
+                            plans,
+                            "Device Lab CLI receipt",
+                        )
                     )
-                )
     contract_tests: dict[str, Any] | None = None
     if args.run_contract_tests:
         contract_tests = run_contract_test_gate(root, errors)

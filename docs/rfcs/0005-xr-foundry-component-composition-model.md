@@ -80,10 +80,14 @@ strongly typed C# adapters. The manifest records each adapter's composition-loca
 source path and assembly. The deterministic lock records the canonical
 repository-relative source path and SHA-256, and becomes stale when an adapter
 source changes. The resolver rejects missing, escaping, linked, non-regular, or
-non-canonical sources and unsafe lock paths. V0.1 manifests and locks remain
-supported for their original pending-binding semantics. This local safety contract
-assumes serialized lock generation in a non-adversarial worktree; it does not yet
-claim cross-process compare-and-swap or same-privilege TOCTOU resistance.
+non-canonical sources and unsafe lock paths. It also requires the source to belong
+to the nearest unique regular Unity `.asmdef` whose name equals the declared
+assembly; `.asmref` ownership currently fails closed. Authority JSON rejects
+duplicate keys at any depth, and v0.2 versions follow SemVer 2.0 numeric
+prerelease rules. V0.1 manifests and locks remain supported for their original
+pending-binding semantics. This local safety contract assumes serialized lock
+generation in a non-adversarial worktree; it does not yet claim cross-process
+compare-and-swap or same-privilege TOCTOU resistance.
 
 A clean eight-package endpoint consumer exercises the adapters without claiming
 that the full 13-component reference composition ran. Its local experiment and

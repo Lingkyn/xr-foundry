@@ -74,6 +74,11 @@ new capability major version and a migration path. The resolver fails closed whe
 The last rule prevents a decorative manifest from describing a graph the actual
 package manager cannot install.
 
+All XFCM authority JSON is decoded with duplicate-key rejection at every object
+depth. V0.2 composition and lock versions use SemVer 2.0 syntax, including the
+numeric-prerelease no-leading-zero rule; v0.1 retains its original compatibility
+contract.
+
 ## Variant slots
 
 Some packages are peers, not cumulative dependencies. The component catalog
@@ -100,8 +105,9 @@ Resolution is intentionally static and deterministic:
 6. reject dependency cycles;
 7. sort providers before consumers, with lexical ordering as the stable tie-break;
 8. for each v0.2 implemented binding, reject unsafe, linked, escaping, missing, or
-   non-regular adapter source paths and bind its repository-relative path,
-   assembly, and source SHA-256; and
+   non-regular adapter source paths; require that the source belongs to the nearest
+   unique regular Unity `.asmdef` and that its name equals the declared assembly;
+   and bind the repository-relative path, assembly, and source SHA-256; and
 9. lock component versions, manifest paths, manifest SHA-256 values, capability
    providers, slot choices, bindings, input digests and dependency order.
 
@@ -159,13 +165,17 @@ adapter boundaries:
 
 Each implementation is a small, explicit C# adapter under the composition's
 consumer root. The v0.2 resolver confines that source to the same composition,
-rejects symbolic links and non-canonical paths, and records its exact source hash.
+rejects symbolic links and non-canonical paths, verifies the nearest effective
+`.asmdef`, and records its exact source hash. `.asmref`-based adapter ownership is
+not yet modeled and therefore fails closed rather than falling through to a parent
+assembly.
 `bindings_implemented: true` therefore means that all declared binding records have
-source-bound implementations. It does **not** mean that all selected packages or
-runtime paths were executed. The lock still records `runtime_ready: false`. These
-filesystem checks assume one serialized writer and no hostile same-privilege actor
-mutating the worktree during a resolver run; cross-writer locking and descriptor-
-based TOCTOU hardening remain future work.
+source-and-assembly-bound implementations. It does **not** mean that C# semantics
+were statically proved or that all selected packages or runtime paths were
+executed. The lock still records `runtime_ready: false`. These filesystem checks
+assume one serialized writer and no hostile same-privilege actor mutating the
+worktree during a resolver run; cross-writer locking and descriptor-based TOCTOU
+hardening remain future work.
 
 ## Evidence ladder
 

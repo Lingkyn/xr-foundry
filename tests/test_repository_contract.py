@@ -37,6 +37,13 @@ COMPOSE_SPEC = importlib.util.spec_from_file_location("compose_system", COMPOSE_
 assert COMPOSE_SPEC and COMPOSE_SPEC.loader
 COMPOSE_MODULE = importlib.util.module_from_spec(COMPOSE_SPEC)
 COMPOSE_SPEC.loader.exec_module(COMPOSE_MODULE)
+MATERIALIZER_SCRIPT = ROOT / "scripts" / "materialize_reference_consumer.py"
+MATERIALIZER_SPEC = importlib.util.spec_from_file_location(
+    "materialize_reference_consumer", MATERIALIZER_SCRIPT
+)
+assert MATERIALIZER_SPEC and MATERIALIZER_SPEC.loader
+MATERIALIZER_MODULE = importlib.util.module_from_spec(MATERIALIZER_SPEC)
+MATERIALIZER_SPEC.loader.exec_module(MATERIALIZER_MODULE)
 
 
 def current_device_profiles() -> dict[str, dict]:
@@ -1190,12 +1197,26 @@ class RepositoryContractTests(unittest.TestCase):
             first_lock["claims"]["unity_compile"],
         )
         self.assertEqual("not_claimed", first_lock["claims"]["device_runtime"])
-        self.assertEqual(3, len(first_lock["resolution"]["bindings"]))
+        self.assertEqual(7, len(first_lock["resolution"]["bindings"]))
+        expected_binding_sources = {
+            "interaction-to-inventory-intent": "InteractionToInventoryIntentAdapter.cs",
+            "inventory-to-persistence": "InventoryToPersistenceAdapter.cs",
+            "settings-to-interaction-policy": "SettingsToInteractionPolicyAdapter.cs",
+            "unity-input-to-semantic-interaction": "UnityInputSemanticInteractionAdapter.cs",
+            "inventory-presentation-to-ugui-renderer": "InventoryUguiXrSurfaceAdapter.cs",
+            "inventory-ugui-renderer-to-xr-surface": "InventoryUguiXrSurfaceAdapter.cs",
+            "settings-to-persistence-rehydration": "SettingsPersistenceRehydrationAdapter.cs",
+        }
+        self.assertEqual(
+            set(expected_binding_sources),
+            {binding["id"] for binding in first_lock["resolution"]["bindings"]},
+        )
         for binding in first_lock["resolution"]["bindings"]:
             implementation = binding["implementation"]
             self.assertEqual("implemented", implementation["status"])
             source = ROOT / implementation["source_path"]
             self.assertTrue(source.is_file())
+            self.assertEqual(expected_binding_sources[binding["id"]], source.name)
             self.assertEqual(
                 hashlib.sha256(source.read_bytes()).hexdigest(),
                 implementation["source_sha256"],
@@ -1218,6 +1239,64 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(13, report["component_count"])
         self.assertTrue(report["bindings_implemented"])
         self.assertFalse(report["runtime_ready"])
+
+    def test_reference_consumer_materializes_every_typed_endpoint_package(self) -> None:
+        consumer = ROOT / "compositions" / "unity" / "reference-system" / "consumer"
+        manifest = MODULE.load_json(consumer / "Packages" / "manifest.json")
+        runtime_asmdef = MODULE.load_json(
+            consumer
+            / "Assets"
+            / "XRFoundry.ReferenceSystem"
+            / "Runtime"
+            / "XRFoundry.ReferenceSystem.asmdef"
+        )
+        editmode_asmdef = MODULE.load_json(
+            consumer
+            / "Assets"
+            / "XRFoundry.ReferenceSystem"
+            / "Tests"
+            / "EditMode"
+            / "XRFoundry.ReferenceSystem.EditMode.Tests.asmdef"
+        )
+        playmode_asmdef = MODULE.load_json(
+            consumer
+            / "Assets"
+            / "XRFoundry.ReferenceSystem"
+            / "Tests"
+            / "PlayMode"
+            / "XRFoundry.ReferenceSystem.PlayMode.Tests.asmdef"
+        )
+
+        embedded_package_ids = {
+            Path(path).name for path in MATERIALIZER_MODULE.EMBEDDED_PACKAGES
+        }
+        expected_endpoint_packages = {
+            "com.lingkyn.interaction.unity",
+            "com.lingkyn.inventory.ugui",
+            "com.lingkyn.inventory.xr.ugui",
+            "com.lingkyn.persistence.unity",
+            "com.lingkyn.settings.unity",
+        }
+        self.assertEqual(embedded_package_ids, set(manifest["testables"]))
+        self.assertTrue(expected_endpoint_packages.issubset(embedded_package_ids))
+
+        expected_runtime_assemblies = {
+            "Lingkyn.Interaction.Unity",
+            "Lingkyn.Inventory.UGUI",
+            "Lingkyn.Inventory.XR.UGUI",
+            "Lingkyn.Persistence.Unity",
+            "Lingkyn.Settings.Unity",
+            "Unity.InputSystem",
+        }
+        self.assertTrue(
+            expected_runtime_assemblies.issubset(set(runtime_asmdef["references"]))
+        )
+        self.assertFalse(runtime_asmdef["noEngineReferences"])
+        for test_asmdef in (editmode_asmdef, playmode_asmdef):
+            self.assertTrue(
+                expected_runtime_assemblies.issubset(set(test_asmdef["references"]))
+            )
+            self.assertIn("UnityEngine.UI", test_asmdef["references"])
 
     def test_v2_composition_lock_tracks_adapter_source_bytes(self) -> None:
         lock_path = ROOT / "compositions/unity/reference-system/foundry.lock.json"
@@ -3124,6 +3203,79 @@ class RepositoryContractTests(unittest.TestCase):
             (root / "README.md").write_text(marker, encoding="utf-8")
             errors = MODULE.scan_text_safety(root)
             self.assertTrue(any("non-public marker" in error for error in errors))
+
+    def test_ignored_untracked_local_projection_is_not_a_publication_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(
+                ["git", "init", "--quiet"], cwd=root, check=True, capture_output=True
+            )
+            (root / ".gitignore").write_text(".local-control/\n", encoding="utf-8")
+            local_projection = root / ".local-control" / "runtime.json"
+            local_projection.parent.mkdir()
+            local_projection.write_text("AI" + "OS", encoding="utf-8")
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertFalse(any("runtime.json" in error for error in errors))
+
+    def test_force_added_ignored_marker_remains_a_publication_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(
+                ["git", "init", "--quiet"], cwd=root, check=True, capture_output=True
+            )
+            (root / ".gitignore").write_text(".local-control/\n", encoding="utf-8")
+            tracked_projection = root / ".local-control" / "tracked.md"
+            tracked_projection.parent.mkdir()
+            tracked_projection.write_text("AI" + "OS", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "--force", ".local-control/tracked.md"],
+                cwd=root,
+                check=True,
+                capture_output=True,
+            )
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertTrue(
+                any("tracked.md" in error and "non-public marker" in error for error in errors)
+            )
+
+    def test_project_profile_allows_only_declared_control_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            control_markers = [
+                "AI" + "OS",
+                "agent" + "-os",
+                "skill" + "-system",
+                "_steward" + "ship",
+                "work " + "packet",
+                "." + "ai" + "os",
+            ]
+            (root / "PROJECT_PROFILE.json").write_text(
+                json.dumps({"control_markers": control_markers}), encoding="utf-8"
+            )
+
+            self.assertEqual([], MODULE.scan_text_safety(root))
+
+    def test_project_profile_still_rejects_product_secret_and_machine_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            content = "\n".join(
+                [
+                    "VR" + "soundscape",
+                    "api" + "_key = 'not-a-real-secret'",
+                    "C:" + "\\Users\\example\\workspace",
+                ]
+            )
+            (root / "PROJECT_PROFILE.json").write_text(content, encoding="utf-8")
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertTrue(any("non-public marker" in error for error in errors))
+            self.assertTrue(any("possible credential" in error for error in errors))
+            self.assertTrue(any("machine-local Windows path" in error for error in errors))
 
     def test_privacy_scan_covers_every_decodable_text_extension(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

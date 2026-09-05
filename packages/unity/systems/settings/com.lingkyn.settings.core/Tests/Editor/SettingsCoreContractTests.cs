@@ -538,6 +538,170 @@ namespace Lingkyn.Settings.Core.Editor.Tests
         }
 
         [Test]
+        public void LoadedSnapshotIsCompletedFromRegistryDefaultsWithoutLosingOverridesRevisionOrUnknownValues()
+        {
+            var registry = MustRegistry(
+                MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User),
+                MustDefinition(
+                    "audio.volume",
+                    SettingValueKind.Float,
+                    SettingValue.FromFloat(1.0),
+                    SettingScope.User,
+                    numeric: new NumericConstraint(0, 1, 0.25)));
+            var opaqueUnknownKey = "  future/raw key  ";
+            var loaded = new SettingsSnapshot(
+                17,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    {
+                        new ScopedSettingKey(MustKey("audio.mute"), SettingScope.Session),
+                        SettingValue.FromBoolean(true)
+                    },
+                },
+                new Dictionary<string, SettingValue>
+                {
+                    { opaqueUnknownKey, SettingValue.FromInteger(9) },
+                });
+
+            // Keep the original two-argument entry point source- and binary-compatible.
+            var validated = SettingsSnapshotValidator.ValidateLoaded(registry, loaded);
+
+            Assert.That(validated.Succeeded, Is.True, validated.Error.Message);
+            Assert.That(validated.Value.Revision, Is.EqualTo(17));
+            Assert.That(
+                validated.Value.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.mute"), SettingScope.Session),
+                    out var sessionOverride),
+                Is.True);
+            Assert.That(sessionOverride.BooleanValue, Is.True);
+            Assert.That(
+                validated.Value.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                    out var defaultMute),
+                Is.True);
+            Assert.That(defaultMute.BooleanValue, Is.False);
+            Assert.That(
+                validated.Value.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User),
+                    out var defaultVolume),
+                Is.True);
+            Assert.That(defaultVolume.FloatValue, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(validated.Value.TryGetUnknownValue(opaqueUnknownKey, out var unknown), Is.True);
+            Assert.That(unknown.IntegerValue, Is.EqualTo(9));
+        }
+
+        [Test]
+        public void ConstraintAwareRepositoryLoadValidatesCompletedSnapshotAndPreservesCommittedOnFailure()
+        {
+            var registry = MustRegistry(
+                MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User),
+                MustDefinition(
+                    "audio.volume",
+                    SettingValueKind.Float,
+                    SettingValue.FromFloat(1.0),
+                    SettingScope.User,
+                    numeric: new NumericConstraint(0, 1, 0.25)));
+            var loaded = new SettingsSnapshot(
+                23,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    {
+                        new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                        SettingValue.FromBoolean(true)
+                    },
+                },
+                new Dictionary<string, SettingValue>());
+            var constraints = new ISettingsConstraint[] { new DependentVolumeConstraint() };
+
+            var validated = SettingsSnapshotValidator.ValidateLoaded(registry, loaded, constraints);
+            Assert.That(validated.Succeeded, Is.False);
+            Assert.That(validated.Error.Code, Is.EqualTo(SettingsValidationCode.CrossConstraintViolation));
+
+            var initial = SettingsSnapshot.CreateInitial(registry, revision: 4);
+            var repository = new RecordingRepository(loaded, loadSucceeded: true);
+            var coordinator = new SettingsCoordinator(
+                registry,
+                initial,
+                constraints: constraints,
+                repository: repository);
+
+            var result = coordinator.LoadFromRepository();
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(SettingsValidationCode.CrossConstraintViolation));
+            Assert.That(coordinator.CommittedSnapshot, Is.SameAs(initial));
+            Assert.That(repository.SaveCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void SnapshotRejectsNullOrEmptyUnknownRawKeysAndPreservesOpaqueKeysExactly()
+        {
+            Assert.Throws<ArgumentException>(() => new SettingsSnapshot(
+                0,
+                new Dictionary<ScopedSettingKey, SettingValue>(),
+                new SingleUnknownRawKeyDictionary(null, SettingValue.FromInteger(1))));
+            Assert.Throws<ArgumentException>(() => new SettingsSnapshot(
+                0,
+                new Dictionary<ScopedSettingKey, SettingValue>(),
+                new Dictionary<string, SettingValue>
+                {
+                    { string.Empty, SettingValue.FromInteger(1) },
+                }));
+
+            const string opaqueKey = "  future/raw key  ";
+            var snapshot = new SettingsSnapshot(
+                0,
+                new Dictionary<ScopedSettingKey, SettingValue>(),
+                new Dictionary<string, SettingValue>
+                {
+                    { opaqueKey, SettingValue.FromInteger(2) },
+                });
+
+            Assert.That(snapshot.TryGetUnknownValue(opaqueKey, out var value), Is.True);
+            Assert.That(value.IntegerValue, Is.EqualTo(2));
+            Assert.That(snapshot.UnknownValues.Keys.Single(), Is.EqualTo(opaqueKey));
+        }
+
+        [Test]
+        public void MaxRevisionRejectsRealChangeBeforeSideEffectsButStillAllowsNoOp()
+        {
+            var registry = MustRegistry(
+                MustDefinition("audio.mute", SettingValueKind.Boolean, SettingValue.FromBoolean(false), SettingScope.User));
+            var initial = SettingsSnapshot.CreateInitial(registry, long.MaxValue);
+            var applicator = new RecordingApplicator("mute", 0, MustKey("audio.mute"));
+            var repository = new RecordingRepository(persistFail: false);
+            var coordinator = new SettingsCoordinator(
+                registry,
+                initial,
+                new[] { applicator },
+                repository: repository);
+            var notifications = 0;
+            coordinator.ChangesApplied += _ => notifications++;
+            var transaction = coordinator.BeginTransaction();
+            transaction.StageSet(
+                new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                SettingValue.FromBoolean(true));
+
+            var changed = coordinator.Apply(transaction);
+
+            Assert.That(changed.Outcome, Is.EqualTo(SettingsApplyOutcome.ValidationFailed));
+            Assert.That(changed.ValidationError.Code, Is.EqualTo(SettingsValidationCode.OutOfRange));
+            Assert.That(changed.CommittedRevision, Is.EqualTo(long.MaxValue));
+            Assert.That(coordinator.CommittedSnapshot, Is.SameAs(initial));
+            Assert.That(applicator.ApplyCount, Is.EqualTo(0));
+            Assert.That(repository.SaveCount, Is.EqualTo(0));
+            Assert.That(notifications, Is.EqualTo(0));
+
+            var noOp = coordinator.Apply(coordinator.BeginTransaction());
+
+            Assert.That(noOp.Outcome, Is.EqualTo(SettingsApplyOutcome.NoOp));
+            Assert.That(noOp.CommittedRevision, Is.EqualTo(long.MaxValue));
+            Assert.That(applicator.ApplyCount, Is.EqualTo(0));
+            Assert.That(repository.SaveCount, Is.EqualTo(0));
+            Assert.That(notifications, Is.EqualTo(0));
+        }
+
+        [Test]
         public void AccessibilityMetadataRoundTripsWithoutComplianceClaims()
         {
             var metadata = new AccessibilityMetadata(
@@ -714,6 +878,46 @@ namespace Lingkyn.Settings.Core.Editor.Tests
                 SaveCount++;
                 return _persistFail ? SettingsPersistResult.Fail("disk full") : SettingsPersistResult.Success();
             }
+        }
+
+        private sealed class SingleUnknownRawKeyDictionary : IReadOnlyDictionary<string, SettingValue>
+        {
+            private readonly string _key;
+            private readonly SettingValue _value;
+
+            public SingleUnknownRawKeyDictionary(string key, SettingValue value)
+            {
+                _key = key;
+                _value = value;
+            }
+
+            public int Count => 1;
+            public IEnumerable<string> Keys => new[] { _key };
+            public IEnumerable<SettingValue> Values => new[] { _value };
+            public SettingValue this[string key] => string.Equals(key, _key, StringComparison.Ordinal)
+                ? _value
+                : throw new KeyNotFoundException();
+
+            public bool ContainsKey(string key) => string.Equals(key, _key, StringComparison.Ordinal);
+
+            public bool TryGetValue(string key, out SettingValue value)
+            {
+                if (ContainsKey(key))
+                {
+                    value = _value;
+                    return true;
+                }
+
+                value = default;
+                return false;
+            }
+
+            public IEnumerator<KeyValuePair<string, SettingValue>> GetEnumerator()
+            {
+                yield return new KeyValuePair<string, SettingValue>(_key, _value);
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
     }
 }

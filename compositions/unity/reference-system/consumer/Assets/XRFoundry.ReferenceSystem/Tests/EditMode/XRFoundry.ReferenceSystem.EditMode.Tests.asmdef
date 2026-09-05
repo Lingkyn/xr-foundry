@@ -4,11 +4,19 @@
   "references": [
     "XRFoundry.ReferenceSystem",
     "Lingkyn.Interaction.Core",
+    "Lingkyn.Interaction.Unity",
     "Lingkyn.Inventory.Core",
     "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UGUI",
+    "Lingkyn.Inventory.XR.UGUI",
     "Lingkyn.Persistence.Core",
     "Lingkyn.Persistence.Unity",
-    "Lingkyn.Settings.Core"
+    "Lingkyn.Settings.Core",
+    "Lingkyn.Settings.Unity",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework",
+    "Unity.ugui",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [
     "Editor"

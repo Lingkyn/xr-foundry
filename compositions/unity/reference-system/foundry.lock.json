@@ -8,7 +8,7 @@
   },
   "engine": "unity",
   "input_digests": {
-    "composition_sha256": "1608d36b629f07930c639251392adf7fa7705b69fef4aa040bbafcb22ec6a08c",
+    "composition_sha256": "12e77dd1ee0e67f5d207634e8c585fe432ef00cf71058dacb1f85ff29879fe63",
     "component_catalog_sha256": "4741482c143f04cff49a4a97aac3e457ed40547602270b0681d32de3aad4bc85",
     "capability_registry_sha256": "57a8e63abdc0039a8ddf4f29b2b563eb4322333f74bd1114f584fe45f263fd66"
   },
@@ -135,6 +135,11 @@
         "provider": "com.lingkyn.inventory.xr.ugui"
       },
       {
+        "id": "xr-foundry.inventory.xr-surface.ugui",
+        "version": "1.0.0",
+        "provider": "com.lingkyn.inventory.xr.ugui"
+      },
+      {
         "id": "xr-foundry.persistence.contract",
         "version": "1.0.0",
         "provider": "com.lingkyn.persistence.core"
@@ -191,6 +196,18 @@
         }
       },
       {
+        "id": "inventory-presentation-to-ugui-renderer",
+        "from_provider": "com.lingkyn.inventory.presentation",
+        "to_provider": "com.lingkyn.inventory.ugui",
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/InventoryUguiXrSurfaceAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "3f20154c10c6f8a89444465ed279d873f862f01de818b99c3f99fcd385f3428b"
+        }
+      },
+      {
         "id": "inventory-to-persistence",
         "from_provider": "com.lingkyn.inventory.core",
         "to_provider": "com.lingkyn.persistence.core",
@@ -203,6 +220,18 @@
         }
       },
       {
+        "id": "inventory-ugui-renderer-to-xr-surface",
+        "from_provider": "com.lingkyn.inventory.ugui",
+        "to_provider": "com.lingkyn.inventory.xr.ugui",
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/InventoryUguiXrSurfaceAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "3f20154c10c6f8a89444465ed279d873f862f01de818b99c3f99fcd385f3428b"
+        }
+      },
+      {
         "id": "settings-to-interaction-policy",
         "from_provider": "com.lingkyn.settings.core",
         "to_provider": "com.lingkyn.interaction.core",
@@ -212,6 +241,30 @@
           "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/SettingsToInteractionPolicyAdapter.cs",
           "assembly": "XRFoundry.ReferenceSystem",
           "source_sha256": "4bb6a4ab6339d1a6819fbfe7989f2ef320c9c22c84790d81042bad009f43a68e"
+        }
+      },
+      {
+        "id": "settings-to-persistence-rehydration",
+        "from_provider": "com.lingkyn.settings.core",
+        "to_provider": "com.lingkyn.persistence.core",
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/SettingsPersistenceRehydrationAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "807b54b0b0dbe708f22648c28c999bb9763912cc48a9e70419c1753292e30c0a"
+        }
+      },
+      {
+        "id": "unity-input-to-semantic-interaction",
+        "from_provider": "com.lingkyn.interaction.unity",
+        "to_provider": "com.lingkyn.interaction.core",
+        "implementation": {
+          "kind": "consumer_owned_adapter",
+          "status": "implemented",
+          "source_path": "compositions/unity/reference-system/consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/UnityInputSemanticInteractionAdapter.cs",
+          "assembly": "XRFoundry.ReferenceSystem",
+          "source_sha256": "6df16100246bc02ad9ef2580164e64ce018907a20b48516de82835ed92bf58c6"
         }
       }
     ],

@@ -593,6 +593,19 @@ def forbidden_public_markers() -> list[str]:
     return ["".join(parts).casefold() for parts in fragments]
 
 
+def project_profile_allowed_control_markers() -> set[str]:
+    """Return control-plane markers that the root project profile may name."""
+    fragments = [
+        ("ai", "os"),
+        ("agent", "-os"),
+        ("skill", "-system"),
+        ("_steward", "ship"),
+        ("work ", "packet"),
+        (".", "ai", "os"),
+    ]
+    return {"".join(parts).casefold() for parts in fragments}
+
+
 def decode_json_document(document: str, source: str) -> Any:
     """Decode JSON without permitting duplicate keys at any object depth."""
 
@@ -1843,24 +1856,69 @@ def scan_text_safety(root: Path) -> list[str]:
     errors: list[str] = []
     absolute_windows_path = re.compile(r"\b[A-Za-z]:\\(?:Users|Program Files|rrjm)\\", re.IGNORECASE)
     secret_pattern = re.compile(r"(api[_-]?key|access[_-]?token|client[_-]?secret)\s*[:=]\s*['\"][^'\"]+", re.IGNORECASE)
-    for path in root.rglob("*"):
-        if not path.is_file() or ".git" in path.relative_to(root).parts:
+
+    publication_paths: list[Path] | None = None
+    try:
+        git_result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "ls-files",
+                "-z",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+            ],
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        git_result = None
+    if git_result is not None and git_result.returncode == 0:
+        candidates: list[Path] = []
+        malformed_candidate = False
+        for raw_path in git_result.stdout.split(b"\0"):
+            if not raw_path:
+                continue
+            relative_path = Path(os.fsdecode(raw_path))
+            if relative_path.is_absolute() or ".." in relative_path.parts:
+                malformed_candidate = True
+                break
+            candidates.append(root / relative_path)
+        if not malformed_candidate:
+            publication_paths = candidates
+    if publication_paths is None:
+        publication_paths = [
+            path
+            for path in root.rglob("*")
+            if path.is_file() and ".git" not in path.relative_to(root).parts
+        ]
+
+    for path in publication_paths:
+        if not path.is_file():
             continue
+        relative_path = path.relative_to(root)
         text = decode_text_file(path)
         if text is None:
             if path.suffix.lower() in STRICT_TEXT_SUFFIXES:
                 errors.append(
-                    f"undecodable controlled text file: {path.relative_to(root)}"
+                    f"undecodable controlled text file: {relative_path}"
                 )
             continue
         lowered = text.casefold()
+        allowed_markers = (
+            project_profile_allowed_control_markers()
+            if relative_path.as_posix() == "PROJECT_PROFILE.json"
+            else set()
+        )
         for marker in forbidden_public_markers():
-            if marker in lowered:
-                errors.append(f"non-public marker in live repository: {path.relative_to(root)}")
+            if marker in lowered and marker not in allowed_markers:
+                errors.append(f"non-public marker in live repository: {relative_path}")
         if absolute_windows_path.search(text):
-            errors.append(f"machine-local Windows path in live repository: {path.relative_to(root)}")
+            errors.append(f"machine-local Windows path in live repository: {relative_path}")
         if secret_pattern.search(text):
-            errors.append(f"possible credential in live repository: {path.relative_to(root)}")
+            errors.append(f"possible credential in live repository: {relative_path}")
     return errors
 
 

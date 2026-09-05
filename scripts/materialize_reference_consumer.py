@@ -11,9 +11,12 @@ TEMPLATE = ROOT / "compositions" / "unity" / "reference-system" / "consumer"
 
 EMBEDDED_PACKAGES = (
     "packages/unity/systems/interaction/com.lingkyn.interaction.core",
+    "packages/unity/systems/interaction/com.lingkyn.interaction.unity",
     "packages/unity/systems/inventory/com.lingkyn.inventory.core",
     "packages/unity/systems/inventory/com.lingkyn.inventory.presentation",
+    "packages/unity/systems/inventory/com.lingkyn.inventory.ugui",
     "packages/unity/systems/inventory/com.lingkyn.inventory.unity",
+    "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui",
     "packages/unity/systems/persistence/com.lingkyn.persistence.core",
     "packages/unity/systems/persistence/com.lingkyn.persistence.unity",
     "packages/unity/systems/settings/com.lingkyn.settings.core",

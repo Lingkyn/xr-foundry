@@ -89,6 +89,71 @@ namespace Lingkyn.Interaction.Core
             return result;
         }
 
+        public InteractionResult<int> ResetPendingPhases(
+            SourceId sourceId,
+            IEnumerable<RouteId> routeIds)
+        {
+            var source = SourceId.TryCreate(sourceId.Value);
+            if (!source.Succeeded)
+            {
+                return InteractionResult<int>.Fail(
+                    source.Error.Code,
+                    source.Error.Message,
+                    source.Error.Subject);
+            }
+
+            if (routeIds == null)
+            {
+                return InteractionResult<int>.Fail(
+                    InteractionValidationCode.InvalidFrame,
+                    "At least one route is required to reset pending phases.");
+            }
+
+            var routes = routeIds.ToArray();
+            if (routes.Length == 0)
+            {
+                return InteractionResult<int>.Fail(
+                    InteractionValidationCode.InvalidFrame,
+                    "At least one route is required to reset pending phases.");
+            }
+
+            var routeSet = new HashSet<RouteId>();
+            foreach (var routeId in routes)
+            {
+                if (!routeSet.Add(routeId))
+                {
+                    return InteractionResult<int>.Fail(
+                        InteractionValidationCode.DuplicateIdentity,
+                        "Pending-phase reset routes must be unique.",
+                        routeId.Value);
+                }
+
+                if (!_registry.TryGetRoute(routeId, out var route))
+                {
+                    return InteractionResult<int>.Fail(
+                        InteractionValidationCode.UnknownRoute,
+                        "Pending-phase reset references an unknown route.",
+                        routeId.Value);
+                }
+
+                if (!route.SourceSelector.Equals(source.Value))
+                {
+                    return InteractionResult<int>.Fail(
+                        InteractionValidationCode.UnknownSource,
+                        "Pending-phase reset source does not match the route selector.",
+                        routeId.Value);
+                }
+            }
+
+            var retained = _state.PendingPhases.Where(phase =>
+                !phase.SourceId.Equals(source.Value)
+                || !routeSet.Contains(phase.RouteId)).ToArray();
+            var cleared = _state.PendingPhases.Count - retained.Length;
+            if (cleared > 0)
+                _state = new InteractionRoutingState(retained, _state.ToggleStates);
+            return InteractionResult<int>.Success(cleared);
+        }
+
         private void ReconcileState(
             Func<InteractionRoutePhaseState, bool> retainPhase,
             Func<InteractionToggleState, bool> retainToggle)

@@ -3,10 +3,16 @@
   "rootNamespace": "XRFoundry.ReferenceSystem",
   "references": [
     "Lingkyn.Interaction.Core",
+    "Lingkyn.Interaction.Unity",
     "Lingkyn.Inventory.Core",
     "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UGUI",
+    "Lingkyn.Inventory.XR.UGUI",
     "Lingkyn.Persistence.Core",
-    "Lingkyn.Settings.Core"
+    "Lingkyn.Persistence.Unity",
+    "Lingkyn.Settings.Core",
+    "Lingkyn.Settings.Unity",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
@@ -16,5 +22,5 @@
   "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
-  "noEngineReferences": true
+  "noEngineReferences": false
 }

@@ -106,6 +106,95 @@ namespace Lingkyn.Interaction.Core.Editor.Tests
         }
 
         [Test]
+        public void ScopedPendingResetClearsOnlyOwnedRoutesAndPreservesToggleState()
+        {
+            var first = Route("route.first", "context.first", "ui.confirm", "source.shared", 0);
+            var second = Route("route.second", "context.second", "ui.confirm", "source.shared", 0);
+            var other = Route("route.other", "context.other", "ui.confirm", "source.other", 0);
+            var registry = Registry(
+                new[] { first, second, other },
+                Context("context.first", 2, first.Id),
+                Context("context.second", 1, second.Id),
+                Context("context.other", 0, other.Id));
+            var toggle = Policy(new IntentPolicyEntry(
+                Id<IntentId>("ui.confirm"),
+                InteractionActivationMode.Toggle,
+                true));
+            var coordinator = new InteractionCoordinator(
+                registry,
+                new[]
+                {
+                    Id<ContextId>("context.first"),
+                    Id<ContextId>("context.second"),
+                    Id<ContextId>("context.other"),
+                },
+                toggle);
+
+            Complete(coordinator, "route.first", "source.shared", 1);
+            coordinator.RouteFrame(Frame(Signal("route.first", "source.shared", InteractionPhase.Started, 10, 0, 0)));
+            coordinator.RouteFrame(Frame(Signal("route.second", "source.shared", InteractionPhase.Started, 11, 0, 0)));
+            coordinator.RouteFrame(Frame(Signal("route.other", "source.other", InteractionPhase.Started, 12, 0, 0)));
+            Assert.That(coordinator.State.PendingPhases, Has.Count.EqualTo(3));
+            Assert.That(coordinator.State.ToggleStates.Single().Active, Is.True);
+
+            var reset = coordinator.ResetPendingPhases(
+                Id<SourceId>("source.shared"),
+                new[] { first.Id });
+
+            Assert.That(reset.Succeeded, Is.True, reset.Error.ToString());
+            Assert.That(reset.Value, Is.EqualTo(1));
+            Assert.That(coordinator.State.PendingPhases.Select(phase => phase.RouteId),
+                Is.EquivalentTo(new[] { second.Id, other.Id }));
+            Assert.That(coordinator.State.ToggleStates.Single().Active, Is.True);
+
+            var stateBeforeRepeat = coordinator.State;
+            var repeated = coordinator.ResetPendingPhases(
+                Id<SourceId>("source.shared"),
+                new[] { first.Id });
+            Assert.That(repeated.Succeeded, Is.True, repeated.Error.ToString());
+            Assert.That(repeated.Value, Is.Zero);
+            Assert.That(coordinator.State, Is.SameAs(stateBeforeRepeat));
+        }
+
+        [Test]
+        public void ScopedPendingResetValidatesTheEntireScopeBeforeChangingState()
+        {
+            var owned = Route("route.owned", "context.owned", "ui.confirm", "source.owner", 0);
+            var foreign = Route("route.foreign", "context.foreign", "ui.confirm", "source.foreign", 0);
+            var registry = Registry(
+                new[] { owned, foreign },
+                Context("context.owned", 1, owned.Id),
+                Context("context.foreign", 0, foreign.Id));
+            var coordinator = new InteractionCoordinator(
+                registry,
+                new[] { Id<ContextId>("context.owned"), Id<ContextId>("context.foreign") });
+            coordinator.RouteFrame(Frame(Signal("route.owned", "source.owner", InteractionPhase.Started, 10, 0, 0)));
+            coordinator.RouteFrame(Frame(Signal("route.foreign", "source.foreign", InteractionPhase.Started, 11, 0, 0)));
+            var stateBefore = coordinator.State;
+            var missing = Id<RouteId>("route.missing");
+
+            var absent = coordinator.ResetPendingPhases(Id<SourceId>("source.owner"), null);
+            var empty = coordinator.ResetPendingPhases(Id<SourceId>("source.owner"), Array.Empty<RouteId>());
+            var duplicate = coordinator.ResetPendingPhases(
+                Id<SourceId>("source.owner"),
+                new[] { owned.Id, owned.Id });
+            var unknownAfterValid = coordinator.ResetPendingPhases(
+                Id<SourceId>("source.owner"),
+                new[] { owned.Id, missing });
+            var foreignAfterValid = coordinator.ResetPendingPhases(
+                Id<SourceId>("source.owner"),
+                new[] { owned.Id, foreign.Id });
+
+            Assert.That(absent.Error.Code, Is.EqualTo(InteractionValidationCode.InvalidFrame));
+            Assert.That(empty.Error.Code, Is.EqualTo(InteractionValidationCode.InvalidFrame));
+            Assert.That(duplicate.Error.Code, Is.EqualTo(InteractionValidationCode.DuplicateIdentity));
+            Assert.That(unknownAfterValid.Error.Code, Is.EqualTo(InteractionValidationCode.UnknownRoute));
+            Assert.That(foreignAfterValid.Error.Code, Is.EqualTo(InteractionValidationCode.UnknownSource));
+            Assert.That(coordinator.State, Is.SameAs(stateBefore));
+            Assert.That(coordinator.State.PendingPhases, Has.Count.EqualTo(2));
+        }
+
+        [Test]
         public void HoldAndThresholdPoliciesAreAppliedFromExplicitState()
         {
             var registry = BasicRegistry();

@@ -49,6 +49,9 @@ namespace Lingkyn.Interaction.Unity.Editor.Tests
             Assert.That(first.Registry.RouteBindings[0].ActionId, Is.EqualTo(graph.Action.id));
             Assert.That(first.Registry.CoreRegistry.BindingSuggestions.Count, Is.EqualTo(1));
             Assert.That(first.Registry.CoreRegistry.Routes.Count, Is.EqualTo(1));
+            Assert.That(InputSystemSignalAdapter.ValidateRouteBindingDescriptor(
+                first.Registry.CoreRegistry.Routes[0],
+                first.Registry.RouteBindings[0]).Succeeded, Is.True);
             Assert.That(graph.Route.RouteId, Is.EqualTo(routeIdBefore));
             Assert.That(graph.Route.Action, Is.SameAs(actionBefore));
 
@@ -198,6 +201,28 @@ namespace Lingkyn.Interaction.Unity.Editor.Tests
         }
 
         [Test]
+        public void ObservationRejectsIngressSequenceOverflowWithoutThrowing()
+        {
+            var graph = CreateGraph();
+            var first = Binding("route.first", graph.ActionReference, InteractionValueKind.Button);
+            var second = Binding("route.second", graph.ActionReference, InteractionValueKind.Button);
+            InteractionResult<InteractionFrame> result = default;
+
+            Assert.DoesNotThrow(() => result = InputSystemSignalAdapter.CaptureRawObservation(
+                new[] { first, second },
+                "player.primary",
+                InteractionModality.Simulated,
+                InteractionCapability.Digital,
+                InteractionPhase.Performed,
+                true,
+                100,
+                new InputObservationStamp(7, int.MaxValue)));
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Error.Code, Is.EqualTo(InteractionValidationCode.InvalidFrame));
+        }
+
+        [Test]
         public void ObservationRejectsMixedPhysicalFactsAndMismatchedValues()
         {
             var graph = CreateGraph();
@@ -251,6 +276,7 @@ namespace Lingkyn.Interaction.Unity.Editor.Tests
                 return InputSystemSignalAdapter.CaptureCallback(
                     callback,
                     new[] { binding },
+                    _ => true,
                     "player.primary",
                     InteractionModality.KeyboardMouse,
                     InteractionCapability.Digital,
@@ -278,6 +304,30 @@ namespace Lingkyn.Interaction.Unity.Editor.Tests
         }
 
         [Test]
+        public void LiveCallbackValueTypeMismatchReturnsKindMismatchWithoutThrowing()
+        {
+            var graph = CreateGraph(actionType: InputActionType.Value);
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            var binding = Binding("ui.confirm.primary", graph.ActionReference, InteractionValueKind.Vector2);
+            InteractionResult<InteractionFrame> captured = default;
+
+            graph.Action.performed += callback => captured = InputSystemSignalAdapter.CaptureCallback(
+                callback,
+                new[] { binding },
+                _ => true,
+                "player.primary",
+                InteractionModality.Simulated,
+                InteractionCapability.Digital,
+                1,
+                new InputObservationStamp(0, 0));
+            graph.Action.Enable();
+
+            Assert.DoesNotThrow(() => Press(keyboard.spaceKey));
+            Assert.That(captured.Succeeded, Is.False);
+            Assert.That(captured.Error.Code, Is.EqualTo(InteractionValidationCode.KindMismatch));
+        }
+
+        [Test]
         public void LiveCallbackRejectsMismatchedActionGuid()
         {
             var observed = CreateGraph(actionType: InputActionType.Value);
@@ -289,6 +339,7 @@ namespace Lingkyn.Interaction.Unity.Editor.Tests
             observed.Action.performed += callback => captured = InputSystemSignalAdapter.CaptureCallback(
                 callback,
                 new[] { binding },
+                _ => true,
                 "player.primary",
                 InteractionModality.KeyboardMouse,
                 InteractionCapability.Digital,

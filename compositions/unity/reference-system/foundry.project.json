@@ -82,6 +82,54 @@
         "source_path": "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/SettingsToInteractionPolicyAdapter.cs",
         "assembly": "XRFoundry.ReferenceSystem"
       }
+    },
+    {
+      "id": "unity-input-to-semantic-interaction",
+      "from_capability": {"id": "xr-foundry.interaction.unity-input", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.interaction.semantic", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": {
+        "kind": "consumer_owned_adapter",
+        "status": "implemented",
+        "source_path": "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/UnityInputSemanticInteractionAdapter.cs",
+        "assembly": "XRFoundry.ReferenceSystem"
+      }
+    },
+    {
+      "id": "inventory-presentation-to-ugui-renderer",
+      "from_capability": {"id": "xr-foundry.inventory.presentation", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.inventory.renderer.ugui", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": {
+        "kind": "consumer_owned_adapter",
+        "status": "implemented",
+        "source_path": "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/InventoryUguiXrSurfaceAdapter.cs",
+        "assembly": "XRFoundry.ReferenceSystem"
+      }
+    },
+    {
+      "id": "inventory-ugui-renderer-to-xr-surface",
+      "from_capability": {"id": "xr-foundry.inventory.renderer.ugui", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.inventory.xr-surface.ugui", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": {
+        "kind": "consumer_owned_adapter",
+        "status": "implemented",
+        "source_path": "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/InventoryUguiXrSurfaceAdapter.cs",
+        "assembly": "XRFoundry.ReferenceSystem"
+      }
+    },
+    {
+      "id": "settings-to-persistence-rehydration",
+      "from_capability": {"id": "xr-foundry.settings.domain", "version": "1.0.0"},
+      "to_capability": {"id": "xr-foundry.persistence.contract", "version": "1.0.0"},
+      "owner": "consumer_composition_root",
+      "implementation": {
+        "kind": "consumer_owned_adapter",
+        "status": "implemented",
+        "source_path": "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/SettingsPersistenceRehydrationAdapter.cs",
+        "assembly": "XRFoundry.ReferenceSystem"
+      }
     }
   ],
   "lock_path": "compositions/unity/reference-system/foundry.lock.json",

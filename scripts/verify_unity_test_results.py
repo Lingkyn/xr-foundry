@@ -174,7 +174,13 @@ def verify_unity_test_result(
 
     errors: list[str] = []
     try:
-        result_path = result.resolve()
+        result_path = result.resolve(strict=True)
+    except FileNotFoundError:
+        try:
+            result_path = result.resolve()
+        except (OSError, RuntimeError, ValueError) as error:
+            result_path = result.absolute()
+            errors.append(f"result path cannot be resolved: {error}")
     except (OSError, RuntimeError, ValueError) as error:
         result_path = result.absolute()
         errors.append(f"result path cannot be resolved: {error}")

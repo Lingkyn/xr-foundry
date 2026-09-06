@@ -1,6 +1,8 @@
 {
   "schema": "xr-foundry.unity_package_catalog.v1",
   "compatibility_profiles": "compatibility-profiles.json",
+  "component_catalog": "component-catalog.json",
+  "capability_registry": "capability-registry.json",
   "maturity_states": ["incubating", "candidate", "stable", "deprecated"],
   "packages": [
     {

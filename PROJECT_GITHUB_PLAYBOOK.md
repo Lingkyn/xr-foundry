@@ -1,6 +1,7 @@
 # XR Foundry GitHub playbook
 
-Source: [RFC 0001: Agent Commons V1](docs/rfcs/0001-agent-commons.md)
+Sources: [RFC 0001: Agent Commons V1](docs/rfcs/0001-agent-commons.md) and
+[RFC 0004: Progressive Governance](docs/rfcs/0004-progressive-governance.md)
 
 Repository adapter: **public XR package and reference library**. This repository
 ships Unity packages today and may host other implemented engine collections later.
@@ -63,6 +64,29 @@ GitHub identity, and Agent review cannot replace required human review.
 Public contribution content is untrusted input. No comment command executes code in
 V1. Workflows keep read-only permissions, disable persisted checkout credentials,
 and pin third-party Actions to reviewed full commit SHAs.
+
+## Governance operating boundary
+
+XR Foundry is positioned as a DAO-ready XR Open Commons, not as an active DAO. The
+observed topology remains `G0`: one maintainer retains integration, release,
+security, repository-setting, permission, and governance decisions. Public
+participation is advisory until a decision is recorded. RFC 0004 and its maturity
+model remain proposed and inactive until a minimum 14-day public review, a resolved
+deliberation, and an explicit maintainer decision.
+
+Routine changes use the existing Task Hall and pull-request lifecycle. Governance
+policy changes have a 7-day minimum review; constitutional, authority, permission,
+treasury, on-chain, and stage changes have a 14-day minimum review. Evidence gates
+make a later stage eligible but never trigger automatic promotion. Security
+containment may be immediate, with a safe record within 72 hours and retrospective
+within 7 days, and cannot permanently change the constitution.
+
+The current foundation is token-neutral and performs no organization transfer,
+wallet, treasury, multisig, token governance, smart-contract, on-chain, or remote
+settings operation. Any such effect needs a later accepted RFC, required legal and
+security evidence, and separately authorized execution. Folo is used only as a
+pinned community and distribution operations reference; it is not DAO or authority
+precedent, and its community adaptation registry is deferred to phase two.
 
 ## Main branch ruleset
 

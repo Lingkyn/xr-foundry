@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/agent-member.schema.json",
+  "title": "XR Foundry AgentMember record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "record_status",
+    "agent_id",
+    "lineage_id",
+    "principal_ref",
+    "action_identities",
+    "status",
+    "autonomy_level",
+    "capability_claims",
+    "mandates"
+  ],
+  "properties": {
+    "$schema": { "const": "agent-member.schema.json" },
+    "schema": { "const": "xr-foundry.agent_member.v1" },
+    "record_status": { "enum": ["example_non_authoritative", "proposed_member"] },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.agent\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "lineage_id": {
+      "type": "string",
+      "pattern": "^lineage\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "principal_ref": {
+      "type": "string",
+      "pattern": "^(github:user|github:org|legal-entity):[A-Za-z0-9][A-Za-z0-9_.-]+$"
+    },
+    "action_identities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/actionIdentity" }
+    },
+    "status": { "enum": ["proposed_inactive", "active", "suspended", "revoked"] },
+    "autonomy_level": { "enum": ["A1", "A2", "A3", "A4"] },
+    "capability_claims": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capabilityClaim" }
+    },
+    "mandates": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/mandate" }
+    }
+  },
+  "$defs": {
+    "nonEmptyStrings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "actionIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "kind", "subject", "status"],
+      "properties": {
+        "system": { "const": "github" },
+        "kind": { "enum": ["user", "github_app", "workflow"] },
+        "subject": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["unverified_example", "verified", "suspended", "revoked"] }
+      }
+    },
+    "capabilityClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "scope", "evidence_refs", "evidence_ancestry_root", "review_status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]+$" },
+        "scope": { "type": "string", "minLength": 1 },
+        "evidence_refs": { "$ref": "#/$defs/nonEmptyStrings" },
+        "evidence_ancestry_root": { "type": "string", "minLength": 1 },
+        "review_status": { "enum": ["unverified_example", "accepted", "expired", "rejected"] }
+      }
+    },
+    "mandate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mandate_id",
+        "agent_id",
+        "principal_ref",
+        "issuer_ref",
+        "checkpoint_ref",
+        "allowed_actions",
+        "resource_scope",
+        "issued_at",
+        "not_before",
+        "expires_at",
+        "revocation"
+      ],
+      "properties": {
+        "mandate_id": { "type": "string", "pattern": "^mandate\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+        "agent_id": { "type": "string", "pattern": "^xr-foundry\\.agent\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+        "principal_ref": { "type": "string", "minLength": 1 },
+        "issuer_ref": { "type": "string", "minLength": 1 },
+        "checkpoint_ref": { "type": "string", "minLength": 1 },
+        "allowed_actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["draft", "comment", "propose", "submit_evidence"] }
+        },
+        "resource_scope": { "$ref": "#/$defs/nonEmptyStrings" },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "not_before": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "revocation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["revocable", "status", "revoked_at", "revoked_by"],
+          "properties": {
+            "revocable": { "const": true },
+            "status": { "enum": ["not_revoked", "revoked"] },
+            "revoked_at": { "type": ["string", "null"], "format": "date-time" },
+            "revoked_by": { "type": ["string", "null"] }
+          }
+        }
+      }
+    }
+  }
+}

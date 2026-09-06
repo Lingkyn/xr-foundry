@@ -269,6 +269,52 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
         }
 
         [Test]
+        public void EmptySaveReadCandidateReachesEnvelopeValidation()
+        {
+            var candidate = new SaveReadCandidate(
+                SaveCandidateKind.Primary,
+                MustCandidateId("primary"),
+                Array.Empty<byte>());
+            var selected = SaveRecoveryCandidateSelector.Select(
+                new SaveReadCandidateSet(new[] { candidate }),
+                SaveRecoveryPolicy.PrimaryOnly,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(candidate.Bytes.Length, Is.EqualTo(0));
+            Assert.That(selected.Succeeded, Is.False);
+            Assert.That(selected.Error.Stage, Is.EqualTo(SaveStage.Envelope));
+            Assert.That(selected.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
+        public void EmptyPrimaryRecoversFromValidBackupWithCorruptionDiagnostic()
+        {
+            var primary = new SaveReadCandidate(
+                SaveCandidateKind.Primary,
+                MustCandidateId("primary"),
+                Array.Empty<byte>());
+            var backupBytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("backup-state", 0)).Value;
+            var backup = new SaveReadCandidate(
+                SaveCandidateKind.Backup,
+                MustCandidateId("backup"),
+                backupBytes);
+
+            var selected = SaveRecoveryCandidateSelector.Select(
+                new SaveReadCandidateSet(new[] { primary, backup }),
+                SaveRecoveryPolicy.PrimaryThenBackup,
+                "lingkyn.state",
+                new Sha256IntegrityProvider());
+
+            Assert.That(selected.Succeeded, Is.True, selected.Error.Message);
+            Assert.That(selected.Value.SelectedCandidate.Kind, Is.EqualTo(SaveCandidateKind.Backup));
+            Assert.That(selected.Value.RecoveryOccurred, Is.True);
+            Assert.That(selected.Value.PrimaryFailureDiagnostic, Is.Not.Null);
+            Assert.That(selected.Value.PrimaryFailureDiagnostic.Value.Stage, Is.EqualTo(SaveStage.Envelope));
+            Assert.That(selected.Value.PrimaryFailureDiagnostic.Value.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
         public void BackupOnlyRecoveryReportsPrimaryMissingDiagnostic()
         {
             var store = new MultiCandidateStore();

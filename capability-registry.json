@@ -1,0 +1,190 @@
+{
+  "schema": "xr-foundry.capability_registry.v1",
+  "model_version": "0.1.0",
+  "policies": {
+    "runtime_data_plane": "typed_in_process",
+    "control_plane": "manifest_capability_composition_lock",
+    "discovery": "explicit_static",
+    "lifecycle": "consumer_owned_configure_start_stop_v1",
+    "breaking_change": "new_capability_major_version",
+    "mcp_role": "optional_external_control_plane_adapter_only"
+  },
+  "capabilities": [
+    {
+      "id": "xr-foundry.project.initialization",
+      "version": "1.0.0",
+      "plane": "composition",
+      "scope": "foundation",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.project-initializer"],
+      "contract_refs": ["packages/unity/foundations/com.lingkyn.project-initializer/Documentation~/index.md"],
+      "description": "Creates and validates a consumer-owned Unity project baseline."
+    },
+    {
+      "id": "xr-foundry.xr.baseline",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "foundation",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.xr-baseline"],
+      "contract_refs": ["packages/unity/foundations/com.lingkyn.xr-baseline/Documentation~/index.md"],
+      "description": "Provides the vendor-neutral Unity XR baseline and validation surface."
+    },
+    {
+      "id": "xr-foundry.interaction.semantic",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "domain",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.interaction.core"],
+      "contract_refs": ["packages/unity/systems/interaction/com.lingkyn.interaction.core/Documentation~/index.md"],
+      "description": "Defines renderer-neutral interaction actions, phases, and semantic state."
+    },
+    {
+      "id": "xr-foundry.interaction.unity-input",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "engine_adapter",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.interaction.unity"],
+      "contract_refs": ["packages/unity/systems/interaction/com.lingkyn.interaction.unity/Documentation~/index.md"],
+      "description": "Adapts Unity input routes into the semantic interaction contract."
+    },
+    {
+      "id": "xr-foundry.inventory.domain",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "domain",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.core"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.core/Documentation~/index.md"],
+      "description": "Owns deterministic inventory state, policies, transactions, events, and snapshots."
+    },
+    {
+      "id": "xr-foundry.inventory.unity-authoring",
+      "version": "1.0.0",
+      "plane": "composition",
+      "scope": "engine_adapter",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.unity"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.unity/Documentation~/index.md"],
+      "description": "Converts Unity authoring assets into deterministic inventory domain definitions."
+    },
+    {
+      "id": "xr-foundry.inventory.presentation",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "presentation",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.presentation"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.presentation/Documentation~/index.md"],
+      "description": "Projects inventory state into renderer-neutral view state and semantic intents."
+    },
+    {
+      "id": "xr-foundry.inventory.renderer",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "renderer",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.ugui", "com.lingkyn.inventory.uitoolkit"],
+      "contract_refs": [
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Documentation~/index.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Documentation~/index.md"
+      ],
+      "description": "Marks the mutually exclusive renderer slot for an inventory composition."
+    },
+    {
+      "id": "xr-foundry.inventory.renderer.ugui",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "renderer",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.ugui"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Documentation~/index.md"],
+      "description": "Renders the neutral inventory presentation contract through Unity UGUI."
+    },
+    {
+      "id": "xr-foundry.inventory.renderer.uitoolkit",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "renderer",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.uitoolkit"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Documentation~/index.md"],
+      "description": "Renders the neutral inventory presentation contract through Unity UI Toolkit."
+    },
+    {
+      "id": "xr-foundry.inventory.xr-surface",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "xr_composition",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.xr.ugui", "com.lingkyn.inventory.xr.uitoolkit"],
+      "contract_refs": [
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/Documentation~/index.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/Documentation~/index.md"
+      ],
+      "description": "Marks the mutually exclusive world-space inventory surface slot."
+    },
+    {
+      "id": "xr-foundry.inventory.xr-surface.ugui",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "xr_composition",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.xr.ugui"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/Documentation~/index.md"],
+      "description": "Composes the UGUI inventory renderer as a validated world-space XR surface."
+    },
+    {
+      "id": "xr-foundry.inventory.xr-surface.uitoolkit",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "xr_composition",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.xr.uitoolkit"],
+      "contract_refs": ["packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/Documentation~/index.md"],
+      "description": "Composes the UI Toolkit inventory renderer as a validated world-space XR surface."
+    },
+    {
+      "id": "xr-foundry.persistence.contract",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "domain",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.persistence.core"],
+      "contract_refs": ["packages/unity/systems/persistence/com.lingkyn.persistence.core/Documentation~/index.md"],
+      "description": "Defines persistence operations and results without selecting a storage provider."
+    },
+    {
+      "id": "xr-foundry.persistence.unity-storage",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "engine_adapter",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.persistence.unity"],
+      "contract_refs": ["packages/unity/systems/persistence/com.lingkyn.persistence.unity/Documentation~/index.md"],
+      "description": "Provides a Unity-local storage implementation for the persistence contract."
+    },
+    {
+      "id": "xr-foundry.settings.domain",
+      "version": "1.0.0",
+      "plane": "runtime",
+      "scope": "domain",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.settings.core"],
+      "contract_refs": ["packages/unity/systems/settings/com.lingkyn.settings.core/Documentation~/index.md"],
+      "description": "Owns typed settings, profiles, validation, transactions, and rollback semantics."
+    },
+    {
+      "id": "xr-foundry.settings.unity-authoring",
+      "version": "1.0.0",
+      "plane": "composition",
+      "scope": "engine_adapter",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.settings.unity"],
+      "contract_refs": ["packages/unity/systems/settings/com.lingkyn.settings.unity/Documentation~/index.md"],
+      "description": "Converts Unity authoring assets into deterministic settings definitions and profiles."
+    }
+  ]
+}

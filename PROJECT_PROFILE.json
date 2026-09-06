@@ -1,0 +1,227 @@
+{
+  "schema": "aios.project_profile.v0",
+  "project_id": "xr-foundry",
+  "project_name": "XR Foundry",
+  "project_type": "game",
+  "project_root": ".",
+  "write_boundary": {
+    "project_root": ".",
+    "allowed_roots": [
+      "."
+    ],
+    "forbidden_without_approval": [
+      "moving, renaming, deleting, or archiving original project materials",
+      "global Codex, Cursor, MCP, hook, plugin-trust, or Python environment mutation",
+      "account, credential, wallet, token, or on-chain operations",
+      "remote Git settings, force push, history rewrite, push, or pull-request operations",
+      "device-runtime, comfort, performance, or DAO activation claims without direct evidence"
+    ]
+  },
+  "backup_policy": {
+    "tier": "mixed",
+    "github_remote": "origin",
+    "durable_branches": [
+      "main"
+    ],
+    "local_only_roots": [
+      ".aios",
+      "Library",
+      "Temp",
+      "Logs"
+    ],
+    "excluded_roots": [
+      ".git",
+      "Library",
+      "Temp",
+      "Logs",
+      "obj",
+      "Build",
+      "Builds"
+    ],
+    "rpo_target_hours": 24,
+    "rto_target_hours": 8,
+    "recovery_commands": [
+      "git clone https://github.com/Lingkyn/xr-foundry.git",
+      "python scripts/validate_repository.py --json --run-contract-tests"
+    ],
+    "lfs_enabled": false,
+    "lfs_push_required": false,
+    "tier_a_mode": "text"
+  },
+  "github_repository_lifecycle": {
+    "status": "active",
+    "policy_surface": "skill-system/github_repository_lifecycle.aios.json",
+    "policy_id": "aios-default-github-repository-lifecycle",
+    "disposition_registry": ".aios/github-branch-dispositions.v1.json",
+    "project_role": "consumer_adapter",
+    "overrides": {}
+  },
+  "game_studio_execution_gates": {
+    "status": "active",
+    "require_construction_layer_at_planning_source": true
+  },
+  "require_construction_layer_at_planning_source": true,
+  "status": "implementing",
+  "current_stage": "AIOS-managed reference-system integration",
+  "current_milestone": "Prove a three-Agent input, presentation, and persistence construction loop",
+  "primary_human_surface": {
+    "surface_type": "project_agent_entry",
+    "path_or_url": "AGENTS.md",
+    "status": "active",
+    "note": "Provider-neutral contribution and validation entry for humans and Agents."
+  },
+  "primary_code_surface": {
+    "surface_type": "unity_package_repository",
+    "path_or_url": "packages/unity",
+    "status": "active",
+    "note": "Installable Unity packages and their tests own runtime implementation behavior."
+  },
+  "primary_design_truth": {
+    "surface_type": "system_composition_architecture",
+    "path_or_url": "docs/architecture/component-composition-model.md",
+    "status": "active"
+  },
+  "primary_research_surface": {
+    "surface_type": "experiment_evidence",
+    "path_or_url": "docs/validation/experiments",
+    "status": "active"
+  },
+  "asset_surface": {
+    "surface_type": "reference_catalog",
+    "path_or_url": "reference-catalog.json",
+    "status": "active",
+    "note": "Public source and artifact admission remains owned by the repository catalog."
+  },
+  "aios_entry": {
+    "surface_type": "project_local_aios_link",
+    "path_or_url": ".aios/project-link.json",
+    "status": "active",
+    "note": "Local generated link points to the AIOS Capsule; projections are not product source truth."
+  },
+  "default_domain_route": "game-dev",
+  "allowed_routes": [
+    "game-dev"
+  ],
+  "authority_map": {
+    "project_identity": {
+      "authority_surface": {
+        "surface_type": "project_profile",
+        "path_or_url": "PROJECT_PROFILE.json",
+        "status": "active"
+      },
+      "fact_class": "project identity, entry, route, and write boundary",
+      "profile_role": "owns_entry_fact",
+      "last_checked": "2026-09-05"
+    },
+    "project_design_truth": {
+      "authority_surface": {
+        "surface_type": "system_composition_architecture",
+        "path_or_url": "docs/architecture/component-composition-model.md",
+        "status": "active"
+      },
+      "fact_class": "component composition architecture and typed-boundary rules",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    },
+    "runtime_state": {
+      "authority_surface": {
+        "surface_type": "aios_capsule_link",
+        "path_or_url": ".aios/project-link.json",
+        "status": "active"
+      },
+      "fact_class": "AIOS cycle state pointer; Capsule owns runtime facts",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    },
+    "research_evidence": {
+      "authority_surface": {
+        "surface_type": "experiment_evidence",
+        "path_or_url": "docs/validation/experiments",
+        "status": "active"
+      },
+      "fact_class": "bounded integration experiments and claim limits",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    },
+    "process_reflection": {
+      "authority_surface": {
+        "surface_type": "experiment_retrospective",
+        "path_or_url": "docs/validation/experiments",
+        "status": "active"
+      },
+      "fact_class": "double-loop observations and follow-up debt",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    },
+    "thesis_writing": {
+      "authority_surface": {
+        "surface_type": "not_applicable",
+        "path_or_url": "not-applicable",
+        "status": "not_applicable"
+      },
+      "fact_class": "thesis writing",
+      "profile_role": "not_applicable",
+      "last_checked": "2026-09-05"
+    },
+    "implementation_behavior": {
+      "authority_surface": {
+        "surface_type": "unity_packages_and_reference_compositions",
+        "path_or_url": "packages/unity",
+        "status": "active"
+      },
+      "fact_class": "package runtime behavior and composition adapters",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    },
+    "validation_result": {
+      "authority_surface": {
+        "surface_type": "repository_and_unity_evidence",
+        "path_or_url": "docs/validation",
+        "status": "active"
+      },
+      "fact_class": "repository, Unity Editor, and bounded experiment validation",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    },
+    "asset_resource_adoption": {
+      "authority_surface": {
+        "surface_type": "reference_catalog",
+        "path_or_url": "reference-catalog.json",
+        "status": "active"
+      },
+      "fact_class": "public source and reusable artifact admission",
+      "profile_role": "points_to_authority",
+      "last_checked": "2026-09-05"
+    }
+  },
+  "current_open_questions": [
+    "Which exact real-device tuple should provide the first headset evidence after Editor-only integration is stable?",
+    "When should Agent-native governance move from inactive contracts to a separately authorized operational pilot?"
+  ],
+  "last_update": {
+    "date": "2026-09-05",
+    "route": "aios-first-three-agent-xr-loop",
+    "summary": "Added a minimal project entry so a real XR construction cycle can be admitted and closed through the AIOS Capsule."
+  },
+  "next_entry_check": "Run project_profile_entry.py, then require a session-local AIOS Work Packet before durable work.",
+  "deferred_or_gated": [
+    {
+      "item": "Global host installation, MCP, hooks, plugin trust, or background automation",
+      "status": "gated",
+      "owner": "project owner",
+      "trigger": "Separate activation decision with rollback and host proof"
+    },
+    {
+      "item": "Remote publication, pull request, account, wallet, token, or on-chain operation",
+      "status": "gated",
+      "owner": "project owner",
+      "trigger": "A later explicitly authorized external-operation goal"
+    },
+    {
+      "item": "Headset, controller, OpenXR, comfort, and performance acceptance",
+      "status": "deferred",
+      "owner": "Device Lab",
+      "trigger": "Named hardware and tester become available"
+    }
+  ]
+}

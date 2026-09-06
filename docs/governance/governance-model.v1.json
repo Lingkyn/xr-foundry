@@ -1,0 +1,290 @@
+{
+  "$schema": "governance-model.schema.json",
+  "schema": "xr-foundry.governance_model.v1",
+  "version": "0.1.0",
+  "status": "proposed",
+  "positioning": {
+    "id": "dao_ready_open_commons",
+    "label": "DAO-ready XR Open Commons",
+    "full_dao": false
+  },
+  "current_stage": "G0",
+  "identity_authority": {
+    "system": "github",
+    "accountable_actor": "human_github_identity",
+    "permission_ledger": "github_repository_and_organization_roles",
+    "agent_identity_is_authority": false
+  },
+  "principles": [
+    "public_deliberation_is_advisory_until_decided",
+    "contribution_recognition_participation_and_permission_are_separate",
+    "evidence_scope_cannot_expand_silently",
+    "promotion_is_explicit_and_reversible",
+    "least_privilege_and_public_recovery",
+    "token_and_payment_do_not_grant_authority"
+  ],
+  "roles": [
+    {
+      "id": "public_contributor",
+      "stage_introduced": "G0",
+      "authority": [
+        "propose_and_discuss",
+        "contribute_through_public_evidence_bound_routes"
+      ],
+      "assignment": "open_participation"
+    },
+    {
+      "id": "maintainer",
+      "stage_introduced": "G0",
+      "authority": [
+        "readiness_and_integration",
+        "merge_release_and_package_promotion",
+        "repository_settings_and_permissions",
+        "governance_decisions"
+      ],
+      "assignment": "explicit_github_role"
+    },
+    {
+      "id": "security_responder",
+      "stage_introduced": "G0",
+      "authority": [
+        "private_report_coordination",
+        "narrow_immediate_containment",
+        "safe_disclosure_and_retrospective"
+      ],
+      "assignment": "maintainer_incident_duty"
+    }
+  ],
+  "decision_classes": [
+    {
+      "id": "routine_change",
+      "minimum_review_days": 0,
+      "route": "existing_task_hall_and_pull_request_lifecycle",
+      "decision_authority": "maintainer",
+      "emergency": false
+    },
+    {
+      "id": "governance_policy",
+      "minimum_review_days": 7,
+      "route": "public_proposal_or_rfc_then_deliberation",
+      "decision_authority": "maintainer",
+      "emergency": false
+    },
+    {
+      "id": "constitutional_change",
+      "minimum_review_days": 14,
+      "route": "rfc_public_deliberation_machine_contract_and_explicit_decision",
+      "decision_authority": "maintainer",
+      "emergency": false
+    },
+    {
+      "id": "security_emergency",
+      "minimum_review_days": 0,
+      "route": "immediate_containment_then_safe_record_and_retrospective",
+      "decision_authority": "maintainer",
+      "emergency": true,
+      "record_within_hours": 72,
+      "retrospective_within_days": 7
+    }
+  ],
+  "stages": [
+    {
+      "id": "G0",
+      "order": 0,
+      "name": "maintainer_led_open_commons",
+      "status": "observed_current",
+      "entry_criteria": {
+        "minimum_observation_days": 0,
+        "minimum_distinct_human_contributors": 1,
+        "minimum_non_maintainer_contributors": 0,
+        "minimum_contribution_types": 0,
+        "minimum_resolved_public_deliberations": 0,
+        "required_roles": ["maintainer:1"],
+        "additional_evidence": ["A public repository with explicit authority and contribution boundaries"]
+      },
+      "capabilities": [
+        "public_proposals_and_evidence_bound_contributions",
+        "maintainer_decided_integration_release_security_and_permissions"
+      ],
+      "prohibited_effects": [
+        "automatic_public_vote",
+        "automatic_role_or_stage_promotion",
+        "wallet_treasury_token_or_onchain_execution"
+      ],
+      "promotion_evidence": ["G1 mixed evidence eligibility and a constitutional decision"]
+    },
+    {
+      "id": "G1",
+      "order": 1,
+      "name": "participatory_commons",
+      "status": "proposed_future",
+      "entry_criteria": {
+        "minimum_observation_days": 90,
+        "minimum_distinct_human_contributors": 3,
+        "minimum_non_maintainer_contributors": 2,
+        "minimum_contribution_types": 2,
+        "minimum_resolved_public_deliberations": 2,
+        "required_roles": ["maintainer:1"],
+        "additional_evidence": ["Sustained useful participation and responsive public deliberation"]
+      },
+      "capabilities": [
+        "advisory_working_groups",
+        "regular_public_governance_review"
+      ],
+      "prohibited_effects": [
+        "binding_public_vote",
+        "automatic_github_permission",
+        "metric_or_token_based_authority"
+      ],
+      "promotion_evidence": ["G2 responsibility redundancy, exercises, and a constitutional decision"]
+    },
+    {
+      "id": "G2",
+      "order": 2,
+      "name": "multi_maintainer_governance",
+      "status": "proposed_future",
+      "entry_criteria": {
+        "minimum_observation_days": 180,
+        "minimum_distinct_human_contributors": 3,
+        "minimum_non_maintainer_contributors": 2,
+        "minimum_contribution_types": 2,
+        "minimum_resolved_public_deliberations": 3,
+        "required_roles": [
+          "independent_active_maintainer:2",
+          "tested_backup_release_or_recovery:1"
+        ],
+        "additional_evidence": [
+          "Successful release, security, or recovery exercise",
+          "Documented responsibility, succession, recusal, revocation, and incident paths"
+        ]
+      },
+      "capabilities": [
+        "scoped_revocable_multi_maintainer_roles",
+        "reconsideration_of_code_owner_and_approval_enforcement",
+        "documented_succession_and_recovery"
+      ],
+      "prohibited_effects": [
+        "automatic_role_grant_from_thresholds",
+        "weakened_status_thread_force_push_or_deletion_protection",
+        "unreviewed_organization_or_permission_change"
+      ],
+      "promotion_evidence": ["G3 financial need, controls, review, and a separate treasury RFC"]
+    },
+    {
+      "id": "G3",
+      "order": 3,
+      "name": "treasury_enabled_commons",
+      "status": "proposed_future",
+      "entry_criteria": {
+        "minimum_observation_days": 0,
+        "minimum_distinct_human_contributors": 3,
+        "minimum_non_maintainer_contributors": 0,
+        "minimum_contribution_types": 0,
+        "minimum_resolved_public_deliberations": 1,
+        "required_roles": ["independent_treasury_steward_or_signer:3"],
+        "additional_evidence": [
+          "Demonstrated recurring shared funding need",
+          "Current legal, tax, accounting, security, privacy, and jurisdiction review",
+          "Public budget, spending, conflict, recusal, reporting, and audit policy",
+          "Signer loss, compromise, emergency stop, and recovery procedures",
+          "Separate accepted treasury RFC"
+        ]
+      },
+      "capabilities": ["Only the financial capabilities separately admitted by the treasury RFC"],
+      "prohibited_effects": [
+        "eligibility_creates_wallet_or_multisig",
+        "financial_contribution_grants_vote_or_repository_authority",
+        "spending_without_external_authorization_and_evidence"
+      ],
+      "promotion_evidence": ["G4 off-chain insufficiency, audit, testnet, recovery, and a separate on-chain RFC"]
+    },
+    {
+      "id": "G4",
+      "order": 4,
+      "name": "bounded_onchain_governance",
+      "status": "proposed_future",
+      "entry_criteria": {
+        "minimum_observation_days": 30,
+        "minimum_distinct_human_contributors": 3,
+        "minimum_non_maintainer_contributors": 0,
+        "minimum_contribution_types": 0,
+        "minimum_resolved_public_deliberations": 1,
+        "required_roles": ["audited_onchain_governance_roles_defined_by_separate_rfc"],
+        "additional_evidence": [
+          "A concrete decision class that off-chain governance cannot safely satisfy",
+          "Separate accepted on-chain RFC",
+          "Threat model and independent audit",
+          "At least 30 days of public testnet failure and recovery exercise",
+          "Quorum, delegation, timelock, upgrade, guardian, emergency, exit, and recovery rules"
+        ]
+      },
+      "capabilities": ["Only the bounded on-chain actions admitted by the separate RFC"],
+      "prohibited_effects": [
+        "automatic_control_of_github_merge_release_security_or_admin",
+        "unbounded_contract_upgrade_or_execution",
+        "removal_of_safe_offchain_recovery"
+      ],
+      "promotion_evidence": ["No higher stage is defined; any expansion requires a successor constitutional RFC"]
+    }
+  ],
+  "promotion_policy": {
+    "gate_model": "mixed_evidence",
+    "thresholds_are_eligibility_only": true,
+    "automatic_promotion": false,
+    "explicit_maintainer_decision": true,
+    "constitutional_review_days": 14,
+    "requires_resolved_deliberation": true,
+    "permission_changes_are_separate": true,
+    "rollback_supported": true
+  },
+  "emergency_policy": {
+    "immediate_containment": true,
+    "record_within_hours": 72,
+    "retrospective_within_days": 7,
+    "disclosure_may_be_safety_delayed": true,
+    "permanent_constitution_change": false
+  },
+  "token_policy": {
+    "status": "token_neutral",
+    "governance_dependency": false,
+    "token_balance_grants_vote": false,
+    "token_balance_grants_repository_permission": false,
+    "payment_grants_authority": false,
+    "contribution_volume_grants_authority": false,
+    "credit_grants_authority": false
+  },
+  "external_effects": {
+    "organization_transfer": false,
+    "wallet": false,
+    "treasury": false,
+    "multisig": false,
+    "token_governance": false,
+    "smart_contract": false,
+    "onchain_execution": false,
+    "remote_settings_change": false
+  },
+  "authority": {
+    "maintainer_final_authority": true,
+    "public_participation_is_advisory": true,
+    "proposal_grants_repository_permission": false,
+    "deliberation_grants_execution_authority": false,
+    "stage_eligibility_grants_role": false,
+    "onchain_result_controls_github_permission": false
+  },
+  "activation": {
+    "active_policy": false,
+    "observed_topology_only": true,
+    "adoption_requires": "resolved_deliberation_and_explicit_maintainer_decision",
+    "minimum_public_review_days": 14,
+    "implementation_requires_task_hall_checkpoint": true
+  },
+  "source_refs": [
+    "GOVERNANCE.md",
+    "docs/rfcs/0001-agent-commons.md",
+    "docs/rfcs/0002-public-workbench.md",
+    "docs/rfcs/0004-progressive-governance.md",
+    "docs/contributing/deliberation-protocol.md",
+    "docs/contributing/recognition-policy.md",
+    "docs/governance/source-manifest.json"
+  ]
+}

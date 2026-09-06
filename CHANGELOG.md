@@ -5,6 +5,28 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added proposed RFC 0006 and an inactive Agent-native membership foundation:
+  `G0 x A0` current truth, `G0 x A1` phase-one target, AgentMember identity and
+  mandate schemas, principal-and-lineage independence, evidence ancestry controls,
+  a pinned Research-Lite manifest, and fail-closed authority boundaries. No Agent
+  registry, account, GitHub App, wallet, token, chain, MCP service, or remote setting
+  was activated.
+- Added XFCM v0.1: RFC 0005, component/capability/composition schemas, colocated
+  manifests for all 15 Unity packages, explicit renderer/XR variant slots, a
+  deterministic 13-component Unity reference lock, consumer-owned lifecycle rules,
+  visible pending cross-family adapters, and fail-closed composition validation.
+- Kept the runtime data plane strongly typed and in process; MCP is reserved for a
+  future optional external control-plane adapter. No whole-composition Unity,
+  runtime, headset, or named-device evidence is claimed by structural resolution.
+- Added the proposed DAO-ready XR Open Commons foundation: RFC 0004, a G0-G4
+  governance maturity model, 7-day policy and 14-day constitutional review windows,
+  emergency review bounds, a governance proposal form, source manifest, and
+  machine checks that keep activation, automatic promotion, tokens, wallets,
+  treasury, on-chain execution, organization transfer, and remote settings off.
+- Hardened the repository foundation with a manually runnable Python 3.11-3.13
+  validation matrix, dependency-aware pip caching, one canonical full contract
+  command, a stable branch-protection aggregate check, monthly Python dependency
+  updates, and validator tests that reject CI or Dependabot drift.
 - Added the renderer-neutral Settings family: typed definitions and values,
   profiles, scoped transactions, whole-snapshot constraints, deterministic
   apply/reverse rollback, persistence seams, accessibility discoverability

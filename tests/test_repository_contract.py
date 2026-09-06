@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import importlib.util
 import copy
+import contextlib
 import hashlib
+import io
+import importlib.util
 import json
 import os
 import struct
@@ -30,6 +32,18 @@ SCAFFOLD_SPEC = importlib.util.spec_from_file_location(
 assert SCAFFOLD_SPEC and SCAFFOLD_SPEC.loader
 SCAFFOLD_MODULE = importlib.util.module_from_spec(SCAFFOLD_SPEC)
 SCAFFOLD_SPEC.loader.exec_module(SCAFFOLD_MODULE)
+COMPOSE_SCRIPT = ROOT / "scripts" / "compose_system.py"
+COMPOSE_SPEC = importlib.util.spec_from_file_location("compose_system", COMPOSE_SCRIPT)
+assert COMPOSE_SPEC and COMPOSE_SPEC.loader
+COMPOSE_MODULE = importlib.util.module_from_spec(COMPOSE_SPEC)
+COMPOSE_SPEC.loader.exec_module(COMPOSE_MODULE)
+MATERIALIZER_SCRIPT = ROOT / "scripts" / "materialize_reference_consumer.py"
+MATERIALIZER_SPEC = importlib.util.spec_from_file_location(
+    "materialize_reference_consumer", MATERIALIZER_SCRIPT
+)
+assert MATERIALIZER_SPEC and MATERIALIZER_SPEC.loader
+MATERIALIZER_MODULE = importlib.util.module_from_spec(MATERIALIZER_SPEC)
+MATERIALIZER_SPEC.loader.exec_module(MATERIALIZER_MODULE)
 
 
 def current_device_profiles() -> dict[str, dict]:
@@ -732,6 +746,179 @@ def attach_device_runtime_receipt(
 
 
 class RepositoryContractTests(unittest.TestCase):
+    def test_authoritative_json_loader_rejects_nested_duplicate_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            document_path = Path(directory) / "nested-duplicate.json"
+            document_path.write_text(
+                '{"outer":{"safe":1,"deeper":{"duplicate":2,"duplicate":3}}}',
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(json.JSONDecodeError) as raised:
+                MODULE.load_json(document_path)
+
+            message = str(raised.exception)
+            self.assertIn(str(document_path), message)
+            self.assertIn("duplicate key 'duplicate'", message)
+
+    def test_compose_cli_reports_duplicate_json_key_without_last_wins(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        failure = json.JSONDecodeError(
+            f"{composition_path}: duplicate key 'key'", "{}", 0
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(COMPOSE_MODULE.VALIDATOR, "load_json", side_effect=failure),
+            mock.patch.object(
+                sys,
+                "argv",
+                [str(COMPOSE_SCRIPT), str(composition_path), "--json"],
+            ),
+            contextlib.redirect_stdout(output),
+        ):
+            status = COMPOSE_MODULE.main()
+
+        self.assertEqual(1, status)
+        report = json.loads(output.getvalue())
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(
+            any(
+                str(composition_path) in error and "duplicate key 'key'" in error
+                for error in report["errors"]
+            )
+        )
+
+    def test_compose_check_reports_invalid_existing_lock_without_traceback(self) -> None:
+        lock_path = ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        failure = json.JSONDecodeError(
+            f"{lock_path}: duplicate key 'claims'", "{}", 0
+        )
+        original_load_json = COMPOSE_MODULE.VALIDATOR.load_json
+
+        def fail_only_existing_lock(path: Path) -> object:
+            if Path(path) == lock_path:
+                raise failure
+            return original_load_json(Path(path))
+
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                COMPOSE_MODULE.VALIDATOR,
+                "load_json",
+                side_effect=fail_only_existing_lock,
+            ),
+            mock.patch.object(
+                sys,
+                "argv",
+                [str(COMPOSE_SCRIPT), "--check", "--json"],
+            ),
+            contextlib.redirect_stdout(output),
+        ):
+            status = COMPOSE_MODULE.main()
+
+        self.assertEqual(1, status)
+        report = json.loads(output.getvalue())
+        self.assertEqual("fail", report["status"])
+        self.assertEqual(
+            "compositions/unity/reference-system/foundry.lock.json",
+            report["lock_path"],
+        )
+        self.assertTrue(
+            any(
+                str(lock_path) in error and "duplicate key 'claims'" in error
+                for error in report["errors"]
+            )
+        )
+
+    def test_repository_cli_reports_json_decode_failure_without_traceback(self) -> None:
+        failure = json.JSONDecodeError(
+            "/tmp/authority.json: duplicate key 'authority'", "{}", 0
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(MODULE, "validate_repository", side_effect=failure),
+            mock.patch.object(sys, "argv", [str(SCRIPT)]),
+            contextlib.redirect_stdout(output),
+        ):
+            status = MODULE.main()
+
+        self.assertEqual(1, status)
+        report = json.loads(output.getvalue())
+        self.assertEqual("fail", report["status"])
+        self.assertEqual(
+            ["repository JSON is invalid: " + str(failure)], report["errors"]
+        )
+
+    def test_device_lab_cli_reports_invalid_profile_or_plan_without_traceback(
+        self,
+    ) -> None:
+        receipt_path = ROOT / "docs/device-lab/device-receipt.template.json"
+        original_load_json = MODULE.load_json
+        cases = (
+            (
+                "profiles",
+                "profile_id",
+                "Device Lab profile is invalid JSON",
+            ),
+            (
+                "test-plans",
+                "test_plan_id",
+                "Device Lab test plan is invalid JSON",
+            ),
+        )
+        for directory_name, duplicate_key, expected_prefix in cases:
+            with self.subTest(directory=directory_name):
+                failed_path: Path | None = None
+
+                def fail_selected_authority(path: Path) -> object:
+                    nonlocal failed_path
+                    candidate = Path(path)
+                    if candidate == receipt_path:
+                        return {}
+                    if candidate.parent.name == directory_name:
+                        failed_path = candidate
+                        raise json.JSONDecodeError(
+                            f"{candidate}: duplicate key {duplicate_key!r}", "{}", 0
+                        )
+                    return original_load_json(candidate)
+
+                output = io.StringIO()
+                with (
+                    mock.patch.object(MODULE, "validate_repository", return_value=[]),
+                    mock.patch.object(
+                        MODULE, "load_json", side_effect=fail_selected_authority
+                    ),
+                    mock.patch.object(
+                        MODULE, "validate_device_lab_execution_receipt"
+                    ) as receipt_validator,
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            str(SCRIPT),
+                            "--device-lab-receipt",
+                            str(receipt_path),
+                            "--json",
+                        ],
+                    ),
+                    contextlib.redirect_stdout(output),
+                ):
+                    status = MODULE.main()
+
+                self.assertEqual(1, status)
+                self.assertIsNotNone(failed_path)
+                receipt_validator.assert_not_called()
+                report = json.loads(output.getvalue())
+                self.assertEqual("fail", report["status"])
+                self.assertTrue(
+                    any(
+                        error.startswith(expected_prefix)
+                        and str(failed_path) in error
+                        and f"duplicate key '{duplicate_key}'" in error
+                        for error in report["errors"]
+                    )
+                )
+
 
     def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
         self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
@@ -989,6 +1176,920 @@ class RepositoryContractTests(unittest.TestCase):
         )
         errors = SCAFFOLD_MODULE.validate_blueprint(blueprint)
         self.assertTrue(any("target_path leaf must equal package.id" in error for error in errors))
+
+    def test_component_model_resolves_deterministically_and_lock_is_current(self) -> None:
+        self.assertEqual([], MODULE.validate_component_model(ROOT))
+        first_lock, first_errors = MODULE.build_composition_lock(ROOT)
+        second_lock, second_errors = MODULE.build_composition_lock(ROOT)
+
+        self.assertEqual([], first_errors)
+        self.assertEqual([], second_errors)
+        self.assertEqual(first_lock, second_lock)
+        self.assertIsNotNone(first_lock)
+        assert first_lock is not None
+        self.assertEqual("xr-foundry.composition_lock.v2", first_lock["schema"])
+        self.assertEqual("0.2.0", first_lock["model_version"])
+        self.assertEqual(13, len(first_lock["resolution"]["components"]))
+        self.assertTrue(first_lock["claims"]["bindings_implemented"])
+        self.assertFalse(first_lock["claims"]["runtime_ready"])
+        self.assertEqual(
+            "not_claimed_for_this_composition",
+            first_lock["claims"]["unity_compile"],
+        )
+        self.assertEqual("not_claimed", first_lock["claims"]["device_runtime"])
+        self.assertEqual(7, len(first_lock["resolution"]["bindings"]))
+        expected_binding_sources = {
+            "interaction-to-inventory-intent": "InteractionToInventoryIntentAdapter.cs",
+            "inventory-to-persistence": "InventoryToPersistenceAdapter.cs",
+            "settings-to-interaction-policy": "SettingsToInteractionPolicyAdapter.cs",
+            "unity-input-to-semantic-interaction": "UnityInputSemanticInteractionAdapter.cs",
+            "inventory-presentation-to-ugui-renderer": "InventoryUguiXrSurfaceAdapter.cs",
+            "inventory-ugui-renderer-to-xr-surface": "InventoryUguiXrSurfaceAdapter.cs",
+            "settings-to-persistence-rehydration": "SettingsPersistenceRehydrationAdapter.cs",
+        }
+        self.assertEqual(
+            set(expected_binding_sources),
+            {binding["id"] for binding in first_lock["resolution"]["bindings"]},
+        )
+        for binding in first_lock["resolution"]["bindings"]:
+            implementation = binding["implementation"]
+            self.assertEqual("implemented", implementation["status"])
+            source = ROOT / implementation["source_path"]
+            self.assertTrue(source.is_file())
+            self.assertEqual(expected_binding_sources[binding["id"]], source.name)
+            self.assertEqual(
+                hashlib.sha256(source.read_bytes()).hexdigest(),
+                implementation["source_sha256"],
+            )
+        self.assertEqual(
+            15,
+            len(list(ROOT.glob("packages/unity/**/foundry.component.json"))),
+        )
+
+        result = subprocess.run(
+            [sys.executable, str(COMPOSE_SCRIPT), "--check", "--json"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
+        report = json.loads(result.stdout)
+        self.assertEqual("pass", report["status"])
+        self.assertEqual(13, report["component_count"])
+        self.assertTrue(report["bindings_implemented"])
+        self.assertFalse(report["runtime_ready"])
+
+    def test_reference_consumer_materializes_every_typed_endpoint_package(self) -> None:
+        consumer = ROOT / "compositions" / "unity" / "reference-system" / "consumer"
+        manifest = MODULE.load_json(consumer / "Packages" / "manifest.json")
+        runtime_asmdef = MODULE.load_json(
+            consumer
+            / "Assets"
+            / "XRFoundry.ReferenceSystem"
+            / "Runtime"
+            / "XRFoundry.ReferenceSystem.asmdef"
+        )
+        editmode_asmdef = MODULE.load_json(
+            consumer
+            / "Assets"
+            / "XRFoundry.ReferenceSystem"
+            / "Tests"
+            / "EditMode"
+            / "XRFoundry.ReferenceSystem.EditMode.Tests.asmdef"
+        )
+        playmode_asmdef = MODULE.load_json(
+            consumer
+            / "Assets"
+            / "XRFoundry.ReferenceSystem"
+            / "Tests"
+            / "PlayMode"
+            / "XRFoundry.ReferenceSystem.PlayMode.Tests.asmdef"
+        )
+
+        embedded_package_ids = {
+            Path(path).name for path in MATERIALIZER_MODULE.EMBEDDED_PACKAGES
+        }
+        expected_endpoint_packages = {
+            "com.lingkyn.interaction.unity",
+            "com.lingkyn.inventory.ugui",
+            "com.lingkyn.inventory.xr.ugui",
+            "com.lingkyn.persistence.unity",
+            "com.lingkyn.settings.unity",
+        }
+        self.assertEqual(embedded_package_ids, set(manifest["testables"]))
+        self.assertTrue(expected_endpoint_packages.issubset(embedded_package_ids))
+
+        expected_runtime_assemblies = {
+            "Lingkyn.Interaction.Unity",
+            "Lingkyn.Inventory.UGUI",
+            "Lingkyn.Inventory.XR.UGUI",
+            "Lingkyn.Persistence.Unity",
+            "Lingkyn.Settings.Unity",
+            "Unity.InputSystem",
+        }
+        self.assertTrue(
+            expected_runtime_assemblies.issubset(set(runtime_asmdef["references"]))
+        )
+        self.assertFalse(runtime_asmdef["noEngineReferences"])
+        for test_asmdef in (editmode_asmdef, playmode_asmdef):
+            self.assertTrue(
+                expected_runtime_assemblies.issubset(set(test_asmdef["references"]))
+            )
+            self.assertIn("UnityEngine.UI", test_asmdef["references"])
+
+    def test_v2_composition_lock_tracks_adapter_source_bytes(self) -> None:
+        lock_path = ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        current_lock = MODULE.load_json(lock_path)
+        implementation = current_lock["resolution"]["bindings"][0]["implementation"]
+        source_path = ROOT / implementation["source_path"]
+        path_type = type(source_path)
+        original_read_bytes = path_type.read_bytes
+
+        def read_with_adapter_mutation(path: Path) -> bytes:
+            content = original_read_bytes(path)
+            if Path(path) == source_path:
+                return content + b"\n// source-byte mutation\n"
+            return content
+
+        with mock.patch.object(path_type, "read_bytes", new=read_with_adapter_mutation):
+            rebuilt_lock, build_errors = MODULE.build_composition_lock(ROOT)
+            validation_errors = MODULE.validate_component_model(ROOT)
+
+        self.assertEqual([], build_errors)
+        self.assertIsNotNone(rebuilt_lock)
+        assert rebuilt_lock is not None
+        rebuilt_implementation = rebuilt_lock["resolution"]["bindings"][0][
+            "implementation"
+        ]
+        self.assertNotEqual(
+            implementation["source_sha256"],
+            rebuilt_implementation["source_sha256"],
+        )
+        self.assertNotEqual(current_lock, rebuilt_lock)
+        self.assertTrue(
+            any("composition lock is stale" in error for error in validation_errors)
+        )
+
+    def test_v2_composition_rejects_unsafe_adapter_sources(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        original = MODULE.load_json(composition_path)
+
+        missing = copy.deepcopy(original)
+        missing["bindings"][0]["implementation"]["source_path"] = (
+            "consumer/Assets/XRFoundry.ReferenceSystem/Runtime/Bindings/MissingAdapter.cs"
+        )
+        _, missing_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, missing
+        )
+        self.assertTrue(any("source_path is missing" in error for error in missing_errors))
+
+        escaping = copy.deepcopy(original)
+        escaping["bindings"][0]["implementation"]["source_path"] = (
+            "../foundry.project.json"
+        )
+        _, escaping_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, escaping
+        )
+        self.assertTrue(
+            any("canonical and start with consumer/" in error for error in escaping_errors)
+        )
+
+        control_character = copy.deepcopy(original)
+        control_character["bindings"][0]["implementation"]["source_path"] = (
+            "consumer/Adapter\x00.cs"
+        )
+        _, control_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, control_character
+        )
+        self.assertTrue(
+            any("non-empty POSIX path" in error for error in control_errors)
+        )
+
+        invalid_assembly = copy.deepcopy(original)
+        invalid_assembly["bindings"][0]["implementation"]["assembly"] = (
+            "XRFoundry.ReferenceSystem\n"
+        )
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(invalid_assembly)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(
+                invalid_assembly,
+                ROOT / manifest_schema_path,
+                "v2 composition manifest",
+            )
+        )
+        _, assembly_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, invalid_assembly
+        )
+        self.assertTrue(
+            any("exact ASCII assembly name" in error for error in assembly_errors)
+        )
+
+        symlinked = copy.deepcopy(original)
+        source_path = (
+            composition_path.parent
+            / symlinked["bindings"][0]["implementation"]["source_path"]
+        )
+        path_type = type(source_path)
+        original_is_symlink = path_type.is_symlink
+
+        def mark_adapter_as_symlink(path: Path) -> bool:
+            if Path(path) == source_path:
+                return True
+            return original_is_symlink(path)
+
+        with mock.patch.object(path_type, "is_symlink", new=mark_adapter_as_symlink):
+            _, symlink_errors = MODULE.build_composition_lock(
+                ROOT, composition_path, symlinked
+            )
+        self.assertTrue(
+            any("must not be a symbolic link" in error for error in symlink_errors)
+        )
+
+        consumer_path = composition_path.parent / "consumer"
+
+        def mark_consumer_as_symlink(path: Path) -> bool:
+            if Path(path) == consumer_path:
+                return True
+            return original_is_symlink(path)
+
+        with mock.patch.object(
+            path_type, "is_symlink", new=mark_consumer_as_symlink
+        ):
+            _, consumer_symlink_errors = MODULE.build_composition_lock(
+                ROOT, composition_path, original
+            )
+        self.assertTrue(
+            any(
+                "consumer directory must not be a symbolic link" in error
+                for error in consumer_symlink_errors
+            )
+        )
+
+    def test_v2_adapter_source_must_match_nearest_unity_assembly(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        composition = MODULE.load_json(composition_path)
+        implementation = composition["bindings"][0]["implementation"]
+        implementation["source_path"] = (
+            "consumer/Assets/XRFoundry.ReferenceSystem/Tests/PlayMode/"
+            "ReferenceSystemIntegrationPlayModeTests.cs"
+        )
+        implementation["assembly"] = "Made.Up.Assembly"
+
+        lock, errors = MODULE.build_composition_lock(
+            ROOT, composition_path, composition
+        )
+
+        self.assertIsNone(lock)
+        self.assertTrue(
+            any(
+                "XRFoundry.ReferenceSystem.PlayMode.Tests" in error
+                and "Made.Up.Assembly" in error
+                for error in errors
+            )
+        )
+
+        implementation["assembly"] = "XRFoundry.ReferenceSystem.PlayMode.Tests"
+        lock, errors = MODULE.build_composition_lock(
+            ROOT, composition_path, composition
+        )
+        self.assertEqual([], errors)
+        self.assertIsNotNone(lock)
+
+    def test_adapter_assembly_scope_fails_closed_on_ambiguous_or_unsafe_metadata(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            composition_path = (
+                root / "compositions" / "unity" / "sample" / "foundry.project.json"
+            )
+            source_path = (
+                composition_path.parent
+                / "consumer/Assets/Sample/Runtime/Bindings/Adapter.cs"
+            )
+            source_path.parent.mkdir(parents=True)
+            source_path.write_text("internal sealed class Adapter {}\n", encoding="utf-8")
+            source, source_error = MODULE.resolve_composition_adapter_source(
+                root,
+                composition_path,
+                "consumer/Assets/Sample/Runtime/Bindings/Adapter.cs",
+            )
+            self.assertIsNone(source_error)
+            assert source is not None
+
+            missing_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("no Unity assembly definition", missing_error)
+
+            runtime_directory = source_path.parent.parent
+            asmdef_path = runtime_directory / "Sample.Runtime.asmdef"
+            asmdef_path.write_text('{"name":"Wrong.Runtime"}', encoding="utf-8")
+            wrong_name_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("Wrong.Runtime", wrong_name_error)
+            self.assertIn("Sample.Runtime", wrong_name_error)
+
+            asmdef_path.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            shadow_path = source_path.parent / "Shadow.asmdef"
+            shadow_path.write_text('{"name":"Shadow.Runtime"}', encoding="utf-8")
+            shadow_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("Shadow.Runtime", shadow_error)
+            shadow_path.unlink()
+
+            duplicate_asmdef = runtime_directory / "Second.asmdef"
+            duplicate_asmdef.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            duplicate_scope_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("exactly one .asmdef", duplicate_scope_error)
+            duplicate_asmdef.unlink()
+
+            asmdef_path.write_text('{"name":', encoding="utf-8")
+            malformed_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("invalid JSON", malformed_error)
+
+            asmdef_path.write_text(
+                '{"name":"Sample.Runtime","nested":{"key":1,"key":2}}',
+                encoding="utf-8",
+            )
+            duplicate_key_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("duplicate key 'key'", duplicate_key_error)
+
+            asmdef_path.unlink()
+            asmdef_path.mkdir()
+            nonregular_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("regular file", nonregular_error)
+            asmdef_path.rmdir()
+
+            outside_asmdef = root / "outside.asmdef"
+            outside_asmdef.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            asmdef_path.symlink_to(outside_asmdef)
+            symlink_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("symbolic link", symlink_error)
+            asmdef_path.unlink()
+
+            asmdef_path.write_text('{"name":"Sample.Runtime"}', encoding="utf-8")
+            asmref_path = source_path.parent / "Redirect.asmref"
+            asmref_path.write_text('{"reference":"Sample.Runtime"}', encoding="utf-8")
+            asmref_error = MODULE.validate_composition_adapter_assembly(
+                root, composition_path, source, "Sample.Runtime"
+            )
+            self.assertIn("asmref is unsupported", asmref_error)
+
+    def test_v2_composition_rejects_duplicate_binding_and_unsafe_lock_path(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        duplicate = MODULE.load_json(composition_path)
+        duplicate["bindings"].append(copy.deepcopy(duplicate["bindings"][0]))
+        _, duplicate_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, duplicate
+        )
+        self.assertTrue(any("duplicate binding id" in error for error in duplicate_errors))
+
+        unsafe_lock = MODULE.load_json(composition_path)
+        unsafe_lock["lock_path"] = "foundry.lock.json"
+        _, lock_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, unsafe_lock
+        )
+        self.assertTrue(any("sibling foundry.lock.json" in error for error in lock_errors))
+
+        lock_target = composition_path.parent / "foundry.lock.json"
+        path_type = type(lock_target)
+        original_is_symlink = path_type.is_symlink
+
+        def mark_lock_as_symlink(path: Path) -> bool:
+            if Path(path) == lock_target:
+                return True
+            return original_is_symlink(path)
+
+        with mock.patch.object(path_type, "is_symlink", new=mark_lock_as_symlink):
+            _, symlink_lock_errors = MODULE.build_composition_lock(
+                ROOT, composition_path, MODULE.load_json(composition_path)
+            )
+        self.assertTrue(
+            any("lock must not be a symbolic link" in error for error in symlink_lock_errors)
+        )
+
+    def test_v2_lock_schema_rejects_noncanonical_source_path(self) -> None:
+        original_lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock = copy.deepcopy(original_lock)
+        lock["resolution"]["bindings"][0]["implementation"]["source_path"] = (
+            "compositions/example/consumer/../../secret.cs"
+        )
+        lock_schema_path, dispatch_errors = MODULE.composition_lock_schema_path(lock)
+        self.assertEqual([], dispatch_errors)
+        assert lock_schema_path is not None
+        schema_errors = MODULE.validate_json_schema_instance(
+            lock,
+            ROOT / lock_schema_path,
+            "v2 composition lock",
+        )
+        self.assertTrue(schema_errors)
+
+        invalid_assembly_lock = copy.deepcopy(original_lock)
+        invalid_assembly_lock["resolution"]["bindings"][0]["implementation"][
+            "assembly"
+        ] = "XRFoundry.ReferenceSystem\n"
+        assembly_schema_errors = MODULE.validate_json_schema_instance(
+            invalid_assembly_lock,
+            ROOT / lock_schema_path,
+            "v2 composition lock",
+        )
+        self.assertTrue(assembly_schema_errors)
+
+    def test_v2_semver_matches_semver_2_numeric_prerelease_rules(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        original_composition = MODULE.load_json(composition_path)
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(original_composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+
+        original_lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            original_lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        assert lock_schema_path is not None
+
+        valid_versions = (
+            "0.2.0-0",
+            "0.2.0-alpha.1",
+            "0.2.0-0A",
+            "0.2.0+001",
+            "1.2.3-alpha.1+001",
+        )
+        for version in valid_versions:
+            with self.subTest(valid=version):
+                self.assertIsNotNone(MODULE.SEMVER_V2_PATTERN.fullmatch(version))
+                composition = copy.deepcopy(original_composition)
+                composition["version"] = version
+                self.assertEqual(
+                    [],
+                    MODULE.validate_json_schema_instance(
+                        composition,
+                        ROOT / manifest_schema_path,
+                        "v2 composition manifest",
+                    ),
+                )
+                lock, build_errors = MODULE.build_composition_lock(
+                    ROOT, composition_path, composition
+                )
+                self.assertEqual([], build_errors)
+                self.assertIsNotNone(lock)
+                schema_lock = copy.deepcopy(original_lock)
+                schema_lock["composition"]["version"] = version
+                self.assertEqual(
+                    [],
+                    MODULE.validate_json_schema_instance(
+                        schema_lock,
+                        ROOT / lock_schema_path,
+                        "v2 composition lock",
+                    ),
+                )
+
+        invalid_versions = (
+            "0.2.0-01",
+            "0.2.0-alpha.01",
+            "01.2.3",
+        )
+        for version in invalid_versions:
+            with self.subTest(invalid=version):
+                self.assertIsNone(MODULE.SEMVER_V2_PATTERN.fullmatch(version))
+                composition = copy.deepcopy(original_composition)
+                composition["version"] = version
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        composition,
+                        ROOT / manifest_schema_path,
+                        "v2 composition manifest",
+                    )
+                )
+                lock, build_errors = MODULE.build_composition_lock(
+                    ROOT, composition_path, composition
+                )
+                self.assertIsNone(lock)
+                self.assertTrue(
+                    any("version must be exact SemVer" in error for error in build_errors)
+                )
+                schema_lock = copy.deepcopy(original_lock)
+                schema_lock["composition"]["version"] = version
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        schema_lock,
+                        ROOT / lock_schema_path,
+                        "v2 composition lock",
+                    )
+                )
+
+    def test_v1_semver_contract_remains_byte_compatible(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        v1_composition = MODULE.load_json(composition_path)
+        v1_composition["schema"] = "xr-foundry.composition_manifest.v1"
+        v1_composition["model_version"] = "0.1.0"
+        v1_composition["version"] = "0.2.0-01"
+        for binding in v1_composition["bindings"]:
+            binding["implementation"] = "consumer_owned_adapter_pending"
+
+        schema_path, dispatch_errors = MODULE.composition_manifest_schema_path(
+            v1_composition
+        )
+        self.assertEqual([], dispatch_errors)
+        self.assertEqual(MODULE.COMPOSITION_MANIFEST_SCHEMA_PATH, schema_path)
+        assert schema_path is not None
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(
+                v1_composition,
+                ROOT / schema_path,
+                "v1 composition manifest",
+            ),
+        )
+        lock, build_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, v1_composition
+        )
+        self.assertEqual([], build_errors)
+        self.assertIsNotNone(lock)
+        assert lock is not None
+        self.assertEqual("0.2.0-01", lock["composition"]["version"])
+
+    def test_composition_schema_dispatch_fails_closed(self) -> None:
+        composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)
+        mismatched = copy.deepcopy(composition)
+        mismatched["model_version"] = "0.1.0"
+        _, mismatch_errors = MODULE.build_composition_lock(
+            ROOT, MODULE.REFERENCE_COMPOSITION_PATH, mismatched
+        )
+        self.assertTrue(any("schema/model mismatch" in error for error in mismatch_errors))
+
+        unknown = copy.deepcopy(composition)
+        unknown["schema"] = "xr-foundry.composition_manifest.v99"
+        _, unknown_errors = MODULE.build_composition_lock(
+            ROOT, MODULE.REFERENCE_COMPOSITION_PATH, unknown
+        )
+        self.assertTrue(any("unsupported composition manifest schema" in error for error in unknown_errors))
+
+    def test_v2_canonical_metadata_rejects_terminal_control_characters(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        original_composition = MODULE.load_json(composition_path)
+        manifest_paths = {
+            "composition.id": ("id",),
+            "composition.version": ("version",),
+            "binding.id": ("bindings", 0, "id"),
+            "binding.assembly": ("bindings", 0, "implementation", "assembly"),
+        }
+
+        def append_lf(payload: dict, path: tuple[object, ...]) -> None:
+            cursor: object = payload
+            for part in path[:-1]:
+                if isinstance(part, int):
+                    assert isinstance(cursor, list)
+                    cursor = cursor[part]
+                else:
+                    assert isinstance(cursor, dict)
+                    cursor = cursor[part]
+            key = path[-1]
+            assert isinstance(cursor, dict)
+            assert isinstance(key, str)
+            cursor[key] += "\n"
+
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(original_composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+        for label, field_path in manifest_paths.items():
+            with self.subTest(contract="manifest-and-builder", field=label):
+                mutated = copy.deepcopy(original_composition)
+                append_lf(mutated, field_path)
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        mutated,
+                        ROOT / manifest_schema_path,
+                        "v2 composition manifest",
+                    )
+                )
+                lock, build_errors = MODULE.build_composition_lock(
+                    ROOT, composition_path, mutated
+                )
+                self.assertIsNone(lock)
+                self.assertTrue(build_errors)
+
+        non_string_binding_id = copy.deepcopy(original_composition)
+        non_string_binding_id["bindings"][0]["id"] = 123
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(
+                non_string_binding_id,
+                ROOT / manifest_schema_path,
+                "v2 composition manifest",
+            )
+        )
+        lock, build_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, non_string_binding_id
+        )
+        self.assertIsNone(lock)
+        self.assertTrue(
+            any("binding id must be" in error for error in build_errors)
+        )
+
+        original_lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock_paths = {
+            "composition.id": ("composition", "id"),
+            "composition.version": ("composition", "version"),
+            "binding.id": ("resolution", "bindings", 0, "id"),
+            "binding.assembly": (
+                "resolution",
+                "bindings",
+                0,
+                "implementation",
+                "assembly",
+            ),
+        }
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            original_lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        assert lock_schema_path is not None
+        for label, field_path in lock_paths.items():
+            with self.subTest(contract="lock", field=label):
+                mutated = copy.deepcopy(original_lock)
+                append_lf(mutated, field_path)
+                self.assertTrue(
+                    MODULE.validate_json_schema_instance(
+                        mutated,
+                        ROOT / lock_schema_path,
+                        "v2 composition lock",
+                    )
+                )
+
+    def test_v1_pending_composition_remains_supported(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        v1_composition = MODULE.load_json(composition_path)
+        v1_composition["schema"] = "xr-foundry.composition_manifest.v1"
+        v1_composition["model_version"] = "0.1.0"
+        for binding in v1_composition["bindings"]:
+            binding["implementation"] = "consumer_owned_adapter_pending"
+        duplicate_binding_id = v1_composition["bindings"][0]["id"]
+        v1_composition["bindings"].append(
+            copy.deepcopy(v1_composition["bindings"][0])
+        )
+
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(v1_composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        self.assertEqual(MODULE.COMPOSITION_MANIFEST_SCHEMA_PATH, manifest_schema_path)
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(
+                v1_composition,
+                ROOT / manifest_schema_path,
+                "v1 composition manifest",
+            ),
+        )
+
+        v1_lock, build_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, v1_composition
+        )
+        self.assertEqual([], build_errors)
+        self.assertIsNotNone(v1_lock)
+        assert v1_lock is not None
+        self.assertEqual("xr-foundry.composition_lock.v1", v1_lock["schema"])
+        self.assertEqual("0.1.0", v1_lock["model_version"])
+        self.assertEqual(
+            {
+                "structural_resolution": "resolved",
+                "runtime_ready": False,
+                "unity_compile": "not_claimed_for_this_composition",
+                "device_runtime": "not_claimed",
+            },
+            v1_lock["claims"],
+        )
+        self.assertTrue(
+            all(
+                binding["implementation"] == "consumer_owned_adapter_pending"
+                for binding in v1_lock["resolution"]["bindings"]
+            )
+        )
+        self.assertEqual(
+            2,
+            sum(
+                binding["id"] == duplicate_binding_id
+                for binding in v1_lock["resolution"]["bindings"]
+            ),
+        )
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            v1_lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        self.assertEqual(MODULE.COMPOSITION_LOCK_SCHEMA_PATH, lock_schema_path)
+        self.assertEqual(
+            [],
+            MODULE.validate_json_schema_instance(
+                v1_lock,
+                ROOT / lock_schema_path,
+                "v1 composition lock",
+            ),
+        )
+
+    def test_composition_rejects_missing_and_incompatible_capability(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        composition = MODULE.load_json(composition_path)
+        composition["required_capabilities"].append(
+            {
+                "id": "xr-foundry.inventory.renderer.uitoolkit",
+                "version": "1.0.0",
+            }
+        )
+
+        _, missing_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, composition
+        )
+
+        self.assertTrue(
+            any(
+                "missing capability provider for "
+                "xr-foundry.inventory.renderer.uitoolkit@1.0.0" in error
+                for error in missing_errors
+            )
+        )
+
+        incompatible = MODULE.load_json(composition_path)
+        domain_requirement = next(
+            item
+            for item in incompatible["required_capabilities"]
+            if item["id"] == "xr-foundry.inventory.domain"
+        )
+        domain_requirement["version"] = "2.0.0"
+
+        _, incompatible_errors = MODULE.build_composition_lock(
+            ROOT, composition_path, incompatible
+        )
+
+        self.assertTrue(
+            any(
+                "missing capability provider for xr-foundry.inventory.domain@2.0.0"
+                in error
+                for error in incompatible_errors
+            )
+        )
+
+    def test_composition_rejects_ambiguous_variant_provider(self) -> None:
+        composition_path = ROOT / MODULE.REFERENCE_COMPOSITION_PATH
+        composition = MODULE.load_json(composition_path)
+        composition["components"].append(
+            {"id": "com.lingkyn.inventory.uitoolkit", "version": "0.1.0"}
+        )
+
+        _, errors = MODULE.build_composition_lock(ROOT, composition_path, composition)
+
+        self.assertTrue(
+            any(
+                "xr-foundry.inventory.renderer@1.0.0 requires exactly one provider"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_composition_rejects_dependency_cycle(self) -> None:
+        manifest_path = (
+            ROOT
+            / "packages/unity/systems/interaction/com.lingkyn.interaction.core"
+            / "foundry.component.json"
+        )
+        original_loader = MODULE.load_json
+        cyclic_manifest = original_loader(manifest_path)
+        cyclic_manifest["requires"].append(
+            {"id": "xr-foundry.interaction.unity-input", "version": "1.0.0"}
+        )
+
+        def load_with_cycle(path: Path) -> dict:
+            return (
+                copy.deepcopy(cyclic_manifest)
+                if Path(path) == manifest_path
+                else original_loader(Path(path))
+            )
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_cycle):
+            _, errors = MODULE.build_composition_lock(ROOT)
+
+        self.assertTrue(any("dependency cycle detected" in error for error in errors))
+
+    def test_component_model_rejects_package_dependency_and_lock_drift(self) -> None:
+        manifest_path = (
+            ROOT
+            / "packages/unity/systems/interaction/com.lingkyn.interaction.unity"
+            / "foundry.component.json"
+        )
+        lock_path = (
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        original_loader = MODULE.load_json
+        drifted_manifest = original_loader(manifest_path)
+        drifted_manifest["requires"] = []
+        drifted_lock = original_loader(lock_path)
+        drifted_lock["resolution"]["dependency_order"] = list(
+            reversed(drifted_lock["resolution"]["dependency_order"])
+        )
+
+        def load_with_drift(path: Path) -> dict:
+            if Path(path) == manifest_path:
+                return copy.deepcopy(drifted_manifest)
+            if Path(path) == lock_path:
+                return copy.deepcopy(drifted_lock)
+            return original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_drift):
+            errors = MODULE.validate_component_model(ROOT)
+
+        self.assertTrue(
+            any("requirements must match internal package dependencies" in error for error in errors)
+        )
+        self.assertTrue(any("composition lock is stale" in error for error in errors))
+
+    def test_component_model_rejects_runtime_promotion_without_new_contract(self) -> None:
+        composition = MODULE.load_json(ROOT / MODULE.REFERENCE_COMPOSITION_PATH)
+        composition["bindings"][0]["implementation"] = {
+            "kind": "component_provided",
+            "status": "implemented",
+        }
+        manifest_schema_path, dispatch_errors = (
+            MODULE.composition_manifest_schema_path(composition)
+        )
+        self.assertEqual([], dispatch_errors)
+        assert manifest_schema_path is not None
+        composition_errors = MODULE.validate_json_schema_instance(
+            composition,
+            ROOT / manifest_schema_path,
+            "composition manifest",
+        )
+
+        lock = MODULE.load_json(
+            ROOT / "compositions/unity/reference-system/foundry.lock.json"
+        )
+        lock["claims"]["runtime_ready"] = True
+        lock_schema_path, lock_dispatch_errors = MODULE.composition_lock_schema_path(
+            lock
+        )
+        self.assertEqual([], lock_dispatch_errors)
+        assert lock_schema_path is not None
+        lock_errors = MODULE.validate_json_schema_instance(
+            lock,
+            ROOT / lock_schema_path,
+            "composition lock",
+        )
+
+        self.assertTrue(composition_errors)
+        self.assertTrue(any("False was expected" in error for error in lock_errors))
+
+    def test_component_model_rejects_internal_dependency_version_drift(self) -> None:
+        package_manifest_path = (
+            ROOT
+            / "packages/unity/systems/interaction/com.lingkyn.interaction.unity"
+            / "package.json"
+        )
+        original_loader = MODULE.load_json
+        drifted_package_manifest = original_loader(package_manifest_path)
+        drifted_package_manifest["dependencies"]["com.lingkyn.interaction.core"] = "9.9.9"
+
+        def load_with_dependency_drift(path: Path) -> dict:
+            return (
+                copy.deepcopy(drifted_package_manifest)
+                if Path(path) == package_manifest_path
+                else original_loader(Path(path))
+            )
+
+        with mock.patch.object(
+            MODULE, "load_json", side_effect=load_with_dependency_drift
+        ):
+            errors = MODULE.validate_component_model(ROOT)
+
+        self.assertTrue(
+            any("internal package dependency version" in error for error in errors)
+        )
 
     def test_current_repository_passes(self) -> None:
         self.assertEqual([], MODULE.validate_repository(ROOT))
@@ -2103,6 +3204,79 @@ class RepositoryContractTests(unittest.TestCase):
             errors = MODULE.scan_text_safety(root)
             self.assertTrue(any("non-public marker" in error for error in errors))
 
+    def test_ignored_untracked_local_projection_is_not_a_publication_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(
+                ["git", "init", "--quiet"], cwd=root, check=True, capture_output=True
+            )
+            (root / ".gitignore").write_text(".local-control/\n", encoding="utf-8")
+            local_projection = root / ".local-control" / "runtime.json"
+            local_projection.parent.mkdir()
+            local_projection.write_text("AI" + "OS", encoding="utf-8")
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertFalse(any("runtime.json" in error for error in errors))
+
+    def test_force_added_ignored_marker_remains_a_publication_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(
+                ["git", "init", "--quiet"], cwd=root, check=True, capture_output=True
+            )
+            (root / ".gitignore").write_text(".local-control/\n", encoding="utf-8")
+            tracked_projection = root / ".local-control" / "tracked.md"
+            tracked_projection.parent.mkdir()
+            tracked_projection.write_text("AI" + "OS", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "--force", ".local-control/tracked.md"],
+                cwd=root,
+                check=True,
+                capture_output=True,
+            )
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertTrue(
+                any("tracked.md" in error and "non-public marker" in error for error in errors)
+            )
+
+    def test_project_profile_allows_only_declared_control_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            control_markers = [
+                "AI" + "OS",
+                "agent" + "-os",
+                "skill" + "-system",
+                "_steward" + "ship",
+                "work " + "packet",
+                "." + "ai" + "os",
+            ]
+            (root / "PROJECT_PROFILE.json").write_text(
+                json.dumps({"control_markers": control_markers}), encoding="utf-8"
+            )
+
+            self.assertEqual([], MODULE.scan_text_safety(root))
+
+    def test_project_profile_still_rejects_product_secret_and_machine_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            content = "\n".join(
+                [
+                    "VR" + "soundscape",
+                    "api" + "_key = 'not-a-real-secret'",
+                    "C:" + "\\Users\\example\\workspace",
+                ]
+            )
+            (root / "PROJECT_PROFILE.json").write_text(content, encoding="utf-8")
+
+            errors = MODULE.scan_text_safety(root)
+
+            self.assertTrue(any("non-public marker" in error for error in errors))
+            self.assertTrue(any("possible credential" in error for error in errors))
+            self.assertTrue(any("machine-local Windows path" in error for error in errors))
+
     def test_privacy_scan_covers_every_decodable_text_extension(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -2404,6 +3578,310 @@ class RepositoryContractTests(unittest.TestCase):
                 "registered live task",
                 require_canonical_repository=True,
             ),
+        )
+
+    def test_governance_contract_is_proposed_inactive_and_token_neutral(self) -> None:
+        self.assertEqual([], MODULE.validate_governance_contract(ROOT))
+        model = MODULE.load_json(
+            ROOT / "docs" / "governance" / "governance-model.v1.json"
+        )
+
+        self.assertEqual("proposed", model["status"])
+        self.assertEqual("G0", model["current_stage"])
+        self.assertFalse(model["activation"]["active_policy"])
+        self.assertFalse(model["promotion_policy"]["automatic_promotion"])
+        self.assertEqual(MODULE.GOVERNANCE_TOKEN_POLICY, model["token_policy"])
+        self.assertEqual(MODULE.GOVERNANCE_EXTERNAL_EFFECTS, model["external_effects"])
+        self.assertEqual(
+            ["G0", "G1", "G2", "G3", "G4"],
+            [stage["id"] for stage in model["stages"]],
+        )
+
+    def test_governance_contract_rejects_authority_and_external_effect_drift(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "governance-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        unsafe_cases = (
+            ("external_effects", "wallet", True, "external effects must remain disabled"),
+            ("token_policy", "token_balance_grants_vote", True, "token-neutral"),
+            ("authority", "stage_eligibility_grants_role", True, "authority boundary"),
+            ("activation", "active_policy", True, "remain inactive"),
+        )
+        for section, field, value, expected in unsafe_cases:
+            with self.subTest(section=section, field=field):
+                unsafe = copy.deepcopy(model)
+                unsafe[section][field] = value
+
+                def load_with_unsafe(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_unsafe):
+                    errors = MODULE.validate_governance_contract(ROOT)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_governance_contract_rejects_window_and_stage_drift(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "governance-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+
+        unsafe_window = copy.deepcopy(model)
+        unsafe_window["decision_classes"][1]["minimum_review_days"] = 6
+
+        def load_with_window(candidate: Path) -> dict:
+            if Path(candidate) == model_path:
+                return unsafe_window
+            return original_load_json(candidate)
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_window):
+            window_errors = MODULE.validate_governance_contract(ROOT)
+        self.assertTrue(any("review window has drifted" in error for error in window_errors))
+
+        unsafe_stage = copy.deepcopy(model)
+        unsafe_stage["stages"][1]["order"] = 2
+
+        def load_with_stage(candidate: Path) -> dict:
+            if Path(candidate) == model_path:
+                return unsafe_stage
+            return original_load_json(candidate)
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_stage):
+            stage_errors = MODULE.validate_governance_contract(ROOT)
+        self.assertTrue(any("stages or their order have drifted" in error for error in stage_errors))
+
+        unsafe_emergency = copy.deepcopy(model)
+        unsafe_emergency["decision_classes"][0]["emergency"] = True
+
+        def load_with_emergency(candidate: Path) -> dict:
+            if Path(candidate) == model_path:
+                return unsafe_emergency
+            return original_load_json(candidate)
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_emergency):
+            emergency_errors = MODULE.validate_governance_contract(ROOT)
+        self.assertTrue(
+            any("emergency classification has drifted" in error for error in emergency_errors)
+        )
+
+    def test_agent_membership_contract_is_proposed_inactive_and_a1_bounded(self) -> None:
+        self.assertEqual([], MODULE.validate_agent_membership_contract(ROOT))
+        model = MODULE.load_json(
+            ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        )
+        self.assertEqual("proposed", model["status"])
+        self.assertEqual("G0xA0", model["current_cell"])
+        self.assertEqual("G0xA1", model["phase_one_target"])
+        self.assertFalse(model["activation"]["active_policy"])
+        self.assertFalse(model["activation"]["active_agent_membership"])
+        self.assertEqual("A1", model["activation"]["maximum_activatable_stage"])
+        self.assertEqual(MODULE.AGENT_EXTERNAL_EFFECTS, model["external_effects"])
+
+    def test_agent_member_requires_principal_lineage_action_identity_and_mandate(self) -> None:
+        example_path = ROOT / "docs" / "governance" / "agent-member.example.json"
+        original_load_json = MODULE.load_json
+        example = original_load_json(example_path)
+        for field in ("principal_ref", "lineage_id", "action_identities", "mandates"):
+            with self.subTest(field=field):
+                unsafe = copy.deepcopy(example)
+                del unsafe[field]
+
+                def load_without_field(candidate: Path) -> dict:
+                    if Path(candidate) == example_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_without_field):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any(field in error for error in errors), errors)
+
+    def test_agent_membership_rejects_early_a2_to_a4_activation(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        for stage_id in ("A2", "A3", "A4"):
+            with self.subTest(stage_id=stage_id):
+                unsafe = copy.deepcopy(model)
+                stage = next(item for item in unsafe["agent_stages"] if item["id"] == stage_id)
+                stage["activation_allowed"] = True
+
+                def load_with_active_stage(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_active_stage):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any("A2-A4" in error for error in errors), errors)
+
+    def test_agent_membership_rejects_authority_and_external_effect_drift(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        unsafe_cases = (
+            ("authority_boundaries", "membership_grants_write", "authority boundary"),
+            ("authority_boundaries", "contribution_grants_write", "authority boundary"),
+            ("authority_boundaries", "deliberation_grants_write", "authority boundary"),
+            ("authority_boundaries", "membership_grants_merge", "authority boundary"),
+            ("authority_boundaries", "membership_grants_release", "authority boundary"),
+            ("authority_boundaries", "membership_grants_admin", "authority boundary"),
+            ("authority_boundaries", "token_grants_authority", "authority boundary"),
+            ("external_effects", "account_operation", "external effects"),
+            ("external_effects", "wallet", "external effects"),
+            ("external_effects", "treasury", "external effects"),
+            ("external_effects", "token", "external effects"),
+            ("external_effects", "smart_contract", "external effects"),
+            ("external_effects", "onchain_execution", "external effects"),
+            ("external_effects", "remote_settings_change", "external effects"),
+        )
+        for section, field, expected in unsafe_cases:
+            with self.subTest(section=section, field=field):
+                unsafe = copy.deepcopy(model)
+                unsafe[section][field] = True
+
+                def load_with_unsafe(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_unsafe):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_agent_membership_rejects_false_independence_and_evidence_multiplication(self) -> None:
+        model_path = ROOT / "docs" / "governance" / "agent-membership-model.v1.json"
+        original_load_json = MODULE.load_json
+        model = original_load_json(model_path)
+        unsafe_cases = (
+            (
+                "independence_policy",
+                "same_principal_counts_as_independent",
+                "principal-and-lineage independence",
+            ),
+            (
+                "independence_policy",
+                "same_lineage_counts_as_independent",
+                "principal-and-lineage independence",
+            ),
+            (
+                "independence_policy",
+                "same_principal_formal_review",
+                "principal-and-lineage independence",
+            ),
+            (
+                "independence_policy",
+                "same_lineage_formal_review",
+                "principal-and-lineage independence",
+            ),
+            (
+                "evidence_policy",
+                "same_ancestry_multiplies_evidence",
+                "evidence ancestry",
+            ),
+        )
+        for section, field, expected in unsafe_cases:
+            with self.subTest(section=section, field=field):
+                unsafe = copy.deepcopy(model)
+                unsafe[section][field] = True
+
+                def load_with_unsafe(candidate: Path) -> dict:
+                    if Path(candidate) == model_path:
+                        return unsafe
+                    return original_load_json(candidate)
+
+                with mock.patch.object(MODULE, "load_json", side_effect=load_with_unsafe):
+                    errors = MODULE.validate_agent_membership_contract(ROOT)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_governance_deliberation_metadata_enforces_complete_review_windows(self) -> None:
+        schema = ROOT / "docs" / "contributing" / "deliberation-record.schema.json"
+        open_record = MODULE.load_json(
+            ROOT / "docs" / "contributing" / "deliberation-record.open.example.json"
+        )
+        valid = copy.deepcopy(open_record)
+        valid.update(
+            {
+                "decision_class": "governance_policy",
+                "governance_stage": "G0",
+                "review_opened_at": "2026-09-03T12:00:00Z",
+                "review_not_before": "2026-09-10T12:00:00Z",
+            }
+        )
+        self.assertEqual(
+            [], MODULE.validate_json_schema_instance(valid, schema, "valid governance review")
+        )
+        self.assertEqual(
+            [], MODULE.validate_governance_deliberation_metadata(valid, "valid governance review")
+        )
+
+        partial = copy.deepcopy(open_record)
+        partial["decision_class"] = "governance_policy"
+        self.assertTrue(
+            MODULE.validate_json_schema_instance(partial, schema, "partial governance review")
+        )
+        self.assertTrue(
+            any(
+                "all-or-none" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    partial, "partial governance review"
+                )
+            )
+        )
+
+        short_policy = copy.deepcopy(valid)
+        short_policy["review_not_before"] = "2026-09-10T11:59:59Z"
+        self.assertTrue(
+            any(
+                "at least 7 days" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    short_policy, "short policy review"
+                )
+            )
+        )
+
+        non_utc = copy.deepcopy(valid)
+        non_utc["review_opened_at"] = "2026-09-03T13:00:00+01:00"
+        non_utc["review_not_before"] = "2026-09-10T13:00:00+01:00"
+        self.assertTrue(
+            any(
+                "must use UTC" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    non_utc, "non-UTC governance review"
+                )
+            )
+        )
+
+        short_constitution = copy.deepcopy(valid)
+        short_constitution["decision_class"] = "constitutional_change"
+        short_constitution["review_not_before"] = "2026-09-17T11:59:59Z"
+        self.assertTrue(
+            any(
+                "at least 14 days" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    short_constitution, "short constitutional review"
+                )
+            )
+        )
+
+        resolved = MODULE.load_json(
+            ROOT / "docs" / "contributing" / "deliberation-record.resolved.example.json"
+        )
+        resolved.update(
+            {
+                "decision_class": "constitutional_change",
+                "governance_stage": "G0",
+                "review_opened_at": "2026-09-03T12:00:00Z",
+                "review_not_before": "2026-09-17T12:00:00Z",
+            }
+        )
+        resolved["decision"]["decided_at"] = "2026-09-17T11:59:59Z"
+        self.assertTrue(
+            any(
+                "predates review_not_before" in error
+                for error in MODULE.validate_governance_deliberation_metadata(
+                    resolved, "early resolved governance review"
+                )
+            )
         )
 
     def test_deliberation_terminal_states_fail_closed(self) -> None:
@@ -4234,6 +5712,74 @@ class RepositoryContractTests(unittest.TestCase):
             errors = MODULE.validate_workflow_security(root)
 
             self.assertTrue(any("workflow-level permissions must be an explicit mapping" in error for error in errors))
+
+    def test_repository_automation_contract_accepts_current_configuration(self) -> None:
+        self.assertEqual([], MODULE.validate_repository_automation_contract(ROOT))
+
+    def test_repository_automation_contract_rejects_matrix_and_dependabot_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "validate.yml").write_text(
+                """name: Validate packages
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  python-contract-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: [\"3.12\"]
+    steps:
+      - uses: actions/checkout@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        with:
+          python-version: \"3.12\"
+      - run: python scripts/validate_repository.py --json
+  repository-contract:
+    name: repository-contract
+    if: ${{ always() }}
+    needs: python-contract-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: none
+    steps:
+      - env:
+          CONTRACT_MATRIX_RESULT: ${{ needs.python-contract-matrix.result }}
+        run: exit 0
+""",
+                encoding="utf-8",
+            )
+            (root / ".github" / "dependabot.yml").write_text(
+                """version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+""",
+                encoding="utf-8",
+            )
+
+            errors = MODULE.validate_repository_automation_contract(root)
+
+            self.assertTrue(any("missing required triggers" in error for error in errors))
+            self.assertTrue(any("Python matrix must equal" in error for error in errors))
+            self.assertTrue(any("fetch full history" in error for error in errors))
+            self.assertTrue(any("canonical full validation command" in error for error in errors))
+            self.assertTrue(any("matrix passes" in error for error in errors))
+            self.assertTrue(any("one pip update entry" in error for error in errors))
 
     def test_public_leakage_scan_covers_all_decodable_text_and_skips_binary(self) -> None:
         marker = "vr" + "soundscape"

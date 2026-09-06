@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/agent-membership-model.schema.json",
+  "title": "XR Foundry agent membership maturity model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "version",
+    "status",
+    "current_cell",
+    "phase_one_target",
+    "agent_stages",
+    "identity_contract",
+    "mandate_contract",
+    "authority_boundaries",
+    "independence_policy",
+    "evidence_policy",
+    "registry_policy",
+    "external_effects",
+    "activation",
+    "retrofit_targets",
+    "source_refs"
+  ],
+  "properties": {
+    "$schema": { "const": "agent-membership-model.schema.json" },
+    "schema": { "const": "xr-foundry.agent_membership_model.v1" },
+    "version": { "const": "0.1.0" },
+    "status": { "const": "proposed" },
+    "current_cell": { "const": "G0xA0" },
+    "phase_one_target": { "const": "G0xA1" },
+    "agent_stages": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/agentStage" }
+    },
+    "identity_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent_id_pattern", "required_fields", "identity_grants_authority", "principal_accountability_required"],
+      "properties": {
+        "agent_id_pattern": { "const": "^xr-foundry\\.agent\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+        "required_fields": {
+          "const": ["agent_id", "lineage_id", "principal_ref", "action_identities", "status", "autonomy_level", "capability_claims", "mandates"]
+        },
+        "identity_grants_authority": { "const": false },
+        "principal_accountability_required": { "const": true }
+      }
+    },
+    "mandate_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_fields", "phase_one_allowed_actions", "delegated_repository_authority"],
+      "properties": {
+        "required_fields": {
+          "const": ["mandate_id", "agent_id", "principal_ref", "issuer_ref", "checkpoint_ref", "allowed_actions", "resource_scope", "issued_at", "not_before", "expires_at", "revocation"]
+        },
+        "phase_one_allowed_actions": { "const": ["draft", "comment", "propose", "submit_evidence"] },
+        "delegated_repository_authority": { "const": false }
+      }
+    },
+    "authority_boundaries": { "$ref": "#/$defs/allFalseFlags" },
+    "independence_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distinct_principal_required", "distinct_lineage_required", "same_principal_counts_as_independent", "same_lineage_counts_as_independent", "same_principal_formal_review", "same_lineage_formal_review"],
+      "properties": {
+        "distinct_principal_required": { "const": true },
+        "distinct_lineage_required": { "const": true },
+        "same_principal_counts_as_independent": { "const": false },
+        "same_lineage_counts_as_independent": { "const": false },
+        "same_principal_formal_review": { "const": false },
+        "same_lineage_formal_review": { "const": false }
+      }
+    },
+    "evidence_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability_claims_require_evidence", "ancestry_root_required", "same_ancestry_multiplies_evidence", "independent_primary_evidence_required_for_additional_count"],
+      "properties": {
+        "capability_claims_require_evidence": { "const": true },
+        "ancestry_root_required": { "const": true },
+        "same_ancestry_multiplies_evidence": { "const": false },
+        "independent_primary_evidence_required_for_additional_count": { "const": true }
+      }
+    },
+    "registry_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["live_registry_created", "example_is_authoritative"],
+      "properties": {
+        "live_registry_created": { "const": false },
+        "example_is_authoritative": { "const": false }
+      }
+    },
+    "external_effects": { "$ref": "#/$defs/allFalseFlags" },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_policy", "active_agent_membership", "maximum_activatable_stage", "requires_constitutional_review_days", "requires_resolved_deliberation", "requires_explicit_maintainer_decision", "requires_task_hall_checkpoint", "requires_revocation_exercise", "requires_independent_review"],
+      "properties": {
+        "active_policy": { "const": false },
+        "active_agent_membership": { "const": false },
+        "maximum_activatable_stage": { "const": "A1" },
+        "requires_constitutional_review_days": { "const": 14 },
+        "requires_resolved_deliberation": { "const": true },
+        "requires_explicit_maintainer_decision": { "const": true },
+        "requires_task_hall_checkpoint": { "const": true },
+        "requires_revocation_exercise": { "const": true },
+        "requires_independent_review": { "const": true }
+      }
+    },
+    "retrofit_targets": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["rfc_0001_successor_amendment", "rfc_0004_two_axis_amendment", "task_hall_v2_claimant_union", "xfcm_external_control_receipt_refs"] }
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^(GOVERNANCE\\.md|docs/[A-Za-z0-9._/-]+)$" }
+    }
+  },
+  "$defs": {
+    "nonEmptyStrings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "agentStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "order", "name", "status", "activation_allowed", "capabilities", "authority_limit"],
+      "properties": {
+        "id": { "enum": ["A0", "A1", "A2", "A3", "A4"] },
+        "order": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["observed_current", "proposed_phase_one", "future_only"] },
+        "activation_allowed": { "type": "boolean" },
+        "capabilities": { "$ref": "#/$defs/nonEmptyStrings" },
+        "authority_limit": { "type": "string", "minLength": 1 }
+      }
+    },
+    "allFalseFlags": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "const": false }
+    }
+  }
+}

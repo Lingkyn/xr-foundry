@@ -1,8 +1,10 @@
 {
   "schema": "xr-foundry.reference_catalog.v1",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "repository": "https://github.com/Lingkyn/xr-foundry",
   "compatibility_profiles": "compatibility-profiles.json",
+  "component_catalog": "component-catalog.json",
+  "capability_registry": "capability-registry.json",
   "selection_dispositions": ["install", "extend_public_seam", "reference_only", "raw_material", "reject"],
   "evidence_order": ["manifest_and_license", "documentation_tests_samples", "repository_validation", "independent_consumer_compile", "runtime_device_evidence_when_claimed"],
   "artifacts": [
@@ -433,6 +435,52 @@
         "Starter profiles are not tested and support no device claim",
         "One device, renderer, or interaction result does not prove another",
         "A receipt does not itself promote, approve, or merge a package"
+      ]
+    },
+    {
+      "id": "xr-foundry-component-composition-model-v0.1",
+      "kind": "architecture_contract",
+      "engine": "engine-neutral_model_with_Unity_reference",
+      "path": "docs/architecture/component-composition-model.md",
+      "maturity": "incubating",
+      "use_modes": ["reference_only", "raw_material"],
+      "purpose": "Versioned component capabilities, explicit variants, consumer-owned lifecycle, deterministic composition resolution, and evidence boundaries for one coherent package system.",
+      "evidence": [
+        "component-catalog.json",
+        "capability-registry.json",
+        "docs/architecture/component-manifest.schema.json",
+        "docs/architecture/component-catalog.schema.json",
+        "docs/architecture/capability-registry.schema.json",
+        "docs/architecture/composition-manifest.schema.json",
+        "docs/architecture/composition-lock.schema.json",
+        "docs/rfcs/0005-xr-foundry-component-composition-model.md",
+        "tests/test_repository_contract.py"
+      ],
+      "non_claims": [
+        "The model is not presented as a universal cross-engine ABI",
+        "MCP is reserved for an optional external control-plane adapter and is not the runtime data plane",
+        "Schema-valid composition does not prove Unity compile, runtime integration, or device behavior"
+      ]
+    },
+    {
+      "id": "unity-xr-foundry-reference-system-v0.1",
+      "kind": "system_composition",
+      "engine": "Unity",
+      "path": "compositions/unity/reference-system",
+      "maturity": "incubating",
+      "use_modes": ["reference_only", "raw_material"],
+      "purpose": "Deterministic Unity composition selecting the UGUI Inventory route while keeping cross-family adapter gaps explicit.",
+      "evidence": [
+        "compositions/unity/reference-system/foundry.project.json",
+        "compositions/unity/reference-system/foundry.lock.json",
+        "compositions/unity/reference-system/README.md",
+        "scripts/compose_system.py",
+        "tests/test_repository_contract.py"
+      ],
+      "non_claims": [
+        "The lock records structural closure only",
+        "Three consumer-owned cross-family adapters remain pending",
+        "No complete-composition Unity compile, runtime, headset, controller, comfort, or named-device result is claimed"
       ]
     }
   ],

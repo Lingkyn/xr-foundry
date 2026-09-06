@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/governance-model.schema.json",
+  "title": "XR Foundry progressive governance model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "version",
+    "status",
+    "positioning",
+    "current_stage",
+    "identity_authority",
+    "principles",
+    "roles",
+    "decision_classes",
+    "stages",
+    "promotion_policy",
+    "emergency_policy",
+    "token_policy",
+    "external_effects",
+    "authority",
+    "activation",
+    "source_refs"
+  ],
+  "properties": {
+    "$schema": { "const": "governance-model.schema.json" },
+    "schema": { "const": "xr-foundry.governance_model.v1" },
+    "version": { "const": "0.1.0" },
+    "status": { "const": "proposed" },
+    "positioning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "full_dao"],
+      "properties": {
+        "id": { "const": "dao_ready_open_commons" },
+        "label": { "const": "DAO-ready XR Open Commons" },
+        "full_dao": { "const": false }
+      }
+    },
+    "current_stage": { "const": "G0" },
+    "identity_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "accountable_actor", "permission_ledger", "agent_identity_is_authority"],
+      "properties": {
+        "system": { "const": "github" },
+        "accountable_actor": { "const": "human_github_identity" },
+        "permission_ledger": { "const": "github_repository_and_organization_roles" },
+        "agent_identity_is_authority": { "const": false }
+      }
+    },
+    "principles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "public_deliberation_is_advisory_until_decided",
+          "contribution_recognition_participation_and_permission_are_separate",
+          "evidence_scope_cannot_expand_silently",
+          "promotion_is_explicit_and_reversible",
+          "least_privilege_and_public_recovery",
+          "token_and_payment_do_not_grant_authority"
+        ]
+      }
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/role" }
+    },
+    "decision_classes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/decisionClass" }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/stage" }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_model",
+        "thresholds_are_eligibility_only",
+        "automatic_promotion",
+        "explicit_maintainer_decision",
+        "constitutional_review_days",
+        "requires_resolved_deliberation",
+        "permission_changes_are_separate",
+        "rollback_supported"
+      ],
+      "properties": {
+        "gate_model": { "const": "mixed_evidence" },
+        "thresholds_are_eligibility_only": { "const": true },
+        "automatic_promotion": { "const": false },
+        "explicit_maintainer_decision": { "const": true },
+        "constitutional_review_days": { "const": 14 },
+        "requires_resolved_deliberation": { "const": true },
+        "permission_changes_are_separate": { "const": true },
+        "rollback_supported": { "const": true }
+      }
+    },
+    "emergency_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "immediate_containment",
+        "record_within_hours",
+        "retrospective_within_days",
+        "disclosure_may_be_safety_delayed",
+        "permanent_constitution_change"
+      ],
+      "properties": {
+        "immediate_containment": { "const": true },
+        "record_within_hours": { "const": 72 },
+        "retrospective_within_days": { "const": 7 },
+        "disclosure_may_be_safety_delayed": { "const": true },
+        "permanent_constitution_change": { "const": false }
+      }
+    },
+    "token_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "governance_dependency",
+        "token_balance_grants_vote",
+        "token_balance_grants_repository_permission",
+        "payment_grants_authority",
+        "contribution_volume_grants_authority",
+        "credit_grants_authority"
+      ],
+      "properties": {
+        "status": { "const": "token_neutral" },
+        "governance_dependency": { "const": false },
+        "token_balance_grants_vote": { "const": false },
+        "token_balance_grants_repository_permission": { "const": false },
+        "payment_grants_authority": { "const": false },
+        "contribution_volume_grants_authority": { "const": false },
+        "credit_grants_authority": { "const": false }
+      }
+    },
+    "external_effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_transfer",
+        "wallet",
+        "treasury",
+        "multisig",
+        "token_governance",
+        "smart_contract",
+        "onchain_execution",
+        "remote_settings_change"
+      ],
+      "properties": {
+        "organization_transfer": { "const": false },
+        "wallet": { "const": false },
+        "treasury": { "const": false },
+        "multisig": { "const": false },
+        "token_governance": { "const": false },
+        "smart_contract": { "const": false },
+        "onchain_execution": { "const": false },
+        "remote_settings_change": { "const": false }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maintainer_final_authority",
+        "public_participation_is_advisory",
+        "proposal_grants_repository_permission",
+        "deliberation_grants_execution_authority",
+        "stage_eligibility_grants_role",
+        "onchain_result_controls_github_permission"
+      ],
+      "properties": {
+        "maintainer_final_authority": { "const": true },
+        "public_participation_is_advisory": { "const": true },
+        "proposal_grants_repository_permission": { "const": false },
+        "deliberation_grants_execution_authority": { "const": false },
+        "stage_eligibility_grants_role": { "const": false },
+        "onchain_result_controls_github_permission": { "const": false }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active_policy",
+        "observed_topology_only",
+        "adoption_requires",
+        "minimum_public_review_days",
+        "implementation_requires_task_hall_checkpoint"
+      ],
+      "properties": {
+        "active_policy": { "const": false },
+        "observed_topology_only": { "const": true },
+        "adoption_requires": { "const": "resolved_deliberation_and_explicit_maintainer_decision" },
+        "minimum_public_review_days": { "const": 14 },
+        "implementation_requires_task_hall_checkpoint": { "const": true }
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(GOVERNANCE\\.md|docs/[A-Za-z0-9._/-]+)$"
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyStrings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "stage_introduced", "authority", "assignment"],
+      "properties": {
+        "id": { "enum": ["public_contributor", "maintainer", "security_responder"] },
+        "stage_introduced": { "const": "G0" },
+        "authority": { "$ref": "#/$defs/nonEmptyStrings" },
+        "assignment": { "enum": ["open_participation", "explicit_github_role", "maintainer_incident_duty"] }
+      }
+    },
+    "decisionClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "minimum_review_days", "route", "decision_authority", "emergency"],
+      "properties": {
+        "id": { "enum": ["routine_change", "governance_policy", "constitutional_change", "security_emergency"] },
+        "minimum_review_days": { "type": "integer", "minimum": 0, "maximum": 14 },
+        "route": { "type": "string", "minLength": 1 },
+        "decision_authority": { "const": "maintainer" },
+        "emergency": { "type": "boolean" },
+        "record_within_hours": { "const": 72 },
+        "retrospective_within_days": { "const": 7 }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "order",
+        "name",
+        "status",
+        "entry_criteria",
+        "capabilities",
+        "prohibited_effects",
+        "promotion_evidence"
+      ],
+      "properties": {
+        "id": { "enum": ["G0", "G1", "G2", "G3", "G4"] },
+        "order": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["observed_current", "proposed_future"] },
+        "entry_criteria": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "minimum_observation_days",
+            "minimum_distinct_human_contributors",
+            "minimum_non_maintainer_contributors",
+            "minimum_contribution_types",
+            "minimum_resolved_public_deliberations",
+            "required_roles",
+            "additional_evidence"
+          ],
+          "properties": {
+            "minimum_observation_days": { "type": "integer", "minimum": 0 },
+            "minimum_distinct_human_contributors": { "type": "integer", "minimum": 0 },
+            "minimum_non_maintainer_contributors": { "type": "integer", "minimum": 0 },
+            "minimum_contribution_types": { "type": "integer", "minimum": 0 },
+            "minimum_resolved_public_deliberations": { "type": "integer", "minimum": 0 },
+            "required_roles": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+            "additional_evidence": { "$ref": "#/$defs/nonEmptyStrings" }
+          }
+        },
+        "capabilities": { "$ref": "#/$defs/nonEmptyStrings" },
+        "prohibited_effects": { "$ref": "#/$defs/nonEmptyStrings" },
+        "promotion_evidence": { "$ref": "#/$defs/nonEmptyStrings" }
+      }
+    }
+  }
+}

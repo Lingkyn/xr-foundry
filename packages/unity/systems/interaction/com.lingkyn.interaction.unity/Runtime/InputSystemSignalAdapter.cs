@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Lingkyn.Interaction.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -86,6 +87,7 @@ namespace Lingkyn.Interaction.Unity
         public static InteractionResult<InteractionFrame> CaptureCallback(
             InputAction.CallbackContext callback,
             IEnumerable<InputRouteBinding> orderedCandidates,
+            Func<InputControl, bool> controlAdmission,
             string observedSourceId,
             InteractionModality observedModality,
             InteractionCapability observedCapabilities,
@@ -97,6 +99,21 @@ namespace Lingkyn.Interaction.Unity
                 candidates, observedSourceId, observedModality, observedCapabilities, timestampTicks);
             if (!common.Succeeded)
                 return InteractionResult<InteractionFrame>.Fail(common.Error.Code, common.Error.Message, common.Error.Subject);
+            if (controlAdmission == null)
+            {
+                return InteractionResult<InteractionFrame>.Fail(
+                    InteractionValidationCode.InvalidFrame,
+                    "Live Input System capture requires an explicit callback-control admission predicate.",
+                    candidates[0].RouteId.Value);
+            }
+            var control = callback.control;
+            if (control == null || !controlAdmission(control))
+            {
+                return InteractionResult<InteractionFrame>.Fail(
+                    InteractionValidationCode.UnknownSource,
+                    "Callback control is not admitted by the declared observation source.",
+                    candidates[0].RouteId.Value);
+            }
             if (callback.action == null || callback.action.id != candidates[0].ActionId)
             {
                 return InteractionResult<InteractionFrame>.Fail(
@@ -109,26 +126,45 @@ namespace Lingkyn.Interaction.Unity
             if (!phase.Succeeded)
                 return InteractionResult<InteractionFrame>.Fail(phase.Error.Code, phase.Error.Message, phase.Error.Subject);
 
-            object rawValue;
-            switch (candidates[0].ValueKind)
+            var callbackValueType = callback.valueType;
+            if (!CallbackValueTypeMatches(candidates[0].ValueKind, callbackValueType))
             {
-                case InteractionValueKind.Button:
-                    rawValue = callback.ReadValueAsButton();
-                    break;
-                case InteractionValueKind.Scalar:
-                    rawValue = callback.ReadValue<float>();
-                    break;
-                case InteractionValueKind.Vector2:
-                    rawValue = callback.ReadValue<Vector2>();
-                    break;
-                case InteractionValueKind.Vector3:
-                    rawValue = callback.ReadValue<Vector3>();
-                    break;
-                default:
-                    return InteractionResult<InteractionFrame>.Fail(
-                        InteractionValidationCode.KindMismatch,
-                        $"Input System callback conversion does not support '{candidates[0].ValueKind}'.",
-                        candidates[0].RouteId.Value);
+                return InteractionResult<InteractionFrame>.Fail(
+                    InteractionValidationCode.KindMismatch,
+                    $"Callback value type '{callbackValueType}' does not match '{candidates[0].ValueKind}'.",
+                    candidates[0].RouteId.Value);
+            }
+
+            object rawValue;
+            try
+            {
+                switch (candidates[0].ValueKind)
+                {
+                    case InteractionValueKind.Button:
+                        rawValue = callback.ReadValueAsButton();
+                        break;
+                    case InteractionValueKind.Scalar:
+                        rawValue = callback.ReadValue<float>();
+                        break;
+                    case InteractionValueKind.Vector2:
+                        rawValue = callback.ReadValue<Vector2>();
+                        break;
+                    case InteractionValueKind.Vector3:
+                        rawValue = callback.ReadValue<Vector3>();
+                        break;
+                    default:
+                        return InteractionResult<InteractionFrame>.Fail(
+                            InteractionValidationCode.KindMismatch,
+                            $"Input System callback conversion does not support '{candidates[0].ValueKind}'.",
+                            candidates[0].RouteId.Value);
+                }
+            }
+            catch (InvalidOperationException exception)
+            {
+                return InteractionResult<InteractionFrame>.Fail(
+                    InteractionValidationCode.KindMismatch,
+                    $"Input System callback value could not be read as '{candidates[0].ValueKind}': {exception.Message}",
+                    candidates[0].RouteId.Value);
             }
 
             return CaptureRawObservation(
@@ -163,6 +199,13 @@ namespace Lingkyn.Interaction.Unity
                     InteractionValidationCode.InvalidPhaseTransition,
                     "Only started, performed, and canceled phases are admitted.");
             }
+            if (candidates.Count - 1 > int.MaxValue - stamp.FirstIngressSequence)
+            {
+                return InteractionResult<InteractionFrame>.Fail(
+                    InteractionValidationCode.InvalidFrame,
+                    "Observation ingress sequence range exceeds Int32.MaxValue.",
+                    candidates[0].RouteId.Value);
+            }
 
             var value = ConvertRawValue(candidates[0].ValueKind, rawValue);
             if (!value.Succeeded)
@@ -183,7 +226,7 @@ namespace Lingkyn.Interaction.Unity
                     value.Value,
                     phase,
                     timestampTicks,
-                    checked(stamp.FirstIngressSequence + index),
+                    stamp.FirstIngressSequence + index,
                     stamp.ObservationSequence));
             }
             return InteractionFrame.Create(signals);
@@ -231,8 +274,48 @@ namespace Lingkyn.Interaction.Unity
             }
         }
 
+        public static InteractionResult ValidateRouteBindingDescriptor(
+            InteractionRoute route,
+            InputRouteBinding binding)
+        {
+            if (route == null || binding == null)
+            {
+                return InteractionResult.Fail(
+                    InteractionValidationCode.InvalidDefinition,
+                    "A semantic route and Input System binding are required.");
+            }
+
+            var expected = Encoding.UTF8.GetBytes(
+                "input-system-action:" + binding.ActionId.ToString("D"));
+            if (!route.OpaqueBindingDescriptor.SequenceEqual(expected))
+            {
+                return InteractionResult.Fail(
+                    InteractionValidationCode.InvalidDefinition,
+                    "Semantic route binding descriptor does not match the candidate Input System action GUID.",
+                    route.Id.Value);
+            }
+
+            return InteractionResult.Success();
+        }
+
         private static InteractionResult<InteractionValue> Validate(InteractionValue value) =>
             InteractionValue.Validate(value.Kind, value);
+
+        private static bool CallbackValueTypeMatches(InteractionValueKind valueKind, Type valueType)
+        {
+            switch (valueKind)
+            {
+                case InteractionValueKind.Button:
+                case InteractionValueKind.Scalar:
+                    return valueType == typeof(float);
+                case InteractionValueKind.Vector2:
+                    return valueType == typeof(Vector2);
+                case InteractionValueKind.Vector3:
+                    return valueType == typeof(Vector3);
+                default:
+                    return false;
+            }
+        }
 
         private static List<InputRouteBinding> FreezeCandidates(IEnumerable<InputRouteBinding> candidates) =>
             candidates == null ? new List<InputRouteBinding>() : candidates.ToList();

@@ -9,6 +9,9 @@ Thank you for helping improve the packages and reference library.
   implementation, review, integration, or documentation.
 - Use the [Device Lab](docs/device-lab/README.md) for revision-bound headset and
   interaction evidence.
+- Use the governance proposal form and the existing
+  [deliberation protocol](docs/contributing/deliberation-protocol.md) for a policy,
+  authority, permission, treasury, on-chain, or maturity-stage change.
 - Contribute through code, documentation, research, design, review, tests,
   user/device testing, or infrastructure. These are separate contribution types,
   not a single activity score.
@@ -18,6 +21,23 @@ Thank you for helping improve the packages and reference library.
 Submitting or claiming an Issue grants no repository permission. External
 contributors normally use a fork. A maintainer must confirm a Task Hall claim lease
 before the task is treated as reserved.
+
+## Governance proposals
+
+Read [`GOVERNANCE.md`](GOVERNANCE.md), the
+[`governance maturity model`](docs/governance/README.md), and
+[`RFC 0004`](docs/rfcs/0004-progressive-governance.md) before proposing a governance
+change. Policy proposals require at least 7 days of public review. Constitutional,
+authority, permission, treasury, on-chain, and stage-transition proposals require
+at least 14 days. A security emergency can be contained immediately but requires a
+record within 72 hours and retrospective within 7 days.
+
+Submitting, discussing, supporting, or outnumbering objections to a proposal does
+not activate it. Stage thresholds only make a transition eligible for a separate
+maintainer decision; they never grant GitHub permission, execution authority, a
+role, payment, or token rights. This repository remains token-neutral, and external
+account, wallet, treasury, organization, remote-setting, and on-chain operations
+require separately authorized work outside the proposal itself.
 
 ## Choose a checkpoint, not an unfinished umbrella
 

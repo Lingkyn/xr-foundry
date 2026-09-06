@@ -1,0 +1,95 @@
+{
+  "schema": "xr-foundry.governance_source_manifest.v1",
+  "version": "0.1.0",
+  "policy": "Sources inform XR Foundry governance decisions but do not transfer their roles, permission models, licenses, brands, tokens, wallets, social channels, or runtime authority.",
+  "sources": [
+    {
+      "id": "xr-foundry-rfc-0001",
+      "publisher": "XR Foundry",
+      "title": "RFC 0001: Agent Commons V1",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0001-agent-commons.md",
+      "classification": "governance_basis",
+      "adopted_lessons": [
+        "Human GitHub identity is the accountable authority boundary.",
+        "Task claims and public input grant no repository permission."
+      ],
+      "limits": ["The RFC does not define a progressive governance maturity path."],
+      "excluded_assumptions": ["Agent identity or task participation creates independent authority."]
+    },
+    {
+      "id": "xr-foundry-rfc-0002",
+      "publisher": "XR Foundry",
+      "title": "RFC 0002: Public Workbench and Contribution Recognition V1",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0002-public-workbench.md",
+      "classification": "governance_basis",
+      "adopted_lessons": [
+        "Contribution evidence, acknowledgement, and revocable permission are separate ledgers.",
+        "Activity, rankings, points, and token counts do not grant authority."
+      ],
+      "limits": ["The proposed workbench does not itself activate a DAO or treasury."],
+      "excluded_assumptions": ["Contribution volume is an automatic role-promotion rule."]
+    },
+    {
+      "id": "xr-foundry-deliberation-v1",
+      "publisher": "XR Foundry",
+      "title": "Public deliberation protocol V1",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/deliberation-protocol.md",
+      "classification": "governance_basis",
+      "adopted_lessons": [
+        "Deliberation, synthesis, decision, and execution are separate layers.",
+        "Only a resolved record plus a separate Task Hall checkpoint can make work ready."
+      ],
+      "limits": ["A deliberation record grants no repository or execution permission."],
+      "excluded_assumptions": ["A new governance system needs a parallel proposal or voting database."]
+    },
+    {
+      "id": "github-repository-roles",
+      "publisher": "GitHub",
+      "title": "Repository roles for an organization",
+      "url": "https://docs.github.com/en/organizations/managing-user-access-to-your-organizations-repositories/repository-roles-for-an-organization",
+      "classification": "platform_authority_reference",
+      "adopted_lessons": ["Repository permission is an explicit platform role, not an inferred contribution property."],
+      "limits": ["GitHub role capability does not authorize XR Foundry to create an organization or change a role."],
+      "excluded_assumptions": ["Naming a future steward in an RFC grants that GitHub role."]
+    },
+    {
+      "id": "github-codeowners",
+      "publisher": "GitHub",
+      "title": "About code owners",
+      "url": "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners",
+      "classification": "platform_authority_reference",
+      "adopted_lessons": ["CODEOWNERS routes review and can participate in separately configured protection rules."],
+      "limits": ["A CODEOWNERS entry does not itself grant repository permission or enable required approval."],
+      "excluded_assumptions": ["Editing CODEOWNERS alone changes the live repository role topology."]
+    },
+    {
+      "id": "kubernetes-roles-responsibilities",
+      "publisher": "Kubernetes",
+      "title": "Roles and responsibilities",
+      "url": "https://kubernetes.io/docs/contribute/participate/roles-and-responsibilities/",
+      "classification": "responsibility_ladder_reference",
+      "adopted_lessons": ["Broader project responsibility benefits from explicit duties and increasing trust."],
+      "limits": ["XR Foundry defines its own roles, evidence, scale, and maintainer decisions."],
+      "excluded_assumptions": ["Kubernetes membership, reviewer, approver, bot, or organization policy transfers to XR Foundry."]
+    },
+    {
+      "id": "folo-pinned-465b997",
+      "publisher": "RSSNext",
+      "title": "Folo repository at reviewed commit 465b997e89bde007fcac32257baec6a2ded73164",
+      "url": "https://github.com/RSSNext/Folo/tree/465b997e89bde007fcac32257baec6a2ded73164",
+      "classification": "community_operations_reference",
+      "adopted_lessons": [
+        "A mature open product can combine a core team with community-maintained distribution routes.",
+        "Contributor-facing release notes and clear contribution funnels can strengthen public adoption."
+      ],
+      "limits": [
+        "The reviewed repository is not used as a DAO decision or repository-authority precedent.",
+        "Community adaptation and distribution registration is deferred until phase two has real evidence."
+      ],
+      "excluded_assumptions": [
+        "Folo wallet, POWER/RSS3, license, brand, social channels, mutable action references, credentials, or release-branch topology should be copied.",
+        "Wallet functionality is governance authority."
+      ]
+    }
+  ]
+}

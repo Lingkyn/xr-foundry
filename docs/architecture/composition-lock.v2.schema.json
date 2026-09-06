@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/composition-lock.v2.schema.json",
+  "title": "XR Foundry deterministic composition lock v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "model_version", "composition", "engine", "input_digests", "resolution", "claims"],
+  "properties": {
+    "schema": {"const": "xr-foundry.composition_lock.v2"},
+    "model_version": {"const": "0.2.0"},
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "path"],
+      "properties": {
+        "id": {"$ref": "#/$defs/compositionId"},
+        "version": {"$ref": "#/$defs/semver"},
+        "path": {
+          "type": "string",
+          "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+foundry\\.project\\.json(?![\\s\\S])"
+        }
+      }
+    },
+    "engine": {"const": "unity"},
+    "input_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["composition_sha256", "component_catalog_sha256", "capability_registry_sha256"],
+      "properties": {
+        "composition_sha256": {"$ref": "#/$defs/sha256"},
+        "component_catalog_sha256": {"$ref": "#/$defs/sha256"},
+        "capability_registry_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["components", "capabilities", "selections", "bindings", "dependency_order"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "version", "manifest_path", "manifest_sha256"],
+            "properties": {
+              "id": {"$ref": "#/$defs/componentId"},
+              "version": {"$ref": "#/$defs/semver"},
+              "manifest_path": {
+                "type": "string",
+                "pattern": "^packages/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+foundry\\.component\\.json(?![\\s\\S])"
+              },
+              "manifest_sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "version", "provider"],
+            "properties": {
+              "id": {"$ref": "#/$defs/capabilityId"},
+              "version": {"$ref": "#/$defs/semver"},
+              "provider": {"$ref": "#/$defs/componentId"}
+            }
+          }
+        },
+        "selections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slot", "component", "version"],
+            "properties": {
+              "slot": {"$ref": "#/$defs/tokenId"},
+              "component": {"$ref": "#/$defs/componentId"},
+              "version": {"$ref": "#/$defs/semver"}
+            }
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "from_provider", "to_provider", "implementation"],
+            "properties": {
+              "id": {"$ref": "#/$defs/tokenId"},
+              "from_provider": {"$ref": "#/$defs/componentId"},
+              "to_provider": {"$ref": "#/$defs/componentId"},
+              "implementation": {"$ref": "#/$defs/bindingImplementation"}
+            }
+          }
+        },
+        "dependency_order": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/componentId"}
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["structural_resolution", "bindings_implemented", "runtime_ready", "unity_compile", "device_runtime"],
+      "properties": {
+        "structural_resolution": {"const": "resolved"},
+        "bindings_implemented": {"type": "boolean"},
+        "runtime_ready": {"const": false},
+        "unity_compile": {"const": "not_claimed_for_this_composition"},
+        "device_runtime": {"const": "not_claimed"}
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(?![\\s\\S])"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+    },
+    "compositionId": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
+    },
+    "componentId": {
+      "type": "string",
+      "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+(?![\\s\\S])"
+    },
+    "tokenId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?![\\s\\S])"
+    },
+    "bindingImplementation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "status"],
+          "properties": {
+            "kind": {"const": "consumer_owned_adapter"},
+            "status": {"const": "pending"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "status", "source_path", "assembly", "source_sha256"],
+          "properties": {
+            "kind": {"const": "consumer_owned_adapter"},
+            "status": {"const": "implemented"},
+            "source_path": {
+              "type": "string",
+              "pattern": "^compositions/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)+consumer/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.cs(?![\\s\\S])"
+            },
+            "assembly": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*(?![\\s\\S])"
+            },
+            "source_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
+    }
+  }
+}

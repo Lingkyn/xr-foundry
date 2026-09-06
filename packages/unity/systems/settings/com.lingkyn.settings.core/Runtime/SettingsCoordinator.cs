@@ -73,6 +73,15 @@ namespace Lingkyn.Settings.Core
                 return SettingsApplyResult.NoOp(_committed.Revision);
             }
 
+            if (_committed.Revision == long.MaxValue)
+            {
+                return SettingsApplyResult.ValidationFailed(
+                    _committed.Revision,
+                    new SettingsValidationError(
+                        SettingsValidationCode.OutOfRange,
+                        "Settings revision cannot be incremented beyond Int64.MaxValue."));
+            }
+
             var applicatorResult = RunApplicators(changes);
             if (applicatorResult.Outcome == SettingsApplyOutcome.ApplicatorFailed
                 || applicatorResult.Outcome == SettingsApplyOutcome.RollbackFailed)
@@ -111,7 +120,7 @@ namespace Lingkyn.Settings.Core
                 return loaded;
             }
 
-            var validated = SettingsSnapshotValidator.ValidateLoaded(_registry, loaded.Value);
+            var validated = SettingsSnapshotValidator.ValidateLoaded(_registry, loaded.Value, _constraints);
             if (!validated.Succeeded)
             {
                 return validated;

@@ -20,6 +20,7 @@ evidence remain explicit gates.
 | Need | Entry point |
 | --- | --- |
 | Choose an available system or package | [`package-catalog.json`](package-catalog.json) |
+| Compose packages as one system | [`XFCM v0.2`](docs/architecture/component-composition-model.md), [`component-catalog.json`](component-catalog.json), and the [Unity reference composition](compositions/unity/reference-system/) |
 | Find reusable reference material | [`reference-catalog.json`](reference-catalog.json) |
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
@@ -29,6 +30,7 @@ evidence remain explicit gates.
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
 | Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
 | See how contributions are recognized | [`Recognition policy`](docs/contributing/recognition-policy.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md) |
+| Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), [`RFC 0004`](docs/rfcs/0004-progressive-governance.md), and proposed [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
 
@@ -55,6 +57,30 @@ person or Agent progressively disclose the installable modules. The machine-read
 separately because dependency, version, maturity, and evidence gates remain
 module-specific.
 
+## One composable system
+
+Every current Unity package also has a colocated `foundry.component.json`. The
+[`component catalog`](component-catalog.json) and
+[`capability registry`](capability-registry.json) turn those independent modules
+into one versioned product-line graph. A consumer composition selects fixed
+components plus exactly one renderer and XR-surface variant, then resolves the graph
+into a deterministic lock.
+
+The first [Unity reference composition](compositions/unity/reference-system/)
+selects the UGUI route and structurally resolves 13 components. UI Toolkit remains
+a peer option rather than an accidental cumulative dependency. Its three
+cross-family boundaries now resolve to consumer-owned typed adapter sources, and
+the v0.2 lock binds each source path, assembly, and SHA-256. A separate clean
+consumer exercises the eight packages needed at those binding endpoints. That
+bounded evidence includes one production `LocalFileSaveStore` zero-byte-primary
+backup-recovery path in a temporary directory. It does not cover all 13
+components, general filesystem durability, a player build, XR input, rendering,
+or a device, so the composition deliberately keeps `runtime_ready: false`.
+
+XFCM keeps runtime communication strongly typed and in process. JSON manifests are
+the composition/control plane. MCP may later expose that control plane to editors
+or coding Agents, but it is not a global runtime event bus.
+
 ## Incubating system standards
 
 The first reusable game-system candidate is the
@@ -70,7 +96,7 @@ consumer evidence, and each XR renderer/device tuple needs its own real-device
 receipt. No old package path or renderer-ambiguous XR compatibility layer is part
 of the active repository surface.
 
-These nine packages form the
+The cataloged Unity packages form the
 [`Unity first batch`](docs/foundry/batches/unity-first-batch.v1.json). A batch
 release is an immutable discovery/install surface; it does not promote package
 maturity or inherit device claims. The
@@ -188,9 +214,16 @@ Run the local checks:
 
 ```powershell
 python -m pip install -r scripts/contract-requirements.txt
+python scripts/compose_system.py --check --json
 python scripts/validate_repository.py --json --fast-structure
 python scripts/validate_repository.py --json --run-contract-tests
 ```
+
+The repository contract supports Python `3.11`, `3.12`, and `3.13`. Pull requests,
+pushes to `main`, and manual workflow runs execute the full contract across that
+matrix. GitHub Actions and the exactly pinned Python contract dependencies are both
+checked monthly by Dependabot; changes remain reviewable pull requests and do not
+gain merge authority from automation.
 
 The fast structure command is iteration feedback and cannot support promotion or
 release. The full command runs repository validation first and skips the test
@@ -212,6 +245,25 @@ permissions or merge authority.
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.
+
+## DAO-ready Open Commons
+
+XR Foundry is being prepared as public infrastructure that can support progressively
+broader stewardship without pretending a DAO already exists. The current observed
+stage is maintainer-led `G0`; the progressive model and RFC 0004 are proposed and
+inactive until public deliberation and an explicit maintainer decision adopt them.
+Participation, recognition, payment, tokens, and repository permission remain
+separate. This phase creates no wallet, treasury, multisig, token governance,
+smart contract, on-chain action, organization transfer, or remote settings change.
+
+See [`GOVERNANCE.md`](GOVERNANCE.md) for the human-readable boundary and
+[`governance-model.v1.json`](docs/governance/governance-model.v1.json) for the
+machine-enforced contract.
+
+RFC 0006 adds a proposed Agent maturity axis without activating Agent membership.
+The observed state remains `G0 x A0`; `G0 x A1` is a review target with accountable
+principals, declared lineage, evidence-bound capabilities, revocable mandates, and
+human maintainer authority.
 
 ## Public workbench for people and Agents
 

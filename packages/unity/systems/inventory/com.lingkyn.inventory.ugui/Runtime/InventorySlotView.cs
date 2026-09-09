@@ -23,6 +23,7 @@ namespace Lingkyn.Inventory.UGUI
         [SerializeField] private Color hoverColor = new Color(0.12f, 0.35f, 0.42f, 1f);
         [SerializeField] private Color selectedColor = new Color(0.10f, 0.65f, 0.72f, 1f);
         [SerializeField] private Color disabledColor = new Color(0.12f, 0.12f, 0.12f, 0.55f);
+        [SerializeField] private InventorySkin skin;
 
         private bool _modelSelected;
         private bool _navigationSelected;
@@ -57,6 +58,18 @@ namespace Lingkyn.Inventory.UGUI
             }
             if (selectionControl != null) selectionControl.interactable = model.Enabled;
             itemView?.Render(model);
+            RefreshVisual();
+        }
+
+        public void ApplySkin(InventorySkin value)
+        {
+            skin = value;
+            if (skin != null && background != null && skin.slotSprite != null)
+            {
+                background.sprite = skin.slotSprite;
+                background.type = Image.Type.Sliced;
+            }
+            itemView?.ApplySkin(skin);
             RefreshVisual();
         }
 
@@ -140,16 +153,21 @@ namespace Lingkyn.Inventory.UGUI
 #pragma warning restore CS0618
         }
 
+        private Color NormalColor => skin != null ? skin.slotNormalColor : normalColor;
+        private Color HoverColor => skin != null ? skin.slotHoverColor : hoverColor;
+        private Color SelectedColor => skin != null ? skin.slotSelectedColor : selectedColor;
+        private Color DisabledColor => skin != null ? skin.slotDisabledColor : disabledColor;
+
         private void RefreshVisual()
         {
             if (background == null) return;
             background.color = !Interactable
-                ? disabledColor
+                ? DisabledColor
                 : _modelSelected || _navigationSelected
-                    ? selectedColor
+                    ? SelectedColor
                     : _hovered
-                        ? hoverColor
-                        : normalColor;
+                        ? HoverColor
+                        : NormalColor;
         }
     }
 }

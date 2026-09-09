@@ -45,6 +45,30 @@ namespace Lingkyn.Inventory.UGUI.Tests
         }
 
         [Test]
+        public void InjectedSkinDrivesSlotStateColorsAcrossPooledSlots()
+        {
+            var instance = UnityEngine.Object.Instantiate(Load("InventoryShell"));
+            var shell = instance.GetComponent<InventoryShellView>();
+            var skin = ScriptableObject.CreateInstance<InventorySkin>();
+            skin.slotNormalColor = new Color(0.11f, 0.22f, 0.33f, 1f);
+            skin.slotDisabledColor = new Color(0.44f, 0.44f, 0.44f, 0.5f);
+            shell.ApplySkin(skin);
+
+            shell.Render(CreateModel(InventoryUiState.Disabled, "disabled", true, false, true));
+            ForceLayout(shell);
+            var grid = shell.Panel.Grid;
+
+            Assert.That(grid.SlotViews[0].Background.color, Is.EqualTo(skin.slotNormalColor),
+                "An enabled slot must adopt the injected skin's normal color.");
+            Assert.That(grid.SlotViews[1].Background.color, Is.EqualTo(skin.slotDisabledColor),
+                "A disabled slot must adopt the injected skin's disabled color.");
+            Assert.That(grid.SlotViews[2].Background.color, Is.EqualTo(skin.slotNormalColor));
+
+            UnityEngine.Object.DestroyImmediate(instance);
+            UnityEngine.Object.DestroyImmediate(skin);
+        }
+
+        [Test]
         public void DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges()
         {
             var item = new ItemDefinitionId("item");

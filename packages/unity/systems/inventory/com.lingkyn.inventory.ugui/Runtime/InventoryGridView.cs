@@ -13,6 +13,7 @@ namespace Lingkyn.Inventory.UGUI
         [SerializeField] private InventorySlotView slotTemplate;
 
         private readonly List<InventorySlotView> _slots = new List<InventorySlotView>();
+        private InventorySkin _skin;
 
         public event Action<InventorySlotIntent> ActivationRequested;
         public event Action<InventorySlotIntent> SelectionRequested;
@@ -39,6 +40,17 @@ namespace Lingkyn.Inventory.UGUI
             contentRoot = root != null ? root : template.transform.parent;
             EnsureConfigured();
             ApplyTemplateLayout();
+        }
+
+        public void ApplySkin(InventorySkin skin)
+        {
+            _skin = skin;
+            if (skin != null) InventorySkin.StyleBackground(GetComponent<Image>(), skin.sectionColor, skin.sectionSprite);
+            if (slotTemplate != null) slotTemplate.ApplySkin(skin);
+            foreach (var slot in _slots)
+            {
+                if (slot != null) slot.ApplySkin(skin);
+            }
         }
 
         public void Render(InventoryViewModel model)
@@ -89,6 +101,7 @@ namespace Lingkyn.Inventory.UGUI
             {
                 var slot = Instantiate(slotTemplate, contentRoot);
                 slot.name = $"{slotTemplate.name}_{_slots.Count}";
+                if (_skin != null) slot.ApplySkin(_skin);
                 AddSlot(slot);
             }
         }

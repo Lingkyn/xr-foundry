@@ -596,6 +596,32 @@ namespace Lingkyn.Inventory.Core.Tests
         }
 
         [Test]
+        public void ZeroQuantityRemoveAndMoveAreRejectedAsInvalidRequestWithoutMutation()
+        {
+            var inventory = CreateInventory(bagCapacity: 2);
+            Assert.That(inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 3), BagId)).Succeeded, Is.True);
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+            var source = new SlotAddress(BagId, 0);
+            var destination = new SlotAddress(BagId, 1);
+
+            var zeroRemove = inventory.Execute(MutationRequest.Remove(source, 0));
+            Assert.That(zeroRemove.Succeeded, Is.False);
+            Assert.That(zeroRemove.Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+
+            var negativeRemove = inventory.Execute(MutationRequest.Remove(source, -1));
+            Assert.That(negativeRemove.Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+
+            Assert.That(inventory.Execute(MutationRequest.Move(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+            Assert.That(inventory.Execute(MutationRequest.Split(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+            Assert.That(inventory.Execute(MutationRequest.Merge(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+            Assert.That(inventory.Execute(MutationRequest.Transfer(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
         public void UnknownContainerAndInvalidSlotAreRejectedWithoutMutation()
         {
             var inventory = CreateInventory(bagCapacity: 2);

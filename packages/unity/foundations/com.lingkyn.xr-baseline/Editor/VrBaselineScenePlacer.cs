@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Lingkyn.Unity.XrBaseline.Config;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -33,7 +34,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         static void EnsureInteractionManager(Scene scene, Transform sceneRoot)
         {
             var managerType = Type.GetType(InteractionManagerTypeName);
-            if (managerType == null) return;
+            if (managerType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.interaction-manager", "XRInteractionManager type is not loaded; no interaction manager was placed in the Sandbox.");
+                return;
+            }
 
             foreach (var root in scene.GetRootGameObjects())
             {
@@ -58,7 +63,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             }
 
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineVisualPaths.FloorPlanePrefab);
-            if (prefab == null) return;
+            if (prefab == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.floor-prefab", $"the floor prefab is missing at {VrBaselineVisualPaths.FloorPlanePrefab}; no floor was placed.");
+                return;
+            }
 
             var existing = environment.Find(VrBaselineVisualPaths.SandboxFloorObjectName);
             if (existing != null)
@@ -77,10 +86,18 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         static void EnsureGrabbableCube(Transform sceneRoot, VrBaselineConfig config)
         {
             var interactables = sceneRoot.Find("_Gameplay/Interactables");
-            if (interactables == null) return;
+            if (interactables == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.hierarchy.interactables", "the Sandbox hierarchy has no _Gameplay/Interactables node; no grabbable cube was placed.", sceneRoot);
+                return;
+            }
 
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineVisualPaths.GrabbableCubePrefab);
-            if (prefab == null) return;
+            if (prefab == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.grabbable-cube-prefab", $"the grabbable cube prefab is missing at {VrBaselineVisualPaths.GrabbableCubePrefab}; no cube was placed.");
+                return;
+            }
 
             var existing = interactables.Find(VrBaselineVisualPaths.SandboxGrabbableObjectName);
             if (existing != null)

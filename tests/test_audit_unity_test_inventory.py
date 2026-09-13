@@ -49,7 +49,7 @@ class AuditUnityTestInventoryTests(unittest.TestCase):
         # Inventory Core: 22 cases recorded by the XAG-INV-01 Editor rerun plus the six tests
         # named by coverage-map.core.json. Interaction Core: 16 recorded plus the five tests
         # named by its coverage map. Every other count matches a recorded Editor run.
-        self.assertEqual(28, counts["Lingkyn.Inventory.Core.Editor.Tests"])
+        self.assertEqual(29, counts["Lingkyn.Inventory.Core.Editor.Tests"])
         self.assertEqual(21, counts["Lingkyn.Interaction.Core.Editor.Tests"])
         self.assertEqual(17, counts["Lingkyn.Interaction.Unity.Editor.Tests"])
         self.assertEqual(29, counts["Lingkyn.Settings.Core.Editor.Tests"])

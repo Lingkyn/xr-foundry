@@ -9,7 +9,7 @@
     "packages/unity/systems/inventory/com.lingkyn.inventory.core/Tests/Editor/InventoryAggregateTests.cs",
     "packages/unity/systems/inventory/com.lingkyn.inventory.core/Tests/Editor/InventoryInvariantTests.cs"
   ],
-  "audited_at_commit": "9cf70c1d840086c5c3150f04d839fb2a084bfa3f",
+  "audited_at_commit": "c3b354368224b9008f938064ac1c01ff4ff7bec0",
   "policy": {
     "unmapped_clause_is_open_gap": true,
     "partial_coverage_cannot_satisfy_gate": true,
@@ -19,9 +19,9 @@
     {
       "id": "CORE-01",
       "clause": "add/remove at zero, one, maximum stack, capacity edge, and overflow",
-      "coverage": "partial",
-      "tests": ["AddFillsStacksAndFailedOverflowIsAtomic", "RemoveFromEmptySlotIsRejectedAsSourceEmptyWithoutMutation", "NonPositiveStackQuantityIsRejectedAtConstruction", "AddExactlyAtMaximumStackAndCapacityBoundarySucceedsWithoutOverflow"],
-      "missing": ["a Remove or Move request whose quantity is zero must be rejected as InvalidRequest at execution (runtime behavior not yet asserted)"]
+      "coverage": "covered",
+      "tests": ["AddFillsStacksAndFailedOverflowIsAtomic", "RemoveFromEmptySlotIsRejectedAsSourceEmptyWithoutMutation", "NonPositiveStackQuantityIsRejectedAtConstruction", "AddExactlyAtMaximumStackAndCapacityBoundarySucceedsWithoutOverflow", "ZeroQuantityRemoveAndMoveAreRejectedAsInvalidRequestWithoutMutation"],
+      "missing": []
     },
     {
       "id": "CORE-02",
@@ -103,10 +103,10 @@
   ],
   "summary": {
     "clauses": 12,
-    "covered": 11,
-    "partial": 1,
+    "covered": 12,
+    "partial": 0,
     "unmapped": 0,
-    "open_gap_tests": 1,
-    "execution_note": "The six tests added after the first audit have not yet executed in a Unity Editor; the map records authored coverage, not results."
+    "open_gap_tests": 0,
+    "execution_note": "The seven tests added after the first audit have not yet executed in a Unity Editor; the map records authored coverage, not results."
   }
 }

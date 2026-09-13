@@ -6303,6 +6303,50 @@ def validate_consumer_lessons_register(root: Path) -> list[str]:
     return errors
 
 
+INVENTORY_PRESENTATION_ASMDEF = (
+    "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/Runtime/"
+    "Lingkyn.Inventory.Presentation.asmdef"
+)
+INVENTORY_AUTHORING_RUNTIME = "packages/unity/systems/inventory/com.lingkyn.inventory.unity/Runtime"
+SCENE_LOOKUP_PATTERN = re.compile(
+    r"\b(Resources\.Load|FindObjectOfType|FindObjectsOfType|FindAnyObjectByType|"
+    r"FindFirstObjectByType|FindObjectsByType)\b"
+)
+
+
+def validate_inventory_isolation_rules(root: Path) -> list[str]:
+    """Keep the Presentation assembly renderer-free and the authoring runtime lookup-free."""
+
+    errors: list[str] = []
+    asmdef_path = root / INVENTORY_PRESENTATION_ASMDEF
+    if asmdef_path.exists():
+        try:
+            asmdef = load_json(asmdef_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"Inventory Presentation asmdef is invalid JSON: {error}")
+            asmdef = None
+        if isinstance(asmdef, dict):
+            references = asmdef.get("references")
+            if references != ["Lingkyn.Inventory.Core"]:
+                errors.append(
+                    "Inventory Presentation assembly must reference only Lingkyn.Inventory.Core; "
+                    f"got {references!r}"
+                )
+            if asmdef.get("noEngineReferences") is not True:
+                errors.append("Inventory Presentation assembly must keep noEngineReferences=true")
+    runtime_root = root / INVENTORY_AUTHORING_RUNTIME
+    if runtime_root.is_dir():
+        for source in sorted(runtime_root.rglob("*.cs")):
+            text = source.read_text(encoding="utf-8", errors="replace")
+            match = SCENE_LOOKUP_PATTERN.search(text)
+            if match is not None:
+                errors.append(
+                    "Inventory authoring runtime must not use Resources or scene lookups: "
+                    f"{source.relative_to(root).as_posix()} uses {match.group(1)}"
+                )
+    return errors
+
+
 def validate_inventory_source_manifest(path: Path) -> list[str]:
     errors: list[str] = []
     if not path.exists():
@@ -8809,6 +8853,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))
+    errors.extend(validate_inventory_isolation_rules(root))
     errors.extend(validate_consumer_lessons_register(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():

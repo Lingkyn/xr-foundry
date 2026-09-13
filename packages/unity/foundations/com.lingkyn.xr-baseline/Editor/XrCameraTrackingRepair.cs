@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -58,7 +59,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         static void EnsureTrackedPoseDriver(GameObject cameraObject)
         {
             var tpdType = Type.GetType(TrackedPoseDriverTypeName);
-            if (tpdType == null) return;
+            if (tpdType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("inputsystem.tracked-pose-driver", "TrackedPoseDriver type is not loaded; head tracking was not wired on the rig camera.", cameraObject);
+                return;
+            }
 
             var driver = cameraObject.GetComponent(tpdType) ?? cameraObject.AddComponent(tpdType);
             if (driver is Behaviour behaviour) behaviour.enabled = true;

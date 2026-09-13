@@ -4,6 +4,7 @@ using UnityEngine.Rendering;
 using Lingkyn.Unity.XrBaseline.Editor.SceneSetup;
 using Lingkyn.Unity.XrBaseline.Config;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
 {
@@ -117,7 +118,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
         {
             var path = VrBaselineVisualPaths.Floor;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                XrBaselineDiagnostics.Unresolved("shader.lit", "neither the URP Lit nor the Standard shader is available; greybox materials were not created.");
+                return;
+            }
 
             var checker = AssetDatabase.GetBuiltinExtraResource<Texture2D>("Default-Checker-Gray.png");
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -145,7 +150,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
         {
             if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) return;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                XrBaselineDiagnostics.Unresolved("shader.lit", "neither the URP Lit nor the Standard shader is available; greybox materials were not created.");
+                return;
+            }
 
             var material = new Material(shader) { name = System.IO.Path.GetFileNameWithoutExtension(path) };
             material.SetColor("_BaseColor", color);
@@ -185,7 +194,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
         {
             if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) return;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                XrBaselineDiagnostics.Unresolved("shader.lit", "neither the URP Lit nor the Standard shader is available; greybox materials were not created.");
+                return;
+            }
 
             var material = new Material(shader) { name = System.IO.Path.GetFileNameWithoutExtension(path) };
             material.SetColor("_BaseColor", baseColor);

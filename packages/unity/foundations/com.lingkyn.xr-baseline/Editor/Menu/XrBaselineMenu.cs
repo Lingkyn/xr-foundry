@@ -7,6 +7,7 @@ using Lingkyn.Unity.XrBaseline.Config;
 using Lingkyn.Unity.XrBaseline.Constants;
 using Lingkyn.Unity.XrBaseline.Editor.ConfigTools;
 using Lingkyn.Unity.XrBaseline.Editor.SceneSetup;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.Menu
 {
@@ -15,6 +16,7 @@ namespace Lingkyn.Unity.XrBaseline.Editor.Menu
         [MenuItem("Tools/Lingkyn/XR Baseline/Initialize Sandbox")]
         public static void InitializeSandbox()
         {
+            XrBaselineDiagnostics.Reset();
             EnsureAssetFolder("Assets/_Project/Scenes");
             var scene = File.Exists(VrBaselineProjectPaths.SandboxScene)
                 ? EditorSceneManager.OpenScene(VrBaselineProjectPaths.SandboxScene, OpenSceneMode.Single)
@@ -38,7 +40,14 @@ namespace Lingkyn.Unity.XrBaseline.Editor.Menu
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, VrBaselineProjectPaths.SandboxScene);
-            Debug.Log("xr_baseline_initialized: Sandbox saved. Device behavior remains unverified until a headset test is recorded.");
+            if (XrBaselineDiagnostics.ReportedKeys.Count > 0)
+            {
+                Debug.LogWarning($"xr_baseline_initialized_with_unresolved: Sandbox saved, but {XrBaselineDiagnostics.ReportedKeys.Count} item(s) could not be configured; see the xr_baseline_unresolved warnings above.");
+            }
+            else
+            {
+                Debug.Log("xr_baseline_initialized: Sandbox saved. Device behavior remains unverified until a headset test is recorded.");
+            }
         }
 
         [MenuItem("Tools/Lingkyn/XR Baseline/Apply Config")]

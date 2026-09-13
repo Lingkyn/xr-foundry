@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using Lingkyn.Unity.XrBaseline.Config;
 using Object = UnityEngine.Object;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -176,7 +177,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             float lineWidth)
         {
             var lineVisualType = Type.GetType(LineVisualTypeName);
-            if (lineVisualType == null) return;
+            if (lineVisualType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.line-visual", "XRInteractorLineVisual type is not loaded; ray visuals were not configured.", rigRoot);
+                return;
+            }
 
             foreach (var lineVisual in rigRoot.GetComponentsInChildren(lineVisualType, true))
             {

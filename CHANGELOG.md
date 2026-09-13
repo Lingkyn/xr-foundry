@@ -5,6 +5,17 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Closed every open test gap in the Inventory coverage maps: added the
+  zero-quantity request test to Inventory Core and the invalid-limit diagnostic
+  test to Inventory Unity, and added the `validate_inventory_isolation_rules`
+  repository rule that pins the Presentation assembly to `Lingkyn.Inventory.Core`
+  only and rejects `Resources.Load` and scene lookups in the authoring runtime.
+  The nine remaining partial clauses are evidence gates.
+- Audited every silent by-name resolution in the XR Baseline Editor tools and
+  routed them through a new once-per-key `XrBaselineDiagnostics` warning, so
+  `Initialize Sandbox` reports unresolved XRI, Input System, shader, or asset
+  members instead of logging a clean success. LESSON-004 and LESSON-005 are now
+  adopted for their remaining families, pending Editor execution.
 - Authored the three Persistence Core and five Interaction Core tests their
   coverage maps had named, marking both maps fully covered pending Editor
   execution, and mapped the Inventory Unity authoring, Presentation,

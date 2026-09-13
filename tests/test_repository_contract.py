@@ -920,6 +920,27 @@ class RepositoryContractTests(unittest.TestCase):
                 )
 
 
+    def test_inventory_isolation_rules_pass_and_fail_closed(self) -> None:
+        self.assertEqual([], MODULE.validate_inventory_isolation_rules(ROOT))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            asmdef = root / MODULE.INVENTORY_PRESENTATION_ASMDEF
+            asmdef.parent.mkdir(parents=True)
+            asmdef.write_text(
+                json.dumps({"name": "Lingkyn.Inventory.Presentation", "references": ["Lingkyn.Inventory.Core", "Unity.ugui"], "noEngineReferences": False}),
+                encoding="utf-8",
+            )
+            runtime = root / MODULE.INVENTORY_AUTHORING_RUNTIME
+            runtime.mkdir(parents=True)
+            (runtime / "Lookup.cs").write_text(
+                "namespace Lingkyn.Inventory.Unity { static class L { static void F() { var x = UnityEngine.Resources.Load(\"a\"); } } }\n",
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_inventory_isolation_rules(root)
+        self.assertTrue(any("reference only Lingkyn.Inventory.Core" in error for error in errors), errors)
+        self.assertTrue(any("noEngineReferences" in error for error in errors), errors)
+        self.assertTrue(any("Resources.Load" in error for error in errors), errors)
+
     def test_operating_mandates_validate_and_fail_closed(self) -> None:
         self.assertEqual([], MODULE.validate_operating_mandates(ROOT))
         mandate_path = ROOT / "docs" / "governance" / "mandates" / "weekly-steward.mandate.json"

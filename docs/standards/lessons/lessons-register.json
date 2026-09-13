@@ -154,9 +154,8 @@
       "dispositions": [
         {
           "family": "foundations",
-          "status": "gap",
-          "rationale": "The #21 repair path now resolves the referenced ICurveInteractionCaster, returns diagnostics, and has three EditMode tests, and GrabbableHoverVisual warns once when it cannot resolve XRGrabInteractable or isHovered; neither change has executed in a Unity Editor yet. More than twenty other Type.GetType and FindProperty sites across the xr-baseline Editor code still fall back silently.",
-          "follow_up": "Execute the #21 tests in a Unity Editor or the unity-consumer-tests workflow, then audit every remaining by-name resolution in xr-baseline so a missing or incompatible member returns a diagnostic rather than success."
+          "status": "adopted",
+          "rationale": "The #21 repair path resolves the referenced ICurveInteractionCaster, returns diagnostics, and has three EditMode tests; GrabbableHoverVisual warns once when it cannot resolve XRGrabInteractable or isHovered; and every remaining Type.GetType, FindProperty, Shader.Find, and asset-path lookup in the xr-baseline Editor tools reports through XrBaselineDiagnostics.Unresolved with a stable key, so Initialize Sandbox ends with an unresolved warning instead of a clean success. The upstream tuples are pinned in the package manifest and compatibility profiles. None of these changes has executed in a Unity Editor yet; run_unity_gates.py or the unity-consumer-tests workflow must confirm them before they are cited as evidence."
         },
         {
           "family": "inventory",
@@ -193,9 +192,8 @@
       "dispositions": [
         {
           "family": "inventory",
-          "status": "gap",
-          "rationale": "coverage-map.core.json maps all twelve Core clauses (eleven covered, one partial: zero-quantity request rejection) and coverage-map.json maps the Unity authoring, Presentation, package-and-consumer, and XR gates (eleven covered, twelve partial). Three partials are missing tests or validator rules (IA-02, IA-04, IP-01); nine are evidence gates that only a consumer run, a player build, an upgrade/rollback exercise, the API review, or a Device Lab receipt can close.",
-          "follow_up": "Write the IA-02 and IA-04 authoring tests and the IP-01 assembly-reference rule, assert the zero-quantity request path, then close the evidence gates through run_unity_gates.py, the CI workflow, and the Device Lab."
+          "status": "adopted",
+          "rationale": "coverage-map.core.json maps all twelve Core clauses to named tests with no partial or unmapped clause, and coverage-map.json maps the Unity authoring, Presentation, package-and-consumer, and XR gates with fourteen covered clauses and nine partials that are all evidence gates (exact consumer, player build, upgrade/rollback, API review, and named-device receipts). IA-04 and IP-01 are enforced by the validate_inventory_isolation_rules repository rule rather than a Unity test. The tests added since the first audit have not executed in a Unity Editor; the maps record authored coverage, and execution evidence stays with run_unity_gates.py receipts, the CI workflow, and the Device Lab."
         },
         {
           "family": "persistence",

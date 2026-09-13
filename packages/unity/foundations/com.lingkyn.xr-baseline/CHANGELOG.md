@@ -12,6 +12,15 @@
   test assembly now references `Unity.XR.Interaction.Toolkit`. Not yet executed in
   a Unity Editor; the `unity-consumer-tests` workflow or a maintainer run must
   confirm it before the fix is cited as evidence.
+- Added `XrBaselineDiagnostics` (Editor) and routed every by-name resolution in
+  the Sandbox Editor tools through it: XRI grab interactable, teleportation area,
+  line visual, tracked pose driver, affordance, scene placer, asset factory,
+  enclosure, and scale-reference lookups now log one
+  `xr_baseline_unresolved: <key>: <reason>` warning per key instead of silently
+  skipping. `Initialize Sandbox` resets the key set first and ends with
+  `xr_baseline_initialized_with_unresolved` when any key was reported, so a
+  partially configured Sandbox is never logged as a clean success. Added one
+  EditMode test for the once-per-key behavior. Not yet executed in a Unity Editor.
 - `GrabbableHoverVisual` now logs one warning per component when XR Interaction
   Toolkit is missing, the GameObject has no `XRGrabInteractable`, or the `isHovered`
   property cannot be resolved, instead of silently never lighting up.

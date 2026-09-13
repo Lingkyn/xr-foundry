@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -33,7 +34,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 
             EnsureScaleReferencePrefab();
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineVisualPaths.ScaleReferencePrefab);
-            if (prefab == null) return;
+            if (prefab == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.scale-reference-prefab", $"the scale reference prefab could not be created or loaded at {VrBaselineVisualPaths.ScaleReferencePrefab}; no scale reference was placed.");
+                return;
+            }
 
             var existing = environmentParent.Find(VrBaselineVisualPaths.SandboxScaleReferenceName);
             if (existing != null)

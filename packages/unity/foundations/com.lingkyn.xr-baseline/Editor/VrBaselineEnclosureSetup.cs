@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -26,7 +27,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             if (environmentParent == null) return;
 
             var material = AssetDatabase.LoadAssetAtPath<Material>(VrBaselineVisualPaths.Environment);
-            if (material == null) return;
+            if (material == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.environment-material", $"the environment material is missing at {VrBaselineVisualPaths.Environment}; the enclosure was not built.");
+                return;
+            }
 
             var enclosure = environmentParent.Find(VrBaselineVisualPaths.SandboxEnclosureName);
             if (enclosure == null)

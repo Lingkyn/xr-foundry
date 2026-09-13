@@ -12,6 +12,11 @@
   test assembly now references `Unity.XR.Interaction.Toolkit`. Not yet executed in
   a Unity Editor; the `unity-consumer-tests` workflow or a maintainer run must
   confirm it before the fix is cited as evidence.
+- Documentation only: the package's Editor gate is now written down in
+  `docs/standards/foundations/verification-contract.md` and mapped to the five
+  existing EditMode tests in `docs/standards/foundations/coverage-map.json`, which
+  also names the two tests still missing (Initialize Sandbox unresolved warning,
+  hover visual warning).
 - Added `XrBaselineDiagnostics` (Editor) and routed every by-name resolution in
   the Sandbox Editor tools through it: XRI grab interactable, teleportation area,
   line visual, tracked pose driver, affordance, scene placer, asset factory,

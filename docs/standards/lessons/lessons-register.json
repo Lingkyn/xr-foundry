@@ -212,9 +212,8 @@
         },
         {
           "family": "foundations",
-          "status": "gap",
-          "rationale": "Each foundation package carries one EditMode test and neither has a verification contract to map against.",
-          "follow_up": "Write a minimal verification contract for each foundation package and map its clauses to named tests."
+          "status": "adopted",
+          "rationale": "docs/standards/foundations/verification-contract.md names the Project Initializer and XR Baseline Editor gates and the claim ceiling; docs/standards/foundations/coverage-map.json maps thirteen clauses (seven covered, five missing named tests, one Device Lab evidence gate) to the six existing EditMode tests. The missing tests are enumerated as open gaps rather than implied, and the map is not execution evidence."
         }
       ]
     },

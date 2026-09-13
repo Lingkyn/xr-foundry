@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the foundations family standard (`docs/standards/foundations/`): a
+  minimal verification contract for `com.lingkyn.project-initializer` and
+  `com.lingkyn.xr-baseline`, a coverage map binding its thirteen clauses to the
+  six existing EditMode tests and naming the five still missing, and the
+  `RequiredFoldersAreUnderProjectRootAndUnique` test. LESSON-005 is now adopted
+  for every live family.
 - Closed every open test gap in the Inventory coverage maps: added the
   zero-quantity request test to Inventory Core and the invalid-limit diagnostic
   test to Inventory Unity, and added the `validate_inventory_isolation_rules`

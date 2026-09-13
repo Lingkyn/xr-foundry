@@ -1,0 +1,144 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "foundations",
+  "contract": "docs/standards/foundations/verification-contract.md",
+  "audited_at_commit": "5214777fef3a249379ddcdb48ced9fad46b6c769",
+  "policy": {
+    "mapping_basis": "test method names and bodies read at the audited commit, matched against contract clause text",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true,
+    "device_clauses_need_a_device_lab_receipt": true
+  },
+  "gates": [
+    {
+      "id": "project_initializer_editor",
+      "section": "Project Initializer Editor gate",
+      "package_id": "com.lingkyn.project-initializer",
+      "test_assembly": "Lingkyn.ProjectInitializer.Editor.Tests",
+      "clauses": [
+        {
+          "id": "PI-01",
+          "clause": "every baseline scene path is under the project root and contains no consumer product name",
+          "coverage": "covered",
+          "tests": ["BaselineScenesAreConsumerNeutralAndUnderProjectRoot"],
+          "missing": []
+        },
+        {
+          "id": "PI-02",
+          "clause": "every required folder is under the project root, uses forward slashes with no trailing slash, is unique, and contains no consumer product name",
+          "coverage": "covered",
+          "tests": ["RequiredFoldersAreUnderProjectRootAndUnique"],
+          "missing": []
+        },
+        {
+          "id": "PI-03",
+          "clause": "running the folder scaffold twice reuses every existing folder and creates nothing new the second time",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a test that scaffolds into a disposable project root and asserts the second ScaffoldResult reports only reused folders; ProjectFolderScaffold currently targets the fixed Assets/_Project root, so the test needs an injectable root or a guarded real-project run"]
+        },
+        {
+          "id": "PI-04",
+          "clause": "Validate reports each missing required folder, baseline scene, and activation marker with a stable issue code and marks the folder and marker issues auto-fixable",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a test on IndieProjectValidator.ValidateIndieBaseline in a project without the scaffold asserting INIT_FOLDER_MISSING, INIT_SCENE_MISSING, and INIT_MARKER_MISSING with AutoFixable on the folder and marker issues"]
+        },
+        {
+          "id": "PI-05",
+          "clause": "the Editor and test assembly definitions reference no consumer runtime assembly",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a repository validation rule pinning Lingkyn.ProjectInitializer.Editor and its test asmdef references to Lingkyn.* and Unity-owned assemblies only"]
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "xr_baseline_editor",
+      "section": "XR Baseline Editor gate",
+      "package_id": "com.lingkyn.xr-baseline",
+      "test_assembly": "Lingkyn.XrBaseline.Editor.Tests",
+      "clauses": [
+        {
+          "id": "XB-01",
+          "clause": "a fresh VrBaselineConfig keeps continuous move disabled and every generated path constant stays under Assets/_Project with no consumer product name",
+          "coverage": "covered",
+          "tests": ["DefaultsAreSafeAndConsumerNeutral"],
+          "missing": []
+        },
+        {
+          "id": "XB-02",
+          "clause": "rig repair configures the caster each NearFarInteractor references, raises a shorter cast distance, and never lowers a longer authored value",
+          "coverage": "covered",
+          "tests": ["ShortCurveCasterIsRaisedToConfiguredDistanceAndNeverLowered"],
+          "missing": []
+        },
+        {
+          "id": "XB-03",
+          "clause": "an interactor without a resolvable far caster produces a failed result whose diagnostic names the interactor",
+          "coverage": "covered",
+          "tests": ["MissingFarCasterIsReportedInsteadOfSilentSuccess"],
+          "missing": []
+        },
+        {
+          "id": "XB-04",
+          "clause": "a rig with no interactors succeeds, configures nothing, and claims nothing",
+          "coverage": "covered",
+          "tests": ["RigWithoutInteractorsReportsNothingAndClaimsNothing"],
+          "missing": []
+        },
+        {
+          "id": "XB-05",
+          "clause": "every by-name resolution reports through XrBaselineDiagnostics.Unresolved once per key, and the key set can be reset",
+          "coverage": "covered",
+          "tests": ["UnresolvedMemberIsReportedOncePerKeyUntilReset"],
+          "missing": [],
+          "note": "The test proves the once-per-key helper; the wiring of every Editor call site through it was audited by reading the source at the audited commit and is listed in the xr-baseline changelog."
+        },
+        {
+          "id": "XB-06",
+          "clause": "Initialize Sandbox resets the key set first and ends with xr_baseline_initialized_with_unresolved when any key was reported",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a test that runs XrBaselineMenu.InitializeSandbox in a project without the XRI Starter Assets sample and expects the xr_baseline_initialized_with_unresolved warning; it needs a disposable scene and Build Settings guard"]
+        },
+        {
+          "id": "XB-07",
+          "clause": "GrabbableHoverVisual warns once per component when XR Interaction Toolkit, XRGrabInteractable, or isHovered cannot be resolved",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a test adding GrabbableHoverVisual to a GameObject without XRGrabInteractable and expecting exactly one warning across several Update calls"]
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "device",
+      "section": "Claim ceiling",
+      "package_id": "com.lingkyn.xr-baseline",
+      "test_assembly": null,
+      "clauses": [
+        {
+          "id": "XB-DEV-01",
+          "clause": "headset tracking, grab, teleport, and comfort behavior of the generated Sandbox",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a Device Lab receipt bound to a full commit SHA; no package test can close this clause"]
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 13,
+    "covered": 7,
+    "partial": 6,
+    "unmapped": 0,
+    "open_gap_tests": 5,
+    "open_evidence_gaps": 1,
+    "execution_note": "RequiredFoldersAreUnderProjectRootAndUnique, the three rig repair tests, and UnresolvedMemberIsReportedOncePerKeyUntilReset have not executed in a Unity Editor; the map records authored coverage, not results."
+  }
+}

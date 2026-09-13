@@ -49,9 +49,10 @@
         {
           "id": "PI-05",
           "clause": "the Editor and test assembly definitions reference no consumer runtime assembly",
-          "coverage": "partial",
-          "tests": [],
-          "missing": ["a repository validation rule pinning Lingkyn.ProjectInitializer.Editor and its test asmdef references to Lingkyn.* and Unity-owned assemblies only"]
+          "coverage": "covered",
+          "tests": ["validator:validate_foundation_assembly_references"],
+          "missing": [],
+          "note": "validate_foundation_assembly_references in scripts/validate_repository.py rejects any reference under packages/unity/foundations that is not a Lingkyn.* or Unity-owned assembly name (GUID references included); tests/test_repository_contract.py proves the rule fails closed."
         }
       ],
       "additional_tests_outside_clauses": []
@@ -134,10 +135,10 @@
   ],
   "summary": {
     "clauses": 13,
-    "covered": 7,
-    "partial": 6,
+    "covered": 8,
+    "partial": 5,
     "unmapped": 0,
-    "open_gap_tests": 5,
+    "open_gap_tests": 4,
     "open_evidence_gaps": 1,
     "execution_note": "RequiredFoldersAreUnderProjectRootAndUnique, the three rig repair tests, and UnresolvedMemberIsReportedOncePerKeyUntilReset have not executed in a Unity Editor; the map records authored coverage, not results."
   }

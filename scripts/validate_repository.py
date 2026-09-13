@@ -6347,6 +6347,41 @@ def validate_inventory_isolation_rules(root: Path) -> list[str]:
     return errors
 
 
+FOUNDATIONS_PACKAGES_ROOT = "packages/unity/foundations"
+FOUNDATION_REFERENCE_PREFIXES = ("Lingkyn.", "Unity.", "UnityEngine.", "UnityEditor.")
+
+
+def validate_foundation_assembly_references(root: Path) -> list[str]:
+    """Foundation assemblies may reference only Lingkyn.* and Unity-owned assemblies (PI-05)."""
+
+    errors: list[str] = []
+    foundations_root = root / FOUNDATIONS_PACKAGES_ROOT
+    if not foundations_root.is_dir():
+        return errors
+    for asmdef_path in sorted(foundations_root.rglob("*.asmdef")):
+        relative = asmdef_path.relative_to(root).as_posix()
+        try:
+            asmdef = load_json(asmdef_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"Foundation asmdef is invalid JSON: {relative}: {error}")
+            continue
+        if not isinstance(asmdef, dict):
+            errors.append(f"Foundation asmdef must be a JSON object: {relative}")
+            continue
+        references = asmdef.get("references", [])
+        if not isinstance(references, list):
+            errors.append(f"Foundation asmdef references must be a list: {relative}")
+            continue
+        for reference in references:
+            name = str(reference)
+            if name.startswith("GUID:") or not name.startswith(FOUNDATION_REFERENCE_PREFIXES):
+                errors.append(
+                    "Foundation assembly must reference only Lingkyn.* or Unity-owned assemblies by name: "
+                    f"{relative} references {name!r}"
+                )
+    return errors
+
+
 def validate_inventory_source_manifest(path: Path) -> list[str]:
     errors: list[str] = []
     if not path.exists():
@@ -8854,6 +8889,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))
     errors.extend(validate_inventory_isolation_rules(root))
+    errors.extend(validate_foundation_assembly_references(root))
     errors.extend(validate_consumer_lessons_register(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():

@@ -941,6 +941,21 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("noEngineReferences" in error for error in errors), errors)
         self.assertTrue(any("Resources.Load" in error for error in errors), errors)
 
+    def test_foundation_assembly_references_pass_and_fail_closed(self) -> None:
+        self.assertEqual([], MODULE.validate_foundation_assembly_references(ROOT))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            asmdef = root / MODULE.FOUNDATIONS_PACKAGES_ROOT / "com.example.foundation" / "Editor" / "Example.Editor.asmdef"
+            asmdef.parent.mkdir(parents=True)
+            asmdef.write_text(
+                json.dumps({"name": "Lingkyn.Example.Editor", "references": ["Lingkyn.Example.Runtime", "Unity.InputSystem", "ConsumerProduct.Runtime", "GUID:0123456789abcdef0123456789abcdef"]}),
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_foundation_assembly_references(root)
+        self.assertEqual(2, len(errors), errors)
+        self.assertTrue(any("'ConsumerProduct.Runtime'" in error for error in errors), errors)
+        self.assertTrue(any("GUID:" in error for error in errors), errors)
+
     def test_operating_mandates_validate_and_fail_closed(self) -> None:
         self.assertEqual([], MODULE.validate_operating_mandates(ROOT))
         mandate_path = ROOT / "docs" / "governance" / "mandates" / "weekly-steward.mandate.json"

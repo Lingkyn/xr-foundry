@@ -213,7 +213,7 @@
         {
           "family": "foundations",
           "status": "adopted",
-          "rationale": "docs/standards/foundations/verification-contract.md names the Project Initializer and XR Baseline Editor gates and the claim ceiling; docs/standards/foundations/coverage-map.json maps thirteen clauses (seven covered, five missing named tests, one Device Lab evidence gate) to the six existing EditMode tests. The missing tests are enumerated as open gaps rather than implied, and the map is not execution evidence."
+          "rationale": "docs/standards/foundations/verification-contract.md names the Project Initializer and XR Baseline Editor gates and the claim ceiling; docs/standards/foundations/coverage-map.json maps thirteen clauses (eight covered, four missing named tests, one Device Lab evidence gate) to the six existing EditMode tests and the validate_foundation_assembly_references repository rule. The missing tests are enumerated as open gaps rather than implied, and the map is not execution evidence."
         }
       ]
     },

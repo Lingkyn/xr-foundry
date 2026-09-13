@@ -24,8 +24,8 @@
         {
           "family": "inventory",
           "status": "gap",
-          "rationale": "ItemDefinition carries Tags only. Issue #85 records three options: a Core kind identity plus an optional profile, a Presentation-only filter contract, or an explicit deferral. None has been decided.",
-          "follow_up": "Record the #85 decision in the Inventory standard and coverage matrix before the public API compatibility review. If admitted, add a validated ItemKindId to Core and read-only FilterByKind and ClearKindFilter intents to Presentation; chrome stays in renderer adapters."
+          "rationale": "ItemDefinition carries Tags only. docs/standards/inventory/proposals/0001-item-kind-taxonomy.md lays out the three options from Issue #85 with a recommendation and the required source check; the maintainer decision is pending.",
+          "follow_up": "Maintainer records the decision in proposal 0001 and the coverage matrix before the public API compatibility review. If option A is admitted, add a validated ItemKindId to Core and read-only FilterByKind and ClearKindFilter intents to Presentation; chrome stays in renderer adapters."
         },
         {
           "family": "settings",
@@ -65,8 +65,8 @@
         {
           "family": "inventory",
           "status": "gap",
-          "rationale": "The move from the single-renderer layout to the presentation-split graph (Core 0.1.1, Presentation 0.1.0, UGUI 0.2.0) shipped without a consumer migration note, and no upgrade or rollback from a released revision has been recorded.",
-          "follow_up": "Write the migration note for the presentation-split graph in the Inventory standard and the affected package changelogs, then record one consumer upgrade and rollback against it. This is the upgrade_and_rollback_across_a_release gate."
+          "rationale": "The move from the single-renderer layout to the presentation-split graph (Core 0.1.1, Presentation 0.1.0, UGUI 0.2.0) shipped without a consumer migration note. docs/standards/inventory/migration-presentation-split.md now records the steps, but no upgrade or rollback from a released revision has been executed and recorded.",
+          "follow_up": "Execute one consumer upgrade and rollback against the migration note from unity-first-batch-v0.1.0 and record the tuple. This is the upgrade_and_rollback_across_a_release gate."
         },
         {
           "family": "persistence",
@@ -110,32 +110,32 @@
         {
           "family": "inventory",
           "status": "gap",
-          "rationale": "The repository-owned reference consumer hosts only the eight binding-endpoint packages and runs by hand. The seven Inventory profiles are anchored at a superseded commit and the promotion fields in package-catalog.json disagree with the recorded receipts.",
-          "follow_up": "Run the Inventory profiles in continuous integration from the repository-owned consumer on every push to main, then regenerate the promotion fields in package-catalog.json from the receipts instead of editing them by hand."
+          "rationale": "The unity-consumer-tests workflow now runs every test assembly of the reference consumer in CI with source-audited exact counts, but it has no license secret yet and no green run on main. The seven Inventory profiles remain anchored at a superseded commit and the promotion fields in package-catalog.json still disagree with the recorded receipts.",
+          "follow_up": "Configure the Unity license secret, obtain the first green unity-consumer-tests run on main, then regenerate the promotion fields in package-catalog.json from the receipts instead of editing them by hand."
         },
         {
           "family": "persistence",
           "status": "gap",
-          "rationale": "Verified profiles exist only at their recorded evidence commit; nothing re-runs them when the packages change.",
+          "rationale": "Verified profiles exist only at their recorded evidence commit. The unity-consumer-tests workflow includes this family's test assemblies through the reference consumer, but it has no license secret yet and no green run on main.",
           "follow_up": "Add the Persistence Core and Unity test assemblies to the continuous-integration Unity consumer."
         },
         {
           "family": "settings",
           "status": "gap",
-          "rationale": "Verified profiles exist only at their recorded evidence commit; nothing re-runs them when the packages change.",
+          "rationale": "Verified profiles exist only at their recorded evidence commit. The unity-consumer-tests workflow includes this family's test assemblies through the reference consumer, but it has no license secret yet and no green run on main.",
           "follow_up": "Add the Settings Core and Unity test assemblies to the continuous-integration Unity consumer."
         },
         {
           "family": "interaction",
           "status": "gap",
-          "rationale": "Verified profiles exist only at their recorded evidence commit; nothing re-runs them when the packages change.",
+          "rationale": "Verified profiles exist only at their recorded evidence commit. The unity-consumer-tests workflow includes this family's test assemblies through the reference consumer, but it has no license secret yet and no green run on main.",
           "follow_up": "Add the Interaction Core and Unity test assemblies to the continuous-integration Unity consumer."
         },
         {
           "family": "foundations",
           "status": "gap",
-          "rationale": "The project-initializer and xr-baseline profiles each carry a single EditMode test at the evidence commit and nothing re-runs them.",
-          "follow_up": "Add both foundation packages to the continuous-integration Unity consumer and extend their contract tests beyond the current single default-safety test."
+          "rationale": "The project-initializer and xr-baseline profiles are verified only at the evidence commit, and neither foundation package is embedded in the reference consumer that unity-consumer-tests runs, so CI does not cover them yet.",
+          "follow_up": "Add both foundation packages to the materialized consumer so unity-consumer-tests runs their EditMode assemblies, then extend project-initializer beyond its single default-safety test."
         }
       ]
     },
@@ -155,8 +155,8 @@
         {
           "family": "foundations",
           "status": "gap",
-          "rationale": "More than twenty Type.GetType and FindProperty sites across the xr-baseline Editor and Runtime code resolve XRI members by name. The repair path and the hover visual fall back silently when a member is missing.",
-          "follow_up": "Fix #21 with positive and negative tests, then audit every by-name resolution in xr-baseline so a missing or incompatible member returns a diagnostic rather than success."
+          "rationale": "The #21 repair path now resolves the referenced ICurveInteractionCaster, returns diagnostics, and has three EditMode tests, but those tests have not yet executed in a Unity Editor. More than twenty other Type.GetType and FindProperty sites across the xr-baseline Editor and Runtime code, including the GrabbableHoverVisual, still fall back silently.",
+          "follow_up": "Execute the #21 tests in a Unity Editor or the unity-consumer-tests workflow, then audit every remaining by-name resolution in xr-baseline so a missing or incompatible member returns a diagnostic rather than success."
         },
         {
           "family": "inventory",
@@ -194,8 +194,8 @@
         {
           "family": "inventory",
           "status": "gap",
-          "rationale": "One clause was closed by XAG-INV-01. UnknownContainer and SourceEmpty remain untested and no clause-to-test map exists for the Core behavior gate.",
-          "follow_up": "Add the remaining rejection-code tests and publish a clause-to-test map for the Core behavior gate in the coverage matrix."
+          "rationale": "docs/standards/inventory/coverage-map.core.json now maps all twelve Core behavior gate clauses to named tests: nine covered, three partial, six tests still missing (SourceEmpty, UnknownContainer, zero-quantity, exact-boundary, full-destination transfer, and multi-seed invariants).",
+          "follow_up": "Write the six missing Core tests named in coverage-map.core.json, then extend the map to the Unity authoring, Presentation, UGUI, and XR gates."
         },
         {
           "family": "persistence",

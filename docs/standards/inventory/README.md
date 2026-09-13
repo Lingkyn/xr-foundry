@@ -112,3 +112,13 @@ may reach candidate maturity without promoting a higher layer or the whole famil
 - [`renderer-neutral-architecture.md`](renderer-neutral-architecture.md):
   renderer-neutral presentation, renderer-explicit XR composition, Git pinning,
   and evidence boundaries.
+
+## Decision, migration, and coverage records
+
+- [Proposal 0001: Item Kind as a closed classification beside open Tags](proposals/0001-item-kind-taxonomy.md)
+  answers Issue #85 and awaits a maintainer decision.
+- [Migration: single-renderer layout to the presentation-split graph](migration-presentation-split.md)
+  gives consumers pinned before the presentation split their upgrade and rollback steps.
+- [`coverage-map.core.json`](coverage-map.core.json) maps every clause of the Core
+  behavior gate to named tests and lists the tests still missing; an unmapped or
+  partial clause is an open gap, not implied coverage.

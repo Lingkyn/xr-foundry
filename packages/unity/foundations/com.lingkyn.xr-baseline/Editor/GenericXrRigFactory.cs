@@ -21,7 +21,7 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             {
                 ReparentUnderPlayer(existing, playerParent);
                 XrCameraTrackingRepair.Repair(existing);
-                XrRigInteractionRepair.Repair(existing, config);
+                ReportRepair(XrRigInteractionRepair.Repair(existing, config), existing);
                 EnsureXrRigAnchor(existing);
                 return existing;
             }
@@ -39,9 +39,21 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             instance.SetActive(true);
 
             XrCameraTrackingRepair.Repair(instance);
-            XrRigInteractionRepair.Repair(instance, config);
+            ReportRepair(XrRigInteractionRepair.Repair(instance, config), instance);
             EnsureXrRigAnchor(instance);
             return instance;
+        }
+
+        /// <summary>
+        /// A repair that could not configure an interactor is an error in the Console, not a
+        /// silently "initialized" Sandbox. The rig is still returned so the caller can inspect it.
+        /// </summary>
+        static void ReportRepair(XrRigInteractionRepairResult result, GameObject rig)
+        {
+            foreach (var diagnostic in result.Diagnostics)
+            {
+                Debug.LogError($"xr_baseline_repair_failed: {diagnostic}", rig);
+            }
         }
 
         public static GameObject FindRigInScene(Scene scene)

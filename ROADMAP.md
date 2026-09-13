@@ -32,6 +32,17 @@ packages at the binding endpoints in one Editor tuple. The composition keeps
 and named-device evidence exist; each of those is a separate gate. See
 [`docs/architecture/component-composition-model.md`](docs/architecture/component-composition-model.md).
 
+## Continuous Unity evidence
+
+The `unity-consumer-tests` workflow materializes the repository-owned reference
+consumer, derives the exact test-case count of every test assembly from source, runs
+each assembly in its own Unity process, and accepts a result only when the
+repository's verifier proves that exact assembly passed completely. It activates
+when a Unity license secret is configured and skips itself on fork pull requests.
+Until its first green run on `main`, every `*_tests` and `local_clean_consumer`
+gate remains workstation evidence anchored at a recorded commit. A green run is
+Editor evidence for one tuple, never a player, controller, or headset claim.
+
 ## Candidate gate
 
 - Repository validator and Python contract tests pass.

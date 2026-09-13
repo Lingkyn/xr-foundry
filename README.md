@@ -234,7 +234,13 @@ The fast structure command is iteration feedback and cannot support promotion or
 release. The full command runs repository validation first and skips the test
 suite if that first stage fails.
 
-Unity package tests run from a Unity consumer through the Test Framework.
+Unity package tests run from a Unity consumer through the Test Framework. The
+`unity-consumer-tests` workflow runs them in CI from the repository-owned reference
+consumer, one assembly per Unity process, and accepts each result only through
+`scripts/verify_unity_test_results.py` against a case count audited from source by
+`scripts/audit_unity_test_inventory.py`. It needs a Unity license stored as a
+repository secret (`UNITY_LICENSE`, or `UNITY_EMAIL` and `UNITY_PASSWORD`) and skips
+itself on fork pull requests, where secrets are unavailable.
 
 ## Contributing and license
 

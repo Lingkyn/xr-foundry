@@ -1,0 +1,111 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "package_id": "com.lingkyn.inventory.core",
+  "contract": "docs/standards/inventory/verification-contract.md",
+  "contract_section": "3. Core behavior gate",
+  "test_assembly": "Lingkyn.Inventory.Core.Editor.Tests",
+  "test_sources": [
+    "packages/unity/systems/inventory/com.lingkyn.inventory.core/Tests/Editor/InventoryAggregateTests.cs",
+    "packages/unity/systems/inventory/com.lingkyn.inventory.core/Tests/Editor/InventoryInvariantTests.cs"
+  ],
+  "audited_at_commit": "9cf70c1d840086c5c3150f04d839fb2a084bfa3f",
+  "policy": {
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "clauses": [
+    {
+      "id": "CORE-01",
+      "clause": "add/remove at zero, one, maximum stack, capacity edge, and overflow",
+      "coverage": "partial",
+      "tests": ["AddFillsStacksAndFailedOverflowIsAtomic"],
+      "missing": ["remove from an empty slot (SourceEmpty rejection path and unchanged state)", "add or remove of quantity zero (rejection path)", "add exactly at maximum stack and exactly at capacity (boundary without overflow)"]
+    },
+    {
+      "id": "CORE-02",
+      "clause": "split/merge conservation of quantity",
+      "coverage": "covered",
+      "tests": ["SplitAndMergeConserveQuantity"],
+      "missing": []
+    },
+    {
+      "id": "CORE-03",
+      "clause": "move/swap/transfer across valid and invalid containers",
+      "coverage": "partial",
+      "tests": ["MoveSwapAndTransferHaveExplicitSemantics"],
+      "missing": ["move, swap, or transfer that names an unknown container rejects with UnknownContainer", "transfer into a full destination container rejects without mutating the source"]
+    },
+    {
+      "id": "CORE-04",
+      "clause": "unique and mutable instances",
+      "coverage": "covered",
+      "tests": ["UniqueInstancesRequireIdentityAndRejectDuplicates", "TypedInstanceStateSurvivesMutationMovePersistenceAndRestore", "InstanceStateRemovalIsExplicitAndTransactional", "UnregisteredTypedStateAndFungibleStateAreRejected"],
+      "missing": []
+    },
+    {
+      "id": "CORE-05",
+      "clause": "duplicate IDs and unresolved definitions",
+      "coverage": "covered",
+      "tests": ["UniqueInstancesRequireIdentityAndRejectDuplicates", "UnresolvedDefinitionAddIsRejectedWithoutMutation", "DefaultIdentifiersCannotEnterAuthoredDomainObjects"],
+      "missing": []
+    },
+    {
+      "id": "CORE-06",
+      "clause": "policy composition and structured rejection reasons",
+      "coverage": "covered",
+      "tests": ["RejectedPolicyLeavesStateAndRevisionUnchanged", "PolicyCanInspectDefinitionMetadataWithoutConsumerCoupling"],
+      "missing": []
+    },
+    {
+      "id": "CORE-07",
+      "clause": "failed-operation immutability and successful-operation atomicity",
+      "coverage": "covered",
+      "tests": ["AddFillsStacksAndFailedOverflowIsAtomic", "RejectedPolicyLeavesStateAndRevisionUnchanged", "UnresolvedDefinitionAddIsRejectedWithoutMutation", "InvalidPersistenceStateLeavesInventoryAndRevisionUnchanged"],
+      "missing": []
+    },
+    {
+      "id": "CORE-08",
+      "clause": "revision increments and post-commit event ordering",
+      "coverage": "covered",
+      "tests": ["ChangeEventObservesCommittedStateAndObserverFailureDoesNotUndoMutation", "RestoreObserversSeeCommittedStateAndCannotRollbackIt"],
+      "missing": []
+    },
+    {
+      "id": "CORE-09",
+      "clause": "snapshot immutability",
+      "coverage": "covered",
+      "tests": ["SnapshotsDoNotChangeAfterLaterMutations"],
+      "missing": []
+    },
+    {
+      "id": "CORE-10",
+      "clause": "persistence round trip and migrations",
+      "coverage": "covered",
+      "tests": ["PersistenceRoundTripRestoresEquivalentStateAtomically", "InvalidPersistenceStateLeavesInventoryAndRevisionUnchanged", "RestoreRejectsDuplicateUniqueInstancesWithoutMutation", "PreviousSchemaRequiresAndRunsOneDeterministicMigration", "InvalidTypedStateRestoreIsStructuredAndAtomic", "PreviousFragmentSchemaIsDecodedAndNormalizedToCurrentSchema", "FragmentRegistryRejectsDuplicateOrUnregisteredCodecInstances"],
+      "missing": []
+    },
+    {
+      "id": "CORE-11",
+      "clause": "deterministic replay of a command sequence",
+      "coverage": "covered",
+      "tests": ["DeterministicStatefulSequencePreservesQuantityAndRejectedState"],
+      "missing": []
+    },
+    {
+      "id": "CORE-12",
+      "clause": "stateful randomized tests assert quantity conservation, no duplicate instance IDs, valid placement, stack bounds, and unchanged state after rejection across long operation sequences",
+      "coverage": "partial",
+      "tests": ["DeterministicStatefulSequencePreservesQuantityAndRejectedState"],
+      "missing": ["a seeded multi-seed run that asserts no duplicate instance ids and stack bounds across every step, not only quantity conservation and rejected state"]
+    }
+  ],
+  "summary": {
+    "clauses": 12,
+    "covered": 9,
+    "partial": 3,
+    "unmapped": 0,
+    "open_gap_tests": 6
+  }
+}

@@ -5,6 +5,20 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the `unity-consumer-tests` workflow: materializes the reference consumer,
+  audits the exact test-case count of every test assembly from source with the new
+  `scripts/audit_unity_test_inventory.py`, runs each assembly in its own pinned
+  game-ci Unity process, verifies every result with
+  `scripts/verify_unity_test_results.py`, and uploads the NUnit XML. It requires a
+  Unity license secret and skips on fork pull requests. The audit reproduces every
+  previously recorded Editor count and is covered by its own contract tests.
+- Added Inventory decision material: proposal 0001 for a closed Item Kind beside
+  open Tags (#85), the migration note from the single-renderer layout to the
+  presentation-split graph, and a clause-to-test coverage map for the Core behavior
+  gate that names six missing tests.
+- Fixed the XR Baseline far-cast-distance repair (#21) to resolve the referenced
+  `ICurveInteractionCaster`, return diagnostics, and fail visibly; Editor execution
+  of its three new tests is pending.
 - Added the consumer lessons register (`docs/standards/lessons/`): seven lessons
   drawn from Inventory's real consumer use and validation records, each with an
   explicit adopted, gap, deferred, or not-applicable disposition for every live

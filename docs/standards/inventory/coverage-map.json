@@ -1,0 +1,223 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "inventory",
+  "contract": "docs/standards/inventory/verification-contract.md",
+  "core_gate_map": "docs/standards/inventory/coverage-map.core.json",
+  "audited_at_commit": "36e21ab81a0868bb526e253ee351c889215a8b00",
+  "policy": {
+    "mapping_basis": "test method names and bodies read at the audited commit, matched against contract clause text; the Core behavior gate lives in coverage-map.core.json",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true,
+    "device_clauses_need_a_device_lab_receipt": true
+  },
+  "gates": [
+    {
+      "id": "unity_authoring",
+      "section": "4. Unity authoring gate",
+      "package_id": "com.lingkyn.inventory.unity",
+      "test_assembly": "Lingkyn.Inventory.Unity.Editor.Tests",
+      "clauses": [
+        {
+          "id": "IA-01",
+          "clause": "EditMode tests validate definition catalogs and asset conversion",
+          "coverage": "covered",
+          "tests": ["ValidAssetsConvertDeterministicallyAndDoNotMutateDuringRuntimeUse"],
+          "missing": []
+        },
+        {
+          "id": "IA-02",
+          "clause": "duplicate IDs, broken references, invalid limits, and incompatible capabilities fail with actionable diagnostics",
+          "coverage": "partial",
+          "tests": ["ValidationReportsAssetFieldAndCorrectiveCode", "InvalidInventoryReferencesAndDuplicateContainersAreActionable"],
+          "missing": ["explicit invalid-limit (non-positive capacity or maximum stack) and incompatible-capability diagnostics with their stable codes"]
+        },
+        {
+          "id": "IA-03",
+          "clause": "runtime state never modifies authored assets",
+          "coverage": "covered",
+          "tests": ["ValidAssetsConvertDeterministicallyAndDoNotMutateDuringRuntimeUse"],
+          "missing": []
+        },
+        {
+          "id": "IA-04",
+          "clause": "no Resources-folder or scene-singleton dependency is required",
+          "coverage": "partial",
+          "tests": ["StableIdSurvivesAssetRenameAndMove"],
+          "missing": ["a test or validator rule asserting the authoring assembly performs no Resources.Load and no scene-singleton lookup"]
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "presentation",
+      "section": "5. Presentation gate",
+      "package_id": "com.lingkyn.inventory.presentation",
+      "test_assembly": "Lingkyn.Inventory.Presentation.Editor.Tests plus the UGUI and UI Toolkit test assemblies",
+      "clauses": [
+        {
+          "id": "IP-01",
+          "clause": "renderer-neutral presentation state, view models, intents, and presenter ports compile without UGUI, UI Toolkit, XRI, scene, or device dependencies",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a test or validator rule asserting Lingkyn.Inventory.Presentation references only Lingkyn.Inventory.Core and no engine renderer or XR assembly"]
+        },
+        {
+          "id": "IP-02",
+          "clause": "presenter tests prove that views cannot mutate storage directly",
+          "coverage": "covered",
+          "tests": ["PresenterOwnsMutationAndViewsReceiveReadOnlyModels", "ViewModelSnapshotsInputAndIntentPreservesStableAddress"],
+          "missing": []
+        },
+        {
+          "id": "IP-03",
+          "clause": "UGUI prefab tests verify independent panel, grid, slot, item, details, and action roles",
+          "coverage": "covered",
+          "tests": ["ShippedPrefabsHaveNoMissingScriptsAndAllFunctionalReferencesAreWired", "NestedPrefabRolesAndVariantRetainIndependentSourceLinksAndBindings"],
+          "missing": []
+        },
+        {
+          "id": "IP-04",
+          "clause": "UI Toolkit tests verify equivalent semantic roles in the UXML/USS visual tree",
+          "coverage": "covered",
+          "tests": ["ShippedDocumentBindsVisibleStatesAndStableSemanticIntents", "ReplacementDocumentFailsWhenNamedContractIsIncomplete"],
+          "missing": []
+        },
+        {
+          "id": "IP-05",
+          "clause": "nested-prefab links and variants survive import and package updates",
+          "coverage": "partial",
+          "tests": ["NestedPrefabRolesAndVariantRetainIndependentSourceLinksAndBindings", "SlotVariantReplacementMustRebindAndThenRendersWithoutChangingGridAsset"],
+          "missing": ["survival across a package update, which only the recorded upgrade and rollback exercise (LESSON-002) can show"]
+        },
+        {
+          "id": "IP-06",
+          "clause": "empty, partial, full, rejected, selected, disabled, and loading/error states are demonstrated by both renderer samples",
+          "coverage": "covered",
+          "tests": ["StateGalleryReplaysSemanticallyDistinctVisibleStates", "ShippedDocumentBindsVisibleStatesAndStableSemanticIntents"],
+          "missing": []
+        },
+        {
+          "id": "IP-07",
+          "clause": "keyboard/pointer presentation tests do not require XR packages, and each renderer emits the same semantic slot intents without mutating Core",
+          "coverage": "covered",
+          "tests": ["ShippedPrefabRaycastsAndActivatesDistinctLeftCenterRightSlots", "KeyboardSubmitUsesSameShippedSlotIntentAndDisabledSuppressesBothPaths", "PresenterRendersAggregateIntoShippedShellAndInputOnlyEmitsIntent", "DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot", "InteractionGateSuppressesIntentsWithoutHidingRenderedState"],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": ["DisabledPresenterStaysDisabledAcrossRefreshAndAggregateEvents", "InitialRenderFailureDoesNotLeakAggregateSubscriptions", "DisposeIsIdempotentAndDetachesChangedAndRestoredSubscriptions", "DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges", "ShippedShellPreservesStableAddressesAndDoesNotDuplicateIntentSubscriptions", "ScrollGridHandlesZeroSmallBoundaryAndLargeCapacitiesWithoutGhostState"]
+    },
+    {
+      "id": "package_and_consumer",
+      "section": "6. Package and consumer gate",
+      "package_id": "all Inventory packages",
+      "test_assembly": "repository validation, CI, and exact-consumer receipts rather than package tests",
+      "clauses": [
+        {
+          "id": "PK-01",
+          "clause": "repository validation and package tests pass",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a green unity-consumer-tests or run_unity_gates.py receipt on the current main commit (profiles are anchored at a25bbc7)"]
+        },
+        {
+          "id": "PK-02",
+          "clause": "packages resolve from a pinned Git revision in a clean Unity consumer",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["an immutable Git URL consumer receipt at the current commit"]
+        },
+        {
+          "id": "PK-03",
+          "clause": "the clean consumer compiles Editor and player assemblies and runs package tests",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a player build compile result; only Editor compilation has been recorded"]
+        },
+        {
+          "id": "PK-04",
+          "clause": "upgrade and rollback from the previous released package revision are recorded",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["one executed upgrade and rollback against migration-presentation-split.md from unity-first-batch-v0.1.0"]
+        },
+        {
+          "id": "PK-05",
+          "clause": "public API compatibility and migration notes match the release",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["the candidate API compatibility review, which waits on the proposal 0001 decision"]
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "xr",
+      "section": "7. XR gate",
+      "package_id": "com.lingkyn.inventory.xr.ugui and com.lingkyn.inventory.xr.uitoolkit",
+      "test_assembly": "Lingkyn.Inventory.XR.UGUI.*.Tests and Lingkyn.Inventory.XR.UIToolkit.*.Tests",
+      "clauses": [
+        {
+          "id": "IX-01",
+          "clause": "XR UGUI uses a world-space Canvas and the supported tracked-device UI path; automated tests verify its raycaster/input-module configuration",
+          "coverage": "covered",
+          "tests": ["ShippedPrefabIsWorldSpaceNestedProviderNeutralAndClosedByDefault", "ValidatorRejectsMissingDuplicateDisabledAndDesktopInputModules", "ValidatorRejectsConventionalGraphicRaycasterWithoutMutatingGlobalInput", "RealXriRayInteractorRoutesToDistinctShippedSlots", "RealXriPokeInteractorRoutesThroughShippedSlotOnRelease"],
+          "missing": []
+        },
+        {
+          "id": "IX-02",
+          "clause": "XR UI Toolkit uses the supported world-space panel and XRI UI Toolkit path; automated tests verify its panel/input configuration without Canvas assumptions",
+          "coverage": "covered",
+          "tests": ["ShippedAssetsUseWorldSpaceKeepExistingColliderAndValidatedPhysicalScale", "SurfaceStartsClosedAndOpensOnlyAfterSceneContractPasses", "SurfaceRejectsCrossObjectBindingsAndColliderDrift", "ProfileRejectsPanelSettingsThatCanRewriteOrSolidifyCollider", "ProfileAppliesFixedDocumentSizeAndMatchingExplicitCollider", "RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera"],
+          "missing": []
+        },
+        {
+          "id": "IX-03",
+          "clause": "each sample can be placed independently of the camera rig and is not head-locked by default; one renderer's evidence cannot promote the other",
+          "coverage": "covered",
+          "tests": ["ApplyingProfilePreservesWorldPoseAndDefaultPlacementDetachesFromCamera", "SurfaceFailsClosedRecoversAndDoesNotFollowCamera", "RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera"],
+          "missing": []
+        },
+        {
+          "id": "IX-04",
+          "clause": "a real headset test records readability, scale, angle, reach, occlusion, stable targeting with each controller, target isolation, disabled-target immutability, interaction states, posture, measured duration, and comfort",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a Device Lab receipt per renderer route: Issue #28 (XR UGUI on PICO) and Issue #27 (XR UI Toolkit on PICO)"]
+        },
+        {
+          "id": "IX-05",
+          "clause": "the receipt identifies the exact package revision, artifact, renderer and XR adapters, resolved lock, versions, build tuple, device, input routes, tester, timestamps, and evidence",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["the same Device Lab receipts; the receipt schema and --device-lab-receipt validation already exist"]
+        },
+        {
+          "id": "IX-06",
+          "clause": "the inventory-world-space-ui-v1 plan requires at least 120 seconds in the recorded posture and exercises every listed check",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["execution of the plan on a named device"]
+        },
+        {
+          "id": "IX-07",
+          "clause": "a completed Device Lab receipt passes the repository validator's --device-lab-receipt gate for the exact composition",
+          "coverage": "partial",
+          "tests": [],
+          "missing": ["a completed receipt to validate"]
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 23,
+    "covered": 11,
+    "partial": 12,
+    "unmapped": 0,
+    "open_gap_tests": 3,
+    "open_evidence_gaps": 9,
+    "note": "Nine partial clauses are evidence gates (exact consumer, player build, upgrade/rollback, API review, and named-device receipts) that no package test can close; three are missing tests or validator rules (IA-02, IA-04, IP-01)."
+  }
+}

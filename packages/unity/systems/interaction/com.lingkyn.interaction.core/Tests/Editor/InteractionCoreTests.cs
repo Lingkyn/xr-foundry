@@ -456,6 +456,172 @@ namespace Lingkyn.Interaction.Core.Editor.Tests
             Assert.That(registry.BindingSuggestions, Is.Empty);
         }
 
+        [Test]
+        public void EveryIdentityTypeRejectsEmptyDefaultAndInvalidValues()
+        {
+            var invalid = new[] { null, "", "   ", " ui.confirm", "ui confirm", "UI.confirm", ".ui", "ui.", "ui..confirm", new string('a', 129) };
+            foreach (var value in invalid)
+            {
+                Assert.That(IntentId.TryCreate(value).Succeeded, Is.False, $"IntentId accepted '{value}'");
+                Assert.That(ContextId.TryCreate(value).Succeeded, Is.False, $"ContextId accepted '{value}'");
+                Assert.That(RouteId.TryCreate(value).Succeeded, Is.False, $"RouteId accepted '{value}'");
+                Assert.That(SourceId.TryCreate(value).Succeeded, Is.False, $"SourceId accepted '{value}'");
+                Assert.That(BindingSuggestionId.TryCreate(value).Succeeded, Is.False, $"BindingSuggestionId accepted '{value}'");
+            }
+
+            Assert.That(IntentId.TryCreate("default").Error.Code, Is.EqualTo(InteractionValidationCode.DefaultIdentity));
+            Assert.That(ContextId.TryCreate("DEFAULT").Error.Code, Is.EqualTo(InteractionValidationCode.DefaultIdentity));
+            Assert.That(RouteId.TryCreate("Default").Error.Code, Is.EqualTo(InteractionValidationCode.DefaultIdentity));
+            Assert.That(SourceId.TryCreate(" ui.confirm").Error.Code, Is.EqualTo(InteractionValidationCode.InvalidIdentity));
+            Assert.That(BindingSuggestionId.TryCreate("ui confirm").Error.Code, Is.EqualTo(InteractionValidationCode.InvalidIdentity));
+
+            const string valid = "ui.confirm-2_a";
+            Assert.That(IntentId.TryCreate(valid).Value.Value, Is.EqualTo(valid));
+            Assert.That(ContextId.TryCreate(valid).Value.Value, Is.EqualTo(valid));
+            Assert.That(RouteId.TryCreate(valid).Value.Value, Is.EqualTo(valid));
+            Assert.That(SourceId.TryCreate(valid).Value.Value, Is.EqualTo(valid));
+            Assert.That(BindingSuggestionId.TryCreate(valid).Value.Value, Is.EqualTo(valid));
+            Assert.That(IntentId.TryCreate(valid).Value, Is.EqualTo(IntentId.TryCreate(valid).Value));
+        }
+
+        [Test]
+        public void MultiModalSourceRoutesSeparatelyAndDoesNotTransferCapabilityEvidence()
+        {
+            var press = Intent("ui.confirm", InteractionValueKind.Button, InteractionCapability.Digital);
+            var point = Intent("point.select", InteractionValueKind.Pose, InteractionCapability.Pose | InteractionCapability.Pointing);
+            var pressRoute = Route("route.press", "context.ui", "ui.confirm", "source.hand", 0,
+                InteractionModality.Gamepad, InteractionCapability.Digital);
+            var pointRoute = Route("route.point", "context.ui", "point.select", "source.hand", 1,
+                InteractionModality.TrackedController, InteractionCapability.Pose | InteractionCapability.Pointing);
+            var registry = Registry(new[] { pressRoute, pointRoute }, new[] { press, point },
+                Context("context.ui", 0, pressRoute.Id, pointRoute.Id));
+            var source = Id<SourceId>("source.hand");
+            var pose = InteractionValue.FromPose(new InteractionPose(new InteractionVector3(0, 0, 0),
+                new InteractionQuaternion(0, 0, 0, 1), true, true));
+
+            var both = Frame(
+                new SourceSignal(pressRoute.Id, source, InteractionModality.Gamepad, InteractionCapability.Digital,
+                    InteractionValue.FromButton(true), InteractionPhase.Started, 10, 0, 0),
+                new SourceSignal(pointRoute.Id, source, InteractionModality.TrackedController,
+                    InteractionCapability.Pose | InteractionCapability.Pointing, pose, InteractionPhase.Started, 10, 1, 1));
+            var routed = RouteFrame(registry, both, InteractionRoutingState.Empty);
+
+            Assert.That(routed.Diagnostics, Is.Empty, string.Join("\n", routed.Diagnostics.Select(x => x.Message)));
+            Assert.That(routed.Events.Select(x => x.RouteId), Is.EquivalentTo(new[] { pressRoute.Id, pointRoute.Id }));
+            Assert.That(routed.Events.Single(x => x.RouteId.Equals(pressRoute.Id)).Modality, Is.EqualTo(InteractionModality.Gamepad));
+            Assert.That(routed.Events.Single(x => x.RouteId.Equals(pointRoute.Id)).Modality, Is.EqualTo(InteractionModality.TrackedController));
+            Assert.That(routed.NextState.PendingPhases, Has.Count.EqualTo(2));
+
+            var borrowed = Frame(new SourceSignal(pointRoute.Id, source, InteractionModality.Gamepad, InteractionCapability.Digital,
+                InteractionValue.FromButton(true), InteractionPhase.Started, 20, 0, 0));
+            var rejected = RouteFrame(registry, borrowed, InteractionRoutingState.Empty);
+            Assert.That(rejected.Events, Is.Empty, "The press route's digital evidence must not satisfy the pose route.");
+            Assert.That(rejected.Diagnostics, Is.Not.Empty);
+            Assert.That(rejected.NextState.PendingPhases, Is.Empty);
+        }
+
+        [Test]
+        public void PublicCollectionsRejectMutationAndDoNotAliasCallerArrays()
+        {
+            var route = Route("route.confirm", "context.ui", "ui.confirm", "source.button", 0);
+            var routes = new[] { route };
+            var registry = Registry(routes, Context("context.ui", 0, route.Id));
+            routes[0] = null;
+            Assert.That(registry.Routes[0], Is.Not.Null, "The registry must copy the caller's route array.");
+
+            Assert.Throws<NotSupportedException>(() => ((IList<InteractionRoute>)registry.Routes).Add(route));
+            Assert.Throws<NotSupportedException>(() => ((IList<IntentDefinition>)registry.Intents).Clear());
+            Assert.Throws<NotSupportedException>(() => ((IList<InteractionContextDefinition>)registry.Contexts).RemoveAt(0));
+            Assert.Throws<NotSupportedException>(() => ((IList<BindingSuggestion>)registry.BindingSuggestions).Add(null));
+
+            var frame = Frame(Signal("route.confirm", "source.button", InteractionPhase.Started, 10, 0, 0));
+            Assert.Throws<NotSupportedException>(() => ((IList<SourceSignal>)frame.Signals).Clear());
+
+            var policy = Policy(new IntentPolicyEntry(Id<IntentId>("ui.confirm"), InteractionActivationMode.Toggle, true));
+            Assert.Throws<NotSupportedException>(() => ((IList<IntentPolicyEntry>)policy.IntentPolicies).Clear());
+            Assert.Throws<NotSupportedException>(() => ((IList<RoutePolicyEntry>)policy.RoutePolicies).Add(default));
+
+            var result = RouteFrame(registry, frame, InteractionRoutingState.Empty);
+            Assert.Throws<NotSupportedException>(() => ((IList<SemanticInteractionEvent>)result.Events).Clear());
+            Assert.Throws<NotSupportedException>(() => ((IList<InteractionDispatchResult>)result.Dispatches).Clear());
+            Assert.Throws<NotSupportedException>(() => ((IList<InteractionDiagnostic>)result.Diagnostics).Add(default));
+            Assert.Throws<NotSupportedException>(() => ((IList<InteractionRoutePhaseState>)result.NextState.PendingPhases).Clear());
+            Assert.Throws<NotSupportedException>(() => ((IList<InteractionToggleState>)result.NextState.ToggleStates).Add(default));
+        }
+
+        [Test]
+        public void HandlerOutcomesAreReportedPerDispatchAndFailedBecomesADiagnosticCode()
+        {
+            var coordinator = new InteractionCoordinator(BasicRegistry(), Active());
+            var ticks = 10L;
+            foreach (var expected in new[] { InteractionHandlerOutcome.Accepted, InteractionHandlerOutcome.Rejected, InteractionHandlerOutcome.Deferred })
+            {
+                var calls = 0;
+                var started = coordinator.RouteFrame(
+                    Frame(Signal("route.confirm", "source.button", InteractionPhase.Started, ticks, 0, 0)),
+                    _ => { calls++; return expected; });
+                Assert.That(calls, Is.Zero, "Started phases never invoke the handler.");
+                Assert.That(started.Dispatches.Single().Status, Is.EqualTo(InteractionDispatchStatus.Routed));
+
+                var performed = coordinator.RouteFrame(
+                    Frame(Signal("route.confirm", "source.button", InteractionPhase.Performed, ticks + 1, 0, 0)),
+                    _ => { calls++; return expected; });
+                Assert.That(calls, Is.EqualTo(1));
+                Assert.That(performed.Events.Single().Phase, Is.EqualTo(InteractionPhase.Performed));
+                var dispatch = performed.Dispatches.Single();
+                Assert.That(dispatch.Status, Is.EqualTo(InteractionDispatchStatus.HandlerOutcome));
+                Assert.That(dispatch.HandlerOutcome, Is.EqualTo(expected));
+                var diagnostic = performed.Diagnostics.Single();
+                Assert.That(diagnostic.Kind, Is.EqualTo(InteractionDiagnosticKind.HandlerResult));
+                Assert.That(diagnostic.Code, Is.EqualTo(InteractionValidationCode.None));
+                ticks += 10;
+            }
+
+            coordinator.RouteFrame(Frame(Signal("route.confirm", "source.button", InteractionPhase.Started, ticks, 0, 0)));
+            var failed = coordinator.RouteFrame(
+                Frame(Signal("route.confirm", "source.button", InteractionPhase.Performed, ticks + 1, 0, 0)),
+                _ => InteractionHandlerOutcome.Failed);
+            Assert.That(failed.Events, Has.Count.EqualTo(1), "The event is still emitted; the failure is recorded, not hidden.");
+            Assert.That(failed.Dispatches.Single().HandlerOutcome, Is.EqualTo(InteractionHandlerOutcome.Failed));
+            Assert.That(failed.Diagnostics.Single().Code, Is.EqualTo(InteractionValidationCode.HandlerFailed));
+
+            ticks += 10;
+            coordinator.RouteFrame(Frame(Signal("route.confirm", "source.button", InteractionPhase.Started, ticks, 0, 0)));
+            var threw = coordinator.RouteFrame(
+                Frame(Signal("route.confirm", "source.button", InteractionPhase.Performed, ticks + 1, 0, 0)),
+                _ => throw new InvalidOperationException("handler boom"));
+            Assert.That(threw.Dispatches.Single().HandlerOutcome, Is.EqualTo(InteractionHandlerOutcome.Failed));
+            Assert.That(threw.Diagnostics.Single().Code, Is.EqualTo(InteractionValidationCode.HandlerFailed));
+            Assert.That(coordinator.State.PendingPhases, Is.Empty, "A failed handler must not leave the lifecycle pending.");
+        }
+
+        [Test]
+        public void RouteIdentityIsStableWhenOpaqueAdapterTokenChanges()
+        {
+            var intent = Id<IntentId>("ui.confirm");
+            var route = Id<RouteId>("route.confirm");
+            var firstToken = new byte[] { 1, 2, 3 };
+            var first = BindingOverride.Create(intent, route, "unity-input-system", firstToken).Value;
+            var second = BindingOverride.Create(intent, route, "unity-input-system", new byte[] { 9, 8 }).Value;
+
+            Assert.That(first.RouteId, Is.EqualTo(second.RouteId));
+            Assert.That(first.IntentId, Is.EqualTo(second.IntentId));
+            Assert.That(first.OpaqueAdapterRouteToken, Is.Not.EqualTo(second.OpaqueAdapterRouteToken));
+
+            firstToken[0] = 0x7F;
+            Assert.That(first.OpaqueAdapterRouteToken[0], Is.EqualTo(1), "The override must own a copy of the token.");
+
+            var duplicate = InteractionBindingOverrideSet.Create(new[] { first, second });
+            Assert.That(duplicate.Succeeded, Is.False, "Identity is intent plus route, never the token.");
+            Assert.That(duplicate.Error.Code, Is.EqualTo(InteractionValidationCode.DuplicateDefinition));
+
+            var single = InteractionBindingOverrideSet.Create(new[] { second });
+            Assert.That(single.Succeeded, Is.True);
+            Assert.That(single.Value.Overrides.Single().RouteId, Is.EqualTo(route));
+            Assert.That(BindingOverride.Create(intent, route, "unity-input-system", Array.Empty<byte>()).Succeeded, Is.False);
+            Assert.That(BindingOverride.Create(intent, route, "  ", firstToken).Succeeded, Is.False);
+        }
+
         private static InteractionRoutingResult Activate(InteractionRegistry registry, InteractionRoutingState state,
             InteractionPolicySnapshot policy, long ticks)
         {

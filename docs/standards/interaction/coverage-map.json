@@ -20,99 +20,148 @@
         {
           "id": "IC-01",
           "clause": "invalid/default/duplicate intent, context, route, source, and binding-suggestion identities",
-          "coverage": "partial",
-          "tests": ["RegistryRejectsDuplicateRouteAndMismatchedMembership", "PolicyValidationRejectsInvalidIdsEnumsAndRanges"],
-          "missing": ["a focused test that IntentId, ContextId, RouteId, SourceId, and BindingSuggestionId each reject empty, default, and invalid-character values"]
+          "coverage": "covered",
+          "tests": [
+            "EveryIdentityTypeRejectsEmptyDefaultAndInvalidValues",
+            "RegistryRejectsDuplicateRouteAndMismatchedMembership",
+            "PolicyValidationRejectsInvalidIdsEnumsAndRanges"
+          ],
+          "missing": []
         },
         {
           "id": "IC-02",
           "clause": "definition/value/capability mismatch and non-finite numeric/pose data",
           "coverage": "covered",
-          "tests": ["FullCapabilityAndModalityMustMatch", "PostTransformOverflowFailsClosed", "PolicyValidationRejectsInvalidIdsEnumsAndRanges"],
+          "tests": [
+            "FullCapabilityAndModalityMustMatch",
+            "PostTransformOverflowFailsClosed",
+            "PolicyValidationRejectsInvalidIdsEnumsAndRanges"
+          ],
           "missing": []
         },
         {
           "id": "IC-03",
           "clause": "inactive context rejection, higher-priority shadowing, and equal-priority collision diagnostics",
           "coverage": "covered",
-          "tests": ["PriorityAndCollisionApplyOnlyWithinOneObservation", "ActiveContextChangesCancelUnsafeLifecycleAndOnlyResetUnreachableToggle"],
+          "tests": [
+            "PriorityAndCollisionApplyOnlyWithinOneObservation",
+            "ActiveContextChangesCancelUnsafeLifecycleAndOnlyResetUnreachableToggle"
+          ],
           "missing": []
         },
         {
           "id": "IC-04",
           "clause": "ordered ingress validation and stable routing/diagnostic order",
           "coverage": "covered",
-          "tests": ["FrameEnforcesObservationAndIngressContract", "RouterIsDeterministicAndDoesNotMutatePriorState"],
+          "tests": [
+            "FrameEnforcesObservationAndIngressContract",
+            "RouterIsDeterministicAndDoesNotMutatePriorState"
+          ],
           "missing": []
         },
         {
           "id": "IC-05",
           "clause": "observation grouping, globally unique route identity, no cross-observation shadowing, and fail-closed inconsistent observation facts",
           "coverage": "covered",
-          "tests": ["PriorityAndCollisionApplyOnlyWithinOneObservation", "RegistryRejectsDuplicateRouteAndMismatchedMembership", "FrameEnforcesObservationAndIngressContract"],
+          "tests": [
+            "PriorityAndCollisionApplyOnlyWithinOneObservation",
+            "RegistryRejectsDuplicateRouteAndMismatchedMembership",
+            "FrameEnforcesObservationAndIngressContract"
+          ],
           "missing": []
         },
         {
           "id": "IC-06",
           "clause": "started, performed, canceled, duplicate, and invalid phase transitions",
           "coverage": "covered",
-          "tests": ["PerformedAndCanceledRequireExplicitStartedState"],
+          "tests": [
+            "PerformedAndCanceledRequireExplicitStartedState"
+          ],
           "missing": []
         },
         {
           "id": "IC-07",
           "clause": "multi-route and multi-modal sources without transferring evidence",
-          "coverage": "partial",
-          "tests": ["RoutePolicyReconciliationPreservesSharedIntentStateWhileAnotherRouteRemainsEnabled", "FullCapabilityAndModalityMustMatch"],
-          "missing": ["one source routed through two modalities in one observation, asserting that neither route inherits the other's capability evidence"]
+          "coverage": "covered",
+          "tests": [
+            "MultiModalSourceRoutesSeparatelyAndDoesNotTransferCapabilityEvidence",
+            "RoutePolicyReconciliationPreservesSharedIntentStateWhileAnotherRouteRemainsEnabled",
+            "FullCapabilityAndModalityMustMatch"
+          ],
+          "missing": []
         },
         {
           "id": "IC-08",
           "clause": "immutable registry, frame, policy, route, event, and diagnostic collections",
-          "coverage": "partial",
-          "tests": ["BindingSuggestionIsImmutableAndNeverActivatesRoute"],
-          "missing": ["mutation attempts against the public registry, frame, policy, route, event, and diagnostic collections that must throw or be ignored"]
+          "coverage": "covered",
+          "tests": [
+            "PublicCollectionsRejectMutationAndDoNotAliasCallerArrays",
+            "BindingSuggestionIsImmutableAndNeverActivatesRoute"
+          ],
+          "missing": []
         },
         {
           "id": "IC-09",
           "clause": "immutable prior/next routing state and repeated-call determinism without hidden router mutation",
           "coverage": "covered",
-          "tests": ["RouterIsDeterministicAndDoesNotMutatePriorState", "ScopedPendingResetValidatesTheEntireScopeBeforeChangingState"],
+          "tests": [
+            "RouterIsDeterministicAndDoesNotMutatePriorState",
+            "ScopedPendingResetValidatesTheEntireScopeBeforeChangingState"
+          ],
           "missing": []
         },
         {
           "id": "IC-10",
           "clause": "cancellation before completion and explicit handler accepted/rejected/deferred/failed outcomes",
-          "coverage": "partial",
-          "tests": ["PolicyChangeCancelsAffectedLifecycleAndToggleWithoutResurrectionOnRollback", "ActiveContextChangesCancelUnsafeLifecycleAndOnlyResetUnreachableToggle"],
-          "missing": ["a handler returning each of accepted, rejected, deferred, and failed, asserting the dispatch result and diagnostics per outcome"]
+          "coverage": "covered",
+          "tests": [
+            "HandlerOutcomesAreReportedPerDispatchAndFailedBecomesADiagnosticCode",
+            "PolicyChangeCancelsAffectedLifecycleAndToggleWithoutResurrectionOnRollback",
+            "ActiveContextChangesCancelUnsafeLifecycleAndOnlyResetUnreachableToggle"
+          ],
+          "missing": []
         },
         {
           "id": "IC-11",
           "clause": "rebinding-compatible stable identity using opaque adapter route tokens",
-          "coverage": "partial",
-          "tests": [],
-          "missing": ["a Core test that a route keeps its identity when its opaque adapter token changes (the Unity adapter covers GUID-based overrides in OverrideRoundTripIsDeterministicAndAppliesByBindingGuid)"]
+          "coverage": "covered",
+          "tests": [
+            "RouteIdentityIsStableWhenOpaqueAdapterTokenChanges"
+          ],
+          "missing": []
         },
         {
           "id": "IC-12",
           "clause": "inert binding suggestions that cannot activate routes, override user choices, or grant device evidence",
           "coverage": "covered",
-          "tests": ["BindingSuggestionIsImmutableAndNeverActivatesRoute"],
+          "tests": [
+            "BindingSuggestionIsImmutableAndNeverActivatesRoute"
+          ],
           "missing": []
         },
         {
           "id": "IC-13",
           "clause": "policy alternatives such as momentary/toggle/hold without rewriting intent IDs",
           "coverage": "covered",
-          "tests": ["HoldAndThresholdPoliciesAreAppliedFromExplicitState", "ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice", "PolicyChangeCancelsAffectedLifecycleAndToggleWithoutResurrectionOnRollback", "RoutePolicyReconciliationPreservesSharedIntentStateWhileAnotherRouteRemainsEnabled", "ScopedPendingResetClearsOnlyOwnedRoutesAndPreservesToggleState"],
+          "tests": [
+            "HoldAndThresholdPoliciesAreAppliedFromExplicitState",
+            "ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice",
+            "PolicyChangeCancelsAffectedLifecycleAndToggleWithoutResurrectionOnRollback",
+            "RoutePolicyReconciliationPreservesSharedIntentStateWhileAnotherRouteRemainsEnabled",
+            "ScopedPendingResetClearsOnlyOwnedRoutesAndPreservesToggleState"
+          ],
           "missing": []
         },
         {
           "id": "IC-14",
           "clause": "validated hold duration and activation thresholds, first-toggle dispatch, cancellation-preserved toggle choice, and non-finite post-policy rejection",
           "coverage": "covered",
-          "tests": ["HoldAndThresholdPoliciesAreAppliedFromExplicitState", "ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice", "PostTransformOverflowFailsClosed", "PolicyValidationRejectsInvalidIdsEnumsAndRanges"],
+          "tests": [
+            "HoldAndThresholdPoliciesAreAppliedFromExplicitState",
+            "ToggleDispatchesFirstAndSecondActivationAndCancelPreservesChoice",
+            "PostTransformOverflowFailsClosed",
+            "PolicyValidationRejectsInvalidIdsEnumsAndRanges"
+          ],
           "missing": []
         }
       ],
@@ -128,42 +177,65 @@
           "id": "IU-01",
           "clause": "ScriptableObject definitions, contexts, and routes convert deterministically to Core without mutating authored assets",
           "coverage": "covered",
-          "tests": ["AuthoringConvertsDeterministicallyWithoutMutatingAssets"],
+          "tests": [
+            "AuthoringConvertsDeterministicallyWithoutMutatingAssets"
+          ],
           "missing": []
         },
         {
           "id": "IU-02",
           "clause": "validation reports asset/index/intent/context/route-specific errors",
           "coverage": "covered",
-          "tests": ["ValidationReportsAssetIndexAndFieldPath", "ValidationReportsDuplicateIntentContextRouteAndUnknownIntentPaths", "BindingSuggestionValidationIsIndexedAndDuplicateSafe"],
+          "tests": [
+            "ValidationReportsAssetIndexAndFieldPath",
+            "ValidationReportsDuplicateIntentContextRouteAndUnknownIntentPaths",
+            "BindingSuggestionValidationIsIndexedAndDuplicateSafe"
+          ],
           "missing": []
         },
         {
           "id": "IU-03",
           "clause": "InputActionReference identity is mapped explicitly; no scene search or name-only lookup is required",
           "coverage": "covered",
-          "tests": ["RouteRequiresExplicitInputActionReference", "LiveCallbackRejectsMismatchedActionGuid"],
+          "tests": [
+            "RouteRequiresExplicitInputActionReference",
+            "LiveCallbackRejectsMismatchedActionGuid"
+          ],
           "missing": []
         },
         {
           "id": "IU-04",
           "clause": "button, scalar, vector2, vector3, started, performed, and canceled conversion is covered; unsupported or mismatched values fail closed",
           "coverage": "covered",
-          "tests": ["RawValueConversionCoversSupportedKindsAndFailsClosed", "InputSystemPhasesMapOnlyToNeutralLifecycle", "LiveCallbackCapturesStartedPerformedAndCanceledFrames", "LiveCallbackValueTypeMismatchReturnsKindMismatchWithoutThrowing", "ObservationRejectsMixedPhysicalFactsAndMismatchedValues"],
+          "tests": [
+            "RawValueConversionCoversSupportedKindsAndFailsClosed",
+            "InputSystemPhasesMapOnlyToNeutralLifecycle",
+            "LiveCallbackCapturesStartedPerformedAndCanceledFrames",
+            "LiveCallbackValueTypeMismatchReturnsKindMismatchWithoutThrowing",
+            "ObservationRejectsMixedPhysicalFactsAndMismatchedValues"
+          ],
           "missing": []
         },
         {
           "id": "IU-05",
           "clause": "multiple bindings, binding display, binding suggestions, and override serialization remain adapter seams",
           "coverage": "covered",
-          "tests": ["BindingDisplayEnumeratesEveryBindingByStableGuid", "OverrideRoundTripIsDeterministicAndAppliesByBindingGuid", "OverrideValidationIsAtomicBeforeExistingOverridesAreReplaced"],
+          "tests": [
+            "BindingDisplayEnumeratesEveryBindingByStableGuid",
+            "OverrideRoundTripIsDeterministicAndAppliesByBindingGuid",
+            "OverrideValidationIsAtomicBeforeExistingOverridesAreReplaced"
+          ],
           "missing": []
         },
         {
           "id": "IU-06",
           "clause": "same-update callback order is captured explicitly by the adapter rather than inferred from asset order",
           "coverage": "covered",
-          "tests": ["ObservationUsesExplicitCandidateAndSequenceOrder", "ObservationRejectsIngressSequenceOverflowWithoutThrowing", "ObservationRejectsDuplicateRouteCandidate"],
+          "tests": [
+            "ObservationUsesExplicitCandidateAndSequenceOrder",
+            "ObservationRejectsIngressSequenceOverflowWithoutThrowing",
+            "ObservationRejectsDuplicateRouteCandidate"
+          ],
           "missing": []
         }
       ],
@@ -172,9 +244,10 @@
   ],
   "summary": {
     "clauses": 20,
-    "covered": 15,
-    "partial": 5,
+    "covered": 20,
+    "partial": 0,
     "unmapped": 0,
-    "open_gap_tests": 5
+    "open_gap_tests": 0,
+    "execution_note": "The five Core tests added after the first audit have not yet executed in a Unity Editor; the map records authored coverage, not results."
   }
 }

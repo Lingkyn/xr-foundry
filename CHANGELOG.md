@@ -5,6 +5,11 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Authored the three Persistence Core and five Interaction Core tests their
+  coverage maps had named, marking both maps fully covered pending Editor
+  execution, and mapped the Inventory Unity authoring, Presentation,
+  package-and-consumer, and XR gates in `coverage-map.json`, separating missing
+  tests from evidence gates.
 - Added clause-to-test coverage maps for the Persistence, Settings, and Interaction
   Core and Unity adapter gates, authored the six Inventory Core tests the Core map
   had named, stated in the Settings standard that accessibility category and

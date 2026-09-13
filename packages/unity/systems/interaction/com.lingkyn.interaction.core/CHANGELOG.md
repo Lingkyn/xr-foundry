@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Added five EditMode tests named by the Interaction coverage map: identity
+  validation for every id type, a multi-modal source whose routes do not share
+  capability evidence, public collection immutability and caller-array isolation,
+  handler accepted/rejected/deferred/failed outcomes per dispatch, and stable route
+  identity across opaque adapter token changes. No runtime change. Editor execution
+  is pending.
+
 ## [Unreleased]
 
 - Implement engine-light semantic interaction routing core with identities, typed values, registry, policy snapshots, deterministic router, diagnostics, handler outcomes, and contract tests.

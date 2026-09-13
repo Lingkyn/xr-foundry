@@ -46,8 +46,9 @@ class AuditUnityTestInventoryTests(unittest.TestCase):
         report = MODULE.audit_project(packages)
         self.assertEqual([], report["errors"])
         counts = {item["name"]: item["cases"] for item in report["assemblies"]}
-        # Counts recorded by prior Unity Editor runs in docs/validation and the XAG-INV-01 receipt.
-        self.assertEqual(22, counts["Lingkyn.Inventory.Core.Editor.Tests"])
+        # Inventory Core: 22 cases recorded by the XAG-INV-01 Editor rerun plus the six tests
+        # named by coverage-map.core.json. Every other count matches a recorded Editor run.
+        self.assertEqual(28, counts["Lingkyn.Inventory.Core.Editor.Tests"])
         self.assertEqual(16, counts["Lingkyn.Interaction.Core.Editor.Tests"])
         self.assertEqual(17, counts["Lingkyn.Interaction.Unity.Editor.Tests"])
         self.assertEqual(29, counts["Lingkyn.Settings.Core.Editor.Tests"])

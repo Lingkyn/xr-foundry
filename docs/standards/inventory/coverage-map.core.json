@@ -20,8 +20,8 @@
       "id": "CORE-01",
       "clause": "add/remove at zero, one, maximum stack, capacity edge, and overflow",
       "coverage": "partial",
-      "tests": ["AddFillsStacksAndFailedOverflowIsAtomic"],
-      "missing": ["remove from an empty slot (SourceEmpty rejection path and unchanged state)", "add or remove of quantity zero (rejection path)", "add exactly at maximum stack and exactly at capacity (boundary without overflow)"]
+      "tests": ["AddFillsStacksAndFailedOverflowIsAtomic", "RemoveFromEmptySlotIsRejectedAsSourceEmptyWithoutMutation", "NonPositiveStackQuantityIsRejectedAtConstruction", "AddExactlyAtMaximumStackAndCapacityBoundarySucceedsWithoutOverflow"],
+      "missing": ["a Remove or Move request whose quantity is zero must be rejected as InvalidRequest at execution (runtime behavior not yet asserted)"]
     },
     {
       "id": "CORE-02",
@@ -33,9 +33,9 @@
     {
       "id": "CORE-03",
       "clause": "move/swap/transfer across valid and invalid containers",
-      "coverage": "partial",
-      "tests": ["MoveSwapAndTransferHaveExplicitSemantics"],
-      "missing": ["move, swap, or transfer that names an unknown container rejects with UnknownContainer", "transfer into a full destination container rejects without mutating the source"]
+      "coverage": "covered",
+      "tests": ["MoveSwapAndTransferHaveExplicitSemantics", "UnknownContainerAndInvalidSlotAreRejectedWithoutMutation", "TransferIntoOccupiedDestinationIsRejectedWithoutMutatingSource"],
+      "missing": []
     },
     {
       "id": "CORE-04",
@@ -96,16 +96,17 @@
     {
       "id": "CORE-12",
       "clause": "stateful randomized tests assert quantity conservation, no duplicate instance IDs, valid placement, stack bounds, and unchanged state after rejection across long operation sequences",
-      "coverage": "partial",
-      "tests": ["DeterministicStatefulSequencePreservesQuantityAndRejectedState"],
-      "missing": ["a seeded multi-seed run that asserts no duplicate instance ids and stack bounds across every step, not only quantity conservation and rejected state"]
+      "coverage": "covered",
+      "tests": ["DeterministicStatefulSequencePreservesQuantityAndRejectedState", "MultipleSeededSequencesPreserveConservationUniqueIdentityAndBounds"],
+      "missing": []
     }
   ],
   "summary": {
     "clauses": 12,
-    "covered": 9,
-    "partial": 3,
+    "covered": 11,
+    "partial": 1,
     "unmapped": 0,
-    "open_gap_tests": 6
+    "open_gap_tests": 1,
+    "execution_note": "The six tests added after the first audit have not yet executed in a Unity Editor; the map records authored coverage, not results."
   }
 }

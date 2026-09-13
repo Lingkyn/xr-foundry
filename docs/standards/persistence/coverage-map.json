@@ -1,0 +1,152 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "persistence",
+  "contract": "docs/standards/persistence/verification-contract.md",
+  "audited_at_commit": "c23935694637438584d5bb531acbf8003da640fa",
+  "policy": {
+    "mapping_basis": "test method names and bodies read at the audited commit, matched against contract clause text",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.persistence.core",
+      "test_assembly": "Lingkyn.Persistence.Core.Editor.Tests",
+      "clauses": [
+        {
+          "id": "PC-01",
+          "clause": "same-version round trip and byte-level envelope bounds",
+          "coverage": "partial",
+          "tests": ["EnvelopeCodecRejectsMalformedAndFutureFormats", "EnvelopeCodecRejectsMalformedUtf8Metadata", "SaveEnvelopeOwnsImmutableByteCopies", "CoordinatorPassesStoredSchemaVersionToCodecDecode"],
+          "missing": ["a named Core same-version round trip through an in-memory store asserting decoded state equality (the Unity adapter covers the file route in RoundTripPersistsPlainDtoSnapshot)"]
+        },
+        {
+          "id": "PC-02",
+          "clause": "ordered multi-step migration",
+          "coverage": "covered",
+          "tests": ["MigrationPipelineAppliesDeterministicPath"],
+          "missing": []
+        },
+        {
+          "id": "PC-03",
+          "clause": "missing, duplicate, ambiguous, cyclic and non-monotonic migration edges",
+          "coverage": "covered",
+          "tests": ["MigrationPipelineRejectsMissingPath", "MigrationPipelineRejectsAmbiguousGraph", "MigrationPipelineTreatsBackEdgeAsNonMonotonic", "MigrationPipelinePrefersNonMonotonicOverAmbiguous", "MigrationPipelineRejectsNonMonotonicGraph", "MigrationPipelineRejectsOvershootEdge", "MigrationPipelineConvertsMigrationThrowsToStableResult"],
+          "missing": []
+        },
+        {
+          "id": "PC-04",
+          "clause": "rejection of future schema versions",
+          "coverage": "covered",
+          "tests": ["MigrationPipelineRejectsFutureStoredVersion", "EnvelopeCodecRejectsMalformedAndFutureFormats"],
+          "missing": []
+        },
+        {
+          "id": "PC-05",
+          "clause": "corrupted payload, incorrect length and incorrect digest",
+          "coverage": "covered",
+          "tests": ["CoordinatorRejectsChecksumCorruptionBeforeDecode", "EnvelopeCodecRejectsMalformedAndFutureFormats", "CoordinatorRejectsIntegrityAlgorithmMismatch", "EmptySaveReadCandidateReachesEnvelopeValidation"],
+          "missing": []
+        },
+        {
+          "id": "PC-06",
+          "clause": "codec, integrity, read, write, flush and commit failures as different results",
+          "coverage": "partial",
+          "tests": ["CoordinatorConvertsCodecEncodeThrowsToStableResult", "CoordinatorConvertsCodecDecodeThrowsToStableResult", "CoordinatorConvertsStoreReadThrowsToStableResult", "CoordinatorConvertsStoreCommitThrowsToStableResult", "CoordinatorConvertsValidatorThrowsToStableResult", "CoordinatorConvertsApplyThrowsToStableResult", "CoordinatorReportsCapabilityMismatchBeforeCommit"],
+          "missing": ["an integrity-provider failure surfacing as the Integrity stage in Core", "StageWrite and Flush stage results exercised in Core with an in-memory store (the Unity adapter covers them for the file store)"]
+        },
+        {
+          "id": "PC-07",
+          "clause": "cancellation before commit",
+          "coverage": "covered",
+          "tests": ["CoordinatorChecksCancellationImmediatelyBeforeCommit"],
+          "missing": []
+        },
+        {
+          "id": "PC-08",
+          "clause": "failed-save preservation of the prior committed record",
+          "coverage": "covered",
+          "tests": ["FailedCommitPreservesPriorBytesAndSurfacesPreservation", "CoordinatorRejectsContradictoryProviderOutcome"],
+          "missing": []
+        },
+        {
+          "id": "PC-09",
+          "clause": "load candidate immutability until consumer validation succeeds",
+          "coverage": "covered",
+          "tests": ["SaveReadCandidateBytesRemainImmutableBeforeValidation", "CoordinatorStopsBeforeApplyWhenValidationFails", "DeferredApplySemanticsRemainIntactAfterRecoverySelection"],
+          "missing": []
+        },
+        {
+          "id": "PC-10",
+          "clause": "recovery selection between primary and backup without silently accepting staging files",
+          "coverage": "covered",
+          "tests": ["PrimaryWinsWhenBackupIsAlsoPresent", "ExplicitRecoveryPolicySelectsValidBackupAndReportsRecovery", "PrimaryOnlyPolicyDoesNotFallBackToBackup", "StagingOnlyCandidateSetIsRejected", "ValidStagingIsNeverSelectedWhenPrimaryExists", "DuplicatePrimaryCandidatesAreRejected", "DuplicateBackupCandidatesAreRejected", "InvalidBackupDoesNotMaskPrimaryFailure", "EmptyPrimaryRecoversFromValidBackupWithCorruptionDiagnostic", "BackupOnlyRecoveryReportsPrimaryMissingDiagnostic", "SelectorRejectsUndefinedRecoveryPolicy", "SelectorRejectsUndefinedCandidateKindInSet", "SelectorRejectsEmptyCandidateIdInSet", "SaveReadCandidateSetSnapshotsMembershipAndOrder"],
+          "missing": []
+        },
+        {
+          "id": "PC-11",
+          "clause": "deterministic post-commit event ordering",
+          "coverage": "covered",
+          "tests": ["ObserversRunInOrderOnlyAfterDurableCommit", "ObserverExceptionProducesWarningDiagnosticsWithoutChangingCommittedState", "FailedCommitDoesNotInvokeObservers"],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": ["SaveSlotIdRejectsInvalidInputs", "DefaultCandidateSetDoesNotThrowSelector", "SaveReadCandidateRejectsDefaultCandidateId", "SaveReadCandidateRejectsUndefinedCandidateKind", "SaveErrorDefaultHashCodeIsSafe"]
+    },
+    {
+      "id": "unity_adapter",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.persistence.unity",
+      "test_assembly": "Lingkyn.Persistence.Unity.Editor.Tests",
+      "clauses": [
+        {
+          "id": "PU-01",
+          "clause": "EditMode tests validate ScriptableObject configuration, schema IDs, migration graphs, slot/path safety and supported DTO shapes",
+          "coverage": "covered",
+          "tests": ["ConfigValidationRejectsUnsafeExtension", "ConfigValidationRejectsDuplicateMigrationEdges", "ConfigRejectsAtomicRequiredCapabilityWithoutAtomicStrategy", "JsonUtilityCodecRejectsUnsupportedDtoShapes", "JsonUtilityCodecRejectsNonSerializableDto", "JsonUtilityCodecRejectsReadonlySerializedField", "JsonUtilityCodecRejectsInvalidUtf8Payload", "PathPolicyKeepsDerivedPathsInsideRoot", "DirectStoreBoundaryRejectsDefaultSlot", "DirectStoreBoundaryRejectsUnsafeExtension", "DirectStoreBoundaryRejectsUnsafeSubdirectory", "DirectStoreBoundaryRejectsUndefinedStrategy"],
+          "missing": []
+        },
+        {
+          "id": "PU-02",
+          "clause": "file-provider tests use a temporary directory and inject failures at stage, flush, backup and replace boundaries",
+          "coverage": "covered",
+          "tests": ["StageWriteFailureMapsToStageWriteAndPreservesPrimary", "FlushFailureMapsToFlushAndPreservesPrimary", "BackupFailureMapsToCommitAndPreservesPrimary", "ReplacementCreatesBackupAndPreservesPriorOnFailure", "RecoverableBackupCorruptionPreservesPrimaryWhenPrimaryUnchanged", "RecoverableReplacePreservesPriorPrimaryInBackupWhenPrimaryLostAfterBackup", "BestEffortFailurePreservationFalseWhenPrimaryLost", "ReadFailureMapsToReadStage", "EnumerationFaultMapsToReadStage", "InitialCommitCreatesPrimaryWithoutBackup", "ReadCandidatesExposePrimaryBackupAndStagingWithoutPromotingStaging", "EmptyPrimaryDoesNotBlockRecoveryFromValidBackup", "EmptyBackupDoesNotBlockValidPrimary", "EmptyStagingDoesNotBlockValidDurableCandidate", "EmptyFilesFailClosedWhenNoSelectableCandidateRemains", "StagingCandidatesAreEnumeratedInDeterministicOrder"],
+          "missing": []
+        },
+        {
+          "id": "PU-03",
+          "clause": "capability tests prove atomic_replace is reported only for the exact provider path that used the supported replacement operation",
+          "coverage": "covered",
+          "tests": ["AtomicReplaceCapabilityAdvertisedOnlyForAtomicStrategy", "AtomicInitialPreconditionFailsWhenAtomicRequired", "AtomicStrategyUsesReplaceEvenWhenLowerMinimumRequired", "CoordinatorRejectsCapabilityMismatchBeforeCommit"],
+          "missing": []
+        },
+        {
+          "id": "PU-04",
+          "clause": "JsonUtility tests record its concrete supported DTO tuple",
+          "coverage": "covered",
+          "tests": ["JsonUtilityCodecRejectsUnsupportedDtoShapes", "RoundTripPersistsPlainDtoSnapshot"],
+          "missing": []
+        },
+        {
+          "id": "PU-05",
+          "clause": "no test writes to a real user's production save directory",
+          "coverage": "covered",
+          "tests": ["TestsNeverWriteToProductionPersistentDataPath"],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 16,
+    "covered": 14,
+    "partial": 2,
+    "unmapped": 0,
+    "open_gap_tests": 3
+  }
+}

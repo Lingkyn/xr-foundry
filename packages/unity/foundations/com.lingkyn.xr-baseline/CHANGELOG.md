@@ -12,6 +12,9 @@
   test assembly now references `Unity.XR.Interaction.Toolkit`. Not yet executed in
   a Unity Editor; the `unity-consumer-tests` workflow or a maintainer run must
   confirm it before the fix is cited as evidence.
+- `GrabbableHoverVisual` now logs one warning per component when XR Interaction
+  Toolkit is missing, the GameObject has no `XRGrabInteractable`, or the `isHovered`
+  property cannot be resolved, instead of silently never lighting up.
 - Documentation only: expanded the README with a quick start, the public
   runtime/editor surface, generated-path conventions, and non-goals. No API,
   version, maturity, or evidence change.

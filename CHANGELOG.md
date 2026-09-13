@@ -5,6 +5,11 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added clause-to-test coverage maps for the Persistence, Settings, and Interaction
+  Core and Unity adapter gates, authored the six Inventory Core tests the Core map
+  had named, stated in the Settings standard that accessibility category and
+  feature id are open metadata, and made the XR Baseline hover visual warn once
+  instead of silently idling when XRI members cannot be resolved.
 - Added `scripts/run_unity_gates.py`: one command that finds a Unity Editor,
   generates a disposable host (the reference consumer, every live package, or one
   package plus its Foundry dependencies), audits exact test counts from source,

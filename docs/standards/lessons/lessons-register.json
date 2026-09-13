@@ -155,7 +155,7 @@
         {
           "family": "foundations",
           "status": "gap",
-          "rationale": "The #21 repair path now resolves the referenced ICurveInteractionCaster, returns diagnostics, and has three EditMode tests, but those tests have not yet executed in a Unity Editor. More than twenty other Type.GetType and FindProperty sites across the xr-baseline Editor and Runtime code, including the GrabbableHoverVisual, still fall back silently.",
+          "rationale": "The #21 repair path now resolves the referenced ICurveInteractionCaster, returns diagnostics, and has three EditMode tests, and GrabbableHoverVisual warns once when it cannot resolve XRGrabInteractable or isHovered; neither change has executed in a Unity Editor yet. More than twenty other Type.GetType and FindProperty sites across the xr-baseline Editor code still fall back silently.",
           "follow_up": "Execute the #21 tests in a Unity Editor or the unity-consumer-tests workflow, then audit every remaining by-name resolution in xr-baseline so a missing or incompatible member returns a diagnostic rather than success."
         },
         {
@@ -194,26 +194,25 @@
         {
           "family": "inventory",
           "status": "gap",
-          "rationale": "docs/standards/inventory/coverage-map.core.json now maps all twelve Core behavior gate clauses to named tests: nine covered, three partial, six tests still missing (SourceEmpty, UnknownContainer, zero-quantity, exact-boundary, full-destination transfer, and multi-seed invariants).",
-          "follow_up": "Write the six missing Core tests named in coverage-map.core.json, then extend the map to the Unity authoring, Presentation, UGUI, and XR gates."
+          "rationale": "docs/standards/inventory/coverage-map.core.json maps all twelve Core behavior gate clauses; eleven are covered and one stays partial (zero-quantity request rejection at execution). The six tests it named are now authored but have not executed in a Unity Editor, and the Unity authoring, Presentation, UGUI, and XR gates are not mapped yet.",
+          "follow_up": "Execute the Core tests through run_unity_gates.py or the CI workflow, assert the zero-quantity request path, then extend the map to the Unity authoring, Presentation, UGUI, and XR gates."
         },
         {
           "family": "persistence",
           "status": "gap",
-          "rationale": "The Core gate enumerates its required behaviors and the package changelog names several matching tests, but nothing ties each clause to a test name.",
-          "follow_up": "Publish a clause-to-test map for the Persistence Core and Unity adapter gates."
+          "rationale": "docs/standards/persistence/coverage-map.json maps all sixteen Core and Unity adapter clauses: fourteen covered, two partial (a named Core same-version round trip, and Integrity, StageWrite, and Flush stage results in Core).",
+          "follow_up": "Write the three missing Core tests named in coverage-map.json and mark the two partial clauses covered."
         },
         {
           "family": "settings",
-          "status": "gap",
-          "rationale": "The Core gate enumerates its required behaviors and the package changelog names matching test areas, but nothing ties each clause to a test name.",
-          "follow_up": "Publish a clause-to-test map for the Settings Core and Unity adapter gates."
+          "status": "adopted",
+          "rationale": "docs/standards/settings/coverage-map.json maps all twelve Core and Unity adapter clauses to named tests with no partial or unmapped clause; the map is authored coverage, and execution evidence stays with the compatibility profiles."
         },
         {
           "family": "interaction",
           "status": "gap",
-          "rationale": "The Core gate enumerates its required behaviors, but nothing ties each clause to a test name.",
-          "follow_up": "Publish a clause-to-test map for the Interaction Core and Unity adapter gates."
+          "rationale": "docs/standards/interaction/coverage-map.json maps all twenty Core and Unity adapter clauses: fifteen covered, five partial (identity validation per id type, multi-modal sources, collection immutability, handler outcomes, and opaque route tokens in Core).",
+          "follow_up": "Write the five missing Core tests named in coverage-map.json and mark the partial clauses covered."
         },
         {
           "family": "foundations",

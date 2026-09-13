@@ -79,7 +79,7 @@ class RunUnityGatesTests(unittest.TestCase):
         self.assertEqual([], receipt["inventory_errors"])
         self.assertEqual(1, receipt["summary"]["planned"])
         self.assertEqual("Lingkyn.Inventory.Core.Editor.Tests", receipt["runs"][0]["assembly"])
-        self.assertEqual(22, receipt["runs"][0]["expected_cases"])
+        self.assertEqual(28, receipt["runs"][0]["expected_cases"])
         self.assertIn("-assemblyNames", receipt["runs"][0]["command"])
         self.assertEqual(receipt["schema"], written["schema"])
         self.assertIsNone(receipt["host"]["path"], "temporary host must be removed after the run")
@@ -89,7 +89,7 @@ class RunUnityGatesTests(unittest.TestCase):
             mode = command[command.index("-testPlatform") + 1]
             assembly = command[command.index("-assemblyNames") + 1]
             result = Path(command[command.index("-testResults") + 1])
-            cases = 22 if assembly == "Lingkyn.Inventory.Core.Editor.Tests" else 1
+            cases = 28 if assembly == "Lingkyn.Inventory.Core.Editor.Tests" else 1
             result.write_text(_passing_result_xml(mode, assembly, cases), encoding="utf-8")
             Path(command[command.index("-logFile") + 1]).write_text("fake unity log\n", encoding="utf-8")
             return 0
@@ -103,7 +103,7 @@ class RunUnityGatesTests(unittest.TestCase):
         self.assertEqual({"assemblies": 1, "passed": 1, "failed": 0, "planned": 0}, receipt["summary"])
         run = receipt["runs"][0]
         self.assertEqual("pass", run["verification"]["status"])
-        self.assertEqual(22, run["verification"]["actual_test_cases"])
+        self.assertEqual(28, run["verification"]["actual_test_cases"])
         self.assertIsNotNone(run["result_sha256"])
 
     def test_wrong_case_count_fails_closed(self) -> None:

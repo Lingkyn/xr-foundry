@@ -118,3 +118,19 @@ the proposed governance constitution active. Adoption requires:
 A successor RFC may revise or supersede the model only while preserving public
 history, authority boundaries, migration and recovery instructions, and validation
 that is at least as strong as the contract it replaces.
+
+## Prototype-stage operating mandates
+
+While the repository is at `G0` with one maintainer, that maintainer may grant an
+Agent a written operating mandate under the active `A0` participation path by
+recording it in [`docs/governance/mandates/`](docs/governance/mandates/README.md)
+with a decision note. No review window applies to granting, renewing, or revoking
+such a mandate. A mandate binds allowed and forbidden actions, branches, paths,
+reporting, expiry, and revocation; an Agent acting inside it does not ask a person
+for each step and reports at the end of every run.
+
+An operating mandate grants no GitHub write, review, merge, release, or
+administrative permission, does not activate RFC 0006 Agent membership, and does
+not shorten the review windows for policy, constitutional, authority, treasury,
+on-chain, or stage-transition changes. The Unity Editor, headset, and merge
+decisions stay with people.

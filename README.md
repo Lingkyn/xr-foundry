@@ -33,6 +33,7 @@ evidence remain explicit gates.
 | Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), [`RFC 0004`](docs/rfcs/0004-progressive-governance.md), and proposed [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
+| Test the packages with your own Unity Editor in one command | [`docs/validation/run-unity-gates.md`](docs/validation/run-unity-gates.md) |
 | Install a released batch by tag | [`docs/releases`](docs/releases/) and the [batch registry](docs/foundry/batches/batch-registry.v1.json) |
 | Navigate the documentation tree | [`docs/README.md`](docs/README.md) |
 

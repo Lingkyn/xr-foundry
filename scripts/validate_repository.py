@@ -2845,6 +2845,55 @@ def validate_agent_membership_contract(root: Path) -> list[str]:
     return errors
 
 
+OPERATING_MANDATE_DIRECTORY = "docs/governance/mandates"
+OPERATING_MANDATE_SCHEMA_PATH = "docs/governance/mandates/operating-mandate.schema.json"
+
+
+def validate_operating_mandates(root: Path) -> list[str]:
+    """Every recorded A0 operating mandate must match its schema and keep its time order."""
+
+    errors: list[str] = []
+    directory = root / OPERATING_MANDATE_DIRECTORY
+    if not directory.is_dir():
+        return errors
+    schema_path = root / OPERATING_MANDATE_SCHEMA_PATH
+    seen_ids: set[str] = set()
+    for path in sorted(directory.glob("*.mandate.json")):
+        label = f"operating mandate {path.name}"
+        try:
+            payload = load_json(path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        schema_errors = validate_json_schema_instance(payload, schema_path, label)
+        errors.extend(schema_errors)
+        if schema_errors or not isinstance(payload, dict):
+            continue
+        mandate_id = str(payload.get("mandate_id"))
+        if mandate_id in seen_ids:
+            errors.append(f"{label}: duplicate mandate_id {mandate_id}")
+        seen_ids.add(mandate_id)
+        parsed: dict[str, datetime] = {}
+        for field in ("issued_at", "not_before", "expires_at"):
+            value, time_errors = _parse_governance_timestamp(payload.get(field), label, field)
+            errors.extend(time_errors)
+            if value is not None:
+                parsed[field] = value
+        if len(parsed) == 3:
+            if parsed["issued_at"] > parsed["not_before"]:
+                errors.append(f"{label}: issued_at must not follow not_before")
+            if parsed["not_before"] >= parsed["expires_at"]:
+                errors.append(f"{label}: expires_at must follow not_before")
+        revocation = payload.get("revocation", {})
+        if revocation.get("status") == "revoked" and not revocation.get("revoked_at"):
+            errors.append(f"{label}: a revoked mandate must record revoked_at")
+        forbidden = " ".join(str(item) for item in payload.get("forbidden_actions", [])).casefold()
+        for required in ("pull request", "merge", "unity editor"):
+            if required not in forbidden:
+                errors.append(f"{label}: forbidden_actions must cover {required!r}")
+    return errors
+
+
 def validate_agent_guide_source_boundary(root: Path) -> list[str]:
     path = root / "AGENTS.md"
     if not path.exists():
@@ -8750,6 +8799,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_agent_guide_source_boundary(root))
     errors.extend(validate_governance_contract(root))
     errors.extend(validate_agent_membership_contract(root))
+    errors.extend(validate_operating_mandates(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_component_model(root))

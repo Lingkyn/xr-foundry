@@ -5,6 +5,21 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added `scripts/run_unity_gates.py`: one command that finds a Unity Editor,
+  generates a disposable host (the reference consumer, every live package, or one
+  package plus its Foundry dependencies), audits exact test counts from source,
+  runs each assembly in its own batchmode process, verifies every result, and
+  writes a run receipt binding commit, host manifest, resolved lock, editor, and
+  per-assembly verification. Covered by contract tests with a fake editor. Added
+  `docs/validation/run-unity-gates.md` (what to test, how, what it proves) and the
+  manual-dispatch `unity-self-hosted-gates` workflow for a maintainer-controlled
+  machine registered as a self-hosted runner.
+- Iterated the governance rules by maintainer direction: added prototype-stage
+  operating mandates (`docs/governance/mandates/`, schema-validated) under the
+  active `A0` path, recorded the weekly steward mandate, let `AGENTS.md` state that
+  a mandated Agent acts within scope without asking, and marked bounded background
+  automation as activated in the project profile. RFC 0006 membership, review
+  windows for constitutional changes, and all GitHub permissions are unchanged.
 - Added the `unity-consumer-tests` workflow: materializes the reference consumer,
   audits the exact test-case count of every test assembly from source with the new
   `scripts/audit_unity_test_inventory.py`, runs each assembly in its own pinned

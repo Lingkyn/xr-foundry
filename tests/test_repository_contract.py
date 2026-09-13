@@ -920,6 +920,36 @@ class RepositoryContractTests(unittest.TestCase):
                 )
 
 
+    def test_operating_mandates_validate_and_fail_closed(self) -> None:
+        self.assertEqual([], MODULE.validate_operating_mandates(ROOT))
+        mandate_path = ROOT / "docs" / "governance" / "mandates" / "weekly-steward.mandate.json"
+        original_loader = MODULE.load_json
+
+        def mutate(change):
+            payload = json.loads(mandate_path.read_text(encoding="utf-8"))
+            change(payload)
+
+            def loader(path: Path):
+                return payload if Path(path) == mandate_path else original_loader(Path(path))
+
+            with mock.patch.object(MODULE, "load_json", side_effect=loader):
+                return MODULE.validate_operating_mandates(ROOT)
+
+        def expire_before_start(payload: dict) -> None:
+            payload["expires_at"] = payload["not_before"]
+
+        self.assertTrue(any("expires_at must follow" in error for error in mutate(expire_before_start)))
+
+        def allow_merge(payload: dict) -> None:
+            payload["forbidden_actions"] = ["nothing is forbidden"]
+
+        self.assertTrue(any("must cover 'merge'" in error for error in mutate(allow_merge)))
+
+        def drop_decision(payload: dict) -> None:
+            payload.pop("decision")
+
+        self.assertTrue(any("JSON Schema violation" in error for error in mutate(drop_decision)))
+
     def test_consumer_lessons_register_positive_contract_passes(self) -> None:
         self.assertEqual([], MODULE.validate_consumer_lessons_register(ROOT))
         register = MODULE.load_json(ROOT / MODULE.LESSONS_REGISTER_PATH)

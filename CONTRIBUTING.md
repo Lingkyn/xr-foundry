@@ -98,7 +98,10 @@ unfinished.”
   `python scripts/validate_repository.py --json --run-contract-tests`, and the
   Python tests. The validator skips the test stage when repository validation
   fails, so fix validation errors first.
-- Record the Unity version and independent consumer result.
+- Run `python scripts/run_unity_gates.py` with your Unity Editor and attach the
+  receipt, result XML, and lock it writes; see
+  [`docs/validation/run-unity-gates.md`](docs/validation/run-unity-gates.md).
+  Record the Unity version and operating system in the pull request.
 - Do not raise package maturity or create a release tag without its evidence gate.
 - Preserve `.meta` files when moving Unity assets.
 - Link the Ready task and confirmed claim lease when applicable. Schedule scope

@@ -199,9 +199,8 @@
         },
         {
           "family": "persistence",
-          "status": "gap",
-          "rationale": "docs/standards/persistence/coverage-map.json maps all sixteen Core and Unity adapter clauses: fourteen covered, two partial (a named Core same-version round trip, and Integrity, StageWrite, and Flush stage results in Core).",
-          "follow_up": "Write the three missing Core tests named in coverage-map.json and mark the two partial clauses covered."
+          "status": "adopted",
+          "rationale": "docs/standards/persistence/coverage-map.json maps all sixteen Core and Unity adapter clauses to named tests with no partial or unmapped clause after three Core tests were added (same-version round trip, Integrity stage failure, StageWrite and Flush results); those three await Editor execution, and execution evidence stays with the compatibility profiles."
         },
         {
           "family": "settings",

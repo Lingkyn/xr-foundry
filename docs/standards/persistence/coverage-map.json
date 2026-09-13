@@ -20,9 +20,9 @@
         {
           "id": "PC-01",
           "clause": "same-version round trip and byte-level envelope bounds",
-          "coverage": "partial",
-          "tests": ["EnvelopeCodecRejectsMalformedAndFutureFormats", "EnvelopeCodecRejectsMalformedUtf8Metadata", "SaveEnvelopeOwnsImmutableByteCopies", "CoordinatorPassesStoredSchemaVersionToCodecDecode"],
-          "missing": ["a named Core same-version round trip through an in-memory store asserting decoded state equality (the Unity adapter covers the file route in RoundTripPersistsPlainDtoSnapshot)"]
+          "coverage": "covered",
+          "tests": ["SameVersionRoundTripThroughInMemoryStoreRestoresEqualState", "EnvelopeCodecRejectsMalformedAndFutureFormats", "EnvelopeCodecRejectsMalformedUtf8Metadata", "SaveEnvelopeOwnsImmutableByteCopies", "CoordinatorPassesStoredSchemaVersionToCodecDecode"],
+          "missing": []
         },
         {
           "id": "PC-02",
@@ -55,9 +55,9 @@
         {
           "id": "PC-06",
           "clause": "codec, integrity, read, write, flush and commit failures as different results",
-          "coverage": "partial",
-          "tests": ["CoordinatorConvertsCodecEncodeThrowsToStableResult", "CoordinatorConvertsCodecDecodeThrowsToStableResult", "CoordinatorConvertsStoreReadThrowsToStableResult", "CoordinatorConvertsStoreCommitThrowsToStableResult", "CoordinatorConvertsValidatorThrowsToStableResult", "CoordinatorConvertsApplyThrowsToStableResult", "CoordinatorReportsCapabilityMismatchBeforeCommit"],
-          "missing": ["an integrity-provider failure surfacing as the Integrity stage in Core", "StageWrite and Flush stage results exercised in Core with an in-memory store (the Unity adapter covers them for the file store)"]
+          "coverage": "covered",
+          "tests": ["CoordinatorConvertsCodecEncodeThrowsToStableResult", "CoordinatorConvertsCodecDecodeThrowsToStableResult", "IntegrityProviderFailureSurfacesAsIntegrityStageBeforeCommit", "CoordinatorConvertsStoreReadThrowsToStableResult", "StageWriteAndFlushFailuresAreDistinctResultsThatPreservePriorBytes", "CoordinatorConvertsStoreCommitThrowsToStableResult", "CoordinatorConvertsValidatorThrowsToStableResult", "CoordinatorConvertsApplyThrowsToStableResult", "CoordinatorReportsCapabilityMismatchBeforeCommit"],
+          "missing": []
         },
         {
           "id": "PC-07",
@@ -144,9 +144,10 @@
   ],
   "summary": {
     "clauses": 16,
-    "covered": 14,
-    "partial": 2,
+    "covered": 16,
+    "partial": 0,
     "unmapped": 0,
-    "open_gap_tests": 3
+    "open_gap_tests": 0,
+    "execution_note": "The three Core tests added after the first audit have not yet executed in a Unity Editor; the map records authored coverage, not results."
   }
 }

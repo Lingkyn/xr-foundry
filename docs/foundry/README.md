@@ -13,6 +13,10 @@ decision record is [RFC 0003](../rfcs/0003-foundry-production-line.md).
    consumer repository even when it can technically be packaged.
 3. Complete its positive-source gate. Do not use a consumer project, course
    project, internal prototype, or rejected candidate as derivation material.
+   Answer every lesson in the
+   [consumer lessons register](../standards/lessons/README.md) for the new family;
+   repository validation requires a disposition per live family once the family's
+   first component manifest exists.
 4. Create a blueprint from
    [`unity-package-blueprint.example.json`](unity-package-blueprint.example.json).
 5. Validate and preview it:

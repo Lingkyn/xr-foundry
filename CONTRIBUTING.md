@@ -79,6 +79,11 @@ unfinished.”
    visual vocabulary in the renderer adapter, expose one injectable skin/theme seam
    that maps the shared tokens, and ship a default skin with the canonical values so
    the library stays visually coherent across systems and contributors.
+7. Check the [consumer lessons register](docs/standards/lessons/README.md). A
+   change that resolves a `gap` updates that disposition to `adopted` with its
+   evidence; a problem found through consumer use that is not product-specific is
+   recorded as a new lesson with a disposition for every live family. Repository
+   validation fails when a family has not responded.
 
 ## Pull requests
 

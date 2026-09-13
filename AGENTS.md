@@ -121,6 +121,12 @@ are not reference material unless independently reviewed and admitted as a posit
 public source. Verify license, maintenance, architecture, tests, compatibility,
 migration, and independent-consumer behavior; popularity alone is not a standard.
 
+Before changing a public seam or proposing a family, read
+`docs/standards/lessons/lessons-register.json`. Every live family must hold an
+explicit disposition for every recorded lesson; a new family answers all existing
+lessons before its blueprint is scaffolded, and a consumer-exposed gap that is not
+product-specific becomes a new lesson rather than a private fix.
+
 Provider adapters must stay thin. Shared facts belong in `reference-catalog.json`,
 package manifests, tests, and public documentation—not duplicated in model-specific
 instruction files.

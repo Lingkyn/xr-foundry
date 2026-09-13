@@ -12,7 +12,7 @@ one repository validation enforces, and the page is the one to fix.
 | Directory | Holds | Start with |
 | --- | --- | --- |
 | [`architecture/`](architecture/) | Repository layout, the XFCM composition model, the version-adaptive reference model, and the JSON schemas for component manifests, catalogs, compositions, and locks | [`component-composition-model.md`](architecture/component-composition-model.md) |
-| [`standards/`](standards/) | One package-family standard per reusable system plus the shared UI design language: positive-source manifests, architecture contracts, coverage matrices, and verification contracts | [`inventory/README.md`](standards/inventory/README.md) |
+| [`standards/`](standards/) | One package-family standard per reusable system, the shared UI design language, and the cross-family [consumer lessons register](standards/lessons/README.md): positive-source manifests, architecture contracts, coverage matrices, verification contracts, and per-family lesson dispositions | [`inventory/README.md`](standards/inventory/README.md) |
 | [`validation/`](validation/) | Exact Unity consumer evidence per compatibility profile, bounded integration experiments, independent review receipts, and the schemas that validate them | [`fail-fast-validation.md`](validation/fail-fast-validation.md) |
 | [`foundry/`](foundry/) | The Foundry V1 production line: manifest, system admissions, blueprints, batches, next source-gate queue, and release policy | [`README.md`](foundry/README.md) |
 | [`device-lab/`](device-lab/) | Device profiles, capability test plans, the receipt template and schema, and the execution-receipt surface | [`README.md`](device-lab/README.md) |

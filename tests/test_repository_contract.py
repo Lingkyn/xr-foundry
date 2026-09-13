@@ -920,6 +920,80 @@ class RepositoryContractTests(unittest.TestCase):
                 )
 
 
+    def test_consumer_lessons_register_positive_contract_passes(self) -> None:
+        self.assertEqual([], MODULE.validate_consumer_lessons_register(ROOT))
+        register = MODULE.load_json(ROOT / MODULE.LESSONS_REGISTER_PATH)
+        families = MODULE.live_package_families(ROOT)
+        self.assertEqual(
+            {"foundations", "inventory", "persistence", "settings", "interaction"},
+            families,
+        )
+        for lesson in register["lessons"]:
+            self.assertEqual(
+                families,
+                {item["family"] for item in lesson["dispositions"]},
+                lesson["id"],
+            )
+
+    def _lessons_register_with(self, mutate) -> list[str]:
+        register_path = ROOT / MODULE.LESSONS_REGISTER_PATH
+        original_loader = MODULE.load_json
+        mutated = json.loads(register_path.read_text(encoding="utf-8"))
+        mutate(mutated)
+
+        def load_with_mutation(path: Path) -> dict:
+            return mutated if Path(path) == register_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_mutation):
+            return MODULE.validate_consumer_lessons_register(ROOT)
+
+    def test_consumer_lessons_register_rejects_a_family_that_did_not_respond(self) -> None:
+        def drop_settings(register: dict) -> None:
+            register["lessons"][0]["dispositions"] = [
+                item
+                for item in register["lessons"][0]["dispositions"]
+                if item["family"] != "settings"
+            ]
+
+        errors = self._lessons_register_with(drop_settings)
+        self.assertTrue(
+            any("must respond for every live family; missing settings" in error for error in errors),
+            errors,
+        )
+
+    def test_consumer_lessons_register_rejects_gap_without_follow_up(self) -> None:
+        def strip_follow_up(register: dict) -> None:
+            for item in register["lessons"][0]["dispositions"]:
+                if item["status"] == "gap":
+                    item.pop("follow_up", None)
+                    break
+
+        errors = self._lessons_register_with(strip_follow_up)
+        self.assertTrue(any("must name a follow_up" in error for error in errors), errors)
+
+    def test_consumer_lessons_register_rejects_unknown_family_and_missing_evidence(self) -> None:
+        def corrupt(register: dict) -> None:
+            lesson = register["lessons"][0]
+            lesson["dispositions"][0]["family"] = "localization"
+            lesson["evidence"].append("docs/standards/lessons/does-not-exist.md")
+
+        errors = self._lessons_register_with(corrupt)
+        self.assertTrue(any("unknown family: localization" in error for error in errors), errors)
+        self.assertTrue(any("evidence path does not exist" in error for error in errors), errors)
+
+    def test_consumer_lessons_register_rejects_schema_and_policy_drift(self) -> None:
+        def drift(register: dict) -> None:
+            register["policy"]["gap_requires_follow_up"] = False
+
+        errors = self._lessons_register_with(drift)
+        self.assertTrue(any("JSON Schema violation" in error for error in errors), errors)
+
+        def duplicate(register: dict) -> None:
+            register["lessons"].append(copy.deepcopy(register["lessons"][0]))
+
+        errors = self._lessons_register_with(duplicate)
+        self.assertTrue(any("duplicate lesson id" in error for error in errors), errors)
+
     def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
         self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
         self.assertEqual([], MODULE.validate_fast_structure(ROOT))

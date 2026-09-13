@@ -6151,6 +6151,109 @@ def validate_repository_automation_contract(root: Path) -> list[str]:
     return errors
 
 
+LESSONS_REGISTER_PATH = "docs/standards/lessons/lessons-register.json"
+LESSONS_REGISTER_SCHEMA_PATH = "docs/standards/lessons/lessons-register.schema.json"
+LESSONS_REGISTER_SCHEMA_ID = "xr-foundry.consumer_lessons_register.v1"
+LESSONS_REGISTER_POLICY = {
+    "every_live_family_must_respond": True,
+    "consumer_material_is_not_derivation_input": True,
+    "gap_requires_follow_up": True,
+    "disposition_binds_current_revision_only": True,
+}
+
+
+def live_package_families(root: Path) -> set[str]:
+    """Return every family declared by a live package's colocated component manifest."""
+
+    families: set[str] = set()
+    catalog_path = root / "package-catalog.json"
+    if not catalog_path.exists():
+        return families
+    try:
+        catalog = load_json(catalog_path)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return families
+    for item in catalog.get("packages", []) if isinstance(catalog, dict) else []:
+        if not isinstance(item, dict):
+            continue
+        manifest_path = safe_repository_path(root, str(item.get("path", "")))
+        if manifest_path is None:
+            continue
+        manifest_path = manifest_path / "foundry.component.json"
+        if not manifest_path.exists():
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        family = manifest.get("family") if isinstance(manifest, dict) else None
+        if isinstance(family, str) and family.strip():
+            families.add(family)
+    return families
+
+
+def validate_consumer_lessons_register(root: Path) -> list[str]:
+    """Require every live package family to answer every recorded consumer lesson."""
+
+    label = "consumer lessons register"
+    path = root / LESSONS_REGISTER_PATH
+    if not path.exists():
+        return [f"{label} is missing: {LESSONS_REGISTER_PATH}"]
+    try:
+        payload = load_json(path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        return [f"{label}: invalid JSON: {error}"]
+    errors = validate_json_schema_instance(payload, root / LESSONS_REGISTER_SCHEMA_PATH, label)
+    if errors or not isinstance(payload, dict):
+        return errors
+    if payload.get("schema") != LESSONS_REGISTER_SCHEMA_ID:
+        errors.append(f"{label}: schema must be {LESSONS_REGISTER_SCHEMA_ID}")
+    errors.extend(policy_matches(payload.get("policy"), LESSONS_REGISTER_POLICY, f"{label} policy"))
+    families = live_package_families(root)
+    if not families:
+        errors.append(f"{label}: no live package family declares a component manifest family")
+        return errors
+    seen_ids: set[str] = set()
+    for lesson in payload.get("lessons", []):
+        lesson_id = str(lesson.get("id", ""))
+        if lesson_id in seen_ids:
+            errors.append(f"{label}: duplicate lesson id: {lesson_id}")
+        seen_ids.add(lesson_id)
+        if lesson.get("origin_family") not in families:
+            errors.append(
+                f"{label}: {lesson_id} origin_family is not a live package family: "
+                f"{lesson.get('origin_family')}"
+            )
+        for item in lesson.get("evidence", []):
+            if isinstance(item, str) and item.startswith("https://"):
+                continue
+            resolved = safe_repository_path(root, item)
+            if resolved is None or not resolved.exists():
+                errors.append(f"{label}: {lesson_id} evidence path does not exist: {item}")
+        responses: dict[str, int] = {}
+        for disposition in lesson.get("dispositions", []):
+            family = str(disposition.get("family", ""))
+            responses[family] = responses.get(family, 0) + 1
+            if family not in families:
+                errors.append(
+                    f"{label}: {lesson_id} disposition names an unknown family: {family}"
+                )
+            status = disposition.get("status")
+            if status in {"gap", "deferred"} and not str(disposition.get("follow_up", "")).strip():
+                errors.append(
+                    f"{label}: {lesson_id} {family} {status} disposition must name a follow_up"
+                )
+        for family in sorted(families):
+            count = responses.get(family, 0)
+            if count == 0:
+                errors.append(
+                    f"{label}: {lesson_id} must respond for every live family; missing {family}"
+                )
+            elif count > 1:
+                errors.append(f"{label}: {lesson_id} responds more than once for {family}")
+    return errors
+
+
 def validate_inventory_source_manifest(path: Path) -> list[str]:
     errors: list[str] = []
     if not path.exists():
@@ -8656,6 +8759,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))
+    errors.extend(validate_consumer_lessons_register(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")

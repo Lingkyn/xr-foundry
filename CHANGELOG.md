@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the consumer lessons register (`docs/standards/lessons/`): seven lessons
+  drawn from Inventory's real consumer use and validation records, each with an
+  explicit adopted, gap, deferred, or not-applicable disposition for every live
+  package family. Repository validation now fails when a live family has not
+  responded to a lesson, a gap or deferral lacks a follow-up, an evidence path is
+  missing, or the register drifts from its schema or policy.
 - Added a `docs/README.md` navigation index with a directory map, task-based
   reading orders, and the evidence rules shared by every documentation surface.
 - Expanded the XR Baseline README and the Settings Core, Settings Unity, and

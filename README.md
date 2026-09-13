@@ -33,6 +33,8 @@ evidence remain explicit gates.
 | Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), [`RFC 0004`](docs/rfcs/0004-progressive-governance.md), and proposed [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
+| Install a released batch by tag | [`docs/releases`](docs/releases/) and the [batch registry](docs/foundry/batches/batch-registry.v1.json) |
+| Navigate the documentation tree | [`docs/README.md`](docs/README.md) |
 
 Thin adapters are included for tools that discover repository instructions in
 different ways: `CLAUDE.md`, `.cursor/rules/`, and `SKILL.md`. They all point back
@@ -210,16 +212,19 @@ Every live package must provide:
 - an independent consumer compile before candidate promotion; and
 - device evidence before XR/controller/headset behavior is called stable.
 
-Run the local checks:
+Run the local checks from a project-local virtual environment so the exactly
+pinned contract dependencies never collide with a distribution-managed Python:
 
-```powershell
+```bash
+python -m venv .venv
+. .venv/bin/activate            # PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install -r scripts/contract-requirements.txt
 python scripts/compose_system.py --check --json
 python scripts/validate_repository.py --json --fast-structure
 python scripts/validate_repository.py --json --run-contract-tests
 ```
 
-The repository contract supports Python `3.11`, `3.12`, and `3.13`. Pull requests,
+`.venv/` is ignored by Git. The repository contract supports Python `3.11`, `3.12`, and `3.13`. Pull requests,
 pushes to `main`, and manual workflow runs execute the full contract across that
 matrix. GitHub Actions and the exactly pinned Python contract dependencies are both
 checked monthly by Dependabot; changes remain reviewable pull requests and do not

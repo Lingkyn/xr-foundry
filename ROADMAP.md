@@ -7,15 +7,30 @@ thin.
 
 ## Foundry production line
 
-Foundry V1 registers the first nine implemented Unity packages as one incubating
-batch and publishes a dry-run-first package blueprint/scaffolder. New systems enter
-through the public source-gate queue; no package directory or package ID is created
-before admission. See [`docs/foundry`](docs/foundry/README.md).
+Foundry V1 publishes a dry-run-first package blueprint/scaffolder and an immutable
+batch registry. Two incubating batches are released: `unity-first-batch` registers
+the nine foundation and Inventory packages, and `unity-next-systems` registers the
+six Persistence, Settings, and Interaction packages, so the 15 live Unity packages
+are each covered exactly once. A batch is a discovery and install surface, not a
+maturity promotion. New systems enter through the public source-gate queue, where
+Localization is the current proposal; no package directory or package ID is
+created before admission. See [`docs/foundry`](docs/foundry/README.md) and
+[`docs/releases`](docs/releases/).
 
 Persistence, Settings/Accessibility, and Semantic Interaction have completed
 their first independently validated Core and Unity checkpoints. Their next gates
 are public API compatibility review, one release upgrade/rollback exercise, and
 any separately scoped live runtime or named-device evidence required by a claim.
+
+## Composition
+
+XFCM v0.2 gives every live package a colocated component manifest and resolves the
+Unity reference composition to a deterministic 13-component lock with three bound
+cross-family adapter sources. The bounded consumer experiment covers the eight
+packages at the binding endpoints in one Editor tuple. The composition keeps
+`runtime_ready: false` until whole-composition Unity evidence, a player build,
+and named-device evidence exist; each of those is a separate gate. See
+[`docs/architecture/component-composition-model.md`](docs/architecture/component-composition-model.md).
 
 ## Candidate gate
 

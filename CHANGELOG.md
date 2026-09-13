@@ -5,6 +5,17 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added a `docs/README.md` navigation index with a directory map, task-based
+  reading orders, and the evidence rules shared by every documentation surface.
+- Expanded the XR Baseline README and the Settings Core, Settings Unity, and
+  Persistence Core package documentation with lifecycle, outcome, recovery,
+  migration, factory-wiring, and non-goal detail derived from the shipped source.
+  No package API, version, maturity, or evidence claim changed.
+- Updated the roadmap to reflect both released Foundry batches, the 15 live Unity
+  packages, the Localization queue proposal, and the XFCM composition gates.
+- Documented a project-local virtual environment as the supported route for the
+  pinned contract dependencies and ignored `.venv/`, `venv/`, and
+  `.pytest_cache/`.
 - Added proposed RFC 0006 and an inactive Agent-native membership foundation:
   `G0 x A0` current truth, `G0 x A1` phase-one target, AgentMember identity and
   mandate schemas, principal-and-lineage independence, evidence ancestry controls,

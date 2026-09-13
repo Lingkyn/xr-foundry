@@ -1,0 +1,63 @@
+# XR Foundry documentation index
+
+This directory holds the standards, architecture, validation evidence,
+production-line, contribution, device-lab, governance, RFC, and release records
+that back the root catalogs. Machine-readable JSON files remain the authority for
+selection and validation; the Markdown pages explain the boundaries around them.
+When a Markdown page and its JSON counterpart disagree, the JSON contract is the
+one repository validation enforces, and the page is the one to fix.
+
+## Directory map
+
+| Directory | Holds | Start with |
+| --- | --- | --- |
+| [`architecture/`](architecture/) | Repository layout, the XFCM composition model, the version-adaptive reference model, and the JSON schemas for component manifests, catalogs, compositions, and locks | [`component-composition-model.md`](architecture/component-composition-model.md) |
+| [`standards/`](standards/) | One package-family standard per reusable system plus the shared UI design language: positive-source manifests, architecture contracts, coverage matrices, and verification contracts | [`inventory/README.md`](standards/inventory/README.md) |
+| [`validation/`](validation/) | Exact Unity consumer evidence per compatibility profile, bounded integration experiments, independent review receipts, and the schemas that validate them | [`fail-fast-validation.md`](validation/fail-fast-validation.md) |
+| [`foundry/`](foundry/) | The Foundry V1 production line: manifest, system admissions, blueprints, batches, next source-gate queue, and release policy | [`README.md`](foundry/README.md) |
+| [`device-lab/`](device-lab/) | Device profiles, capability test plans, the receipt template and schema, and the execution-receipt surface | [`README.md`](device-lab/README.md) |
+| [`contributing/`](contributing/) | Task Hall, task registry, deliberation protocol, recognition policy, continuation receipts, and the label contract | [`task-hall.md`](contributing/task-hall.md) |
+| [`governance/`](governance/) | The progressive governance maturity model, the Agent membership model, and their source manifests | [`README.md`](governance/README.md) |
+| [`rfcs/`](rfcs/) | Numbered decision records for Agent Commons, the public workbench, the production line, progressive governance, XFCM, and the Agent-native DAO proposal | [`0005-xr-foundry-component-composition-model.md`](rfcs/0005-xr-foundry-component-composition-model.md) |
+| [`releases/`](releases/) | Immutable batch release notes with pinned install selectors, verified claims, and non-claims | [`unity-next-systems-v0.1.0.md`](releases/unity-next-systems-v0.1.0.md) |
+| [`for-agents.md`](for-agents.md) | Provider-neutral workflow for coding agents that select, install, extend, or adapt artifacts | |
+
+## Reading order by task
+
+**Evaluate one package.** Read the root `package-catalog.json` entry, then the
+package `README.md` and `Documentation~/index.md`, then its tuple in the root
+`compatibility-profiles.json`, then the matching `validation/evidence/<profile>/`
+directory.
+
+**Compose several packages.** Read
+[`architecture/component-composition-model.md`](architecture/component-composition-model.md),
+then the root `component-catalog.json` and `capability-registry.json`, then the
+[Unity reference composition](../compositions/unity/reference-system/README.md),
+and run `python scripts/compose_system.py --check --json`.
+
+**Propose a new system.** Read [`foundry/README.md`](foundry/README.md), then
+[`foundry/system-admission.md`](foundry/system-admission.md), then
+[`foundry/queue/next-batch.json`](foundry/queue/next-batch.json), and model the
+new family on an existing `standards/<family>/` source manifest and contract set.
+
+**Contribute bounded work.** Read
+[`contributing/task-hall.md`](contributing/task-hall.md), select one Ready
+checkpoint, and publish a receipt that validates against
+[`contributing/work-continuation.schema.json`](contributing/work-continuation.schema.json)
+before pausing or handing off.
+
+**Submit device evidence.** Read [`device-lab/README.md`](device-lab/README.md),
+select a plan under [`device-lab/test-plans/`](device-lab/test-plans/), start from
+[`device-lab/device-receipt.template.json`](device-lab/device-receipt.template.json),
+and validate the completed receipt with
+`python scripts/validate_repository.py --device-lab-receipt <path> --json`.
+
+## Evidence rules that apply everywhere
+
+- Evidence binds to one exact commit, resolved dependency lock, build target,
+  renderer, input source, and device tuple. It does not transfer to a sibling
+  tuple, a later commit, or a different renderer composition.
+- A manifest, a passing scaffold, a batch release, or a `not_tested` entry is
+  never a maturity, runtime, or device claim.
+- Every JSON contract under this directory is validated by
+  `scripts/validate_repository.py`; run it before and after editing any of them.

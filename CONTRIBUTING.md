@@ -84,9 +84,15 @@ unfinished.”
 
 - Use a focused branch and update package plus repository changelogs.
 - Add or update EditMode/PlayMode tests and a minimal sample.
-- Install the pinned contract dependencies with
-  `python -m pip install -r scripts/contract-requirements.txt`.
-- Run `python scripts/validate_repository.py --json` and Python tests.
+- Install the pinned contract dependencies into a project-local virtual
+  environment (`python -m venv .venv`, activate it, then
+  `python -m pip install -r scripts/contract-requirements.txt`). The pins are
+  exact, so installing them into a distribution-managed Python can fail on an
+  uninstallable system package.
+- Run `python scripts/compose_system.py --check --json`,
+  `python scripts/validate_repository.py --json --run-contract-tests`, and the
+  Python tests. The validator skips the test stage when repository validation
+  fails, so fix validation errors first.
 - Record the Unity version and independent consumer result.
 - Do not raise package maturity or create a release tag without its evidence gate.
 - Preserve `.meta` files when moving Unity assets.

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Documentation only: expanded `Documentation~/index.md` with the save and load
+  pipelines, recovery-policy table, migration graph rules, and commit-capability
+  semantics. No API, version, or evidence change.
 - Replace scaffold marker with engine-light persistence core implementation.
 - Add deterministic save envelope codec, migration pipeline, integrity abstraction, and save coordinator orchestration.
 - Add focused editor tests for slot IDs, malformed/future envelopes, checksum corruption, migration rejection paths, fail-closed stage order, and capability mismatch.

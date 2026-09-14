@@ -61,6 +61,7 @@ python scripts/validate_repository.py --json --run-contract-tests
 | `LESSON-005` | Verification contracts drift from tests unless clause coverage is enumerated | Inventory, [XAG-INV-01](../../validation/experiments/2026-07-15-xag-inv-01-cursor-result.md) |
 | `LESSON-006` | Multi-package Git consumers pin every sibling to one full SHA and declare the test harness | Inventory, [canonical consumer validation](../../validation/2026-07-15-canonical-nested-git-consumer.md) |
 | `LESSON-007` | Renderer adapters expose a skin seam from their first version | Inventory, [#84](https://github.com/Lingkyn/xr-foundry/issues/84) |
+| `LESSON-008` | A package version bump is a verification claim, not a changelog convenience | Inventory, [#81](https://github.com/Lingkyn/xr-foundry/pull/81) |
 
 The JSON file is authoritative for the per-family dispositions; this table is a
 reading aid.

@@ -296,6 +296,46 @@
           "rationale": "The xr-baseline greybox colors are smoke-test tuning in VrBaselineConfig, not product UI."
         }
       ]
+    },
+    {
+      "id": "LESSON-008",
+      "title": "A package version bump is a verification claim, not a changelog convenience",
+      "origin_family": "inventory",
+      "observed": "PR #81 added the UGUI InventorySkin seam and bumped com.lingkyn.inventory.ugui from 0.2.0 to 0.3.0 in the same unverified change. The repository contract rejected it because the package catalog, the Foundry batch manifest, and two compatibility profiles still bind 0.2.0 to the last Editor evidence commit; recording 0.3.0 there without an Editor run would fabricate verification, so the pull request has been blocked since July 2026 waiting on the #82 editor pass.",
+      "rule": "A package version changes only in the same change that records the evidence for that version in the package catalog, batch manifest, and compatibility profiles. Code and test changes that have not executed in the gate stay under an Unreleased changelog heading at the currently catalogued version, so they can merge without a verification claim and the version moves when the receipt exists.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/pull/81#issuecomment-5013152152",
+        "https://github.com/Lingkyn/xr-foundry/issues/82",
+        "scripts/validate_repository.py"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "gap",
+          "rationale": "PR #81 still carries the 0.3.0 bump ahead of any Editor evidence, and the component/package.json, catalog/package, batch manifest, and compatibility profile version rules in scripts/validate_repository.py fail on a merge of that branch onto main. The Inventory changes merged since then keep every package at its catalogued version under Unreleased.",
+          "follow_up": "Rework #81 to keep com.lingkyn.inventory.ugui at 0.2.0 with the seam under Unreleased, or land it together with the #82 receipt that re-records the catalog, batch manifest, and profiles for 0.3.0."
+        },
+        {
+          "family": "foundations",
+          "status": "adopted",
+          "rationale": "Both foundation packages carry their pending test and diagnostics changes under Unreleased at the catalogued 0.1.0, and the version parity rules pass at the current revision."
+        },
+        {
+          "family": "persistence",
+          "status": "adopted",
+          "rationale": "The three added Core tests are recorded under Unreleased at the catalogued package versions, and the version parity rules pass at the current revision."
+        },
+        {
+          "family": "settings",
+          "status": "adopted",
+          "rationale": "The Settings standard note and coverage map were added without a version change, and the version parity rules pass at the current revision."
+        },
+        {
+          "family": "interaction",
+          "status": "adopted",
+          "rationale": "The five added Core tests are recorded under Unreleased at the catalogued package versions, and the version parity rules pass at the current revision."
+        }
+      ]
     }
   ]
 }

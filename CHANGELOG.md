@@ -5,6 +5,9 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Weekly steward intake: recorded LESSON-008 (a package version bump is a
+  verification claim) from the PR #81 block, with a disposition for every live
+  family. No code change.
 - Added the foundations family standard (`docs/standards/foundations/`): a
   minimal verification contract for `com.lingkyn.project-initializer` and
   `com.lingkyn.xr-baseline`, a coverage map binding its thirteen clauses to the

@@ -78,14 +78,25 @@ jobs:
       - name: Compute the merge-readiness verdict
         env:
           BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
         run: |
           python scripts/merge_readiness.py \
-            --base "origin/$BASE_REF" --head HEAD \
+            --base "origin/$BASE_REF" --head HEAD --head-branch "$HEAD_REF" \
             --github-reviews pr-reviews.json --pr-author "$PR_AUTHOR" --pr-draft "$PR_DRAFT" \
             --reviews-informational \
             --output merge-readiness/verdict.json --markdown | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Require process-merge eligibility on mandated branches
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          verdict = json.loads(pathlib.Path("merge-readiness/verdict.json").read_text(encoding="utf-8"))
+          mandated = next(c for c in verdict["checks"] if c["id"] == "mandated_branch")
+          if mandated["status"] == "pass" and not verdict["process_merge_eligible"]:
+              raise SystemExit("mandated branch is not process-merge eligible: " + ", ".join(verdict["blocking"] + verdict["unknown"]) + f" (class {verdict['decision_class']})")
+          print("process_merge_eligible:", verdict["process_merge_eligible"])
+          PY
       - name: Upload the verdict
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

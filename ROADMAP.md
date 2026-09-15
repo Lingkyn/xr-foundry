@@ -33,7 +33,9 @@ an operating mandate works the first unblocked item without waiting to be asked:
    compatibility profiles move to the current commit. Needs a Unity Editor or a
    Unity license secret; nothing else in this list is credible before it.
 2. **Process-decided merges.** The advisory `merge-readiness` verdict runs on every
-   pull request; RFC 0007 proposes making it binding after a public review.
+   pull request and already computes process-merge eligibility; RFC 0007 proposes
+   the rule under which a routine change on a mandated branch merges by GitHub
+   auto-merge, after its review window and two owner-only repository settings.
 3. **Second checkpoints for Persistence, Settings, and Interaction.** Public API
    compatibility review, one release upgrade/rollback exercise per family, and the
    open dispositions in the lessons register.

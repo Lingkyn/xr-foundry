@@ -285,6 +285,87 @@ class MergeReadinessTests(unittest.TestCase):
             early = evaluate(repo, deliberation_record=record, now=datetime(2026, 9, 20, tzinfo=timezone.utc))
             self.assertIn("governance_review_window", early["blocking"])
 
+    def test_lazy_consensus_resolves_open_record_after_window_without_objection(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "gov")
+            write(repo, "GOVERNANCE.md", "# Governance\n\nNew rule.\n")
+            commit_all(repo, "gov")
+            record = Path(directory) / "record.json"
+            base = {"status": "open", "decision_class": "governance_policy", "review_not_before": "2026-09-22T09:00:00Z", "decision": None, "deltas": []}
+            record.write_text(json.dumps(base), encoding="utf-8")
+            default = evaluate(repo, deliberation_record=record)
+            self.assertIn("governance_review_window", default["blocking"], "lazy consensus is off unless opted in")
+
+            report = evaluate(repo, deliberation_record=record, lazy_consensus=True)
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertEqual("pass", check["status"], check)
+            self.assertTrue(check["evidence"]["lazy_consensus"])
+            self.assertEqual("non_routine", report["decision_class"])
+            self.assertFalse(report["process_merge_eligible"])
+
+            early = evaluate(repo, deliberation_record=record, lazy_consensus=True, now=datetime(2026, 9, 20, tzinfo=timezone.utc))
+            self.assertIn("governance_review_window", early["blocking"])
+
+            objected = dict(base, deltas=[{"id": "DELTA-1", "kind": "risk", "summary": "x"}])
+            record.write_text(json.dumps(objected), encoding="utf-8")
+            self.assertIn("governance_review_window", evaluate(repo, deliberation_record=record, lazy_consensus=True)["blocking"])
+
+            evidence_only = dict(base, deltas=[{"id": "DELTA-2", "kind": "evidence", "summary": "x"}])
+            record.write_text(json.dumps(evidence_only), encoding="utf-8")
+            self.assertEqual("pass", statuses(evaluate(repo, deliberation_record=record, lazy_consensus=True))["governance_review_window"])
+
+    def test_mandated_branch_and_process_merge_eligibility(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            write_json(
+                repo,
+                "docs/governance/mandates/steward.mandate.json",
+                {
+                    "mandate_id": "mandate.steward.v1",
+                    "resource_scope": {"branches": ["claude/steward-*"]},
+                    "not_before": "2026-09-01T00:00:00Z",
+                    "expires_at": "2026-12-31T00:00:00Z",
+                    "revocation": {"status": "not_revoked"},
+                },
+            )
+            write_json(
+                repo,
+                "docs/governance/mandates/revoked.mandate.json",
+                {
+                    "mandate_id": "mandate.revoked.v1",
+                    "resource_scope": {"branches": ["old/*"]},
+                    "not_before": "2026-09-01T00:00:00Z",
+                    "expires_at": "2026-12-31T00:00:00Z",
+                    "revocation": {"status": "revoked"},
+                },
+            )
+            commit_all(repo, "mandates")
+            branch(repo, "claude/steward-docs")
+            write(repo, "docs/readme.md", "changed\n")
+            commit_all(repo, "docs")
+            ready = evaluate(repo, skip_contract=False, contract_command=PASSING_CONTRACT, head_branch="claude/steward-docs", pr_metadata=None, reviews_informational=True)
+            self.assertEqual("ready", ready["verdict"], json.dumps(ready, indent=2))
+            self.assertEqual("routine_change", ready["decision_class"])
+            self.assertTrue(ready["process_merge_eligible"])
+            self.assertEqual("mandate.steward.v1", next(c for c in ready["checks"] if c["id"] == "mandated_branch")["evidence"]["mandate_id"])
+
+            foreign = evaluate(repo, skip_contract=False, contract_command=PASSING_CONTRACT, head_branch="feature/x", pr_metadata=None, reviews_informational=True)
+            self.assertEqual("ready", foreign["verdict"])
+            self.assertFalse(foreign["process_merge_eligible"])
+            self.assertEqual([], foreign["blocking"], "mandated_branch never blocks the verdict itself")
+
+            revoked = evaluate(repo, head_branch="old/thing", reviews_informational=True)
+            check = next(c for c in revoked["checks"] if c["id"] == "mandated_branch")
+            self.assertEqual("fail", check["status"])
+            self.assertEqual(["mandate.revoked.v1"], check["evidence"]["matching_but_inactive"])
+
+            expired = evaluate(repo, head_branch="claude/steward-docs", now=datetime(2027, 1, 1, tzinfo=timezone.utc))
+            self.assertEqual("fail", statuses(expired)["mandated_branch"])
+
+            draft = evaluate(repo, skip_contract=False, contract_command=PASSING_CONTRACT, head_branch="claude/steward-docs", pr_metadata={"author_login": "a", "draft": True, "reviews": []}, reviews_informational=True)
+            self.assertFalse(draft["process_merge_eligible"])
+
     def test_new_proposed_rfc_is_a_proposal_not_a_rule_change(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = make_repo(directory)

@@ -8,8 +8,10 @@ boundaries, and (when pull-request metadata is supplied) independent human revie
 
 Under the current G0 x A0 governance state the verdict is advisory: a maintainer
 still performs the merge, and the verdict records what the process concluded so a
-merge against a blocked verdict is a visible, accountable override. Making the
-verdict binding is a constitutional change proposed separately (RFC 0007).
+merge against a blocked verdict is a visible, accountable override. The report also
+computes `decision_class` and `process_merge_eligible` for RFC 0007, which proposes
+that a routine change on a mandated branch merge by GitHub auto-merge once the
+verdict is ready; that rule is not adopted, and `--lazy-consensus` is off by default.
 
 Usage:
     python scripts/merge_readiness.py --base origin/main --head HEAD --json
@@ -23,6 +25,7 @@ against the merged tree.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import re
 import shutil
@@ -55,6 +58,7 @@ PACKAGE_SOURCE_SUFFIXES = (".cs", ".asmdef", ".uxml", ".uss", ".prefab", ".unity
 CHANGELOG_EXEMPT_PREFIXES = ("docs/",)
 CHANGELOG_EXEMPT_ROOT_FILES = {"README.md", "ROADMAP.md", "CONTRIBUTING.md", "SECURITY.md", "PROJECT_GITHUB_PLAYBOOK.md", "AGENTS.md", "CLAUDE.md"}
 GOVERNANCE_DECISION_CLASSES = {"governance_policy", "constitutional_change"}
+OBJECTION_DELTA_KINDS = {"risk", "counterexample"}
 SHA_PATTERN = re.compile(r"\b[0-9a-f]{40}\b")
 
 
@@ -409,6 +413,7 @@ def check_governance_boundary(
     changes: dict[str, str],
     deliberation_record: Path | None,
     now: datetime,
+    lazy_consensus: bool = False,
 ) -> Check:
     governance_changes = sorted(
         path
@@ -444,33 +449,96 @@ def check_governance_boundary(
         evidence["record_error"] = str(error)
         return Check("governance_review_window", "fail", "The deliberation record cannot be read.", evidence)
     problems: list[str] = []
-    if record.get("status") != "resolved":
-        problems.append("record status must be resolved")
-    decision = record.get("decision")
-    if not isinstance(decision, dict):
-        problems.append("record must carry a decision")
+    evidence["deliberation_record"] = str(deliberation_record)
     if record.get("decision_class") not in GOVERNANCE_DECISION_CLASSES:
         problems.append("decision_class must be governance_policy or constitutional_change")
     not_before = record.get("review_not_before")
-    decided_at = decision.get("decided_at") if isinstance(decision, dict) else None
     try:
         not_before_dt = datetime.fromisoformat(str(not_before).replace("Z", "+00:00")) if not_before else None
-        decided_dt = datetime.fromisoformat(str(decided_at).replace("Z", "+00:00")) if decided_at else None
     except ValueError:
-        not_before_dt = decided_dt = None
-        problems.append("review_not_before and decided_at must be ISO-8601 timestamps")
-    if not_before_dt is None or decided_dt is None:
-        problems.append("review_not_before and decision.decided_at are required")
-    else:
-        if decided_dt < not_before_dt:
+        not_before_dt = None
+    if not_before_dt is None:
+        problems.append("review_not_before is required")
+    elif not_before_dt > now:
+        problems.append("the review window has not closed yet")
+    status = record.get("status")
+    decision = record.get("decision")
+    if status == "resolved":
+        decided_at = decision.get("decided_at") if isinstance(decision, dict) else None
+        try:
+            decided_dt = datetime.fromisoformat(str(decided_at).replace("Z", "+00:00")) if decided_at else None
+        except ValueError:
+            decided_dt = None
+        if not isinstance(decision, dict) or decided_dt is None:
+            problems.append("a resolved record must carry a decision with decided_at")
+        elif not_before_dt is not None and decided_dt < not_before_dt:
             problems.append("the decision predates review_not_before")
-        if not_before_dt > now:
-            problems.append("the review window has not closed yet")
-    evidence["deliberation_record"] = str(deliberation_record)
+        detail = "Governance changes are backed by a resolved deliberation record whose review window closed."
+    elif status == "open" and not lazy_consensus:
+        problems.append("an open record cannot satisfy the rule; lazy consensus (RFC 0007) is not adopted")
+        detail = ""
+    elif status == "open":
+        # Lazy consensus (RFC 0007, opt-in): an open record whose window closed with no
+        # objection delta resolves by process; the steward records decided_by process:<mandate>.
+        objections = [
+            item.get("id")
+            for item in (record.get("deltas", []) if isinstance(record.get("deltas"), list) else [])
+            if isinstance(item, dict) and item.get("kind") in OBJECTION_DELTA_KINDS
+        ]
+        if objections:
+            problems.append(f"the open record carries unresolved objection deltas {objections}; a person must resolve them")
+        elif decision is not None:
+            problems.append("an open record cannot carry a decision")
+        evidence["lazy_consensus"] = not problems
+        detail = "The review window closed with no objection delta: lazy consensus applies and the steward records the resolution."
+    else:
+        problems.append("record status must be open or resolved")
+        detail = ""
     if problems:
         evidence["problems"] = problems
         return Check("governance_review_window", "fail", "The deliberation record does not satisfy the review-window rule.", evidence)
-    return Check("governance_review_window", "pass", "Governance changes are backed by a resolved deliberation record whose review window closed.", evidence)
+    return Check("governance_review_window", "pass", detail, evidence)
+
+
+def check_mandated_branch(repo: Path, head: str, head_branch: str | None, now: datetime) -> Check:
+    """A process-executed merge is only for a branch that an unexpired operating mandate names."""
+
+    if not head_branch:
+        return Check("mandated_branch", "info", "No head branch supplied; process-executed merge eligibility is not evaluated.")
+    listing = run_git(repo, "ls-tree", "--name-only", head, f"{MANDATE_PREFIX}", check=False).stdout.split()
+    candidates: list[str] = []
+    for path in listing:
+        if not path.endswith(".mandate.json"):
+            continue
+        payload = read_json_blob(repo, head, path)
+        if not isinstance(payload, dict):
+            continue
+        mandate_id = str(payload.get("mandate_id", path))
+        branches = payload.get("resource_scope", {}).get("branches", []) if isinstance(payload.get("resource_scope"), dict) else []
+        if not any(fnmatch.fnmatchcase(head_branch, str(pattern)) for pattern in branches):
+            continue
+        candidates.append(mandate_id)
+        revocation = payload.get("revocation", {})
+        if isinstance(revocation, dict) and revocation.get("status") == "revoked":
+            continue
+        try:
+            not_before = datetime.fromisoformat(str(payload.get("not_before")).replace("Z", "+00:00"))
+            expires_at = datetime.fromisoformat(str(payload.get("expires_at")).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if not_before <= now < expires_at:
+            return Check(
+                "mandated_branch",
+                "pass",
+                "The head branch is named by an unrevoked, unexpired operating mandate.",
+                {"mandate_id": mandate_id, "head_branch": head_branch},
+            )
+    return Check(
+        "mandated_branch",
+        "fail",
+        "The head branch is not covered by a live operating mandate; a person merges it.",
+        {"head_branch": head_branch, "matching_but_inactive": candidates},
+    )
 
 
 def load_pr_metadata(path: Path | None) -> dict[str, Any] | None:
@@ -546,6 +614,8 @@ def evaluate(
     skip_contract: bool = False,
     contract_command: list[str] | None = None,
     reviews_informational: bool = False,
+    head_branch: str | None = None,
+    lazy_consensus: bool = False,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
@@ -555,29 +625,51 @@ def evaluate(
     changes = changed_files(repo, base, head)
     checks: list[Check] = [check_no_merge_conflict(clean, conflicts)]
     checks.append(check_repository_contract(repo, base, head, merged_tree, contract_command, skip_contract))
-    checks.append(check_version_bump_evidence(repo, base, head, changes))
+    version_check = check_version_bump_evidence(repo, base, head, changes)
+    checks.append(version_check)
     checks.append(check_changelogs(repo, head, changes))
-    checks.append(check_maturity_unchanged(repo, base, head, changes))
+    maturity_check = check_maturity_unchanged(repo, base, head, changes)
+    checks.append(maturity_check)
     checks.append(check_unity_evidence(repo, head, changes))
-    checks.append(check_governance_boundary(repo, head, changes, deliberation_record, now))
-    checks.append(check_not_draft(pr_metadata))
+    governance_check = check_governance_boundary(repo, head, changes, deliberation_record, now, lazy_consensus)
+    checks.append(governance_check)
+    draft_check = check_not_draft(pr_metadata)
+    checks.append(draft_check)
     checks.append(check_independent_review(pr_metadata, reviews_informational))
-    blocking = [check.id for check in checks if check.status == "fail"]
+    mandate_check = check_mandated_branch(repo, head, head_branch, now)
+    checks.append(mandate_check)
+    blocking = [check.id for check in checks if check.status == "fail" and check.id != "mandated_branch"]
     unknown = [check.id for check in checks if check.status == "unknown"]
     verdict = "ready" if not blocking and not unknown else "blocked"
+    routine = (
+        governance_check.status == "pass"
+        and "governance_changes" not in governance_check.evidence
+        and maturity_check.status == "pass"
+        and not version_check.evidence.get("bumped")
+    )
+    decision_class = "routine_change" if routine else "non_routine"
+    process_merge_eligible = (
+        verdict == "ready"
+        and routine
+        and mandate_check.status == "pass"
+        and draft_check.status != "fail"
+    )
     return {
         "schema": SCHEMA,
         "evaluated_at": now.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "base": {"ref": base_ref, "commit": base},
-        "head": {"ref": head_ref, "commit": head},
+        "head": {"ref": head_ref, "commit": head, "branch": head_branch},
         "changed_files": len(changes),
         "checks": [check.as_dict() for check in checks],
         "verdict": verdict,
         "blocking": blocking,
         "unknown": unknown,
+        "decision_class": decision_class,
+        "process_merge_eligible": process_merge_eligible,
         "authority": {
             "verdict_is_binding": False,
             "grants_merge_permission": False,
+            "process_merge_eligibility_is_rfc_0007_proposal": True,
             "override_requires_recorded_maintainer_reason": True,
         },
     }
@@ -599,7 +691,11 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines += ["", "Blocking: " + ", ".join(f"`{item}`" for item in report["blocking"])]
     if report["unknown"]:
         lines += ["", "Not evaluated: " + ", ".join(f"`{item}`" for item in report["unknown"])]
-    lines += ["", "The verdict is advisory under G0 x A0; a merge against a blocked verdict needs a recorded maintainer reason."]
+    lines += [
+        "",
+        f"Decision class `{report['decision_class']}`; process-executed merge eligible: **{str(report['process_merge_eligible']).lower()}**.",
+        "A merge against a blocked verdict needs a recorded maintainer reason.",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -612,6 +708,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--github-reviews", type=Path, help="raw GitHub REST pulls/{n}/reviews payload (used with --pr-author/--pr-draft)")
     parser.add_argument("--pr-author", default="", help="pull-request author login for --github-reviews")
     parser.add_argument("--pr-draft", default="false", help="true/false draft flag for --github-reviews")
+    parser.add_argument("--head-branch", help="head branch name, matched against operating-mandate branch patterns")
+    parser.add_argument("--lazy-consensus", action="store_true", help="accept an open deliberation record whose window closed without objection (RFC 0007 proposal; off by default)")
     parser.add_argument("--deliberation-record", type=Path, help="resolved deliberation record for governance changes")
     parser.add_argument("--skip-contract", action="store_true", help="do not run the repository contract on the merged tree")
     parser.add_argument("--contract-command", help="override the contract command (shell words, JSON list)")
@@ -643,6 +741,8 @@ def main(argv: list[str] | None = None) -> int:
             skip_contract=args.skip_contract,
             contract_command=command,
             reviews_informational=args.reviews_informational,
+            head_branch=args.head_branch,
+            lazy_consensus=args.lazy_consensus,
         )
     except MergeReadinessError as error:
         print(json.dumps({"schema": SCHEMA, "verdict": "blocked", "error": str(error)}, indent=2))

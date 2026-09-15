@@ -5,6 +5,14 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Extended `scripts/merge_readiness.py` with the `mandated_branch` check,
+  `decision_class`, `process_merge_eligible`, and an opt-in `--lazy-consensus`
+  mode (off by default), and made the `merge-readiness` CI job fail when a
+  mandated branch is not process-merge eligible. These are inputs to RFC 0007,
+  which now records the governance extension drafted on 2026-09-15 (auto-merge
+  for routine changes on mandated branches, lazy consensus, mandate extension)
+  and withheld from the branch pending the maintainer's own reading; no
+  governance rule, schema, or mandate changed.
 - Added the merge-readiness process: `scripts/merge_readiness.py` computes a
   `ready` or `blocked` verdict for a candidate branch from the repository's own
   rules (clean merge, repository contract on the merged tree, LESSON-008 version

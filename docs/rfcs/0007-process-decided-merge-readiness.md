@@ -31,15 +31,45 @@ review and each reversible:
    independent-review check becomes blocking instead of informational. A maintainer
    can still merge only what the process passed, and the override path becomes a
    deliberation record rather than a comment.
-3. **Process-executed routine merges (constitutional, 14-day review).** For the
-   `routine_change` decision class only, a merge whose verdict is `ready`, whose
-   review comes from a different principal and lineage than the author, and whose
-   changes touch no governance path may be executed by an accountable automation
-   under a recorded mandate. Governance, maturity, release, security, and device
-   claims stay with people.
+3. **Process-executed routine merges.** For the `routine_change` decision class
+   only, a pull request from a branch named by a live operating mandate merges by
+   GitHub auto-merge once the verdict is `ready` and the required checks pass. No
+   write-capable token exists in any workflow; GitHub executes the merge under the
+   repository's own branch protection. Governance, maturity, release, security, and
+   device claims stay with people, and governance deliberations resolve by lazy
+   consensus only when their window closed without an objection delta.
 
-Steps 2 and 3 are not activated by merging this file. Step 3 also depends on
-RFC 0006 for the principal and lineage vocabulary it needs.
+Steps 2 and 3 are not activated by merging this file. The tool already computes
+`decision_class`, `process_merge_eligible`, and the `mandated_branch` check, and
+carries an opt-in `--lazy-consensus` mode, so adoption is a rule change, not a
+code change.
+
+Record of 2026-09-15: at the maintainer's direction an extension of
+`GOVERNANCE.md`, the Task Hall merge sentence, the deliberation schema, and the
+weekly steward mandate implementing steps 1 to 3 immediately was drafted. It was
+withheld from the branch so that an Agent extending its own mandate passes through
+a human reading first; the drafted text is what this RFC proposes:
+
+- **Routine merge rule.** A routine change (no governance, maturity, or
+  version-evidence change) on a branch named by a live operating mandate merges by
+  GitHub auto-merge once the verdict is `ready` and the required checks pass;
+  anyone may object afterwards by Issue or revert.
+- **Lazy consensus.** A governance deliberation whose window closes with no `risk`
+  or `counterexample` delta resolves with `decided_by: process:<mandate_id>`; an
+  objection keeps it with a person. The schema's `decided_by` pattern gains the
+  `process:` form.
+- **Mandate extension.** The steward may open pull requests from its branches,
+  enable auto-merge on ready routine changes, and record lazy-consensus
+  resolutions; it still may not approve, merge by hand, or change settings.
+- **Human remainder.** Maturity, releases, tags, device claims, security response,
+  repository settings, permissions, every non-routine merge, and every override.
+- **One-time owner setup.** Allow auto-merge on the repository; require
+  `repository-contract` and `merge-readiness` on `main`.
+
+The independent-review requirement would be informational for routine changes;
+the repository contract, the verdict, and the right of anyone to object or revert
+are the guard rails. RFC 0006 still supplies the principal and lineage vocabulary
+a future multi-agent review rule needs.
 
 ## Problem
 

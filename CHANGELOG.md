@@ -5,6 +5,20 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the merge-readiness process: `scripts/merge_readiness.py` computes a
+  `ready` or `blocked` verdict for a candidate branch from the repository's own
+  rules (clean merge, repository contract on the merged tree, LESSON-008 version
+  evidence, changelog discipline, maturity boundary, governance review windows,
+  draft state, independent review), with contract tests, the advisory
+  `merge-readiness` CI job on pull requests, `docs/contributing/merge-readiness.md`,
+  and Proposed RFC 0007 describing the review path from advisory verdict to
+  binding check. The verdict grants no permission; merge decisions stay with a
+  maintainer at G0 x A0.
+- Opened deliberation record DLB-0001 for the prototype-stage operating-mandates
+  section added to `GOVERNANCE.md` on 2026-09-13, because the merge-readiness
+  verdict correctly reports that governance-policy change as owing its 7-day
+  public review. Added an "Execution order after Inventory" section to the
+  roadmap.
 - Weekly steward intake: recorded LESSON-008 (a package version bump is a
   verification claim) from the PR #81 block, with a disposition for every live
   family. No code change.

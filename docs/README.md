@@ -17,9 +17,9 @@ one repository validation enforces, and the page is the one to fix.
 | [`governance/mandates/`](governance/mandates/) | Written operating mandates under which Agents act without asking, with allowed and forbidden actions, scope, expiry, and revocation | [`README.md`](governance/mandates/README.md) |
 | [`foundry/`](foundry/) | The Foundry V1 production line: manifest, system admissions, blueprints, batches, next source-gate queue, and release policy | [`README.md`](foundry/README.md) |
 | [`device-lab/`](device-lab/) | Device profiles, capability test plans, the receipt template and schema, and the execution-receipt surface | [`README.md`](device-lab/README.md) |
-| [`contributing/`](contributing/) | Task Hall, task registry, deliberation protocol, recognition policy, continuation receipts, and the label contract | [`task-hall.md`](contributing/task-hall.md) |
-| [`governance/`](governance/) | The progressive governance maturity model, the Agent membership model, and their source manifests | [`README.md`](governance/README.md) |
-| [`rfcs/`](rfcs/) | Numbered decision records for Agent Commons, the public workbench, the production line, progressive governance, XFCM, and the Agent-native DAO proposal | [`0005-xr-foundry-component-composition-model.md`](rfcs/0005-xr-foundry-component-composition-model.md) |
+| [`contributing/`](contributing/) | Task Hall, task registry, deliberation protocol, recognition policy, continuation receipts, the label contract, and the [merge-readiness contract](contributing/merge-readiness.md) that computes the merge verdict from the repository's rules | [`task-hall.md`](contributing/task-hall.md) |
+| [`governance/`](governance/) | The progressive governance maturity model, the Agent membership model, their source manifests, and live [deliberation records](governance/deliberations/) for governance changes | [`README.md`](governance/README.md) |
+| [`rfcs/`](rfcs/) | Numbered decision records for Agent Commons, the public workbench, the production line, progressive governance, XFCM, the Agent-native DAO proposal, and process-decided merge readiness | [`0005-xr-foundry-component-composition-model.md`](rfcs/0005-xr-foundry-component-composition-model.md) |
 | [`releases/`](releases/) | Immutable batch release notes with pinned install selectors, verified claims, and non-claims | [`unity-next-systems-v0.1.0.md`](releases/unity-next-systems-v0.1.0.md) |
 | [`for-agents.md`](for-agents.md) | Provider-neutral workflow for coding agents that select, install, extend, or adapt artifacts | |
 

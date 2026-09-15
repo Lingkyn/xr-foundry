@@ -22,6 +22,33 @@ their first independently validated Core and Unity checkpoints. Their next gates
 are public API compatibility review, one release upgrade/rollback exercise, and
 any separately scoped live runtime or named-device evidence required by a claim.
 
+## Execution order after Inventory
+
+The library grows one evidence gate at a time, in this order, and an Agent under
+an operating mandate works the first unblocked item without waiting to be asked:
+
+1. **Editor evidence for the authored tests.** Every Core and adapter test named in
+   the family coverage maps (`docs/standards/*/coverage-map*.json`) runs through
+   `scripts/run_unity_gates.py` or the `unity-consumer-tests` workflow, and the
+   compatibility profiles move to the current commit. Needs a Unity Editor or a
+   Unity license secret; nothing else in this list is credible before it.
+2. **Process-decided merges.** The advisory `merge-readiness` verdict runs on every
+   pull request; RFC 0007 proposes making it binding after a public review.
+3. **Second checkpoints for Persistence, Settings, and Interaction.** Public API
+   compatibility review, one release upgrade/rollback exercise per family, and the
+   open dispositions in the lessons register.
+4. **Inventory renderer and device gates.** Land the UGUI skin seam (#81) without
+   an unverified version bump, then the Device Lab plan
+   `inventory-world-space-ui-v1` on one named headset.
+5. **Localization** through the source-gate queue (`NEXT-LOCALIZATION`): cross-project
+   admission, positive-source manifest, then a Core and Unity blueprint. No package
+   directory exists before admission.
+6. **Whole-composition evidence.** A green reference-system run, a player build, and
+   named-device evidence lift `runtime_ready` for the XFCM composition.
+
+Families beyond Localization enter only through the queue with their own
+admission record; the roadmap does not pre-announce them.
+
 ## Composition
 
 XFCM v0.2 gives every live package a colocated component manifest and resolves the

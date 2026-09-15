@@ -27,7 +27,10 @@ release, or device status.
 6. Pin installs to a reviewed immutable commit or release.
 7. Run `python scripts/compose_system.py --check --json` when a composition is
    involved, then `python scripts/validate_repository.py --json`, the repository
-   tests, and the consuming project's own resolution/compile/tests.
+   tests, and the consuming project's own resolution/compile/tests. Before offering
+   a change for merge, run `python scripts/merge_readiness.py --base origin/main
+   --head HEAD --markdown` and fix every `fail`; the verdict is the process's
+   answer to "may this merge?" (`docs/contributing/merge-readiness.md`).
 8. Require real-device evidence before claiming XR runtime, controller, comfort,
    spatial-audio, or headset behavior. For Inventory XR, use Device Lab plan
    `docs/device-lab/test-plans/inventory-world-space-ui-v1.json`, start from

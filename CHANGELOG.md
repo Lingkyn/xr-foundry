@@ -31,11 +31,12 @@ live in each package's `CHANGELOG.md`.
   Hall merge sentence, the mandate README, and the deliberation schema's
   `process:` identity changed with it, and deliberation record DLB-0002 holds the
   rule open to objection until 2026-09-29. The weekly steward mandate's matching
-  extension (open pull requests, enable auto-merge on ready routine changes,
-  record lazy-consensus resolutions) is recorded in RFC 0007 and is the issuer's
-  own edit of the mandate file: the Agent's harness refuses to let it commit an
-  expansion of its own mandate. Undo: revert this commit, or set the mandate's
-  `revocation.status` to `revoked`. No workflow holds a write token; the one-time
+  extension (open pull requests and enable auto-merge on ready routine changes,
+  record lazy-consensus resolutions, stage new families under `staging/`, extend
+  tests and docs in live packages without version or evidence changes) landed in
+  the next commit after the maintainer adjusted the Agent's harness permissions.
+  Undo: revert those commits, or set the mandate's `revocation.status` to
+  `revoked`. No workflow holds a write token; the one-time
   repository settings (allow auto-merge, required checks on `main`) remain the
   owner's act.
 - Extended `scripts/merge_readiness.py` with the `mandated_branch` check,

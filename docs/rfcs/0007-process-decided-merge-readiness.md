@@ -47,9 +47,9 @@ extension of `GOVERNANCE.md`, the Task Hall merge sentence, and the deliberation
 schema implementing steps 1 to 3 took effect in one revertible commit named in
 `CHANGELOG.md`. Deliberation record `DLB-0002` keeps it open to objection for 14
 days; an objection delta or a revert undoes it. The matching weekly steward
-mandate extension below is the issuer's own edit of
-`docs/governance/mandates/weekly-steward.mandate.json`, because the Agent's
-harness refuses to commit an expansion of its own mandate. The rule as adopted:
+mandate extension landed on 2026-09-16 after the maintainer adjusted the Agent's
+harness permissions, which had refused to commit an expansion of the Agent's own
+mandate. The rule as adopted:
 
 - **Routine merge rule.** A routine change (no governance, maturity, or
   version-evidence change) on a branch named by a live operating mandate merges by

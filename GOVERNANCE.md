@@ -163,11 +163,10 @@ CI job. Deliberation record `DLB-0002` keeps this rule open to objection for its
 
 **Undo.** This section, the matching Task Hall sentence, and the deliberation
 schema's `process:` identity were introduced in one commit named in
-`CHANGELOG.md`. Reverting that commit restores the previous rules in full. The
-steward mandate's pull-request and auto-merge permissions are a separate edit of
-the mandate file that its issuer makes (the text is recorded in RFC 0007); setting
-the mandate's `revocation.status` to `revoked` stops the automation immediately
-without touching the rules.
+`CHANGELOG.md`, and the steward mandate's pull-request and auto-merge permissions
+in the following one. Reverting those commits restores the previous rules in full.
+Setting the mandate's `revocation.status` to `revoked` stops the automation
+immediately without touching the rules.
 
 The one-time repository settings that make this run without a person are the
 owner's: allow auto-merge on the repository, and protect `main` with

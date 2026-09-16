@@ -5,6 +5,10 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Queued the family after Localization: `NEXT-AUDIO-EVENTS` in
+  `docs/foundry/queue/next-batch.json` (audio event identity, mix and snapshot
+  state, spatial attachment intents, thin Unity AudioMixer adapter) with its
+  source requirements and next action; no package id is reserved.
 - Lowered the contribution barrier for routine changes. Added
   `docs/contributing/start-here.md` (clone, one install command, one verdict
   command, push, five-line pull request), a five-line routine section at the top

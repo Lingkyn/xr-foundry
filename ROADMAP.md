@@ -51,8 +51,13 @@ an operating mandate works the first unblocked item without waiting to be asked:
 6. **Whole-composition evidence.** A green reference-system run, a player build, and
    named-device evidence lift `runtime_ready` for the XFCM composition.
 
-Families beyond Localization enter only through the queue with their own
-admission record; the roadmap does not pre-announce them.
+7. **Audio events** (`NEXT-AUDIO-EVENTS` in the queue): engine-light audio event
+   identity, mix and snapshot state, and spatial attachment intents with a thin
+   Unity AudioMixer adapter. It enters the admission gate after Localization
+   leaves staging.
+
+Families beyond these enter only through the queue with their own admission
+record; the roadmap does not pre-announce them.
 
 ## Composition
 

@@ -1,0 +1,39 @@
+{
+  "schema": "xr-foundry.unity_package_blueprint.v1",
+  "record_status": "draft",
+  "package": {
+    "id": "com.lingkyn.localization.core",
+    "display_name": "Lingkyn Localization Core",
+    "version": "0.1.0",
+    "unity": "6000.0",
+    "description": "Engine-light localized message identity, BCP 47 locale fallback, an ICU MessageFormat subset, CLDR cardinal plural categories for a declared language set, immutable message tables, catalog resolution, and content validation with stable diagnostic codes.",
+    "category": "system",
+    "family": "localization",
+    "target_path": "packages/unity/systems/localization/com.lingkyn.localization.core",
+    "root_namespace": "Lingkyn.Localization.Core",
+    "dependencies": {}
+  },
+  "admission": {
+    "implementation_issue": "to be opened by the maintainer; the mandate forbids the Agent from creating Issues",
+    "system_admission_record": "docs/foundry/admissions/localization.v1.json",
+    "source_manifest": "docs/standards/localization/source-manifest.json",
+    "positive_sources": [
+      "https://www.rfc-editor.org/rfc/rfc5646",
+      "https://www.rfc-editor.org/rfc/rfc4647",
+      "https://cldr.unicode.org/index/cldr-spec/plural-rules",
+      "https://unicode-org.github.io/icu/userguide/format_parse/messages/",
+      "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html"
+    ],
+    "intended_maturity": "incubating"
+  },
+  "scaffold": {
+    "sample_name": "MessageCatalog",
+    "sample_description": "Domain-only tables for three locales, fallback resolution, plural and select formatting, and a validation report with stable codes."
+  },
+  "authority": {
+    "grants_catalog_admission": false,
+    "grants_maturity": false,
+    "grants_release": false,
+    "grants_device_claim": false
+  }
+}

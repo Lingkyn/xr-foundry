@@ -5,6 +5,18 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Started the next system family. `staging/localization/` holds the first
+  Localization Core (`LocaleId` with BCP 47 subtags and RFC 4647 lookup fallback,
+  `MessageId`, an ICU MessageFormat subset with plural, select, exact selectors
+  and quoting, CLDR cardinal rules for a declared language set, immutable tables,
+  catalog resolution that reports the fallback chain, and a validator with stable
+  codes) with 28 EditMode tests, and `docs/standards/localization/` holds the
+  standard README, source manifest, verification contract, coverage map, and the
+  admission and blueprint drafts. The code has not compiled; it stays in staging,
+  outside the catalog and every batch, until one Unity run produces its first
+  compatibility profile, because the production line requires that profile to
+  register a package. The source URLs could not be fetched from the authoring
+  environment and are marked for confirmation by a person.
 - Governance rule iteration by maintainer direction (2026-09-15, "act, keep the
   undo"), in one revertible commit: `GOVERNANCE.md` gains "Process-decided merges
   and lazy consensus". A routine change on a branch named by a live operating

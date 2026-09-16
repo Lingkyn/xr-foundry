@@ -43,8 +43,10 @@ an operating mandate works the first unblocked item without waiting to be asked:
 4. **Inventory renderer and device gates.** Land the UGUI skin seam (#81) without
    an unverified version bump, then the Device Lab plan
    `inventory-world-space-ui-v1` on one named headset.
-5. **Localization** through the source-gate queue (`NEXT-LOCALIZATION`): cross-project
-   admission, positive-source manifest, then a Core and Unity blueprint. No package
+5. **Localization** through the source-gate queue (`NEXT-LOCALIZATION`): the Core
+   implementation, tests, source manifest, verification contract, and admission and
+   blueprint drafts are staged in `staging/localization/`; one Unity run plus the
+   maintainer's admission signature move it into the package tree. No package
    directory exists before admission.
 6. **Whole-composition evidence.** A green reference-system run, a player build, and
    named-device evidence lift `runtime_ready` for the XFCM composition.

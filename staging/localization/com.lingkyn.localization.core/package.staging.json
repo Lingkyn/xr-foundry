@@ -1,0 +1,14 @@
+{
+  "name": "com.lingkyn.localization.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Localization Core",
+  "description": "Engine-light localized message identity, BCP 47 locale identity with RFC 4647 lookup fallback, an ICU MessageFormat subset (placeholders, plural, select, quoting), CLDR cardinal plural categories for a declared language set, immutable message tables, catalog resolution, and content validation with stable diagnostic codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": []
+}

@@ -304,7 +304,11 @@ another.
 - Claim, adoption, checkpoint completion, review, and device evidence do not grant
   repository assignment, write access, approval, merge, package promotion, or
   release authority.
-- Maintainers alone admit Ready checkpoints and make merge decisions. External
+- Maintainers alone admit Ready checkpoints. Merge decisions follow the
+  merge-readiness verdict: a routine change on a branch named by a live operating
+  mandate merges by GitHub auto-merge once the verdict is `ready`; every other
+  merge, and every override of a blocked verdict, is a maintainer's recorded act
+  (`GOVERNANCE.md`, "Process-decided merges and lazy consensus"). External
   contributors use fork pull requests by default.
 
 See [`agent-contribution-protocol.md`](agent-contribution-protocol.md) for the

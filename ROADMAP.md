@@ -32,10 +32,11 @@ an operating mandate works the first unblocked item without waiting to be asked:
    `scripts/run_unity_gates.py` or the `unity-consumer-tests` workflow, and the
    compatibility profiles move to the current commit. Needs a Unity Editor or a
    Unity license secret; nothing else in this list is credible before it.
-2. **Process-decided merges.** The advisory `merge-readiness` verdict runs on every
-   pull request and already computes process-merge eligibility; RFC 0007 proposes
-   the rule under which a routine change on a mandated branch merges by GitHub
-   auto-merge, after its review window and two owner-only repository settings.
+2. **Process-decided merges.** The `merge-readiness` verdict runs on every pull
+   request; a routine change on a mandated branch merges by GitHub auto-merge once
+   the verdict is ready (rule in effect, revertible, objection surface DLB-0002).
+   Needs the two owner-only repository settings named in
+   `docs/contributing/merge-readiness.md`.
 3. **Second checkpoints for Persistence, Settings, and Interaction.** Public API
    compatibility review, one release upgrade/rollback exercise per family, and the
    open dispositions in the lessons register.

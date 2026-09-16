@@ -18,9 +18,10 @@ review period and a maintainer explicitly accepts them.
 - [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) may describe an Agent as a
   proposed participant with a principal and mandate, but it is inactive and does
   not replace this human-accountability rule.
-- Maintainers retain final responsibility for readiness, integration, merge,
-  release, package promotion, security response, repository settings, and
-  permission decisions.
+- Maintainers retain final responsibility for readiness, integration, release,
+  package promotion, security response, repository settings, and permission
+  decisions, and for every merge that the process-decided merge rule below does
+  not execute.
 - `CODEOWNERS` routes review requests. It does not grant write, review, approval,
   merge, release, or administrator permission.
 - A proposal, reaction, vote, task claim, contribution record, acknowledgement,
@@ -53,7 +54,7 @@ machine-local paths.
 
 | Decision class | Minimum review | Route |
 | --- | ---: | --- |
-| Routine code, documentation, package, or evidence change | Normal pull-request lifecycle; no governance waiting period | Existing tests, review, and maintainer merge |
+| Routine code, documentation, package, or evidence change | Normal pull-request lifecycle; no governance waiting period | Merge-readiness verdict; GitHub auto-merge for a mandated branch, maintainer merge otherwise |
 | Governance policy | 7 days | Public proposal or RFC, deliberation record, explicit maintainer decision |
 | Constitution, authority boundary, or governance-stage change | 14 days | RFC, public deliberation, explicit maintainer decision, machine-contract update |
 | Security emergency | Immediate containment allowed | Private reporting where needed, durable record within 72 hours, and a safe retrospective within 7 days |
@@ -132,5 +133,43 @@ for each step and reports at the end of every run.
 An operating mandate grants no GitHub write, review, merge, release, or
 administrative permission, does not activate RFC 0006 Agent membership, and does
 not shorten the review windows for policy, constitutional, authority, treasury,
-on-chain, or stage-transition changes. The Unity Editor, headset, and merge
-decisions stay with people.
+on-chain, or stage-transition changes. The Unity Editor and headset stay with
+people; merge decisions follow the next section.
+
+## Process-decided merges and lazy consensus (prototype stage, revertible)
+
+Recorded by maintainer direction on 2026-09-15 under the prototype rule "act, keep
+the undo": whether a change may merge is decided by the process, not by a person.
+The process is the merge-readiness verdict (`docs/contributing/merge-readiness.md`),
+computed by `scripts/merge_readiness.py` and published by the `merge-readiness`
+CI job. Deliberation record `DLB-0002` keeps this rule open to objection for its
+14-day window; an objection delta there, or a maintainer revert, undoes it.
+
+- A **routine change** (no governance, maturity, or version-evidence change) on a
+  branch named by a live operating mandate merges by GitHub auto-merge once the
+  verdict is `ready` and the required checks pass. No person approves it; anyone
+  may object afterwards by opening an Issue or reverting through the same
+  process.
+- A **non-routine change** never auto-merges. Governance-policy and constitutional
+  changes stay behind their 7-day and 14-day windows. When a window closes and the
+  deliberation record carries no `risk` or `counterexample` delta, the record
+  resolves by **lazy consensus**: the steward records the proposed option with
+  `decided_by: process:<mandate_id>`. An objection delta keeps the record open
+  until a person resolves it.
+- Maturity promotion, releases, tags, device claims, security response, repository
+  settings, and permissions remain human decisions.
+- A merge against a blocked verdict is an override and must be recorded with a
+  reason; repeated overrides of one check mean the rule, not the person, changes.
+
+**Undo.** This section, the matching Task Hall sentence, and the deliberation
+schema's `process:` identity were introduced in one commit named in
+`CHANGELOG.md`. Reverting that commit restores the previous rules in full. The
+steward mandate's pull-request and auto-merge permissions are a separate edit of
+the mandate file that its issuer makes (the text is recorded in RFC 0007); setting
+the mandate's `revocation.status` to `revoked` stops the automation immediately
+without touching the rules.
+
+The one-time repository settings that make this run without a person are the
+owner's: allow auto-merge on the repository, and protect `main` with
+`repository-contract` and `merge-readiness` as required status checks. Until they
+exist, the verdict is computed and published but a person still clicks merge.

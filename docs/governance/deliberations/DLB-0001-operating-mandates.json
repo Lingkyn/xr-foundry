@@ -81,7 +81,7 @@
     "non_goals": [
       "No GitHub permission, branch-protection, or App installation change under any option."
     ],
-    "exact_next_action": "After 2026-09-22T09:00:00Z the maintainer records one option, rationale, and reopen conditions; until then the steward branch's GOVERNANCE.md change stays blocked in the merge-readiness verdict."
+    "exact_next_action": "Until 2026-09-22T09:00:00Z anyone may add a risk or counterexample delta. If none exists when the window closes, the weekly steward records OPT-KEEP-MANDATES by lazy consensus with decided_by process:mandate.weekly-steward.v1; if one exists, a person resolves the record."
   },
   "reopen_conditions": [
     "RFC 0006 activation replaces mandates with Agent membership records.",

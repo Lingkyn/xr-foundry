@@ -10,8 +10,10 @@ Mandates live here as JSON records validated against
 [`operating-mandate.schema.json`](operating-mandate.schema.json). They are not
 AgentMember records under RFC 0006; RFC 0006 membership stays proposed and inactive.
 A mandate grants no GitHub write, review, merge, release, or administrative
-permission, and every action it allows is still subject to repository validation,
-pull-request review, and the maintainer's merge decision.
+permission, and every action it allows is still subject to repository validation
+and the merge-readiness verdict. A routine change on a mandated branch merges by
+GitHub auto-merge once the verdict is `ready`; a non-routine change, or a blocked
+verdict, waits for a person (`docs/contributing/merge-readiness.md`).
 
 ## Rules
 

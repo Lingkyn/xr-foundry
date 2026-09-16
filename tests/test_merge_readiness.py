@@ -267,7 +267,7 @@ class MergeReadinessTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            self.assertIn("governance_review_window", evaluate(repo, deliberation_record=record)["blocking"])
+            self.assertIn("governance_review_window", evaluate(repo, deliberation_record=record, lazy_consensus=False)["blocking"])
 
             record.write_text(
                 json.dumps(
@@ -294,10 +294,10 @@ class MergeReadinessTests(unittest.TestCase):
             record = Path(directory) / "record.json"
             base = {"status": "open", "decision_class": "governance_policy", "review_not_before": "2026-09-22T09:00:00Z", "decision": None, "deltas": []}
             record.write_text(json.dumps(base), encoding="utf-8")
-            default = evaluate(repo, deliberation_record=record)
-            self.assertIn("governance_review_window", default["blocking"], "lazy consensus is off unless opted in")
+            disabled = evaluate(repo, deliberation_record=record, lazy_consensus=False)
+            self.assertIn("governance_review_window", disabled["blocking"], "the pre-2026-09-15 rule rejects open records")
 
-            report = evaluate(repo, deliberation_record=record, lazy_consensus=True)
+            report = evaluate(repo, deliberation_record=record)
             check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
             self.assertEqual("pass", check["status"], check)
             self.assertTrue(check["evidence"]["lazy_consensus"])

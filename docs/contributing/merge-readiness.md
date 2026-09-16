@@ -1,18 +1,19 @@
 # Merge readiness: the process decides, a person executes
 
-Status: **incubating repository contract** (advisory under `G0 x A0`)
+Status: **incubating repository contract** (prototype-stage rule in
+`GOVERNANCE.md`, "Process-decided merges and lazy consensus", revertible; objection
+surface `DLB-0002`)
 
 XR Foundry wants "may this change merge?" to be answered by a process, not by one
 person's mood. The answer is computed from public, reproducible facts by
-`scripts/merge_readiness.py` and written down as a verdict. Under the current
-governance stage a maintainer still performs the merge, so the verdict does two
-things: it tells the maintainer what the process concluded, and it makes any merge
-against a blocked verdict a visible override that needs a recorded reason.
+`scripts/merge_readiness.py` and written down as a verdict. For a routine change
+on a branch named by a live operating mandate, GitHub auto-merge executes the
+merge once the verdict is `ready` and the required checks pass; no person clicks.
+For everything else the verdict tells the maintainer what the process concluded,
+and it makes any merge against a blocked verdict a visible override that needs a
+recorded reason.
 
-## The loop without a person (proposed, RFC 0007)
-
-The tool already computes everything the proposed loop needs; adopting the loop is
-a governance decision that has not been made.
+## The loop without a person
 
 1. An Agent under a mandate pushes to its mandated branch and opens a pull request
    with GitHub auto-merge enabled.
@@ -25,10 +26,13 @@ a governance decision that has not been made.
    verdict, fixes what it names, and pushes again. A non-routine change waits for a
    person by design.
 
-Adopting it needs: the `GOVERNANCE.md` rule and mandate extension described in
-RFC 0007 after their review windows, then two repository settings only the owner
-can change (allow auto-merge; require `repository-contract` and `merge-readiness`
-on `main`).
+One-time setup only the repository owner can do: allow auto-merge in the
+repository settings, and protect `main` with `repository-contract` and
+`merge-readiness` as required status checks. Until then the verdict is published
+but a person still clicks merge.
+
+**Undo.** Revert the commit named in `CHANGELOG.md` for this rule, or set the
+steward mandate's `revocation.status` to `revoked` to stop the automation at once.
 
 This is the repository's split between process accountability and individual
 accountability:
@@ -73,7 +77,7 @@ information because GitHub's own required-review protection is the binding check
 | `changelogs_updated` | Every package whose files changed also changed its `CHANGELOG.md`; repository-level changes outside `docs/` and packages changed the root `CHANGELOG.md` | `fail` naming the missing changelog |
 | `maturity_unchanged` | No `maturity` field changed in a component manifest or the package catalog | `fail`: a promotion is a separate evidence decision |
 | `unity_evidence` | No Unity package source changed, or a `docs/validation/*.json` receipt in the change names a commit after which no package source changed | `info`: merge is allowed only without maturity, release, or device claims |
-| `governance_review_window` | No governance rule changed; or a new `Status: **Proposed**` RFC was only added; or a resolved deliberation record with `governance_policy` or `constitutional_change` class, a decision dated after `review_not_before`, and a closed window is supplied. With `--lazy-consensus` (RFC 0007 proposal, off by default) an open record whose window closed with no `risk` or `counterexample` delta also passes | `fail`: the rule change owes its 7-day or 14-day public review |
+| `governance_review_window` | No governance rule changed; or a new `Status: **Proposed**` RFC was only added; or a deliberation record with `governance_policy` or `constitutional_change` class whose window closed is supplied and is either resolved with a decision dated after `review_not_before`, or still open with no `risk` or `counterexample` delta (lazy consensus; `--no-lazy-consensus` disables it) | `fail`: the rule change owes its 7-day or 14-day public review, or a person must resolve an objection |
 | `not_draft` | The pull request is not a draft | `fail` |
 | `independent_review` | A GitHub identity other than the author (bots excluded) approved and nobody still requests changes | `fail`, or `info` with `--reviews-informational`; `unknown` without metadata |
 | `mandated_branch` | `--head-branch` matches a branch pattern of an unrevoked, unexpired operating mandate at the head commit | `fail` (never blocks the verdict; it only removes process-merge eligibility); `info` without a branch |
@@ -82,7 +86,7 @@ Verdict: `ready` only when no check is `fail` or `unknown`. `info` never blocks.
 The report also states `decision_class` (`routine_change` when no governance path,
 maturity, or package version changed) and `process_merge_eligible`, which is true
 only for a `ready`, routine, non-draft change on a mandated branch. Eligibility is
-an input to the RFC 0007 proposal, not a permission.
+what the CI job enforces on mandated branches; it is not a permission.
 
 Governance paths are `GOVERNANCE.md`, the governance and Agent-membership models,
 `docs/rfcs/`, the Task Hall documents, the deliberation protocol, and `CODEOWNERS`.
@@ -97,8 +101,8 @@ mandate is granted or revoked by a recorded maintainer decision without a window
 - It is not a review. It checks that an independent review exists, not that the
   review was good.
 - It is not permission. The mandate, the verdict, and CI grant no GitHub role.
-- It does not shorten a governance review window and, without the opt-in
-  `--lazy-consensus` flag, cannot be satisfied by an `open` deliberation record.
+- It does not shorten a governance review window. An `open` deliberation record
+  satisfies it only after the window closed with no objection delta.
 
 ## Overriding a blocked verdict
 

@@ -6,12 +6,14 @@ from public, reproducible facts: the merge result, the repository contract, the
 version-evidence rule (LESSON-008), changelog discipline, maturity and governance
 boundaries, and (when pull-request metadata is supplied) independent human review.
 
-Under the current G0 x A0 governance state the verdict is advisory: a maintainer
-still performs the merge, and the verdict records what the process concluded so a
-merge against a blocked verdict is a visible, accountable override. The report also
-computes `decision_class` and `process_merge_eligible` for RFC 0007, which proposes
-that a routine change on a mandated branch merge by GitHub auto-merge once the
-verdict is ready; that rule is not adopted, and `--lazy-consensus` is off by default.
+The verdict grants no permission. Execution is GitHub's own auto-merge: once the
+owner has made the CI `merge-readiness` job a required check and allowed auto-merge,
+a pull request from a branch named by a live operating mandate merges by itself
+when this verdict is `ready` and the change is routine (no governance, maturity,
+or version-evidence change). Everything else, and every merge against a blocked
+verdict, is a person's visible, accountable act (GOVERNANCE.md, "Process-decided
+merges and lazy consensus"). Lazy consensus for governance deliberations is on by
+default; `--no-lazy-consensus` evaluates under the pre-2026-09-15 rule.
 
 Usage:
     python scripts/merge_readiness.py --base origin/main --head HEAD --json
@@ -413,7 +415,7 @@ def check_governance_boundary(
     changes: dict[str, str],
     deliberation_record: Path | None,
     now: datetime,
-    lazy_consensus: bool = False,
+    lazy_consensus: bool = True,
 ) -> Check:
     governance_changes = sorted(
         path
@@ -475,11 +477,11 @@ def check_governance_boundary(
             problems.append("the decision predates review_not_before")
         detail = "Governance changes are backed by a resolved deliberation record whose review window closed."
     elif status == "open" and not lazy_consensus:
-        problems.append("an open record cannot satisfy the rule; lazy consensus (RFC 0007) is not adopted")
+        problems.append("an open record cannot satisfy the rule when lazy consensus is disabled")
         detail = ""
     elif status == "open":
-        # Lazy consensus (RFC 0007, opt-in): an open record whose window closed with no
-        # objection delta resolves by process; the steward records decided_by process:<mandate>.
+        # Lazy consensus: an open record whose window closed with no objection delta
+        # resolves by process; the steward records decided_by process:<mandate>.
         objections = [
             item.get("id")
             for item in (record.get("deltas", []) if isinstance(record.get("deltas"), list) else [])
@@ -615,7 +617,7 @@ def evaluate(
     contract_command: list[str] | None = None,
     reviews_informational: bool = False,
     head_branch: str | None = None,
-    lazy_consensus: bool = False,
+    lazy_consensus: bool = True,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
@@ -669,7 +671,7 @@ def evaluate(
         "authority": {
             "verdict_is_binding": False,
             "grants_merge_permission": False,
-            "process_merge_eligibility_is_rfc_0007_proposal": True,
+            "process_merge_requires_live_mandate_and_routine_class": True,
             "override_requires_recorded_maintainer_reason": True,
         },
     }
@@ -709,7 +711,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pr-author", default="", help="pull-request author login for --github-reviews")
     parser.add_argument("--pr-draft", default="false", help="true/false draft flag for --github-reviews")
     parser.add_argument("--head-branch", help="head branch name, matched against operating-mandate branch patterns")
-    parser.add_argument("--lazy-consensus", action="store_true", help="accept an open deliberation record whose window closed without objection (RFC 0007 proposal; off by default)")
+    parser.add_argument("--no-lazy-consensus", dest="lazy_consensus", action="store_false", help="reject an open deliberation record even when its window closed without objection (pre-2026-09-15 rule)")
     parser.add_argument("--deliberation-record", type=Path, help="resolved deliberation record for governance changes")
     parser.add_argument("--skip-contract", action="store_true", help="do not run the repository contract on the merged tree")
     parser.add_argument("--contract-command", help="override the contract command (shell words, JSON list)")

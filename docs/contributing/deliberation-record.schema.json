@@ -159,7 +159,11 @@
         "option_id": { "type": "string", "pattern": "^OPT-[A-Z0-9][A-Z0-9-]*$" },
         "summary": { "type": "string", "minLength": 1 },
         "rationale": { "$ref": "#/$defs/nonEmptyStrings" },
-        "decided_by": { "type": "string", "pattern": "^@[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$" },
+        "decided_by": {
+          "type": "string",
+          "description": "A GitHub identity, or process:<mandate_id> when a governance deliberation resolved by lazy consensus (review window closed with no objection delta) under a recorded operating mandate.",
+          "pattern": "^(?:@[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?|process:mandate\\.[a-z0-9]+(?:[.-][a-z0-9]+)*)$"
+        },
         "decided_at": { "type": "string", "format": "date-time" }
       }
     }

@@ -1,10 +1,13 @@
 # RFC 0007: Process-decided merge readiness
 
-Status: **Proposed**
+Status: **Proposed** (steps 1 to 3 in effect at prototype stage by maintainer
+direction on 2026-09-15, revertible; see `GOVERNANCE.md`, "Process-decided merges
+and lazy consensus", and deliberation record `DLB-0002`)
 
-Activation: **inactive; the merge decision stays with a maintainer at G0 x A0**
+Activation: **prototype-stage rule active for routine changes on mandated
+branches; the required-check and auto-merge repository settings are the owner's**
 
-Public deliberation: **not opened by this local implementation**
+Public deliberation: **DLB-0002, open until 2026-09-29T12:00:00Z**
 
 Related decisions:
 
@@ -39,16 +42,14 @@ review and each reversible:
    device claims stay with people, and governance deliberations resolve by lazy
    consensus only when their window closed without an objection delta.
 
-Steps 2 and 3 are not activated by merging this file. The tool already computes
-`decision_class`, `process_merge_eligible`, and the `mandated_branch` check, and
-carries an opt-in `--lazy-consensus` mode, so adoption is a rule change, not a
-code change.
-
-Record of 2026-09-15: at the maintainer's direction an extension of
-`GOVERNANCE.md`, the Task Hall merge sentence, the deliberation schema, and the
-weekly steward mandate implementing steps 1 to 3 immediately was drafted. It was
-withheld from the branch so that an Agent extending its own mandate passes through
-a human reading first; the drafted text is what this RFC proposes:
+Record of 2026-09-15: at the maintainer's direction ("act, keep the undo"), the
+extension of `GOVERNANCE.md`, the Task Hall merge sentence, and the deliberation
+schema implementing steps 1 to 3 took effect in one revertible commit named in
+`CHANGELOG.md`. Deliberation record `DLB-0002` keeps it open to objection for 14
+days; an objection delta or a revert undoes it. The matching weekly steward
+mandate extension below is the issuer's own edit of
+`docs/governance/mandates/weekly-steward.mandate.json`, because the Agent's
+harness refuses to commit an expansion of its own mandate. The rule as adopted:
 
 - **Routine merge rule.** A routine change (no governance, maturity, or
   version-evidence change) on a branch named by a live operating mandate merges by
@@ -66,9 +67,9 @@ a human reading first; the drafted text is what this RFC proposes:
 - **One-time owner setup.** Allow auto-merge on the repository; require
   `repository-contract` and `merge-readiness` on `main`.
 
-The independent-review requirement would be informational for routine changes;
-the repository contract, the verdict, and the right of anyone to object or revert
-are the guard rails. RFC 0006 still supplies the principal and lineage vocabulary
+The independent-review requirement is informational for routine changes; the
+repository contract, the verdict, and the right of anyone to object or revert are
+the guard rails. RFC 0006 still supplies the principal and lineage vocabulary
 a future multi-agent review rule needs.
 
 ## Problem

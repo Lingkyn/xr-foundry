@@ -5,14 +5,28 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Governance rule iteration by maintainer direction (2026-09-15, "act, keep the
+  undo"), in one revertible commit: `GOVERNANCE.md` gains "Process-decided merges
+  and lazy consensus". A routine change on a branch named by a live operating
+  mandate merges by GitHub auto-merge once the merge-readiness verdict is ready
+  and the required checks pass; governance deliberations whose window closes
+  without an objection delta resolve by lazy consensus with
+  `decided_by: process:<mandate>`; non-routine changes, overrides, maturity,
+  releases, device claims, settings, and permissions stay with people. The Task
+  Hall merge sentence, the mandate README, and the deliberation schema's
+  `process:` identity changed with it, and deliberation record DLB-0002 holds the
+  rule open to objection until 2026-09-29. The weekly steward mandate's matching
+  extension (open pull requests, enable auto-merge on ready routine changes,
+  record lazy-consensus resolutions) is recorded in RFC 0007 and is the issuer's
+  own edit of the mandate file: the Agent's harness refuses to let it commit an
+  expansion of its own mandate. Undo: revert this commit, or set the mandate's
+  `revocation.status` to `revoked`. No workflow holds a write token; the one-time
+  repository settings (allow auto-merge, required checks on `main`) remain the
+  owner's act.
 - Extended `scripts/merge_readiness.py` with the `mandated_branch` check,
-  `decision_class`, `process_merge_eligible`, and an opt-in `--lazy-consensus`
-  mode (off by default), and made the `merge-readiness` CI job fail when a
-  mandated branch is not process-merge eligible. These are inputs to RFC 0007,
-  which now records the governance extension drafted on 2026-09-15 (auto-merge
-  for routine changes on mandated branches, lazy consensus, mandate extension)
-  and withheld from the branch pending the maintainer's own reading; no
-  governance rule, schema, or mandate changed.
+  `decision_class`, `process_merge_eligible`, and lazy consensus (on by default,
+  `--no-lazy-consensus` to disable), and made the `merge-readiness` CI job fail
+  when a mandated branch is not process-merge eligible.
 - Added the merge-readiness process: `scripts/merge_readiness.py` computes a
   `ready` or `blocked` verdict for a candidate branch from the repository's own
   rules (clean merge, repository contract on the merged tree, LESSON-008 version

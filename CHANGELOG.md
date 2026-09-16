@@ -10,9 +10,12 @@ live in each package's `CHANGELOG.md`.
   `MessageId`, an ICU MessageFormat subset with plural, select, exact selectors
   and quoting, CLDR cardinal rules for a declared language set, immutable tables,
   catalog resolution that reports the fallback chain, and a validator with stable
-  codes) with 28 EditMode tests, and `docs/standards/localization/` holds the
-  standard README, source manifest, verification contract, coverage map, and the
-  admission and blueprint drafts. The code has not compiled; it stays in staging,
+  codes) with 28 EditMode tests, the Unity adapter (ScriptableObject tables and
+  catalogs with fail-closed authoring validation and stable codes, an explicit
+  `SystemLanguage` map, a plain runtime with a `LocaleChanged` event) with 7
+  EditMode tests, and `docs/standards/localization/` holds the standard README,
+  source manifest, verification contract, coverage map (21 clauses, 20 covered),
+  and the admission and blueprint drafts. The code has not compiled; it stays in staging,
   outside the catalog and every batch, until one Unity run produces its first
   compatibility profile, because the production line requires that profile to
   register a package. The source URLs could not be fetched from the authoring

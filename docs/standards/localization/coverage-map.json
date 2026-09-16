@@ -32,14 +32,31 @@
         {"id": "LC-13", "clause": "validation codes for missing and extra messages, placeholder mismatch, missing and unused plural categories, unknown plural rules, a missing source table, and a clean pass", "coverage": "covered", "tests": ["ValidatorReportsMissingExtraAndPlaceholderMismatch", "ValidatorReportsPluralCategoryGapsPerLocale", "ValidatorReportsUnknownPluralRulesAsError", "ValidatorPassesAConsistentCatalog", "ValidatorFailsWhenSourceLocaleHasNoTable"], "missing": []}
       ],
       "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "unity_adapter",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.localization.unity",
+      "test_assembly": "Lingkyn.Localization.Unity.Editor.Tests",
+      "clauses": [
+        {"id": "LU-01", "clause": "a table asset converts to a domain table without mutating the asset", "coverage": "covered", "tests": ["TableAssetConvertsToDomainTableWithoutMutation"], "missing": []},
+        {"id": "LU-02", "clause": "table authoring validation reports invalid locale, invalid id, duplicate id, and malformed template with stable codes, field paths, and the source asset, and conversion throws with the same report", "coverage": "covered", "tests": ["TableAssetValidationReportsStableCodesAndConversionThrows"], "missing": []},
+        {"id": "LU-03", "clause": "catalog authoring validation reports a missing table reference, a duplicate locale, an invalid default locale, and a default locale without a table", "coverage": "covered", "tests": ["CatalogAssetValidationReportsMissingTableDuplicateLocaleAndDefaultWithoutTable"], "missing": []},
+        {"id": "LU-04", "clause": "a valid catalog asset converts to a domain catalog that resolves with fallback and formats with the resolved locale's plural rules", "coverage": "covered", "tests": ["CatalogAssetConvertsAndFormatsWithFallback"], "missing": []},
+        {"id": "LU-05", "clause": "the SystemLanguage map is explicit and fails closed for Unknown", "coverage": "covered", "tests": ["SystemLanguageMapIsExplicitAndFailsClosed"], "missing": []},
+        {"id": "LU-06", "clause": "the runtime raises LocaleChanged once per actual change and formats in the new locale", "coverage": "covered", "tests": ["RuntimeRaisesLocaleChangedOnceAndFormatsInNewLocale"], "missing": []},
+        {"id": "LU-07", "clause": "the runtime reports whether a locale has a direct table and whether a message used fallback", "coverage": "covered", "tests": ["RuntimeReportsFallbackWhenLocaleHasNoDirectTable"], "missing": []},
+        {"id": "LU-08", "clause": "a bridge to the Unity Localization package reports the package's absence instead of silently ignoring it (LESSON-004)", "coverage": "partial", "tests": [], "missing": ["the bridge itself is not implemented; when it is, a test that resolves the package by assembly name and asserts an explicit diagnostic when it is absent"]}
+      ],
+      "additional_tests_outside_clauses": []
     }
   ],
   "summary": {
-    "clauses": 13,
-    "covered": 13,
-    "partial": 0,
+    "clauses": 21,
+    "covered": 20,
+    "partial": 1,
     "unmapped": 0,
-    "open_gap_tests": 0,
-    "execution_note": "All 28 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red."
+    "open_gap_tests": 1,
+    "execution_note": "All 35 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. LU-08 is unimplemented by design until the Unity Localization bridge is scoped."
   }
 }

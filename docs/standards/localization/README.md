@@ -35,7 +35,7 @@ or currency formatting with locale digits, ordinal rules, gender inflection beyo
 | Layer | Owns | Must not own |
 | --- | --- | --- |
 | Engine-light Core (`com.lingkyn.localization.core`, staged) | identity, fallback chains, template parsing and formatting, plural rules, tables, catalog resolution, validation, structured results | Unity types, asset loading, UI, culture-specific number rendering, product content |
-| Unity adapter (`com.lingkyn.localization.unity`, not started) | ScriptableObject string tables, locale selection from `SystemLanguage` or settings, a bridge to the Unity Localization package's tables when present | domain message identity, fallback policy, validation rules |
+| Unity adapter (`com.lingkyn.localization.unity`, staged) | ScriptableObject message tables and catalogs with fail-closed authoring validation and stable codes, an explicit `SystemLanguage` map, a plain runtime that owns the current locale and raises `LocaleChanged`; a bridge to the Unity Localization package's tables is a later seam | domain message identity, fallback policy, validation rules, scene singletons, static instances |
 
 ## Evidence boundary
 

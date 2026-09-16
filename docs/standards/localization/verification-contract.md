@@ -36,12 +36,25 @@ Deterministic tests must cover:
   unused plural categories, unknown plural rules, and a missing source table, plus a
   consistent catalog passing clean.
 
-## Unity adapter gate (not started)
+## Unity adapter gate
 
-- EditMode tests validate ScriptableObject string tables and locale selection.
-- A missing Unity Localization package is reported, never silently ignored
-  (LESSON-004).
-- No test claims rendering, font, or right-to-left behavior.
+EditMode tests must cover:
+
+- conversion of a table asset to a domain table without mutating the asset;
+- table authoring validation with stable codes, field paths, and the source asset
+  for an invalid locale, an invalid id, a duplicate id, and a malformed template,
+  and conversion that throws with the same report;
+- catalog authoring validation for a missing table reference, a duplicate locale,
+  an invalid default locale, and a default locale without a table;
+- conversion of a valid catalog asset that resolves with fallback and formats with
+  the resolved locale's plural rules;
+- an explicit `SystemLanguage` map that fails closed for `Unknown`;
+- a runtime that raises `LocaleChanged` once per actual change, formats in the new
+  locale, and reports direct-table and fallback state; and
+- when a bridge to the Unity Localization package exists, an explicit diagnostic
+  for the package's absence rather than silence (LESSON-004).
+
+No test claims rendering, font, or right-to-left behavior.
 
 ## Claim ceiling
 

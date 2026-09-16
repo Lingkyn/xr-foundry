@@ -17,6 +17,8 @@ evidence commit. The code is written and tested on paper; it has not compiled.
 | --- | --- |
 | `com.lingkyn.localization.core/Runtime/LocalizationCore.cs` | Engine-light Core: `LocaleId`, `MessageId`, `MessageTemplate`, `CldrPluralRules`, `MessageTable`, `LocalizationCatalog`, `LocalizationValidator`, results and diagnostics |
 | `com.lingkyn.localization.core/Tests/Editor/LocalizationCoreContractTests.cs` | 28 EditMode tests mapped in `docs/standards/localization/coverage-map.json` |
+| `com.lingkyn.localization.unity/Runtime/LocalizationUnity.cs` | Unity adapter: `MessageTableAsset`, `LocalizationCatalogAsset`, `LocalizationAuthoringValidation` with stable codes, `SystemLocaleMap`, `LocalizationRuntime` |
+| `com.lingkyn.localization.unity/Tests/Editor/LocalizationUnityAuthoringTests.cs` | 7 EditMode tests for the adapter gate |
 | `docs/standards/localization/` | Standard README, source manifest, verification contract, coverage map, admission and blueprint drafts |
 
 ## How it moves into the tree
@@ -26,9 +28,10 @@ One Unity run turns this into a live package. The person or Agent with the Edito
 1. Copies `docs/standards/localization/admission.draft.json` to
    `docs/foundry/admissions/localization.v1.json` (a maintainer decision) and
    `blueprint.draft.json` to `docs/foundry/blueprints/localization-core.v1.json`.
-2. Runs `python scripts/scaffold_unity_package.py docs/foundry/blueprints/localization-core.v1.json --output-root . --write`,
-   then replaces the generated scaffold sources with the files here and renames
-   `package.staging.json` to `package.json`, adding `.meta` files for every asset.
+2. Runs `python scripts/scaffold_unity_package.py docs/foundry/blueprints/localization-core.v1.json --output-root . --write`
+   (and the same for a `localization-unity` blueprint), then replaces the generated
+   scaffold sources with the files here and renames each `package.staging.json` to
+   `package.json`, adding `.meta` files for every asset.
 3. Adds the package to `package-catalog.json`, `component-catalog.json`,
    `capability-registry.json`, a building batch, and the lessons-register
    dispositions listed in `docs/standards/localization/README.md`.

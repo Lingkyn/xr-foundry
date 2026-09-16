@@ -5,8 +5,8 @@
   "agent": {
     "tool": "Claude Code",
     "model_family": "Claude",
-    "execution": "Scheduled routine that resumes the maintainer's Claude Code session once a week and runs unattended",
-    "trigger_ref": "claude-code-routine:trig_018VZb593WTQKj1z2igdhbZe"
+    "execution": "Scheduled routines that resume the maintainer's Claude Code session unattended: a daily run at 23:45 UTC that works the roadmap's execution order until it reaches a Unity, headset, or maintainer-only item, and a weekly intake run on Monday 09:00 UTC",
+    "trigger_ref": "claude-code-routine:trig_014RRihsec73RWxYcH2zbhSu (daily), claude-code-routine:trig_018VZb593WTQKj1z2igdhbZe (weekly)"
   },
   "principal_ref": "github:user:Lingkyn",
   "issuer_ref": "github:user:Lingkyn",

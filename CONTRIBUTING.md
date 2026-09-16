@@ -2,6 +2,15 @@
 
 Thank you for helping improve the packages and reference library.
 
+## Start here
+
+For a routine change (documentation, tests, tooling, or a non-breaking package
+change) read [`docs/contributing/start-here.md`](docs/contributing/start-here.md):
+clone, one install command, make the change, run
+`python scripts/merge_readiness.py --base origin/main --head HEAD --markdown`, push,
+and fill in five lines of the pull-request template. No claim, lease, anchor, or
+governance window applies. Everything below is for non-routine work.
+
 ## Choose a contribution route
 
 - Discuss an unshaped design or source comparison before creating executable work.

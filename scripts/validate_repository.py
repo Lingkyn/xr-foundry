@@ -9028,6 +9028,44 @@ def validate_fast_structure(root: Path) -> list[str]:
     return errors
 
 
+FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r": missing \.meta$"), "Every .cs and .asmdef under packages/ needs a sibling .meta file; copy one from the same folder and give it a fresh 32-hex guid."),
+    (re.compile(r"namespace must start with Lingkyn\."), "Rename the namespace to Lingkyn.<Family>.<Layer>; package code never uses a consumer or product namespace."),
+    (re.compile(r"non-public marker in live repository"), "The file mentions a private tool, product, or workspace name; replace it with a neutral term (the marker list is in scan_text_safety)."),
+    (re.compile(r"machine-local Windows path in live repository"), "Remove the drive-letter path; build paths from environment variables or describe the location in words."),
+    (re.compile(r"component/package(\.json)? version mismatch|catalog/package version mismatch|package manifest identity/version drift|compatibility profile identity/version mismatch|current package version must match catalog"), "A package version moved without its evidence record (LESSON-008): keep package.json at the catalogued version and put the change under '## Unreleased', or update package-catalog.json, the batch file, and a verified compatibility profile in the same change."),
+    (re.compile(r"catalog/live package paths must agree|Foundry system admissions must cover every live system family"), "A com.lingkyn.* package.json exists outside the catalog, or vice versa; a new family stays under staging/ with package.staging.json until its admission and compatibility profile exist."),
+    (re.compile(r"Foundry staging scaffold cannot enter live packages"), "Delete the .foundry-scaffold.json marker only after replacing the scaffold's failing test with real tests, and keep unadmitted scaffolds under staging/."),
+    (re.compile(r"responds more than once for|has no disposition|lesson.*disposition|dispositions must cover"), "Every live family needs exactly one disposition per lesson in docs/standards/lessons/lessons-register.json (adopted, gap, deferred, or not_applicable) with a rationale."),
+    (re.compile(r"third-party Action must use a full commit SHA|external Action lacks an immutable revision"), "Pin the action to a 40-character commit SHA with the version in a trailing comment, e.g. actions/checkout@<sha> # v6."),
+    (re.compile(r"checkout must set persist-credentials=false"), "Add 'with: persist-credentials: false' to every actions/checkout step."),
+    (re.compile(r"permissions must|permission .* must be read or none"), "Workflow and job permissions are read or none only; a write-capable token is never granted to CI."),
+    (re.compile(r"workflow uses forbidden or unreviewed triggers|comment-trigger workflows are forbidden|pull_request_target"), "Only pull_request, push, and workflow_dispatch triggers are admitted."),
+    (re.compile(r"reference evidence path does not exist"), "Every evidence path in reference-catalog.json must exist in the tree; point it at the committed record or remove the entry."),
+    (re.compile(r"README Git install"), "Install examples pin every sibling package to the same full-SHA placeholder (LESSON-006); copy the matrix shape from an existing package README."),
+    (re.compile(r"Foundation assembly must reference only|Inventory Presentation assembly must reference only|must not use Resources or scene lookups"), "The assembly reached outside its declared seam; reference only Lingkyn.* and Unity-owned assemblies, and resolve dependencies explicitly instead of Resources.Load or FindObject*."),
+    (re.compile(r"Contract test suite failed"), "Run 'python -m unittest discover -s tests -p \"test_*.py\"' and read the first FAIL; recorded test counts live in tests/test_audit_unity_test_inventory.py and tests/test_run_unity_gates.py."),
+    (re.compile(r"missing root community/product file"), "Restore the named root file; the repository contract requires it."),
+    (re.compile(r"repository JSON is invalid"), "A JSON file does not parse; the message names it. Validate with 'python -m json.tool <file>'."),
+    (re.compile(r"placeholder text is prohibited"), "Replace TODO/TBD/lorem placeholders with real content or remove the entry."),
+    (re.compile(r"must remain Proposed|must remain inactive"), "Proposed governance stays Proposed and inactive until a resolved deliberation record and maintainer decision exist; edit the RFC text back."),
+]
+
+
+def explain_errors(errors: list[str]) -> list[dict[str, str]]:
+    """Attach a fix hint to every error so a first-time contributor knows the next step."""
+
+    explained: list[dict[str, str]] = []
+    for error in errors:
+        hint = "No specific hint is recorded for this rule yet; search scripts/validate_repository.py for the message text to find the check, and read docs/contributing/start-here.md."
+        for pattern, candidate in FIX_HINTS:
+            if pattern.search(error):
+                hint = candidate
+                break
+        explained.append({"error": error, "hint": hint})
+    return explained
+
+
 def run_contract_test_gate(root: Path, repository_errors: list[str]) -> dict[str, Any]:
     if repository_errors:
         return {
@@ -9150,6 +9188,8 @@ def main() -> int:
         "status": "pass" if not errors else "fail",
         "errors": errors,
     }
+    if errors:
+        report["hints"] = explain_errors(errors)
     if device_lab_receipt_path is not None:
         report["device_lab_receipt"] = str(device_lab_receipt_path)
     if contract_tests is not None:

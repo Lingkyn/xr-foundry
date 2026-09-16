@@ -66,9 +66,13 @@ that exact candidate before registering support.
 
 ## Public contribution route
 
-Use [`docs/contributing/task-hall.md`](docs/contributing/task-hall.md) for bounded
-work and [`docs/device-lab/README.md`](docs/device-lab/README.md) for device
-evidence. Select one named checkpoint whose dependencies are complete. A contributor
+A routine change (documentation, tests, tooling, or a non-breaking package change)
+follows [`docs/contributing/start-here.md`](docs/contributing/start-here.md): branch,
+change, `python scripts/merge_readiness.py`, push, five-line pull request. It needs
+no claim, lease, anchor, or governance window. Use
+[`docs/contributing/task-hall.md`](docs/contributing/task-hall.md) for bounded
+coordinated work and [`docs/device-lab/README.md`](docs/device-lab/README.md) for
+device evidence. Select one named checkpoint whose dependencies are complete. A contributor
 comments `/claim` with that checkpoint ID and a short plan; only a
 maintainer-confirmed lease reserves that checkpoint. The claim grants no write,
 review, merge, release, or package promotion permission. External contributors

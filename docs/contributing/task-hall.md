@@ -53,6 +53,19 @@ pull request and work only on that checkpoint. Code is not the only route: accep
 tests, device/user testing, design, triage, and infrastructure all have explicit
 recognition categories.
 
+## Routine lane (no claim, lease, or anchor)
+
+A routine change is one the merge-readiness verdict classifies as
+`routine_change`: it touches no governance path, no package `maturity`, and no
+package version, and it claims no evidence. Documentation, tests, tooling, and
+non-breaking package changes are routine. A routine change follows
+[`start-here.md`](start-here.md): branch, change, run
+`python scripts/merge_readiness.py`, push, five-line pull request. It needs no
+checkpoint claim, no lease, no execution anchor, no continuation receipt, and no
+governance window. The checkpoint machinery below exists for bounded work that
+several people or Agents coordinate on, for anything that claims evidence, and for
+rule changes; it is not the entry fee for fixing a sentence or adding a test.
+
 ## Umbrella tasks and checkpoint DAGs
 
 An umbrella task preserves the shared objective, scope, non-goals, source gate,

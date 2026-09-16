@@ -956,6 +956,23 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("'ConsumerProduct.Runtime'" in error for error in errors), errors)
         self.assertTrue(any("GUID:" in error for error in errors), errors)
 
+    def test_every_error_gets_a_fix_hint(self) -> None:
+        explained = MODULE.explain_errors(
+            [
+                "packages/unity/x/Runtime/A.cs: missing .meta",
+                "com.lingkyn.demo: component/package.json version mismatch",
+                "Contract test suite failed; no commit or push may proceed",
+                "something nobody anticipated",
+            ]
+        )
+        self.assertEqual(4, len(explained))
+        self.assertIn(".meta", explained[0]["hint"])
+        self.assertIn("LESSON-008", explained[1]["hint"])
+        self.assertIn("unittest", explained[2]["hint"])
+        self.assertIn("start-here.md", explained[3]["hint"])
+        for pattern, hint in MODULE.FIX_HINTS:
+            self.assertTrue(hint.strip(), pattern.pattern)
+
     def test_operating_mandates_validate_and_fail_closed(self) -> None:
         self.assertEqual([], MODULE.validate_operating_mandates(ROOT))
         mandate_path = ROOT / "docs" / "governance" / "mandates" / "weekly-steward.mandate.json"

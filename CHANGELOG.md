@@ -5,6 +5,15 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Lowered the contribution barrier for routine changes. Added
+  `docs/contributing/start-here.md` (clone, one install command, one verdict
+  command, push, five-line pull request), a five-line routine section at the top
+  of the pull-request template with the long checklist kept for non-routine work,
+  a "Routine lane" in the Task Hall stating that routine changes need no claim,
+  lease, anchor, continuation receipt, or governance window (deliberation record
+  DLB-0003 holds that rule open to objection until 2026-09-23), pointers from
+  `CONTRIBUTING.md`, `AGENTS.md`, and the docs index, and a `hints` array in the
+  validator's JSON output that attaches a fix hint to every error.
 - Started the next system family. `staging/localization/` holds the first
   Localization Core (`LocaleId` with BCP 47 subtags and RFC 4647 lookup fallback,
   `MessageId`, an ICU MessageFormat subset with plural, select, exact selectors

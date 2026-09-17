@@ -5,6 +5,16 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- XR UI shell source gate (WI-005): `docs/standards/xr-ui-shell/` gains a
+  source manifest (thirteen public sources, URLs not fetched and marked for a
+  person to confirm), a verification contract (renderer-neutral Core gate with
+  panel, wrist-menu, and hand-menu identity, anchor kinds, placement intents,
+  pointer and gaze routing, and the design-language skin contract; UGUI and UI
+  Toolkit sibling adapter gates each with one injectable skin seam; claim
+  ceiling), a README with a disposition for every lesson and the rule that the
+  Inventory presentation adapters become one client of the shell, and an
+  admission draft; `NEXT-XR-UI-SHELL` joins the source-gate queue as a proposal
+  with no package ids.
 - Scene flow source gate (WI-003): `docs/standards/scene-flow/` gains a source
   manifest (seventeen public sources, URLs not fetched and marked for a person to
   confirm), a verification contract (Core gate with the transition state machine

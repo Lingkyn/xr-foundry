@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Proposed RFC 0008, scheduled steward execution inside the repository: one
+  mandate-listed workflow on a `schedule` trigger with a read-only
+  `GITHUB_TOKEN` and one scoped write secret, so the repository keeps moving when
+  a person supplies only tokens instead of depending on one vendor's hosted
+  session. Nothing takes effect until deliberation record DLB-0004 resolves
+  (window closes 2026-10-01T19:00:00Z); the workflow file lands only after that
+  with a person confirming the pinned action SHA.
 - Added tool-neutral work items: `docs/contributing/work-items.json` cuts the
   milestone plan in `docs/milestones.md` into self-contained units (what to read,
   allowed paths, steps, acceptance commands, proof path) that any person or coding

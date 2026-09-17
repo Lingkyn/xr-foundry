@@ -59,7 +59,40 @@ an operating mandate works the first unblocked item without waiting to be asked:
    gate after Localization leaves staging.
 
 Families beyond these enter only through the queue with their own admission
-record; the roadmap does not pre-announce them.
+record. The section below ranks the candidates so the queue takes the most-used
+systems first; it grants no admission, package id, or directory.
+
+## Family priority by consumer frequency
+
+The library builds the systems that almost every XR project needs before the
+ones only some projects need. Ranking basis: how often a Unity XR project has to
+build the system itself, whether an engine-light Core can be authored and tested
+without an Editor, and whether admitted positive public sources exist. A family
+moves up only through the source-gate queue (`docs/foundry/queue/next-batch.json`)
+with its own admission record.
+
+| Rank | Family | Frequency | State | Why this position |
+| --- | --- | --- | --- | --- |
+| 1 | Foundations: XR baseline and project initializer | Every project | Live, incubating | Rig, config, diagnostics, and project layout come first; everything else composes on them |
+| 2 | Semantic interaction | Every XR project | Live, incubating | Grab, hover, activate, and hand or controller routing are the first thing a user touches |
+| 3 | Settings and accessibility | Every XR project | Live, incubating | Comfort options (vignette, turn mode, seated or standing) are a store requirement on every headset |
+| 4 | Persistence | Nearly every project | Live, incubating | Save, load, versioned migration, and fail-closed corruption handling |
+| 5 | Inventory | Most games, many tools | Live, incubating | The most elaborate family; also the proof of the renderer-adapter and XR-composition pattern |
+| 6 | Localization | Every shipped project | Staged (`staging/localization`) | Store listings and comfort text need it before release; engine-light Core is complete on paper |
+| 7 | Audio events | Every project | Staged (`staging/audio`) | Mix, snapshot, parameter, and attachment intents; the adapter is thin over the mixer |
+| 8 | Locomotion and comfort | Every VR project | Candidate | Teleport, snap and smooth turn, continuous move, comfort vignette policy; today only Editor setup tools exist in xr-baseline. Sources: XR Interaction Toolkit locomotion, platform comfort guidelines |
+| 9 | Scene flow | Nearly every project | Candidate | Loading, transitions, fade and hold, additive scene sets, error recovery; every project writes one and most write it badly |
+| 10 | XR UI shell | Most XR projects | Candidate | World-space panels, wrist and hand menus, pointer and gaze routing, built on the shared design language; the Inventory presentation adapters become one client of it |
+| 11 | Haptics | Most XR projects | Candidate | Named haptic events and per-controller profiles behind an engine-light intent seam; natural extension of Interaction |
+| 12 | Tutorial and onboarding | Most XR projects | Candidate | First-run guidance, gated steps, replay; XR projects need it because controls are not discoverable |
+| 13 | Objectives and quests | Most games | Candidate | Goal graphs, progress state, persistence integration |
+| 14 | Analytics events | Many projects | Candidate | Consent-gated, typed event intents with no vendor dependency in Core |
+| 15 | Dialogue and narrative | Some games | Candidate | Branching lines, localization integration; lower frequency across XR tools |
+| 16 | Networking and multiplayer | Some projects | Deferred | High frequency where present, but no engine-light Core is credible without a transport; enters after a source comparison of the maintained public stacks |
+
+Ranks 8 to 10 are the next three source gates after Audio, in that order. A
+candidate enters the queue only with a source manifest, a verification contract,
+and an admission draft, exactly as Localization and Audio did.
 
 ## Composition
 

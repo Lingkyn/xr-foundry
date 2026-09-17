@@ -146,11 +146,11 @@ RFC with a 14-day window. This page lists no deliverables for it on purpose.
 
 ## How the work is picked up
 
-Each open cell that a contributor can act on is a packet in
-[`contributing/work-packets.json`](contributing/work-packets.json), written so
+Each open cell that a contributor can act on is a item in
+[`contributing/work-items.json`](contributing/work-items.json), written so
 that a person, the steward Agent, or any other coding assistant can take it with
 no session context: what to read, where to write, what to do, and the commands
-that prove it. [`contributing/work-packets.md`](contributing/work-packets.md) is
+that prove it. [`contributing/work-items.md`](contributing/work-items.md) is
 the protocol.
 
 ## How this page is kept honest

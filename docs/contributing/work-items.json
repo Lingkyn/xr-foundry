@@ -1,15 +1,15 @@
 {
-  "schema": "xr-foundry.work_packets.v1",
+  "schema": "xr-foundry.work_items.v1",
   "version": "0.1.0",
   "policy": {
-    "packet_grants_no_permission": true,
+    "item_grants_no_permission": true,
     "acceptance_is_machine_checked_where_possible": true,
     "done_needs_proof_path": true,
     "disjoint_allowed_paths_run_in_parallel": true
   },
-  "packets": [
+  "items": [
     {
-      "id": "WP-001",
+      "id": "WI-001",
       "title": "Locomotion and comfort source gate",
       "milestone_batch": "2c",
       "needs": "none",
@@ -46,14 +46,14 @@
       "done_proof": null
     },
     {
-      "id": "WP-002",
+      "id": "WI-002",
       "title": "Locomotion and comfort staged Core and Unity adapter",
       "milestone_batch": "2c",
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WP-001"],
+      "depends_on": ["WI-001"],
       "read_first": [
         "AGENTS.md",
         "staging/audio/README.md",
@@ -62,7 +62,7 @@
       ],
       "allowed_paths": ["staging/locomotion/", "docs/standards/locomotion/coverage-map.json", "docs/standards/locomotion/README.md"],
       "steps": [
-        "Read docs/standards/locomotion/verification-contract.md, which WP-001 produced, then author staging/locomotion/com.lingkyn.locomotion.core and com.lingkyn.locomotion.unity with package.staging.json, asmdefs, Runtime sources, NUnit EditMode tests, and a domain-only sample, modelled on staging/audio.",
+        "Read docs/standards/locomotion/verification-contract.md, which WI-001 produced, then author staging/locomotion/com.lingkyn.locomotion.core and com.lingkyn.locomotion.unity with package.staging.json, asmdefs, Runtime sources, NUnit EditMode tests, and a domain-only sample, modelled on staging/audio.",
         "Write docs/standards/locomotion/coverage-map.json mapping every contract clause to named tests; every listed test must exist and every test must be listed.",
         "Write staging/locomotion/README.md with the status line, the what-is-here table, the promotion steps, and the statement that the code is authored and unexecuted."
       ],
@@ -74,7 +74,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-003",
+      "id": "WI-003",
       "title": "Scene flow source gate",
       "milestone_batch": "2c",
       "needs": "none",
@@ -107,18 +107,18 @@
       "done_proof": null
     },
     {
-      "id": "WP-004",
+      "id": "WI-004",
       "title": "Scene flow staged Core and Unity adapter",
       "milestone_batch": "2c",
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WP-003"],
+      "depends_on": ["WI-003"],
       "read_first": ["AGENTS.md", "staging/audio/README.md", "docs/standards/audio/verification-contract.md"],
       "allowed_paths": ["staging/scene-flow/", "docs/standards/scene-flow/coverage-map.json", "docs/standards/scene-flow/README.md"],
       "steps": [
-        "Read docs/standards/scene-flow/verification-contract.md, which WP-003 produced, then author the staged Core and Unity adapter packages with tests and a sample, modelled on staging/audio.",
+        "Read docs/standards/scene-flow/verification-contract.md, which WI-003 produced, then author the staged Core and Unity adapter packages with tests and a sample, modelled on staging/audio.",
         "Write the coverage map and the staging README."
       ],
       "acceptance": {
@@ -129,7 +129,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-005",
+      "id": "WI-005",
       "title": "XR UI shell source gate",
       "milestone_batch": "2c",
       "needs": "none",
@@ -164,7 +164,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-006",
+      "id": "WI-006",
       "title": "Source manifests of every family are machine-checked",
       "milestone_batch": "1a",
       "needs": "none",
@@ -186,7 +186,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-007",
+      "id": "WI-007",
       "title": "API surface inventories are derived, not typed",
       "milestone_batch": "1a",
       "needs": "none",
@@ -208,7 +208,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-008",
+      "id": "WI-008",
       "title": "CI binds a governance change to its deliberation record",
       "milestone_batch": "3c",
       "needs": "none",
@@ -230,7 +230,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-009",
+      "id": "WI-009",
       "title": "Cold-start receipt template and schema",
       "milestone_batch": "1f",
       "needs": "none",
@@ -252,14 +252,14 @@
       "done_proof": null
     },
     {
-      "id": "WP-010",
+      "id": "WI-010",
       "title": "First cold-start receipt from outside the maintainer account",
       "milestone_batch": "1f",
       "needs": "outside_contributor",
       "decision_class": "routine",
       "size": "small",
       "status": "open",
-      "depends_on": ["WP-009"],
+      "depends_on": ["WI-009"],
       "read_first": ["docs/contributing/start-here.md"],
       "allowed_paths": ["docs/validation/cold-start/"],
       "steps": [
@@ -273,7 +273,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-011",
+      "id": "WI-011",
       "title": "Run the Unity gates and bind every profile to the current commit",
       "milestone_batch": "1b",
       "needs": "unity_editor",
@@ -295,14 +295,14 @@
       "done_proof": null
     },
     {
-      "id": "WP-012",
+      "id": "WI-012",
       "title": "Promote Localization from staging",
       "milestone_batch": "1d",
       "needs": "unity_editor",
       "decision_class": "non_routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WP-011"],
+      "depends_on": ["WI-011"],
       "read_first": ["staging/localization/README.md", "docs/foundry/README.md", "docs/standards/localization/admission.draft.json"],
       "allowed_paths": ["packages/unity/systems/localization/", "staging/localization/", "docs/foundry/", "docs/standards/localization/", "package-catalog.json", "component-catalog.json", "capability-registry.json", "compatibility-profiles.json", "reference-catalog.json", "docs/standards/lessons/lessons-register.json", "README.md", "ROADMAP.md", "CHANGELOG.md"],
       "steps": [
@@ -317,14 +317,14 @@
       "done_proof": null
     },
     {
-      "id": "WP-013",
+      "id": "WI-013",
       "title": "Promote Audio events from staging",
       "milestone_batch": "1d",
       "needs": "unity_editor",
       "decision_class": "non_routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WP-011"],
+      "depends_on": ["WI-011"],
       "read_first": ["staging/audio/README.md", "docs/foundry/README.md", "docs/standards/audio/admission.draft.json"],
       "allowed_paths": ["packages/unity/systems/audio/", "staging/audio/", "docs/foundry/", "docs/standards/audio/", "package-catalog.json", "component-catalog.json", "capability-registry.json", "compatibility-profiles.json", "reference-catalog.json", "docs/standards/lessons/lessons-register.json", "README.md", "ROADMAP.md", "CHANGELOG.md"],
       "steps": [
@@ -339,14 +339,14 @@
       "done_proof": null
     },
     {
-      "id": "WP-014",
+      "id": "WI-014",
       "title": "Inventory world-space UI device receipt",
       "milestone_batch": "1e",
       "needs": "headset",
       "decision_class": "non_routine",
       "size": "medium",
       "status": "open",
-      "depends_on": ["WP-011"],
+      "depends_on": ["WI-011"],
       "read_first": ["docs/device-lab/README.md", "docs/device-lab/test-plans/inventory-world-space-ui-v1.json", "docs/device-lab/device-receipt.template.json"],
       "allowed_paths": ["docs/device-lab/receipts/", "docs/device-lab/profiles/"],
       "steps": [
@@ -360,7 +360,7 @@
       "done_proof": null
     },
     {
-      "id": "WP-015",
+      "id": "WI-015",
       "title": "Required checks, auto-merge, license secret, release tags",
       "milestone_batch": "1b",
       "needs": "maintainer",
@@ -383,14 +383,14 @@
       "done_proof": null
     },
     {
-      "id": "WP-016",
+      "id": "WI-016",
       "title": "Five certified good-first-issue items",
       "milestone_batch": "1f",
       "needs": "maintainer",
       "decision_class": "routine",
       "size": "small",
       "status": "open",
-      "depends_on": ["WP-009"],
+      "depends_on": ["WI-009"],
       "read_first": ["CONTRIBUTING.md", "docs/contributing/open-work.md", "docs/contributing/label-contract.json"],
       "allowed_paths": ["docs/contributing/tasks/"],
       "steps": [

@@ -22,7 +22,7 @@ one repository validation enforces, and the page is the one to fix.
 | [`rfcs/`](rfcs/) | Numbered decision records for Agent Commons, the public workbench, the production line, progressive governance, XFCM, the Agent-native DAO proposal, and process-decided merge readiness | [`0005-xr-foundry-component-composition-model.md`](rfcs/0005-xr-foundry-component-composition-model.md) |
 | [`releases/`](releases/) | Immutable batch release notes with pinned install selectors, verified claims, and non-claims | [`unity-next-systems-v0.1.0.md`](releases/unity-next-systems-v0.1.0.md) |
 | [`for-agents.md`](for-agents.md) | Provider-neutral workflow for coding agents that select, install, extend, or adapt artifacts | |
-| [`milestones.md`](milestones.md) | The batches that make this a qualified repository (M1), a community (M2), and an organization (M3), each with a checkable done criterion and current status; the work is cut into tool-neutral [packets](contributing/work-packets.md) | |
+| [`milestones.md`](milestones.md) | The batches that make this a qualified repository (M1), a community (M2), and an organization (M3), each with a checkable done criterion and current status; the work is cut into tool-neutral [items](contributing/work-items.md) | |
 
 ## Reading order by task
 

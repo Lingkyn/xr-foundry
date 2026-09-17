@@ -2849,10 +2849,10 @@ OPERATING_MANDATE_DIRECTORY = "docs/governance/mandates"
 OPERATING_MANDATE_SCHEMA_PATH = "docs/governance/mandates/operating-mandate.schema.json"
 
 
-WORK_PACKETS_PATH = "docs/contributing/work-packets.json"
-WORK_PACKETS_SCHEMA_PATH = "docs/contributing/work-packets.schema.json"
+WORK_ITEMS_PATH = "docs/contributing/work-items.json"
+WORK_ITEMS_SCHEMA_PATH = "docs/contributing/work-items.schema.json"
 MILESTONES_PATH = "docs/milestones.md"
-WORK_PACKET_ACCEPTANCE_SCRIPTS = frozenset(
+WORK_ITEM_ACCEPTANCE_SCRIPTS = frozenset(
     {
         "validate_repository.py",
         "merge_readiness.py",
@@ -2864,31 +2864,31 @@ WORK_PACKET_ACCEPTANCE_SCRIPTS = frozenset(
 )
 
 
-def validate_work_packets(root: Path) -> list[str]:
-    """Work packets must be self-contained and re-derivable from the tree.
+def validate_work_items(root: Path) -> list[str]:
+    """Work items must be self-contained and re-derivable from the tree.
 
-    Every packet in ``docs/contributing/work-packets.json`` must match its schema,
+    Every item in ``docs/contributing/work-items.json`` must match its schema,
     carry a unique id, name a milestone batch that exists as a ``### Batch`` heading
-    in ``docs/milestones.md``, depend only on packets that exist without a cycle,
+    in ``docs/milestones.md``, depend only on items that exist without a cycle,
     list ``read_first`` paths that exist, and name acceptance commands that run
-    scripts under ``scripts/``. A ``done`` packet must name a ``done_proof`` path that
+    scripts under ``scripts/``. A ``done`` item must name a ``done_proof`` path that
     exists; any other status must not. ``allowed_paths`` and ``acceptance.artifacts``
-    may not exist yet (a packet often creates them), so they are checked for shape
+    may not exist yet (a item often creates them), so they are checked for shape
     only: repository-relative, no ``..``, no leading slash.
     """
 
     errors: list[str] = []
-    path = root / WORK_PACKETS_PATH
+    path = root / WORK_ITEMS_PATH
     if not path.is_file():
         return errors
-    label = "work packets"
+    label = "work items"
     try:
         payload = load_json(path)
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         return [f"{label}: invalid JSON ({exc})"]
-    schema_path = root / WORK_PACKETS_SCHEMA_PATH
+    schema_path = root / WORK_ITEMS_SCHEMA_PATH
     if not schema_path.is_file():
-        return [f"{label}: schema {WORK_PACKETS_SCHEMA_PATH} is missing"]
+        return [f"{label}: schema {WORK_ITEMS_SCHEMA_PATH} is missing"]
     errors.extend(validate_json_schema_instance(payload, schema_path, label))
     if errors:
         return errors
@@ -2903,43 +2903,43 @@ def validate_work_packets(root: Path) -> list[str]:
     else:
         errors.append(f"{label}: {MILESTONES_PATH} is missing")
 
-    packets = payload.get("packets", [])
-    ids = [packet.get("id") for packet in packets]
+    items = payload.get("items", [])
+    ids = [item.get("id") for item in items]
     seen: set[str] = set()
-    for packet_id in ids:
-        if packet_id in seen:
-            errors.append(f"{label}: duplicate packet id {packet_id}")
-        seen.add(packet_id)
+    for item_id in ids:
+        if item_id in seen:
+            errors.append(f"{label}: duplicate item id {item_id}")
+        seen.add(item_id)
     known = set(ids)
 
     def bad_relative(value: str) -> bool:
         return value.startswith("/") or ".." in value.split("/") or value != value.strip()
 
-    for packet in packets:
-        packet_id = packet.get("id")
-        plabel = f"{label} {packet_id}"
-        batch = packet.get("milestone_batch")
+    for item in items:
+        item_id = item.get("id")
+        plabel = f"{label} {item_id}"
+        batch = item.get("milestone_batch")
         if batches and batch not in batches:
             errors.append(f"{plabel}: milestone_batch {batch!r} is not a '### Batch' heading in {MILESTONES_PATH}")
-        for dependency in packet.get("depends_on", []):
-            if dependency == packet_id:
+        for dependency in item.get("depends_on", []):
+            if dependency == item_id:
                 errors.append(f"{plabel}: depends on itself")
             elif dependency not in known:
-                errors.append(f"{plabel}: depends_on names unknown packet {dependency}")
-        for relative in packet.get("read_first", []):
+                errors.append(f"{plabel}: depends_on names unknown item {dependency}")
+        for relative in item.get("read_first", []):
             if bad_relative(relative) or not (root / relative).exists():
                 errors.append(f"{plabel}: read_first path does not exist: {relative}")
-        for relative in list(packet.get("allowed_paths", [])) + list(packet.get("acceptance", {}).get("artifacts", [])):
+        for relative in list(item.get("allowed_paths", [])) + list(item.get("acceptance", {}).get("artifacts", [])):
             if bad_relative(relative):
                 errors.append(f"{plabel}: path must be repository-relative without '..': {relative}")
-        for command in packet.get("acceptance", {}).get("commands", []):
+        for command in item.get("acceptance", {}).get("commands", []):
             script_match = re.match(r"^python scripts/([a-z_]+\.py)", command)
             if script_match:
                 script_name = script_match.group(1)
-                if script_name not in WORK_PACKET_ACCEPTANCE_SCRIPTS or not (root / "scripts" / script_name).is_file():
+                if script_name not in WORK_ITEM_ACCEPTANCE_SCRIPTS or not (root / "scripts" / script_name).is_file():
                     errors.append(f"{plabel}: acceptance command names a script that is not an accepted repository script: {command}")
-        status = packet.get("status")
-        proof = packet.get("done_proof")
+        status = item.get("status")
+        proof = item.get("done_proof")
         if status == "done":
             if not isinstance(proof, str) or bad_relative(proof) or not (root / proof).exists():
                 errors.append(f"{plabel}: status done requires a done_proof path that exists in the tree")
@@ -2947,7 +2947,7 @@ def validate_work_packets(root: Path) -> list[str]:
             errors.append(f"{plabel}: done_proof is only allowed when status is done")
 
     # Dependency cycles.
-    graph = {packet.get("id"): [d for d in packet.get("depends_on", []) if d in known] for packet in packets}
+    graph = {item.get("id"): [d for d in item.get("depends_on", []) if d in known] for item in items}
     state: dict[str, int] = {}
 
     def visit(node: str, trail: list[str]) -> None:
@@ -9583,7 +9583,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_agent_membership_contract(root))
     errors.extend(validate_operating_mandates(root))
     errors.extend(validate_live_deliberation_records(root))
-    errors.extend(validate_work_packets(root))
+    errors.extend(validate_work_items(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_component_model(root))
@@ -9735,11 +9735,11 @@ def validate_fast_structure(root: Path) -> list[str]:
 
 
 FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"work packets .*milestone_batch .* is not a '### Batch' heading"), "Use a batch id that exists as a '### Batch <id>:' heading in docs/milestones.md (1a to 3c), or add the batch to the milestone page first."),
-    (re.compile(r"work packets .*(depends_on names unknown packet|depends on itself|dependency cycle)"), "depends_on may only name other existing packet ids and must not form a cycle; split the packet or drop the dependency."),
-    (re.compile(r"work packets .*read_first path does not exist"), "read_first lists what a newcomer reads before starting; every entry must be a path that exists in the tree at the commit the packet is published."),
-    (re.compile(r"work packets .*acceptance command names a script that is not an accepted repository script"), "Acceptance commands run only scripts under scripts/ (validate_repository.py, merge_readiness.py, compose_system.py, open_work.py, run_unity_gates.py, scaffold_unity_package.py) or python -m unittest."),
-    (re.compile(r"work packets .*(status done requires a done_proof|done_proof is only allowed when status is done)"), "A packet is done only with a done_proof path in the tree (receipt, artifact, or record); leave done_proof null for any other status."),
+    (re.compile(r"work items .*milestone_batch .* is not a '### Batch' heading"), "Use a batch id that exists as a '### Batch <id>:' heading in docs/milestones.md (1a to 3c), or add the batch to the milestone page first."),
+    (re.compile(r"work items .*(depends_on names unknown item|depends on itself|dependency cycle)"), "depends_on may only name other existing item ids and must not form a cycle; split the item or drop the dependency."),
+    (re.compile(r"work items .*read_first path does not exist"), "read_first lists what a newcomer reads before starting; every entry must be a path that exists in the tree at the commit the item is published."),
+    (re.compile(r"work items .*acceptance command names a script that is not an accepted repository script"), "Acceptance commands run only scripts under scripts/ (validate_repository.py, merge_readiness.py, compose_system.py, open_work.py, run_unity_gates.py, scaffold_unity_package.py) or python -m unittest."),
+    (re.compile(r"work items .*(status done requires a done_proof|done_proof is only allowed when status is done)"), "A item is done only with a done_proof path in the tree (receipt, artifact, or record); leave done_proof null for any other status."),
     (re.compile(r": missing \.meta$"), "Every .cs and .asmdef under packages/ needs a sibling .meta file; copy one from the same folder and give it a fresh 32-hex guid."),
     (re.compile(r"namespace must start with Lingkyn\."), "Rename the namespace to Lingkyn.<Family>.<Layer>; package code never uses a consumer or product namespace."),
     (re.compile(r"non-public marker in live repository"), "The file mentions a private tool, product, or workspace name; replace it with a neutral term (the marker list is in scan_text_safety)."),

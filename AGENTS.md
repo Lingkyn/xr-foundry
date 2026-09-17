@@ -67,10 +67,10 @@ that exact candidate before registering support.
 ## Picking up work without session context
 
 Any person or coding Agent, in any tool, takes the next unit of work from
-`docs/contributing/work-packets.json` following
-`docs/contributing/work-packets.md`: choose a packet whose `needs` you satisfy,
+`docs/contributing/work-items.json` following
+`docs/contributing/work-items.md`: choose a item whose `needs` you satisfy,
 stay inside its `allowed_paths`, run its acceptance commands, and mark it `done`
-only with a proof path in the tree. The milestone plan those packets serve is
+only with a proof path in the tree. The milestone plan those items serve is
 `docs/milestones.md`.
 
 ## Public contribution route

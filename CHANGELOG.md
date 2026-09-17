@@ -5,14 +5,14 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
-- Added tool-neutral work packets: `docs/contributing/work-packets.json` cuts the
+- Added tool-neutral work items: `docs/contributing/work-items.json` cuts the
   milestone plan in `docs/milestones.md` into self-contained units (what to read,
   allowed paths, steps, acceptance commands, proof path) that any person or coding
-  Agent can pick up without session context; `docs/contributing/work-packets.md`
-  is the protocol; `validate_work_packets` in `scripts/validate_repository.py`
+  Agent can pick up without session context; `docs/contributing/work-items.md`
+  is the protocol; `validate_work_items` in `scripts/validate_repository.py`
   checks the schema, unique ids, batch headings, dependency graph, `read_first`
   paths, accepted acceptance scripts, and that `done` carries an existing proof
-  path, with fix hints and `tests/test_work_packets.py`.
+  path, with fix hints and `tests/test_work_items.py`.
 - Staged the Audio events family under `staging/audio/`: `com.lingkyn.audio.core`
   (event, bus, snapshot, anchor, and parameter identities; closed parameter
   contracts; immutable mix graph; intents applied to an immutable state with

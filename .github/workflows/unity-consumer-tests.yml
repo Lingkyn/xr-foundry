@@ -1,0 +1,161 @@
+name: Unity consumer tests
+
+# Runs the repository-owned reference consumer through the Unity Test Framework in
+# CI so the *_tests and local_clean_consumer gates no longer depend on one
+# maintainer workstation (consumer lessons register, LESSON-003).
+#
+# Activation: add a Unity license as repository secrets. Either UNITY_LICENSE (the
+# .ulf file contents) or UNITY_EMAIL plus UNITY_PASSWORD (plus UNITY_SERIAL for a
+# Pro/Plus seat). Secrets are never exposed to fork pull requests, so the Unity
+# jobs skip themselves on forks instead of failing on a missing license.
+#
+# Evidence rule: every test assembly runs in its own Unity process with an
+# -assemblyNames filter, and its NUnit XML must pass verify_unity_test_results.py
+# against an exact case count derived from source by audit_unity_test_inventory.py.
+# A green run here is Editor evidence for one exact tuple; it is not a player,
+# controller, headset, or named-device claim.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "packages/unity/**"
+      - "compositions/unity/**"
+      - "scripts/materialize_reference_consumer.py"
+      - "scripts/audit_unity_test_inventory.py"
+      - "scripts/verify_unity_test_results.py"
+      - ".github/workflows/unity-consumer-tests.yml"
+  pull_request:
+    paths:
+      - "packages/unity/**"
+      - "compositions/unity/**"
+      - "scripts/materialize_reference_consumer.py"
+      - "scripts/audit_unity_test_inventory.py"
+      - "scripts/verify_unity_test_results.py"
+      - ".github/workflows/unity-consumer-tests.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-consumer-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-inventory:
+    name: test-inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.audit.outputs.matrix }}
+    steps:
+      - name: Check out repository into a subdirectory
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          path: xr-foundry
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Materialize the reference consumer outside the repository
+        run: python xr-foundry/scripts/materialize_reference_consumer.py --output "${GITHUB_WORKSPACE}/consumer"
+      - name: Audit the exact test-case inventory from source
+        id: audit
+        run: |
+          python xr-foundry/scripts/audit_unity_test_inventory.py consumer
+          echo "matrix=$(python xr-foundry/scripts/audit_unity_test_inventory.py consumer --github-matrix)" >> "$GITHUB_OUTPUT"
+
+  editor-tests:
+    name: editor-tests
+    needs: test-inventory
+    # Fork pull requests receive no secrets; skip rather than fail on a missing license.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.test-inventory.outputs.matrix) }}
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+      RESULT_DIR: unity-artifacts/${{ matrix.assembly }}-${{ matrix.mode }}
+    steps:
+      - name: Check out repository into a subdirectory
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          path: xr-foundry
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Require a Unity license secret
+        run: |
+          if [ -z "$UNITY_LICENSE" ] && { [ -z "$UNITY_EMAIL" ] || [ -z "$UNITY_PASSWORD" ]; }; then
+            echo "::error::No Unity license configured. Add UNITY_LICENSE, or UNITY_EMAIL and UNITY_PASSWORD, as repository secrets."
+            exit 1
+          fi
+      - name: Free runner disk space for the Unity editor image
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+      - name: Materialize the reference consumer outside the repository
+        run: python xr-foundry/scripts/materialize_reference_consumer.py --output "${GITHUB_WORKSPACE}/consumer"
+      - name: Restore the Unity Library cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: consumer/Library
+          key: unity-library-6000.3.19f1-${{ hashFiles('xr-foundry/packages/unity/**/package.json', 'xr-foundry/compositions/unity/reference-system/consumer/Packages/manifest.json') }}
+          restore-keys: |
+            unity-library-6000.3.19f1-
+      - name: Record the run boundary before Unity starts
+        run: |
+          mkdir -p "$RESULT_DIR"
+          date +%s > run-boundary-epoch.txt
+      - name: Run ${{ matrix.assembly }} in ${{ matrix.mode }}
+        uses: game-ci/unity-test-runner@32e57712352b500e17974b245a6dce9e11a73213 # v4.4.0
+        with:
+          projectPath: consumer
+          testMode: ${{ matrix.mode == 'EditMode' && 'editmode' || 'playmode' }}
+          customParameters: -assemblyNames ${{ matrix.assembly }}
+          artifactsPath: ${{ env.RESULT_DIR }}
+          coverageEnabled: false
+          githubToken: ""
+      - name: Verify the result proves exactly this assembly passed completely
+        run: |
+          MODE_FILE="$(echo '${{ matrix.mode }}' | tr '[:upper:]' '[:lower:]')-results.xml"
+          sudo chown -R "$(id -u):$(id -g)" "$RESULT_DIR"
+          python xr-foundry/scripts/verify_unity_test_results.py "$RESULT_DIR/$MODE_FILE" \
+            --mode "${{ matrix.mode }}" \
+            --expected-total "${{ matrix.cases }}" \
+            --not-before-epoch "$(cat run-boundary-epoch.txt)" \
+            --assembly "${{ matrix.assembly }}.dll"
+      - name: Upload the NUnit result and Unity log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: unity-${{ matrix.assembly }}-${{ matrix.mode }}
+          path: ${{ env.RESULT_DIR }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  unity-consumer-tests:
+    name: unity-consumer-tests
+    if: ${{ always() }}
+    needs: editor-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: none
+    steps:
+      - name: Require every editor test job to pass, or the whole set to be skipped on a fork
+        env:
+          EDITOR_TESTS_RESULT: ${{ needs.editor-tests.result }}
+        run: test "$EDITOR_TESTS_RESULT" = success || test "$EDITOR_TESTS_RESULT" = skipped

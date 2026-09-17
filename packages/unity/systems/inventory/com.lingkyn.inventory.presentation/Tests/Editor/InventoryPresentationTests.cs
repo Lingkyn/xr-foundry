@@ -60,6 +60,61 @@ namespace Lingkyn.Inventory.Presentation.Tests
         }
 
         [Test]
+        public void InitialRenderFailureDoesNotLeakAggregateSubscriptions()
+        {
+            var item = new ItemDefinitionId("item");
+            var container = new ContainerId("bag");
+            var aggregate = CreateAggregate(item, container);
+            var beforeMutation = aggregate.CreatePersistenceEnvelope();
+            var view = new ThrowingView();
+            System.Exception observerFault = null;
+            aggregate.ObserverFaulted += exception => observerFault = exception;
+
+            Assert.That(
+                () => new InventoryPresenter(aggregate, view),
+                Throws.InvalidOperationException.With.Message.EqualTo("Initial render failed."));
+            Assert.That(view.RenderCount, Is.EqualTo(1));
+
+            var added = aggregate.Execute(MutationRequest.Add(new ItemStack(item, 1), container));
+            Assert.That(added.Succeeded, Is.True, added.Message);
+            var restored = aggregate.Restore(beforeMutation);
+            Assert.That(restored.Succeeded, Is.True, restored.Message);
+
+            Assert.That(view.RenderCount, Is.EqualTo(1),
+                "A presenter whose constructor failed must not observe later Changed or Restored events.");
+            Assert.That(observerFault, Is.Null,
+                "A leaked presenter would surface its unreachable throwing view through ObserverFaulted.");
+        }
+
+        [Test]
+        public void DisposeIsIdempotentAndDetachesChangedAndRestoredSubscriptions()
+        {
+            var item = new ItemDefinitionId("item");
+            var container = new ContainerId("bag");
+            var aggregate = CreateAggregate(item, container);
+            var beforeMutation = aggregate.CreatePersistenceEnvelope();
+            var view = new RecordingView();
+            var presenter = new InventoryPresenter(aggregate, view);
+            var renderCount = view.RenderCount;
+
+            Assert.DoesNotThrow(() =>
+            {
+                presenter.Dispose();
+                presenter.Dispose();
+            });
+
+            var added = aggregate.Execute(MutationRequest.Add(new ItemStack(item, 1), container));
+            Assert.That(added.Succeeded, Is.True, added.Message);
+            Assert.That(view.RenderCount, Is.EqualTo(renderCount),
+                "A disposed presenter must not observe Changed events.");
+
+            var restored = aggregate.Restore(beforeMutation);
+            Assert.That(restored.Succeeded, Is.True, restored.Message);
+            Assert.That(view.RenderCount, Is.EqualTo(renderCount),
+                "A disposed presenter must not observe Restored events.");
+        }
+
+        [Test]
         public void ViewModelSnapshotsInputAndIntentPreservesStableAddress()
         {
             var address = new SlotAddress(new ContainerId("bag"), 3);
@@ -87,7 +142,24 @@ namespace Lingkyn.Inventory.Presentation.Tests
         private sealed class RecordingView : IInventoryView
         {
             public InventoryViewModel Last { get; private set; }
-            public void Render(InventoryViewModel model) => Last = model;
+            public int RenderCount { get; private set; }
+
+            public void Render(InventoryViewModel model)
+            {
+                RenderCount++;
+                Last = model;
+            }
+        }
+
+        private sealed class ThrowingView : IInventoryView
+        {
+            public int RenderCount { get; private set; }
+
+            public void Render(InventoryViewModel model)
+            {
+                RenderCount++;
+                throw new System.InvalidOperationException("Initial render failed.");
+            }
         }
     }
 }

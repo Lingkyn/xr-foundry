@@ -27,3 +27,14 @@ No package identifier or directory is admitted until the positive-source gate
 receives an independent PASS. Read the [architecture contract](architecture-contract.md),
 [verification contract](verification-contract.md), and
 [positive-source manifest](source-manifest.json) before implementation or reuse.
+
+See also:
+
+- [`api-surface.md`](api-surface.md) (public API inventory for the compatibility review)
+
+## Coverage record
+
+[`coverage-map.json`](coverage-map.json) maps every clause of the Core and Unity
+adapter gates in the verification contract to named tests and lists the tests still
+missing. An unmapped or partial clause is an open gap, not implied coverage, and the
+map is not execution evidence.

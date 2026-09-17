@@ -2,6 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -43,17 +44,33 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             if (!VrBaselineInteractableSetup.IsXriAvailable) return;
 
             var affordancePrefab = LoadAffordancePrefab();
-            if (affordancePrefab == null) return;
+            if (affordancePrefab == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.starter-assets.highlight-affordance-prefab", "the XRI Starter Assets highlight affordance prefab was not found; import the Starter Assets sample. No affordance was added.", cubeRoot);
+                return;
+            }
 
             var grabType = Type.GetType(GrabInteractableTypeName);
             var providerType = Type.GetType(StateProviderTypeName);
-            if (grabType == null || providerType == null) return;
+            if (grabType == null || providerType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.affordance-state-provider", "XRGrabInteractable or XRInteractableAffordanceStateProvider is not loaded in this XRI revision; no affordance was added.", cubeRoot);
+                return;
+            }
 
             var grab = cubeRoot.GetComponent(grabType);
-            if (grab == null) return;
+            if (grab == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.cube.grab-interactable", "the grabbable cube has no XRGrabInteractable; run the interactable setup first. No affordance was added.", cubeRoot);
+                return;
+            }
 
             var renderer = cubeRoot.GetComponent<MeshRenderer>();
-            if (renderer == null) return;
+            if (renderer == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.cube.renderer", "the grabbable cube has no MeshRenderer; no affordance was added.", cubeRoot);
+                return;
+            }
 
             GameObject affordanceRoot = null;
             foreach (Transform child in cubeRoot.transform)
@@ -82,10 +99,22 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
                     sourceProp.objectReferenceValue = grab;
                     providerSo.ApplyModifiedPropertiesWithoutUndo();
                 }
+                else
+                {
+                    XrBaselineDiagnostics.Unresolved("xri.affordance.m_InteractableSource", "the affordance state provider exposes no m_InteractableSource field in this XRI revision; the affordance is not bound to the cube.", affordanceRoot);
+                }
+            }
+            else
+            {
+                XrBaselineDiagnostics.Unresolved("xri.affordance.provider-missing", "the instantiated affordance prefab carries no XRInteractableAffordanceStateProvider; the affordance is not bound to the cube.", affordanceRoot);
             }
 
             var helperType = Type.GetType(RendererHelperTypeName);
-            if (helperType == null) return;
+            if (helperType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.material-property-block-helper", "MaterialPropertyBlockHelper is not loaded in this XRI revision; the affordance renderer was not bound.", affordanceRoot);
+                return;
+            }
 
             foreach (var helper in affordanceRoot.GetComponentsInChildren(helperType, true))
             {

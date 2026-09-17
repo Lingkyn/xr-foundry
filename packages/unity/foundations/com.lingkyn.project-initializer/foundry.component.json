@@ -1,0 +1,29 @@
+{
+  "schema": "xr-foundry.component_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "com.lingkyn.project-initializer",
+  "version": "0.1.0",
+  "engine": "unity",
+  "family": "foundations",
+  "kind": "foundation",
+  "maturity": "incubating",
+  "package_manifest": "package.json",
+  "runtime_data_plane": "typed_in_process",
+  "discovery": "explicit_static",
+  "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
+  "provides": [
+    {"id": "xr-foundry.project.initialization", "version": "1.0.0"}
+  ],
+  "requires": [],
+  "contract_refs": [
+    "packages/unity/foundations/com.lingkyn.project-initializer/Documentation~/index.md"
+  ],
+  "evidence": {
+    "manifest_contract": "declared",
+    "runtime_integration": "not_claimed",
+    "device_runtime": "not_claimed"
+  },
+  "non_claims": [
+    "This structural declaration does not prove a generated consumer project runs."
+  ]
+}

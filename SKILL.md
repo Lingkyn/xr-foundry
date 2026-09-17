@@ -15,6 +15,12 @@ adapters and content in the consumer repository. Run the public repository check
 and the consumer's own compile/tests. Do not claim engine, device, controller,
 comfort, spatial-audio, or headset support without the required current evidence.
 
+For multi-package systems, also read `{baseDir}/component-catalog.json`,
+`{baseDir}/capability-registry.json`, and the selected composition under
+`{baseDir}/compositions/`. Run `scripts/compose_system.py --check --json` before
+claiming structural closure. Keep runtime communication strongly typed and treat
+pending cross-family bindings as unfinished integration, not implicit behavior.
+
 For Inventory XR device claims, follow
 `{baseDir}/docs/device-lab/test-plans/inventory-world-space-ui-v1.json`, start from
 `{baseDir}/docs/device-lab/device-receipt.template.json`, and run the repository

@@ -12,6 +12,9 @@ license, maturity, compatibility, extension, and evidence boundaries.
 | `AGENTS.md` | Compact repository map and operating contract |
 | `reference-catalog.json` | Machine-readable selection and evidence index |
 | `package-catalog.json` | Unity package versions and maturity |
+| `component-catalog.json` | One component declaration per package, lifecycle policy, and selectable variant slots |
+| `capability-registry.json` | Versioned semantic capabilities and their admitted providers |
+| `compositions/` | Explicit system requests and deterministic locks |
 | `compatibility-profiles.json` | Exact tested tuples and version-adaptation claim boundaries |
 | `CLAUDE.md` | Thin import for Claude Code project instructions |
 | `.cursor/rules/xr-foundry.mdc` | Thin Cursor project rule |
@@ -64,6 +67,11 @@ Do not patch a shared package with product-specific types or scenes to make one
 consumer pass. Create a consumer adapter. If several consumers need the same seam,
 propose that seam upstream with generic tests and samples.
 
+For multi-package work, resolve the XFCM composition before changing code. Treat a
+passing lock as structural evidence only, follow its provider-before-consumer
+lifecycle order, and keep pending cross-family bindings visible. Do not use MCP,
+JSON messages, or an untyped global event bus as the per-frame Unity data plane.
+
 ## Evidence boundary
 
 Repository validation proves shape and public-boundary rules. Unity package tests
@@ -73,8 +81,18 @@ those proves headset behavior; runtime/device claims need target-device evidence
 
 ## Public contribution workflow
 
-Agents can help a GitHub contributor perform Task Hall duties, but they do not
-receive repository authority from an Issue or `/claim` comment. Use this sequence:
+A routine change (documentation, tests, tooling, or a non-breaking package change)
+follows [`contributing/start-here.md`](contributing/start-here.md): branch, change,
+run `python scripts/merge_readiness.py --base origin/main --head HEAD --markdown`,
+push, five-line pull request. It needs no claim, lease, execution anchor, or
+governance window. A new system family is authored under `staging/` before its
+Unity evidence exists and moves into `packages/` only after admission and a
+verified compatibility profile; the current staged example is
+[`../staging/localization/README.md`](../staging/localization/README.md).
+
+Agents can help a GitHub contributor perform Task Hall duties for bounded
+coordinated work, but they do not receive repository authority from an Issue or
+`/claim` comment. Use this sequence:
 
 1. read [`contributing/task-hall.md`](contributing/task-hall.md), the umbrella
    Issue, the selected Ready checkpoint, and its public source/evidence links;
@@ -92,8 +110,13 @@ receive repository authority from an Issue or `/claim` comment. Use this sequenc
    request before starting a sibling checkpoint;
 7. publish a continuation receipt before pausing, releasing, transferring, or
    abandoning work, preserving completed checkpoints and the exact next action; and
-8. leave review, merge, release, maturity, and support decisions to their declared
-   maintainers and gates.
+8. leave review, release, maturity, and support decisions to their declared
+   maintainers and gates. Whether a change may merge is answered by the
+   [merge-readiness verdict](contributing/merge-readiness.md): a routine change on
+   a branch named by a live operating mandate merges by GitHub auto-merge once the
+   verdict is `ready` and the required checks pass; a non-routine change waits for
+   a maintainer who reads the same verdict. Neither the verdict nor a mandate lets
+   an Agent merge.
 
 Use `Assisted-by: TOOL:MODEL` when material coding-assistant help is known. The
 accountable human owns licensing, privacy, correctness, verification, and follow-up.

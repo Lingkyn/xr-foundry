@@ -1,0 +1,137 @@
+{
+  "schema": "xr-foundry.localization_source_manifest.v1",
+  "scope": "Engine-light localized message identity, BCP 47 locale fallback, an ICU MessageFormat subset, CLDR cardinal plural categories, and content validation, with a thin Unity adapter planned separately",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these specifications and must be confirmed by a person before the admission record is signed.",
+  "sources": [
+    {
+      "id": "bcp47-rfc5646",
+      "kind": "official_open_standard",
+      "authority": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc5646",
+      "license_or_terms": "IETF Trust document terms; syntax facts only",
+      "maintenance_evidence": "BCP 47 is the current Internet standard for language tags; not fetched from this environment",
+      "admitted_role": "Locale identity syntax: language, script, and region subtags and their canonical casing",
+      "admitted_claims": [
+        "A language tag is a sequence of subtags separated by hyphens with a primary language subtag first",
+        "Script subtags are four letters and region subtags are two letters or three digits",
+        "Tags are case-insensitive; conventional casing is lowercase language, titlecase script, uppercase region"
+      ],
+      "excluded_uses": [
+        "Core does not implement extended language, variant, extension, or private-use subtags",
+        "No claim of full BCP 47 validation against the IANA registry"
+      ]
+    },
+    {
+      "id": "rfc4647-lookup",
+      "kind": "official_open_standard",
+      "authority": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc4647",
+      "license_or_terms": "IETF Trust document terms; algorithm facts only",
+      "maintenance_evidence": "RFC 4647 is the current BCP 47 matching specification; not fetched from this environment",
+      "admitted_role": "Fallback chain construction by progressive truncation of the requested tag",
+      "admitted_claims": [
+        "Lookup finds the best single match by removing subtags from the end of the range until a match is found",
+        "A default value is returned when no truncation matches"
+      ],
+      "excluded_uses": [
+        "Filtering and extended filtering are not implemented",
+        "No wildcard ranges"
+      ]
+    },
+    {
+      "id": "cldr-plural-rules",
+      "kind": "official_open_standard",
+      "authority": "Unicode Consortium",
+      "url": "https://cldr.unicode.org/index/cldr-spec/plural-rules",
+      "license_or_terms": "Unicode License; rule facts only, no data files copied",
+      "maintenance_evidence": "CLDR plural rules are the reference used by ICU and major platforms; not fetched from this environment",
+      "admitted_role": "Cardinal plural categories and the operands n, i, and v for the declared language set",
+      "admitted_claims": [
+        "Plural categories are zero, one, two, few, many, and other, and other is always present",
+        "Rules are expressed over operands such as the absolute value, integer digits, and visible fraction digits",
+        "Languages differ in which categories they use; English uses one and other, Russian one, few, many, other, Arabic all six, Japanese other only"
+      ],
+      "excluded_uses": [
+        "Ordinal rules, range rules, and compact-number many rules added in later CLDR releases are not implemented",
+        "Languages outside the declared set are reported as unsupported, not approximated"
+      ]
+    },
+    {
+      "id": "icu-messageformat",
+      "kind": "official_documentation",
+      "authority": "ICU project",
+      "url": "https://unicode-org.github.io/icu/userguide/format_parse/messages/",
+      "license_or_terms": "ICU documentation terms; syntax facts only, no ICU code copied",
+      "maintenance_evidence": "ICU MessageFormat is the widely adopted message syntax that platform localization tools accept; not fetched from this environment",
+      "admitted_role": "Template syntax: named arguments, plural and select branches, the # number sign, exact =n selectors, apostrophe quoting",
+      "admitted_claims": [
+        "Arguments are written in braces with an optional type and style",
+        "plural and select arguments carry named branches and must include an other branch",
+        "A number sign inside a plural branch is replaced by the formatted number",
+        "An apostrophe quotes syntax characters and two apostrophes produce one"
+      ],
+      "excluded_uses": [
+        "Date, time, number-style, spellout, ordinal, and choice arguments are not implemented",
+        "No claim of full ICU compatibility"
+      ]
+    },
+    {
+      "id": "unity-localization-package",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only",
+      "maintenance_evidence": "Unity Localization is the engine's maintained localization package; version pin to be confirmed by a person",
+      "admitted_role": "Adapter boundary: string tables keyed by locale, locale fallback, and smart-string formatting as the engine-side counterpart",
+      "admitted_claims": [
+        "The engine package separates locales, string tables, and table entries keyed by a stable key",
+        "Locale fallback is configurable per locale",
+        "Smart Strings provide placeholder and plural formatting on the engine side"
+      ],
+      "excluded_uses": [
+        "Core does not depend on the Unity Localization package; the adapter may bridge to it when present",
+        "No claim about the engine package's runtime behavior without a compatibility profile"
+      ]
+    },
+    {
+      "id": "unreal-localization-overview",
+      "kind": "independent_professional_implementation",
+      "authority": "Epic Games",
+      "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/localization-overview-for-unreal-engine",
+      "license_or_terms": "Epic documentation terms; architecture facts only",
+      "maintenance_evidence": "Unreal Engine localization is a shipped, maintained second-engine implementation; not fetched from this environment",
+      "admitted_role": "Independent evidence that text identity (namespace and key), culture fallback, and a gather-translate-compile pipeline are the common kernel",
+      "admitted_claims": [
+        "Text identity is separate from its translations and stable across edits",
+        "Culture fallback walks from specific to general cultures"
+      ],
+      "excluded_uses": [
+        "No Unreal type, asset format, or tool is copied"
+      ]
+    },
+    {
+      "id": "project-fluent",
+      "kind": "widely_adopted_open_source",
+      "authority": "Mozilla",
+      "url": "https://projectfluent.org/",
+      "license_or_terms": "Apache-2.0 documentation and reference implementations; design facts only",
+      "maintenance_evidence": "Fluent ships in Firefox and has independent implementations in several languages; not fetched from this environment",
+      "admitted_role": "Counterexample and design boundary: asymmetric localization where translators own plural and grammatical variation",
+      "admitted_claims": [
+        "Translations may need branches the source language does not, so validation must be per target locale",
+        "Fallback to a source locale must be explicit and reported rather than silent"
+      ],
+      "excluded_uses": [
+        "Fluent syntax is not implemented; the MessageFormat subset is the admitted syntax"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, or platform authority",
+    "The first implementation is a message-formatting and validation substrate, not a complete localization pipeline or editor",
+    "The declared plural language set is a subset of CLDR and is stated in the code; any other language is unsupported until its rules are added with tests"
+  ]
+}

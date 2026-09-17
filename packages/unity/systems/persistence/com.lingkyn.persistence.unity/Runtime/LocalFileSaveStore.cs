@@ -174,7 +174,7 @@ namespace Lingkyn.Persistence.Unity
                     {
                         _fileOperations.FlushToDisk(stream);
                     }
-                    catch (Exception exception)
+                    catch
                     {
                         failureStage = SaveStage.Flush;
                         throw;

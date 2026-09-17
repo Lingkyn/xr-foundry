@@ -10,9 +10,16 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         const string SampleOriginPath =
             "Assets/Samples/XR Interaction Toolkit/3.3.1/Starter Assets/Prefabs/XR Origin (XR Rig).prefab";
 
-        public static GameObject LoadOrResolveOriginSource()
+        public static GameObject LoadOrResolveOriginSource() =>
+            LoadOrResolveOriginSource(VrBaselineProjectLayout.Default);
+
+        /// <summary>
+        /// Same as <see cref="LoadOrResolveOriginSource()"/> with the project prefab looked up under an
+        /// injected layout. The XRI Starter Assets sample fallbacks are project-wide and unchanged.
+        /// </summary>
+        internal static GameObject LoadOrResolveOriginSource(VrBaselineProjectLayout layout)
         {
-            var projectPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineProjectPaths.XrOriginRigPrefab);
+            var projectPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(layout.XrOriginRigPrefab);
             if (projectPrefab != null) return UnwrapBuildingBlockPrefab(projectPrefab);
 
             if (File.Exists(SampleOriginPath))

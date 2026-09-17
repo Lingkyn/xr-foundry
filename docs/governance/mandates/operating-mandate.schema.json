@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/mandates/operating-mandate.schema.json",
+  "title": "XR Foundry A0 operating mandate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mandate_id",
+    "participation_path",
+    "agent",
+    "principal_ref",
+    "issuer_ref",
+    "decision",
+    "allowed_actions",
+    "forbidden_actions",
+    "resource_scope",
+    "reporting",
+    "issued_at",
+    "not_before",
+    "expires_at",
+    "revocation"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.operating_mandate.v1" },
+    "mandate_id": { "type": "string", "pattern": "^mandate\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+    "participation_path": { "const": "A0_human_accountable_agent_assistance" },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "model_family", "execution", "trigger_ref"],
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "model_family": { "type": "string", "minLength": 1 },
+        "execution": { "type": "string", "minLength": 1 },
+        "trigger_ref": { "type": "string", "minLength": 1 }
+      }
+    },
+    "principal_ref": { "type": "string", "pattern": "^(github:user|github:org|legal-entity):[A-Za-z0-9][A-Za-z0-9_.-]+$" },
+    "issuer_ref": { "type": "string", "pattern": "^(github:user|github:org|legal-entity):[A-Za-z0-9][A-Za-z0-9_.-]+$" },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recorded_at", "recorded_by", "basis", "review_window_days"],
+      "properties": {
+        "recorded_at": { "type": "string", "format": "date-time" },
+        "recorded_by": { "type": "string", "minLength": 1 },
+        "basis": { "type": "string", "minLength": 1 },
+        "review_window_days": { "const": 0 }
+      }
+    },
+    "allowed_actions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "resource_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branches", "paths"],
+      "properties": {
+        "branches": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cadence", "surface", "must_state"],
+      "properties": {
+        "cadence": { "type": "string", "minLength": 1 },
+        "surface": { "type": "string", "minLength": 1 },
+        "must_state": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "not_before": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revocable", "status", "revoked_at", "revoked_by", "how"],
+      "properties": {
+        "revocable": { "const": true },
+        "status": { "enum": ["not_revoked", "revoked"] },
+        "revoked_at": { "type": ["string", "null"], "format": "date-time" },
+        "revoked_by": { "type": ["string", "null"] },
+        "how": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

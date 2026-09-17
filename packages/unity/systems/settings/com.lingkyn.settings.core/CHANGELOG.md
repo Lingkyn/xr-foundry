@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Documentation
+
+- Expanded `Documentation~/index.md` with the define/layer/snapshot/stage/apply
+  lifecycle, the `SettingsApplyOutcome` table, applicator filtering and rollback
+  semantics, and the persistence port. No API, version, or evidence change.
+
 ## [0.1.0] - 2026-07-16
 
 ### Added

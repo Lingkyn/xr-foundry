@@ -1,0 +1,109 @@
+{
+  "schema": "xr-foundry.component_catalog.v1",
+  "model_version": "0.1.0",
+  "component_manifest_schema": "docs/architecture/component-manifest.schema.json",
+  "lifecycle_policies": [
+    {
+      "id": "consumer_owned_configure_start_stop_v1",
+      "owner": "consumer_composition_root",
+      "phases": ["configure", "start", "stop"],
+      "start_order": "dependency_order",
+      "stop_order": "reverse_dependency_order"
+    }
+  ],
+  "components": [
+    {
+      "id": "com.lingkyn.project-initializer",
+      "package_path": "packages/unity/foundations/com.lingkyn.project-initializer",
+      "manifest_path": "packages/unity/foundations/com.lingkyn.project-initializer/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.xr-baseline",
+      "package_path": "packages/unity/foundations/com.lingkyn.xr-baseline",
+      "manifest_path": "packages/unity/foundations/com.lingkyn.xr-baseline/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.core",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.core",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.core/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.unity",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.unity",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.unity/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.presentation",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.presentation",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.ugui",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.uitoolkit",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.ugui",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.ugui/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.inventory.xr.uitoolkit",
+      "package_path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit",
+      "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.persistence.core",
+      "package_path": "packages/unity/systems/persistence/com.lingkyn.persistence.core",
+      "manifest_path": "packages/unity/systems/persistence/com.lingkyn.persistence.core/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.persistence.unity",
+      "package_path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity",
+      "manifest_path": "packages/unity/systems/persistence/com.lingkyn.persistence.unity/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.settings.core",
+      "package_path": "packages/unity/systems/settings/com.lingkyn.settings.core",
+      "manifest_path": "packages/unity/systems/settings/com.lingkyn.settings.core/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.settings.unity",
+      "package_path": "packages/unity/systems/settings/com.lingkyn.settings.unity",
+      "manifest_path": "packages/unity/systems/settings/com.lingkyn.settings.unity/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.interaction.core",
+      "package_path": "packages/unity/systems/interaction/com.lingkyn.interaction.core",
+      "manifest_path": "packages/unity/systems/interaction/com.lingkyn.interaction.core/foundry.component.json"
+    },
+    {
+      "id": "com.lingkyn.interaction.unity",
+      "package_path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity",
+      "manifest_path": "packages/unity/systems/interaction/com.lingkyn.interaction.unity/foundry.component.json"
+    }
+  ],
+  "slots": [
+    {
+      "id": "inventory.renderer",
+      "capability": "xr-foundry.inventory.renderer",
+      "candidates": [
+        "com.lingkyn.inventory.ugui",
+        "com.lingkyn.inventory.uitoolkit"
+      ]
+    },
+    {
+      "id": "inventory.xr-surface",
+      "capability": "xr-foundry.inventory.xr-surface",
+      "candidates": [
+        "com.lingkyn.inventory.xr.ugui",
+        "com.lingkyn.inventory.xr.uitoolkit"
+      ]
+    }
+  ]
+}

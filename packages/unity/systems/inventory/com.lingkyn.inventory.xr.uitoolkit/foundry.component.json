@@ -1,0 +1,34 @@
+{
+  "schema": "xr-foundry.component_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "com.lingkyn.inventory.xr.uitoolkit",
+  "version": "0.1.0",
+  "engine": "unity",
+  "family": "inventory",
+  "kind": "xr_composition",
+  "maturity": "incubating",
+  "package_manifest": "package.json",
+  "runtime_data_plane": "typed_in_process",
+  "discovery": "explicit_static",
+  "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
+  "provides": [
+    {"id": "xr-foundry.inventory.xr-surface", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.xr-surface.uitoolkit", "version": "1.0.0"}
+  ],
+  "requires": [
+    {"id": "xr-foundry.inventory.domain", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.presentation", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.renderer.uitoolkit", "version": "1.0.0"}
+  ],
+  "contract_refs": [
+    "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/Documentation~/index.md"
+  ],
+  "evidence": {
+    "manifest_contract": "declared",
+    "runtime_integration": "not_claimed",
+    "device_runtime": "not_claimed"
+  },
+  "non_claims": [
+    "A resolved XR surface manifest is not named-device or comfort evidence."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "xr-foundry.component_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "com.lingkyn.interaction.unity",
+  "version": "0.1.0",
+  "engine": "unity",
+  "family": "interaction",
+  "kind": "engine_adapter",
+  "maturity": "incubating",
+  "package_manifest": "package.json",
+  "runtime_data_plane": "typed_in_process",
+  "discovery": "explicit_static",
+  "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
+  "provides": [
+    {"id": "xr-foundry.interaction.unity-input", "version": "1.0.0"}
+  ],
+  "requires": [
+    {"id": "xr-foundry.interaction.semantic", "version": "1.0.0"}
+  ],
+  "contract_refs": [
+    "packages/unity/systems/interaction/com.lingkyn.interaction.unity/Documentation~/index.md"
+  ],
+  "evidence": {
+    "manifest_contract": "declared",
+    "runtime_integration": "not_claimed",
+    "device_runtime": "not_claimed"
+  },
+  "non_claims": [
+    "The adapter declaration does not prove a particular Unity input route or device."
+  ]
+}

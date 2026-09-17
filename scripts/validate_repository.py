@@ -14,7 +14,7 @@ import sys
 import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -28,7 +28,8 @@ REQUIRED_ROOT_FILES = {
     "README.md", "LICENSE", "CHANGELOG.md", "ROADMAP.md", "CONTRIBUTING.md",
     "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md", "AGENTS.md", "CLAUDE.md",
     "SKILL.md", "package-catalog.json", "reference-catalog.json",
-    "compatibility-profiles.json",
+    "compatibility-profiles.json", "component-catalog.json",
+    "capability-registry.json",
 }
 REQUIRED_PACKAGE_ENTRIES = {
     "package.json", "README.md", "CHANGELOG.md", "LICENSE.md",
@@ -135,6 +136,135 @@ REQUIRED_AGENT_COMMONS_FILES = {
     "docs/validation/independent-review-receipt.schema.json",
     "scripts/contract-requirements.txt",
 }
+REQUIRED_GOVERNANCE_FILES = {
+    "GOVERNANCE.md",
+    ".github/ISSUE_TEMPLATE/governance-proposal.yml",
+    "docs/governance/README.md",
+    "docs/governance/governance-model.schema.json",
+    "docs/governance/governance-model.v1.json",
+    "docs/governance/source-manifest.json",
+    "docs/rfcs/0004-progressive-governance.md",
+}
+REQUIRED_AGENT_MEMBERSHIP_FILES = {
+    "docs/governance/agent-member.example.json",
+    "docs/governance/agent-member.schema.json",
+    "docs/governance/agent-membership-model.schema.json",
+    "docs/governance/agent-membership-model.v1.json",
+    "docs/governance/agent-native-source-manifest.json",
+    "docs/rfcs/0006-agent-native-xr-dao.md",
+}
+GOVERNANCE_STAGE_IDS = ["G0", "G1", "G2", "G3", "G4"]
+GOVERNANCE_DECISION_WINDOWS = {
+    "routine_change": 0,
+    "governance_policy": 7,
+    "constitutional_change": 14,
+    "security_emergency": 0,
+}
+GOVERNANCE_EXTERNAL_EFFECTS = {
+    "organization_transfer": False,
+    "wallet": False,
+    "treasury": False,
+    "multisig": False,
+    "token_governance": False,
+    "smart_contract": False,
+    "onchain_execution": False,
+    "remote_settings_change": False,
+}
+GOVERNANCE_TOKEN_POLICY = {
+    "status": "token_neutral",
+    "governance_dependency": False,
+    "token_balance_grants_vote": False,
+    "token_balance_grants_repository_permission": False,
+    "payment_grants_authority": False,
+    "contribution_volume_grants_authority": False,
+    "credit_grants_authority": False,
+}
+GOVERNANCE_AUTHORITY = {
+    "maintainer_final_authority": True,
+    "public_participation_is_advisory": True,
+    "proposal_grants_repository_permission": False,
+    "deliberation_grants_execution_authority": False,
+    "stage_eligibility_grants_role": False,
+    "onchain_result_controls_github_permission": False,
+}
+GOVERNANCE_ACTIVATION = {
+    "active_policy": False,
+    "observed_topology_only": True,
+    "adoption_requires": "resolved_deliberation_and_explicit_maintainer_decision",
+    "minimum_public_review_days": 14,
+    "implementation_requires_task_hall_checkpoint": True,
+}
+AGENT_STAGE_IDS = ["A0", "A1", "A2", "A3", "A4"]
+AGENT_IDENTITY_REQUIRED_FIELDS = [
+    "agent_id",
+    "lineage_id",
+    "principal_ref",
+    "action_identities",
+    "status",
+    "autonomy_level",
+    "capability_claims",
+    "mandates",
+]
+AGENT_MANDATE_REQUIRED_FIELDS = [
+    "mandate_id",
+    "agent_id",
+    "principal_ref",
+    "issuer_ref",
+    "checkpoint_ref",
+    "allowed_actions",
+    "resource_scope",
+    "issued_at",
+    "not_before",
+    "expires_at",
+    "revocation",
+]
+AGENT_AUTHORITY_BOUNDARIES = {
+    "membership_grants_write": False,
+    "membership_grants_merge": False,
+    "membership_grants_release": False,
+    "membership_grants_admin": False,
+    "contribution_grants_write": False,
+    "deliberation_grants_write": False,
+    "token_grants_authority": False,
+    "mandate_grants_github_role": False,
+}
+AGENT_INDEPENDENCE_POLICY = {
+    "distinct_principal_required": True,
+    "distinct_lineage_required": True,
+    "same_principal_counts_as_independent": False,
+    "same_lineage_counts_as_independent": False,
+    "same_principal_formal_review": False,
+    "same_lineage_formal_review": False,
+}
+AGENT_EVIDENCE_POLICY = {
+    "capability_claims_require_evidence": True,
+    "ancestry_root_required": True,
+    "same_ancestry_multiplies_evidence": False,
+    "independent_primary_evidence_required_for_additional_count": True,
+}
+AGENT_EXTERNAL_EFFECTS = {
+    "account_operation": False,
+    "github_app_installation": False,
+    "organization_transfer": False,
+    "wallet": False,
+    "treasury": False,
+    "multisig": False,
+    "token": False,
+    "smart_contract": False,
+    "onchain_execution": False,
+    "remote_settings_change": False,
+}
+AGENT_ACTIVATION = {
+    "active_policy": False,
+    "active_agent_membership": False,
+    "maximum_activatable_stage": "A1",
+    "requires_constitutional_review_days": 14,
+    "requires_resolved_deliberation": True,
+    "requires_explicit_maintainer_decision": True,
+    "requires_task_hall_checkpoint": True,
+    "requires_revocation_exercise": True,
+    "requires_independent_review": True,
+}
 REQUIRED_FOUNDRY_FILES = {
     "docs/foundry/README.md",
     "docs/foundry/release-policy.md",
@@ -156,6 +286,71 @@ REQUIRED_FOUNDRY_FILES = {
     "docs/rfcs/0003-foundry-production-line.md",
     "scripts/scaffold_unity_package.py",
 }
+REQUIRED_COMPONENT_MODEL_FILES = {
+    "component-catalog.json",
+    "capability-registry.json",
+    "docs/architecture/component-manifest.schema.json",
+    "docs/architecture/component-catalog.schema.json",
+    "docs/architecture/capability-registry.schema.json",
+    "docs/architecture/composition-manifest.schema.json",
+    "docs/architecture/composition-lock.schema.json",
+    "docs/architecture/composition-manifest.v2.schema.json",
+    "docs/architecture/composition-lock.v2.schema.json",
+    "docs/architecture/component-composition-model.md",
+    "docs/rfcs/0005-xr-foundry-component-composition-model.md",
+    "compositions/unity/reference-system/README.md",
+    "compositions/unity/reference-system/foundry.project.json",
+    "compositions/unity/reference-system/foundry.lock.json",
+    "scripts/compose_system.py",
+}
+COMPONENT_MODEL_VERSION = "0.1.0"
+COMPONENT_CATALOG_PATH = Path("component-catalog.json")
+CAPABILITY_REGISTRY_PATH = Path("capability-registry.json")
+COMPONENT_MANIFEST_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "component-manifest.schema.json"
+)
+COMPONENT_CATALOG_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "component-catalog.schema.json"
+)
+CAPABILITY_REGISTRY_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "capability-registry.schema.json"
+)
+COMPOSITION_MANIFEST_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-manifest.schema.json"
+)
+COMPOSITION_LOCK_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-lock.schema.json"
+)
+COMPOSITION_MANIFEST_V2_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-manifest.v2.schema.json"
+)
+COMPOSITION_LOCK_V2_SCHEMA_PATH = (
+    Path("docs") / "architecture" / "composition-lock.v2.schema.json"
+)
+COMPOSITION_MANIFEST_CONTRACTS = {
+    "xr-foundry.composition_manifest.v1": {
+        "model_version": "0.1.0",
+        "schema_path": COMPOSITION_MANIFEST_SCHEMA_PATH,
+        "lock_schema": "xr-foundry.composition_lock.v1",
+        "lock_schema_path": COMPOSITION_LOCK_SCHEMA_PATH,
+    },
+    "xr-foundry.composition_manifest.v2": {
+        "model_version": "0.2.0",
+        "schema_path": COMPOSITION_MANIFEST_V2_SCHEMA_PATH,
+        "lock_schema": "xr-foundry.composition_lock.v2",
+        "lock_schema_path": COMPOSITION_LOCK_V2_SCHEMA_PATH,
+    },
+}
+COMPOSITION_LOCK_CONTRACTS = {
+    contract["lock_schema"]: {
+        "model_version": contract["model_version"],
+        "schema_path": contract["lock_schema_path"],
+    }
+    for contract in COMPOSITION_MANIFEST_CONTRACTS.values()
+}
+REFERENCE_COMPOSITION_PATH = (
+    Path("compositions") / "unity" / "reference-system" / "foundry.project.json"
+)
 PUBLIC_REPOSITORY = "https://github.com/Lingkyn/xr-foundry"
 FULL_SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
@@ -166,11 +361,31 @@ SEMVER_PATTERN = re.compile(
     r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
 )
+SEMVER_V2_PATTERN = re.compile(
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+)
+COMPOSITION_ID_PATTERN = re.compile(
+    r"xr-foundry\.[a-z0-9]+(?:[.-][a-z0-9]+)*"
+)
+COMPOSITION_BINDING_ID_PATTERN = re.compile(
+    r"[a-z0-9]+(?:[.-][a-z0-9]+)*"
+)
+COMPOSITION_ASSEMBLY_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")
 UNITY_EDITOR_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)[abfp](?:0|[1-9][0-9]*)"
 )
 EXACT_RUNTIME_VERSION_PATTERN = re.compile(
     r"(?:0|[1-9][0-9]*)(?:\.[0-9A-Za-z]+)+(?:[-+._][0-9A-Za-z]+)*"
+)
+VALIDATOR_PYTHON_VERSIONS = ["3.11", "3.12", "3.13"]
+CONTRACT_REQUIREMENTS_PATH = "scripts/contract-requirements.txt"
+CANONICAL_VALIDATION_COMMAND = (
+    "python scripts/validate_repository.py --json --run-contract-tests"
 )
 
 
@@ -378,8 +593,37 @@ def forbidden_public_markers() -> list[str]:
     return ["".join(parts).casefold() for parts in fragments]
 
 
-def load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+def project_profile_allowed_control_markers() -> set[str]:
+    """Return control-plane markers that the root project profile may name."""
+    fragments = [
+        ("ai", "os"),
+        ("agent", "-os"),
+        ("skill", "-system"),
+        ("_steward", "ship"),
+        ("work ", "packet"),
+        (".", "ai", "os"),
+    ]
+    return {"".join(parts).casefold() for parts in fragments}
+
+
+def decode_json_document(document: str, source: str) -> Any:
+    """Decode JSON without permitting duplicate keys at any object depth."""
+
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        decoded: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in decoded:
+                raise json.JSONDecodeError(
+                    f"{source}: duplicate key {key!r}", document, 0
+                )
+            decoded[key] = value
+        return decoded
+
+    return json.loads(document, object_pairs_hook=reject_duplicate_keys)
+
+
+def load_json(path: Path) -> Any:
+    return decode_json_document(path.read_text(encoding="utf-8"), str(path))
 
 
 def read_decodable_text(path: Path) -> str | None:
@@ -490,6 +734,1094 @@ def validate_json_schema_instance(
     return errors
 
 
+def safe_repository_path(root: Path, relative: Any) -> Path | None:
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        return None
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        return None
+    try:
+        resolved = (root / candidate).resolve()
+        resolved.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved
+
+
+def composition_manifest_contract(
+    payload: Any,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    """Select a manifest contract from its explicit schema/model pair."""
+
+    if not isinstance(payload, dict):
+        return None, ["composition manifest must be an object"]
+    schema = payload.get("schema")
+    model_version = payload.get("model_version")
+    if not isinstance(schema, str) or schema not in COMPOSITION_MANIFEST_CONTRACTS:
+        return None, [f"unsupported composition manifest schema: {schema!r}"]
+    contract = COMPOSITION_MANIFEST_CONTRACTS[schema]
+    if model_version != contract["model_version"]:
+        return None, [
+            "composition manifest schema/model mismatch: "
+            f"{schema} requires model_version {contract['model_version']}, "
+            f"got {model_version!r}"
+        ]
+    return contract, []
+
+
+def composition_manifest_schema_path(
+    payload: Any,
+) -> tuple[Path | None, list[str]]:
+    contract, errors = composition_manifest_contract(payload)
+    if contract is None:
+        return None, errors
+    return contract["schema_path"], []
+
+
+def composition_lock_contract(
+    payload: Any,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    """Select a lock contract from its explicit schema/model pair."""
+
+    if not isinstance(payload, dict):
+        return None, ["composition lock must be an object"]
+    schema = payload.get("schema")
+    model_version = payload.get("model_version")
+    if not isinstance(schema, str) or schema not in COMPOSITION_LOCK_CONTRACTS:
+        return None, [f"unsupported composition lock schema: {schema!r}"]
+    contract = COMPOSITION_LOCK_CONTRACTS[schema]
+    if model_version != contract["model_version"]:
+        return None, [
+            "composition lock schema/model mismatch: "
+            f"{schema} requires model_version {contract['model_version']}, "
+            f"got {model_version!r}"
+        ]
+    return contract, []
+
+
+def composition_lock_schema_path(
+    payload: Any,
+) -> tuple[Path | None, list[str]]:
+    contract, errors = composition_lock_contract(payload)
+    if contract is None:
+        return None, errors
+    return contract["schema_path"], []
+
+
+def resolve_composition_adapter_source(
+    root: Path,
+    composition_path: Path,
+    source_path: Any,
+) -> tuple[Path | None, str | None]:
+    """Resolve a v2 adapter source inside the composition-owned consumer tree."""
+
+    if (
+        not isinstance(source_path, str)
+        or not source_path
+        or "\\" in source_path
+        or any(unicodedata.category(character).startswith("C") for character in source_path)
+    ):
+        return None, "adapter source_path must be a non-empty POSIX path"
+    pure_path = PurePosixPath(source_path)
+    if (
+        pure_path.is_absolute()
+        or pure_path.as_posix() != source_path
+        or not pure_path.parts
+        or pure_path.parts[0] != "consumer"
+        or any(part in {"", ".", ".."} for part in pure_path.parts)
+    ):
+        return None, "adapter source_path must be canonical and start with consumer/"
+
+    consumer = composition_path.parent / "consumer"
+    if consumer.is_symlink():
+        return None, "composition consumer directory must not be a symbolic link"
+    try:
+        consumer_mode = consumer.lstat().st_mode
+    except (OSError, ValueError):
+        return None, "composition consumer directory is missing"
+    if not stat.S_ISDIR(consumer_mode):
+        return None, "composition consumer path must be a directory"
+
+    cursor = consumer
+    for part in pure_path.parts[1:-1]:
+        cursor /= part
+        if cursor.is_symlink():
+            return None, "adapter source_path ancestry must not contain symbolic links"
+
+    candidate = composition_path.parent.joinpath(*pure_path.parts)
+    if candidate.is_symlink():
+        return None, "adapter source_path must not be a symbolic link"
+    try:
+        mode = candidate.lstat().st_mode
+    except (OSError, ValueError):
+        return None, "adapter source_path is missing"
+    if not stat.S_ISREG(mode):
+        return None, "adapter source_path must be a regular file"
+    try:
+        resolved_candidate = candidate.resolve(strict=True)
+        resolved_consumer = consumer.resolve(strict=True)
+        resolved_candidate.relative_to(resolved_consumer)
+        resolved_candidate.relative_to(root.resolve())
+    except (OSError, RuntimeError, ValueError):
+        return None, "adapter source_path escapes the composition consumer directory"
+    return resolved_candidate, None
+
+
+def validate_composition_adapter_assembly(
+    root: Path,
+    composition_path: Path,
+    source: Path,
+    declared_assembly: str,
+) -> str | None:
+    """Bind a consumer adapter to the nearest Unity assembly definition."""
+
+    try:
+        consumer = (composition_path.parent / "consumer").resolve(strict=True)
+        cursor = source.parent.resolve(strict=True)
+        cursor.relative_to(consumer)
+    except (OSError, RuntimeError, ValueError):
+        return "adapter source assembly scope escapes the composition consumer directory"
+
+    while True:
+        try:
+            scope_entries = sorted(cursor.iterdir(), key=lambda candidate: candidate.name)
+            asmrefs = [
+                candidate
+                for candidate in scope_entries
+                if candidate.suffix.casefold() == ".asmref"
+            ]
+            asmdefs = sorted(
+                (
+                    candidate
+                    for candidate in scope_entries
+                    if candidate.suffix.casefold() == ".asmdef"
+                ),
+                key=lambda candidate: candidate.name,
+            )
+        except (OSError, ValueError) as error:
+            return f"adapter Unity assembly scope cannot be inspected: {error}"
+        if asmrefs:
+            return (
+                "asmref is unsupported for adapter source binding; found "
+                f"{[candidate.name for candidate in asmrefs]}"
+            )
+        if asmdefs:
+            if len(asmdefs) != 1:
+                return (
+                    "adapter source nearest Unity assembly scope must contain exactly "
+                    f"one .asmdef; found {[candidate.name for candidate in asmdefs]}"
+                )
+            asmdef = asmdefs[0]
+            if asmdef.is_symlink():
+                return "adapter source Unity assembly definition must not be a symbolic link"
+            try:
+                asmdef_mode = asmdef.lstat().st_mode
+            except (OSError, ValueError):
+                return "adapter source Unity assembly definition is missing"
+            if not stat.S_ISREG(asmdef_mode):
+                return "adapter source Unity assembly definition must be a regular file"
+            try:
+                asmdef_payload = load_json(asmdef)
+            except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                return f"adapter source Unity assembly definition is invalid JSON: {error}"
+            if not isinstance(asmdef_payload, dict):
+                return "adapter source Unity assembly definition must be a JSON object"
+            actual_assembly = asmdef_payload.get("name")
+            if actual_assembly != declared_assembly:
+                return (
+                    "adapter source resolves to Unity assembly "
+                    f"{actual_assembly!r}, not declared assembly {declared_assembly!r}"
+                )
+            return None
+        if cursor == consumer:
+            return "adapter source has no Unity assembly definition in its consumer scope"
+        parent = cursor.parent
+        if parent == cursor:
+            return "adapter source has no Unity assembly definition in its consumer scope"
+        cursor = parent
+
+
+def capability_key(reference: Any) -> tuple[str, str] | None:
+    if not isinstance(reference, dict):
+        return None
+    capability_id = reference.get("id")
+    version = reference.get("version")
+    if not isinstance(capability_id, str) or not isinstance(version, str):
+        return None
+    return capability_id, version
+
+
+def load_component_manifests(
+    root: Path,
+    component_catalog: Any,
+) -> tuple[dict[str, dict[str, Any]], dict[str, Path], list[str]]:
+    errors: list[str] = []
+    manifests: dict[str, dict[str, Any]] = {}
+    manifest_paths: dict[str, Path] = {}
+    if not isinstance(component_catalog, dict):
+        return manifests, manifest_paths, ["component catalog must be an object"]
+    components = component_catalog.get("components")
+    if not isinstance(components, list):
+        return manifests, manifest_paths, ["component catalog components must be an array"]
+    seen_component_ids: set[str] = set()
+    for index, item in enumerate(components):
+        label = f"component catalog components[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{label}: entry must be an object")
+            continue
+        component_id = item.get("id")
+        if not isinstance(component_id, str) or not component_id:
+            errors.append(f"{label}: id must be a non-empty string")
+            continue
+        if component_id in seen_component_ids:
+            errors.append(f"component catalog contains duplicate id: {component_id}")
+            continue
+        seen_component_ids.add(component_id)
+        manifest_path = safe_repository_path(root, item.get("manifest_path"))
+        if manifest_path is None:
+            errors.append(f"{component_id}: manifest_path must stay inside the repository")
+            continue
+        if not manifest_path.exists():
+            errors.append(f"{component_id}: component manifest is missing: {item.get('manifest_path')}")
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{component_id}: component manifest is invalid JSON: {error}")
+            continue
+        if not isinstance(manifest, dict):
+            errors.append(f"{component_id}: component manifest must be an object")
+            continue
+        manifests[component_id] = manifest
+        manifest_paths[component_id] = manifest_path
+    return manifests, manifest_paths, errors
+
+
+def capability_provider_map(
+    manifests: dict[str, dict[str, Any]],
+) -> dict[tuple[str, str], list[str]]:
+    providers: dict[tuple[str, str], list[str]] = {}
+    for component_id, manifest in manifests.items():
+        provides = manifest.get("provides", [])
+        if not isinstance(provides, list):
+            continue
+        for reference in provides:
+            key = capability_key(reference)
+            if key is not None:
+                providers.setdefault(key, []).append(component_id)
+    return {
+        key: sorted(set(component_ids))
+        for key, component_ids in providers.items()
+    }
+
+
+def deterministic_dependency_order(
+    dependencies: dict[str, set[str]],
+) -> tuple[list[str], list[str]]:
+    remaining = {
+        component_id: set(required)
+        for component_id, required in dependencies.items()
+    }
+    ready = sorted(
+        component_id
+        for component_id, required in remaining.items()
+        if not required
+    )
+    order: list[str] = []
+    while ready:
+        component_id = ready.pop(0)
+        if component_id in order:
+            continue
+        order.append(component_id)
+        for consumer_id in sorted(remaining):
+            if component_id not in remaining[consumer_id]:
+                continue
+            remaining[consumer_id].remove(component_id)
+            if not remaining[consumer_id] and consumer_id not in order:
+                ready.append(consumer_id)
+                ready.sort()
+    cyclic = sorted(
+        component_id
+        for component_id, required in remaining.items()
+        if required
+    )
+    return order, cyclic
+
+
+def build_composition_lock(
+    root: Path,
+    composition_path: Path = REFERENCE_COMPOSITION_PATH,
+    composition_payload: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    errors: list[str] = []
+    root = root.resolve()
+    absolute_composition_path = (
+        composition_path
+        if composition_path.is_absolute()
+        else root / composition_path
+    ).resolve()
+    try:
+        relative_composition_path = absolute_composition_path.relative_to(root).as_posix()
+    except ValueError:
+        return None, ["composition manifest must stay inside the repository"]
+    if composition_payload is None:
+        if not absolute_composition_path.exists():
+            return None, [f"composition manifest is missing: {relative_composition_path}"]
+        try:
+            composition_payload = load_json(absolute_composition_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            return None, [f"composition manifest is invalid JSON: {error}"]
+    if not isinstance(composition_payload, dict):
+        return None, ["composition manifest must be an object"]
+
+    composition_contract, contract_errors = composition_manifest_contract(
+        composition_payload
+    )
+    if composition_contract is None:
+        return None, contract_errors
+    is_v2 = composition_payload.get("schema") == "xr-foundry.composition_manifest.v2"
+    if is_v2:
+        composition_id = composition_payload.get("id")
+        composition_version = composition_payload.get("version")
+        if (
+            not isinstance(composition_id, str)
+            or COMPOSITION_ID_PATTERN.fullmatch(composition_id) is None
+        ):
+            errors.append("v2 composition id must be an exact canonical identifier")
+        if (
+            not isinstance(composition_version, str)
+            or SEMVER_V2_PATTERN.fullmatch(composition_version) is None
+        ):
+            errors.append("v2 composition version must be exact SemVer")
+        expected_lock_file = absolute_composition_path.parent / "foundry.lock.json"
+        expected_lock_path = expected_lock_file.relative_to(root).as_posix()
+        if composition_payload.get("lock_path") != expected_lock_path:
+            errors.append(
+                "v2 composition lock_path must name its sibling foundry.lock.json: "
+                f"expected {expected_lock_path}"
+            )
+        elif expected_lock_file.is_symlink():
+            errors.append("v2 composition lock must not be a symbolic link")
+        else:
+            try:
+                lock_mode = expected_lock_file.lstat().st_mode
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError) as error:
+                errors.append(f"v2 composition lock target is invalid: {error}")
+            else:
+                if not stat.S_ISREG(lock_mode):
+                    errors.append("v2 composition lock target must be a regular file")
+
+    catalog_path = safe_repository_path(root, composition_payload.get("component_catalog"))
+    registry_path = safe_repository_path(root, composition_payload.get("capability_registry"))
+    if catalog_path is None or not catalog_path.exists():
+        errors.append("composition component catalog path is missing or unsafe")
+    if registry_path is None or not registry_path.exists():
+        errors.append("composition capability registry path is missing or unsafe")
+    if errors:
+        return None, errors
+    assert catalog_path is not None
+    assert registry_path is not None
+    try:
+        component_catalog = load_json(catalog_path)
+        capability_registry = load_json(registry_path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        return None, [f"composition input is invalid JSON: {error}"]
+
+    manifests, manifest_paths, manifest_errors = load_component_manifests(
+        root, component_catalog
+    )
+    errors.extend(manifest_errors)
+    raw_catalog_slots = component_catalog.get("slots", [])
+    if not isinstance(raw_catalog_slots, list):
+        errors.append("component catalog slots must be an array")
+        raw_catalog_slots = []
+    catalog_slots = {
+        str(item.get("id", "")): item
+        for item in raw_catalog_slots
+        if isinstance(item, dict) and item.get("id")
+    }
+    selected_versions: dict[str, str] = {}
+    direct_components = composition_payload.get("components", [])
+    if not isinstance(direct_components, list):
+        errors.append("composition components must be an array")
+        direct_components = []
+    for item in direct_components:
+        if not isinstance(item, dict):
+            errors.append("composition component selections must be objects")
+            continue
+        component_id = str(item.get("id", ""))
+        version = str(item.get("version", ""))
+        if component_id in selected_versions:
+            errors.append(f"composition selects component more than once: {component_id}")
+        selected_versions[component_id] = version
+
+    selections = composition_payload.get("selections", [])
+    if not isinstance(selections, list):
+        errors.append("composition selections must be an array")
+        selections = []
+    selections_by_slot: dict[str, list[dict[str, Any]]] = {}
+    for selection in selections:
+        if not isinstance(selection, dict):
+            errors.append("composition slot selections must be objects")
+            continue
+        slot_id = str(selection.get("slot", ""))
+        selections_by_slot.setdefault(slot_id, []).append(selection)
+    for slot_id, slot in catalog_slots.items():
+        selected_for_slot = selections_by_slot.get(slot_id, [])
+        if len(selected_for_slot) != 1:
+            errors.append(
+                f"composition slot {slot_id} must have exactly one selection"
+            )
+            continue
+        selection = selected_for_slot[0]
+        component_id = str(selection.get("component", ""))
+        version = str(selection.get("version", ""))
+        candidates = slot.get("candidates", [])
+        if not isinstance(candidates, list):
+            errors.append(f"composition slot {slot_id} candidates must be an array")
+            candidates = []
+        if component_id not in candidates:
+            errors.append(
+                f"composition slot {slot_id} rejects non-candidate component {component_id}"
+            )
+        if component_id in selected_versions:
+            errors.append(f"composition selects component more than once: {component_id}")
+        selected_versions[component_id] = version
+    for slot_id in sorted(set(selections_by_slot) - set(catalog_slots)):
+        errors.append(f"composition selects unknown slot: {slot_id}")
+    for slot_id, selected_for_slot in selections_by_slot.items():
+        if len(selected_for_slot) > 1:
+            errors.append(f"composition slot {slot_id} must have exactly one selection")
+
+    for component_id, version in selected_versions.items():
+        manifest = manifests.get(component_id)
+        if manifest is None:
+            errors.append(f"composition selects unknown component: {component_id}")
+            continue
+        if manifest.get("version") != version:
+            errors.append(
+                f"composition component version mismatch for {component_id}: "
+                f"selected {version}, manifest {manifest.get('version')}"
+            )
+
+    selected_manifests = {
+        component_id: manifests[component_id]
+        for component_id in selected_versions
+        if component_id in manifests
+    }
+    selected_provider_map = capability_provider_map(selected_manifests)
+    raw_registry_capabilities = capability_registry.get("capabilities", [])
+    if not isinstance(raw_registry_capabilities, list):
+        errors.append("capability registry capabilities must be an array")
+        raw_registry_capabilities = []
+    registry_capabilities = {
+        capability_key(item)
+        for item in raw_registry_capabilities
+        if capability_key(item) is not None
+    }
+    resolved_capabilities: dict[tuple[str, str], str] = {}
+
+    def resolve(reference: Any, label: str) -> str | None:
+        key = capability_key(reference)
+        if key is None:
+            errors.append(f"{label}: capability reference must contain id and version")
+            return None
+        capability_id, version = key
+        if key not in registry_capabilities:
+            errors.append(
+                f"{label}: capability is not registered: {capability_id}@{version}"
+            )
+        providers = selected_provider_map.get(key, [])
+        if not providers:
+            errors.append(
+                f"{label}: missing capability provider for {capability_id}@{version}"
+            )
+            return None
+        if len(providers) != 1:
+            errors.append(
+                f"{label}: capability {capability_id}@{version} requires exactly one "
+                f"provider; selected providers={providers}"
+            )
+            return None
+        provider = providers[0]
+        previous = resolved_capabilities.get(key)
+        if previous is not None and previous != provider:
+            errors.append(
+                f"{label}: capability {capability_id}@{version} resolved inconsistently"
+            )
+            return None
+        resolved_capabilities[key] = provider
+        return provider
+
+    dependencies = {
+        component_id: set()
+        for component_id in selected_manifests
+    }
+    for component_id, manifest in selected_manifests.items():
+        requires = manifest.get("requires", [])
+        if not isinstance(requires, list):
+            errors.append(f"{component_id}: requires must be an array")
+            continue
+        for reference in requires:
+            provider = resolve(reference, f"{component_id} requirement")
+            if provider is None:
+                continue
+            if provider == component_id:
+                errors.append(f"{component_id}: component cannot require itself")
+            else:
+                dependencies[component_id].add(provider)
+
+    required_capabilities = composition_payload.get("required_capabilities", [])
+    if not isinstance(required_capabilities, list):
+        errors.append("composition required_capabilities must be an array")
+        required_capabilities = []
+    for reference in required_capabilities:
+        resolve(reference, "composition root requirement")
+
+    locked_bindings: list[dict[str, Any]] = []
+    bindings = composition_payload.get("bindings", [])
+    if not isinstance(bindings, list):
+        errors.append("composition bindings must be an array")
+        bindings = []
+    seen_binding_ids: set[str] = set()
+    for binding in bindings:
+        if not isinstance(binding, dict):
+            errors.append("composition bindings must be objects")
+            continue
+        raw_binding_id = binding.get("id", "")
+        binding_id = (
+            raw_binding_id
+            if isinstance(raw_binding_id, str)
+            else str(raw_binding_id)
+        )
+        if is_v2 and (
+            not isinstance(raw_binding_id, str)
+            or COMPOSITION_BINDING_ID_PATTERN.fullmatch(raw_binding_id) is None
+        ):
+            errors.append(
+                f"v2 composition binding id must be an exact canonical identifier: "
+                f"{raw_binding_id!r}"
+            )
+        if is_v2 and binding_id in seen_binding_ids:
+            errors.append(f"composition contains duplicate binding id: {binding_id}")
+        seen_binding_ids.add(binding_id)
+        from_provider = resolve(
+            binding.get("from_capability"), f"binding {binding_id} source"
+        )
+        to_provider = resolve(
+            binding.get("to_capability"), f"binding {binding_id} target"
+        )
+        if from_provider is not None and to_provider is not None:
+            implementation = binding.get("implementation")
+            locked_implementation: Any = implementation
+            if is_v2:
+                if not isinstance(implementation, dict):
+                    errors.append(
+                        f"binding {binding_id}: v2 implementation must be an object"
+                    )
+                    continue
+                kind = implementation.get("kind")
+                status_value = implementation.get("status")
+                if kind != "consumer_owned_adapter":
+                    errors.append(
+                        f"binding {binding_id}: unsupported implementation kind {kind!r}"
+                    )
+                    continue
+                if status_value == "pending":
+                    locked_implementation = {
+                        "kind": "consumer_owned_adapter",
+                        "status": "pending",
+                    }
+                elif status_value == "implemented":
+                    source, source_error = resolve_composition_adapter_source(
+                        root,
+                        absolute_composition_path,
+                        implementation.get("source_path"),
+                    )
+                    if source_error is not None or source is None:
+                        errors.append(
+                            f"binding {binding_id}: {source_error or 'adapter source is invalid'}"
+                        )
+                        continue
+                    assembly = implementation.get("assembly")
+                    if (
+                        not isinstance(assembly, str)
+                        or COMPOSITION_ASSEMBLY_PATTERN.fullmatch(assembly) is None
+                    ):
+                        errors.append(
+                            f"binding {binding_id}: implemented adapter assembly must be "
+                            "an exact ASCII assembly name"
+                        )
+                        continue
+                    assembly_error = validate_composition_adapter_assembly(
+                        root,
+                        absolute_composition_path,
+                        source,
+                        assembly,
+                    )
+                    if assembly_error is not None:
+                        errors.append(f"binding {binding_id}: {assembly_error}")
+                        continue
+                    locked_implementation = {
+                        "kind": "consumer_owned_adapter",
+                        "status": "implemented",
+                        "source_path": source.relative_to(root).as_posix(),
+                        "assembly": assembly,
+                        "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                    }
+                else:
+                    errors.append(
+                        f"binding {binding_id}: unsupported implementation status "
+                        f"{status_value!r}"
+                    )
+                    continue
+            locked_bindings.append(
+                {
+                    "id": binding_id,
+                    "from_provider": from_provider,
+                    "to_provider": to_provider,
+                    "implementation": locked_implementation,
+                }
+            )
+
+    dependency_order, cyclic = deterministic_dependency_order(dependencies)
+    if cyclic:
+        errors.append(
+            "composition dependency cycle detected among: " + ", ".join(cyclic)
+        )
+    if errors:
+        return None, errors
+
+    locked_components = []
+    for component_id in sorted(selected_manifests):
+        manifest_path = manifest_paths[component_id]
+        locked_components.append(
+            {
+                "id": component_id,
+                "version": selected_manifests[component_id]["version"],
+                "manifest_path": manifest_path.relative_to(root).as_posix(),
+                "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+            }
+        )
+    lock = {
+        "schema": composition_contract["lock_schema"],
+        "model_version": composition_contract["model_version"],
+        "composition": {
+            "id": composition_payload.get("id"),
+            "version": composition_payload.get("version"),
+            "path": relative_composition_path,
+        },
+        "engine": composition_payload.get("engine"),
+        "input_digests": {
+            "composition_sha256": hashlib.sha256(
+                absolute_composition_path.read_bytes()
+            ).hexdigest(),
+            "component_catalog_sha256": hashlib.sha256(
+                catalog_path.read_bytes()
+            ).hexdigest(),
+            "capability_registry_sha256": hashlib.sha256(
+                registry_path.read_bytes()
+            ).hexdigest(),
+        },
+        "resolution": {
+            "components": locked_components,
+            "capabilities": [
+                {
+                    "id": capability_id,
+                    "version": version,
+                    "provider": provider,
+                }
+                for (capability_id, version), provider in sorted(
+                    resolved_capabilities.items()
+                )
+            ],
+            "selections": sorted(
+                [
+                    {
+                        "slot": str(item.get("slot", "")),
+                        "component": str(item.get("component", "")),
+                        "version": str(item.get("version", "")),
+                    }
+                    for item in selections
+                    if isinstance(item, dict)
+                ],
+                key=lambda item: item["slot"],
+            ),
+            "bindings": sorted(locked_bindings, key=lambda item: item["id"]),
+            "dependency_order": dependency_order,
+        },
+        "claims": {
+            "structural_resolution": "resolved",
+            "runtime_ready": False,
+            "unity_compile": "not_claimed_for_this_composition",
+            "device_runtime": "not_claimed",
+        },
+    }
+    if is_v2:
+        lock["claims"] = {
+            "structural_resolution": "resolved",
+            "bindings_implemented": bool(locked_bindings) and all(
+                isinstance(binding.get("implementation"), dict)
+                and binding["implementation"].get("status") == "implemented"
+                for binding in locked_bindings
+            ),
+            "runtime_ready": False,
+            "unity_compile": "not_claimed_for_this_composition",
+            "device_runtime": "not_claimed",
+        }
+    return lock, []
+
+
+def validate_component_model(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_COMPONENT_MODEL_FILES):
+        if not (root / relative).exists():
+            errors.append(f"component model required file is missing: {relative}")
+
+    instance_specs = [
+        (COMPONENT_CATALOG_PATH, COMPONENT_CATALOG_SCHEMA_PATH, "component catalog"),
+        (CAPABILITY_REGISTRY_PATH, CAPABILITY_REGISTRY_SCHEMA_PATH, "capability registry"),
+    ]
+    loaded: dict[Path, dict[str, Any]] = {}
+    for instance_path, schema_path, label in instance_specs:
+        absolute_instance = root / instance_path
+        absolute_schema = root / schema_path
+        if not absolute_instance.exists() or not absolute_schema.exists():
+            continue
+        try:
+            payload = load_json(absolute_instance)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        loaded[instance_path] = payload
+        errors.extend(validate_json_schema_instance(payload, absolute_schema, label))
+
+    absolute_composition = root / REFERENCE_COMPOSITION_PATH
+    if absolute_composition.exists():
+        try:
+            composition_payload = load_json(absolute_composition)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"reference composition: invalid JSON: {error}")
+        else:
+            loaded[REFERENCE_COMPOSITION_PATH] = composition_payload
+            schema_path, dispatch_errors = composition_manifest_schema_path(
+                composition_payload
+            )
+            errors.extend(
+                f"reference composition: {error}" for error in dispatch_errors
+            )
+            if schema_path is not None:
+                errors.extend(
+                    validate_json_schema_instance(
+                        composition_payload,
+                        root / schema_path,
+                        "reference composition",
+                    )
+                )
+
+    component_catalog = loaded.get(COMPONENT_CATALOG_PATH)
+    capability_registry = loaded.get(CAPABILITY_REGISTRY_PATH)
+    composition = loaded.get(REFERENCE_COMPOSITION_PATH)
+    if component_catalog is None or capability_registry is None:
+        return errors
+
+    manifests, manifest_paths, manifest_errors = load_component_manifests(
+        root, component_catalog
+    )
+    errors.extend(manifest_errors)
+    component_schema = root / COMPONENT_MANIFEST_SCHEMA_PATH
+    for component_id, manifest in manifests.items():
+        errors.extend(
+            validate_json_schema_instance(
+                manifest, component_schema, f"component manifest {component_id}"
+            )
+        )
+
+    raw_catalog_entries = component_catalog.get("components", [])
+    if not isinstance(raw_catalog_entries, list):
+        raw_catalog_entries = []
+    catalog_entries = {
+        str(item.get("id", "")): item
+        for item in raw_catalog_entries
+        if isinstance(item, dict) and item.get("id")
+    }
+    package_catalog_path = root / "package-catalog.json"
+    package_catalog = load_json(package_catalog_path) if package_catalog_path.exists() else {}
+    if package_catalog.get("component_catalog") != COMPONENT_CATALOG_PATH.as_posix():
+        errors.append("package catalog must point to component-catalog.json")
+    if package_catalog.get("capability_registry") != CAPABILITY_REGISTRY_PATH.as_posix():
+        errors.append("package catalog must point to capability-registry.json")
+    reference_catalog_path = root / "reference-catalog.json"
+    reference_catalog = (
+        load_json(reference_catalog_path) if reference_catalog_path.exists() else {}
+    )
+    if reference_catalog.get("component_catalog") != COMPONENT_CATALOG_PATH.as_posix():
+        errors.append("reference catalog must point to component-catalog.json")
+    if reference_catalog.get("capability_registry") != CAPABILITY_REGISTRY_PATH.as_posix():
+        errors.append("reference catalog must point to capability-registry.json")
+    package_entries = {
+        str(item.get("id", "")): item
+        for item in package_catalog.get("packages", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    if set(catalog_entries) != set(package_entries):
+        errors.append(
+            "component catalog must describe every live package exactly once: "
+            f"components={sorted(catalog_entries)} packages={sorted(package_entries)}"
+        )
+    discovered_manifest_paths = {
+        path.relative_to(root).as_posix()
+        for path in root.glob("packages/unity/**/foundry.component.json")
+        if path.is_file()
+    }
+    declared_manifest_paths = {
+        str(item.get("manifest_path", ""))
+        for item in catalog_entries.values()
+    }
+    if discovered_manifest_paths != declared_manifest_paths:
+        errors.append(
+            "component catalog/live manifest mismatch: "
+            f"catalog={sorted(declared_manifest_paths)} live={sorted(discovered_manifest_paths)}"
+        )
+
+    for component_id, entry in catalog_entries.items():
+        package_entry = package_entries.get(component_id)
+        manifest = manifests.get(component_id)
+        package_path = str(entry.get("package_path", ""))
+        manifest_path = str(entry.get("manifest_path", ""))
+        if manifest_path != f"{package_path}/foundry.component.json":
+            errors.append(
+                f"{component_id}: component manifest must be colocated with its package"
+            )
+        if package_entry is None or manifest is None:
+            continue
+        if package_entry.get("path") != package_path:
+            errors.append(f"{component_id}: component/package catalog path mismatch")
+        if manifest.get("id") != component_id:
+            errors.append(f"{component_id}: component manifest id mismatch")
+        if manifest.get("version") != package_entry.get("version"):
+            errors.append(f"{component_id}: component/package version mismatch")
+        if manifest.get("maturity") != package_entry.get("maturity"):
+            errors.append(f"{component_id}: component/package maturity mismatch")
+        package_manifest_path = root / package_path / "package.json"
+        if package_manifest_path.exists():
+            package_manifest = load_json(package_manifest_path)
+            if package_manifest.get("name") != component_id:
+                errors.append(f"{component_id}: component/package.json identity mismatch")
+            if package_manifest.get("version") != manifest.get("version"):
+                errors.append(f"{component_id}: component/package.json version mismatch")
+        contract_refs = manifest.get("contract_refs", [])
+        if not isinstance(contract_refs, list):
+            contract_refs = []
+        for contract_ref in contract_refs:
+            contract_path = safe_repository_path(root, contract_ref)
+            if contract_path is None or not contract_path.exists():
+                errors.append(
+                    f"{component_id}: contract reference is missing or unsafe: {contract_ref}"
+                )
+
+    provider_map = capability_provider_map(manifests)
+    registry_entries: dict[tuple[str, str], dict[str, Any]] = {}
+    capabilities = capability_registry.get("capabilities", [])
+    if not isinstance(capabilities, list):
+        capabilities = []
+    for capability in capabilities:
+        key = capability_key(capability)
+        if key is None:
+            continue
+        if key in registry_entries:
+            errors.append(
+                f"capability registry contains duplicate capability: {key[0]}@{key[1]}"
+            )
+            continue
+        registry_entries[key] = capability
+        raw_declared_providers = capability.get("providers", [])
+        declared_providers = (
+            sorted(set(raw_declared_providers))
+            if isinstance(raw_declared_providers, list)
+            else []
+        )
+        actual_providers = provider_map.get(key, [])
+        if declared_providers != actual_providers:
+            errors.append(
+                f"capability registry provider drift for {key[0]}@{key[1]}: "
+                f"declared={declared_providers} manifests={actual_providers}"
+            )
+        contract_refs = capability.get("contract_refs", [])
+        if not isinstance(contract_refs, list):
+            contract_refs = []
+        for contract_ref in contract_refs:
+            contract_path = safe_repository_path(root, contract_ref)
+            if contract_path is None or not contract_path.exists():
+                errors.append(
+                    f"capability {key[0]}@{key[1]} contract reference is missing or unsafe: "
+                    f"{contract_ref}"
+                )
+    for key in sorted(set(provider_map) - set(registry_entries)):
+        errors.append(f"component provides unregistered capability: {key[0]}@{key[1]}")
+
+    all_dependencies: dict[str, set[str]] = {
+        component_id: set() for component_id in manifests
+    }
+    for component_id, manifest in manifests.items():
+        resolved_dependency_components: set[str] = set()
+        seen_references: set[tuple[str, str]] = set()
+        required_capabilities = manifest.get("requires", [])
+        if not isinstance(required_capabilities, list):
+            required_capabilities = []
+        for reference in required_capabilities:
+            key = capability_key(reference)
+            if key is None:
+                continue
+            if key in seen_references:
+                errors.append(
+                    f"{component_id}: duplicate required capability {key[0]}@{key[1]}"
+                )
+                continue
+            seen_references.add(key)
+            if key not in registry_entries:
+                errors.append(
+                    f"{component_id}: requires unregistered capability {key[0]}@{key[1]}"
+                )
+            providers = provider_map.get(key, [])
+            if len(providers) != 1:
+                errors.append(
+                    f"{component_id}: required capability {key[0]}@{key[1]} must have "
+                    f"one unambiguous catalog provider; providers={providers}"
+                )
+                continue
+            provider = providers[0]
+            if provider == component_id:
+                errors.append(f"{component_id}: component cannot require itself")
+            else:
+                resolved_dependency_components.add(provider)
+                all_dependencies[component_id].add(provider)
+        package_path = manifest_paths.get(component_id)
+        if package_path is None:
+            continue
+        package_manifest_path = package_path.parent / "package.json"
+        if not package_manifest_path.exists():
+            continue
+        package_manifest = load_json(package_manifest_path)
+        dependencies = package_manifest.get("dependencies", {})
+        internal_dependencies = {
+            dependency_id
+            for dependency_id in dependencies
+            if isinstance(dependency_id, str) and dependency_id.startswith("com.lingkyn.")
+        } if isinstance(dependencies, dict) else set()
+        for dependency_id in sorted(internal_dependencies):
+            provider_manifest = manifests.get(dependency_id)
+            if provider_manifest is None:
+                continue
+            if dependencies.get(dependency_id) != provider_manifest.get("version"):
+                errors.append(
+                    f"{component_id}: internal package dependency version for "
+                    f"{dependency_id} must match provider component version "
+                    f"{provider_manifest.get('version')}"
+                )
+        if internal_dependencies != resolved_dependency_components:
+            errors.append(
+                f"{component_id}: component requirements must match internal package "
+                f"dependencies: requirements={sorted(resolved_dependency_components)} "
+                f"package={sorted(internal_dependencies)}"
+            )
+
+    _, cyclic = deterministic_dependency_order(all_dependencies)
+    if cyclic:
+        errors.append(
+            "component catalog dependency cycle detected among: " + ", ".join(cyclic)
+        )
+
+    slot_ids: set[str] = set()
+    slot_candidates_seen: set[str] = set()
+    slots = component_catalog.get("slots", [])
+    if not isinstance(slots, list):
+        slots = []
+    for slot in slots:
+        if not isinstance(slot, dict):
+            continue
+        slot_id = str(slot.get("id", ""))
+        if slot_id in slot_ids:
+            errors.append(f"component catalog contains duplicate slot: {slot_id}")
+        slot_ids.add(slot_id)
+        capability_id = str(slot.get("capability", ""))
+        matching_keys = [key for key in provider_map if key[0] == capability_id]
+        if len(matching_keys) != 1:
+            errors.append(
+                f"component slot {slot_id} must name exactly one registered capability version"
+            )
+            continue
+        expected_candidates = provider_map[matching_keys[0]]
+        raw_candidates = slot.get("candidates", [])
+        candidates = (
+            sorted(set(raw_candidates))
+            if isinstance(raw_candidates, list)
+            else []
+        )
+        if candidates != expected_candidates:
+            errors.append(
+                f"component slot {slot_id} candidate/provider drift: "
+                f"candidates={candidates} providers={expected_candidates}"
+            )
+        overlap = slot_candidates_seen.intersection(candidates)
+        if overlap:
+            errors.append(
+                f"component slot candidates must belong to one slot only: {sorted(overlap)}"
+            )
+        slot_candidates_seen.update(candidates)
+
+    if composition is not None:
+        expected_lock, lock_errors = build_composition_lock(
+            root, REFERENCE_COMPOSITION_PATH, composition
+        )
+        errors.extend(lock_errors)
+        lock_path = safe_repository_path(root, composition.get("lock_path"))
+        if lock_path is None:
+            errors.append("reference composition lock path is unsafe")
+        elif lock_path.exists():
+            try:
+                actual_lock = load_json(lock_path)
+            except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                errors.append(f"reference composition lock is invalid JSON: {error}")
+            else:
+                lock_schema_path, dispatch_errors = composition_lock_schema_path(
+                    actual_lock
+                )
+                errors.extend(
+                    f"reference composition lock: {error}"
+                    for error in dispatch_errors
+                )
+                if lock_schema_path is not None:
+                    errors.extend(
+                        validate_json_schema_instance(
+                            actual_lock,
+                            root / lock_schema_path,
+                            "reference composition lock",
+                        )
+                    )
+                manifest_contract, _ = composition_manifest_contract(composition)
+                if manifest_contract is not None and (
+                    not isinstance(actual_lock, dict)
+                    or actual_lock.get("schema") != manifest_contract["lock_schema"]
+                    or actual_lock.get("model_version")
+                    != manifest_contract["model_version"]
+                ):
+                    errors.append(
+                        "reference composition lock schema/model does not match "
+                        "the manifest contract"
+                    )
+                if expected_lock is not None and actual_lock != expected_lock:
+                    errors.append(
+                        "reference composition lock is stale; run "
+                        "python scripts/compose_system.py --write-lock"
+                    )
+        else:
+            errors.append("reference composition lock is missing")
+    return errors
+
+
 def decode_text_file(path: Path) -> str | None:
     """Return decoded human-readable text, or None for binary/undecodable data."""
     raw = path.read_bytes()
@@ -524,24 +1856,69 @@ def scan_text_safety(root: Path) -> list[str]:
     errors: list[str] = []
     absolute_windows_path = re.compile(r"\b[A-Za-z]:\\(?:Users|Program Files|rrjm)\\", re.IGNORECASE)
     secret_pattern = re.compile(r"(api[_-]?key|access[_-]?token|client[_-]?secret)\s*[:=]\s*['\"][^'\"]+", re.IGNORECASE)
-    for path in root.rglob("*"):
-        if not path.is_file() or ".git" in path.relative_to(root).parts:
+
+    publication_paths: list[Path] | None = None
+    try:
+        git_result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "ls-files",
+                "-z",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+            ],
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        git_result = None
+    if git_result is not None and git_result.returncode == 0:
+        candidates: list[Path] = []
+        malformed_candidate = False
+        for raw_path in git_result.stdout.split(b"\0"):
+            if not raw_path:
+                continue
+            relative_path = Path(os.fsdecode(raw_path))
+            if relative_path.is_absolute() or ".." in relative_path.parts:
+                malformed_candidate = True
+                break
+            candidates.append(root / relative_path)
+        if not malformed_candidate:
+            publication_paths = candidates
+    if publication_paths is None:
+        publication_paths = [
+            path
+            for path in root.rglob("*")
+            if path.is_file() and ".git" not in path.relative_to(root).parts
+        ]
+
+    for path in publication_paths:
+        if not path.is_file():
             continue
+        relative_path = path.relative_to(root)
         text = decode_text_file(path)
         if text is None:
             if path.suffix.lower() in STRICT_TEXT_SUFFIXES:
                 errors.append(
-                    f"undecodable controlled text file: {path.relative_to(root)}"
+                    f"undecodable controlled text file: {relative_path}"
                 )
             continue
         lowered = text.casefold()
+        allowed_markers = (
+            project_profile_allowed_control_markers()
+            if relative_path.as_posix() == "PROJECT_PROFILE.json"
+            else set()
+        )
         for marker in forbidden_public_markers():
-            if marker in lowered:
-                errors.append(f"non-public marker in live repository: {path.relative_to(root)}")
+            if marker in lowered and marker not in allowed_markers:
+                errors.append(f"non-public marker in live repository: {relative_path}")
         if absolute_windows_path.search(text):
-            errors.append(f"machine-local Windows path in live repository: {path.relative_to(root)}")
+            errors.append(f"machine-local Windows path in live repository: {relative_path}")
         if secret_pattern.search(text):
-            errors.append(f"possible credential in live repository: {path.relative_to(root)}")
+            errors.append(f"possible credential in live repository: {relative_path}")
     return errors
 
 
@@ -958,6 +2335,899 @@ def validate_agent_commons_source_manifest(root: Path) -> list[str]:
     missing = required_ids - ids
     if missing:
         errors.append(f"Agent Commons source manifest lacks required sources: {sorted(missing)}")
+    return errors
+
+
+def validate_governance_source_manifest(root: Path) -> list[str]:
+    errors: list[str] = []
+    path = root / "docs" / "governance" / "source-manifest.json"
+    if not path.exists():
+        return ["Governance source manifest is missing"]
+    payload = load_json(path)
+    if payload.get("schema") != "xr-foundry.governance_source_manifest.v1":
+        errors.append("Governance source manifest schema is invalid")
+    if payload.get("version") != "0.1.0":
+        errors.append("Governance source manifest version must remain 0.1.0")
+    if not str(payload.get("policy", "")).strip():
+        errors.append("Governance source manifest must state its transfer boundary")
+    sources = payload.get("sources")
+    if not isinstance(sources, list) or not sources:
+        return errors + ["Governance source manifest must contain public sources"]
+    required_ids = {
+        "xr-foundry-rfc-0001",
+        "xr-foundry-rfc-0002",
+        "xr-foundry-deliberation-v1",
+        "github-repository-roles",
+        "github-codeowners",
+        "kubernetes-roles-responsibilities",
+        "folo-pinned-465b997",
+    }
+    allowed_classifications = {
+        "governance_basis",
+        "platform_authority_reference",
+        "responsibility_ladder_reference",
+        "community_operations_reference",
+    }
+    ids: set[str] = set()
+    source_by_id: dict[str, dict[str, Any]] = {}
+    for source in sources:
+        if not isinstance(source, dict):
+            errors.append("Governance sources must be objects")
+            continue
+        source_id = str(source.get("id", ""))
+        if not source_id or source_id in ids:
+            errors.append(f"Governance source id is missing or duplicated: {source_id}")
+        ids.add(source_id)
+        source_by_id[source_id] = source
+        if not str(source.get("url", "")).startswith("https://"):
+            errors.append(f"Governance source must use public HTTPS: {source_id}")
+        for field in ("publisher", "title", "classification"):
+            if not str(source.get(field, "")).strip():
+                errors.append(f"Governance source must state {field}: {source_id}")
+        if source.get("classification") not in allowed_classifications:
+            errors.append(f"Governance source classification is invalid: {source_id}")
+        for field in ("adopted_lessons", "limits", "excluded_assumptions"):
+            value = source.get(field)
+            if not isinstance(value, list) or not value or not all(
+                isinstance(item, str) and item.strip() for item in value
+            ):
+                errors.append(f"Governance source must state non-empty {field}: {source_id}")
+    missing = required_ids - ids
+    if missing:
+        errors.append(f"Governance source manifest lacks required sources: {sorted(missing)}")
+    folo = source_by_id.get("folo-pinned-465b997", {})
+    if folo:
+        expected_folo_url = (
+            "https://github.com/RSSNext/Folo/tree/"
+            "465b997e89bde007fcac32257baec6a2ded73164"
+        )
+        if folo.get("url") != expected_folo_url:
+            errors.append("Folo governance reference must stay pinned to the reviewed commit")
+        if folo.get("classification") != "community_operations_reference":
+            errors.append("Folo must remain a community operations reference")
+        boundary_text = " ".join(
+            str(item)
+            for field in ("limits", "excluded_assumptions")
+            for item in folo.get(field, [])
+        ).casefold()
+        if "not used as a dao" not in boundary_text:
+            errors.append("Folo must be explicitly excluded as DAO authority precedent")
+        if "deferred" not in boundary_text or "wallet" not in boundary_text:
+            errors.append("Folo limits must keep phase-two adaptation and wallet reuse out of scope")
+    return errors
+
+
+def validate_agent_native_source_manifest(root: Path) -> list[str]:
+    errors: list[str] = []
+    path = root / "docs" / "governance" / "agent-native-source-manifest.json"
+    if not path.exists():
+        return ["Agent-native source manifest is missing"]
+    payload = load_json(path)
+    if payload.get("schema") != "xr-foundry.agent_native_source_manifest.v1":
+        errors.append("Agent-native source manifest schema is invalid")
+    if payload.get("version") != "0.1.0":
+        errors.append("Agent-native source manifest version must remain 0.1.0")
+    if not str(payload.get("policy", "")).strip():
+        errors.append("Agent-native source manifest must state its transfer boundary")
+    sources = payload.get("sources")
+    if not isinstance(sources, list) or not sources:
+        return errors + ["Agent-native source manifest must contain public sources"]
+    required_ids = {
+        "a2a-pinned-98853be",
+        "oasf-pinned-3d1b83b",
+        "agntcy-identity-pinned-4520772",
+        "w3c-did-core",
+        "w3c-vc-data-model-2",
+        "github-apps-action-identity",
+        "slsa-v1-2",
+        "in-toto-spec",
+        "governing-actions-not-agents-2606-26298",
+        "epistemic-sybil-resistance-2609-01873",
+        "social-system-arena-pinned-2bb33c6",
+        "open-autonomy-pinned-b53eaa9",
+    }
+    allowed_classifications = {
+        "description_and_interoperability_reference",
+        "future_identity_adapter_reference",
+        "platform_action_identity_reference",
+        "provenance_reference",
+        "governance_research",
+        "evaluation_reference",
+        "agent_runtime_reference",
+    }
+    ids: set[str] = set()
+    for source in sources:
+        if not isinstance(source, dict):
+            errors.append("Agent-native sources must be objects")
+            continue
+        source_id = str(source.get("id", ""))
+        if not source_id or source_id in ids:
+            errors.append(f"Agent-native source id is missing or duplicated: {source_id}")
+        ids.add(source_id)
+        if not str(source.get("url", "")).startswith("https://"):
+            errors.append(f"Agent-native source must use public HTTPS: {source_id}")
+        for field in ("publisher", "title", "classification"):
+            if not str(source.get(field, "")).strip():
+                errors.append(f"Agent-native source must state {field}: {source_id}")
+        if source.get("classification") not in allowed_classifications:
+            errors.append(f"Agent-native source classification is invalid: {source_id}")
+        for field in ("adopted_lessons", "limits", "excluded_assumptions"):
+            value = source.get(field)
+            if not isinstance(value, list) or not value or not all(
+                isinstance(item, str) and item.strip() for item in value
+            ):
+                errors.append(f"Agent-native source must state non-empty {field}: {source_id}")
+    missing = required_ids - ids
+    if missing:
+        errors.append(f"Agent-native source manifest lacks required sources: {sorted(missing)}")
+    return errors
+
+
+def _parse_governance_timestamp(
+    value: Any,
+    label: str,
+    field: str,
+) -> tuple[datetime | None, list[str]]:
+    if not isinstance(value, str):
+        return None, [f"{label}: {field} must be an RFC 3339 timestamp"]
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None, [f"{label}: {field} must be an RFC 3339 timestamp"]
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None, [f"{label}: {field} must include a timezone"]
+    if parsed.utcoffset() != timedelta(0):
+        return None, [f"{label}: {field} must use UTC"]
+    return parsed, []
+
+
+def validate_governance_deliberation_metadata(
+    payload: dict[str, Any],
+    label: str,
+) -> list[str]:
+    fields = (
+        "decision_class",
+        "governance_stage",
+        "review_opened_at",
+        "review_not_before",
+    )
+    present = [field for field in fields if field in payload]
+    if not present:
+        return []
+    if len(present) != len(fields):
+        missing = sorted(set(fields) - set(present))
+        return [f"{label}: governance review metadata is all-or-none; missing {missing}"]
+
+    errors: list[str] = []
+    decision_class = payload.get("decision_class")
+    governance_stage = payload.get("governance_stage")
+    if decision_class not in GOVERNANCE_DECISION_WINDOWS:
+        errors.append(f"{label}: governance decision class is invalid")
+    if governance_stage not in GOVERNANCE_STAGE_IDS:
+        errors.append(f"{label}: governance stage is invalid")
+    opened, opened_errors = _parse_governance_timestamp(
+        payload.get("review_opened_at"), label, "review_opened_at"
+    )
+    not_before, not_before_errors = _parse_governance_timestamp(
+        payload.get("review_not_before"), label, "review_not_before"
+    )
+    errors.extend(opened_errors)
+    errors.extend(not_before_errors)
+    if (
+        opened is not None
+        and not_before is not None
+        and decision_class in GOVERNANCE_DECISION_WINDOWS
+    ):
+        minimum = opened + timedelta(days=GOVERNANCE_DECISION_WINDOWS[decision_class])
+        if not_before < minimum:
+            errors.append(
+                f"{label}: {decision_class} review_not_before must be at least "
+                f"{GOVERNANCE_DECISION_WINDOWS[decision_class]} days after review_opened_at"
+            )
+    decision = payload.get("decision")
+    if payload.get("status") == "resolved" and isinstance(decision, dict):
+        decided_at, decided_errors = _parse_governance_timestamp(
+            decision.get("decided_at"), label, "decision.decided_at"
+        )
+        errors.extend(decided_errors)
+        if decided_at is not None and not_before is not None and decided_at < not_before:
+            errors.append(f"{label}: resolved governance decision predates review_not_before")
+    return errors
+
+
+def validate_governance_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_GOVERNANCE_FILES):
+        if not (root / relative).exists():
+            errors.append(f"Governance foundation is missing {relative}")
+    errors.extend(validate_governance_source_manifest(root))
+
+    model_path = root / "docs" / "governance" / "governance-model.v1.json"
+    schema_path = root / "docs" / "governance" / "governance-model.schema.json"
+    if not model_path.exists():
+        return errors
+    model = load_json(model_path)
+    errors.extend(validate_json_schema_instance(model, schema_path, "Governance model"))
+    if model.get("schema") != "xr-foundry.governance_model.v1":
+        errors.append("Governance model schema identifier is invalid")
+    if model.get("version") != "0.1.0":
+        errors.append("Governance model version must remain 0.1.0")
+    if model.get("status") != "proposed":
+        errors.append("Governance model must remain proposed until adoption")
+    if model.get("current_stage") != "G0":
+        errors.append("Governance current stage must remain the observed G0 topology")
+
+    decision_classes = model.get("decision_classes", [])
+    decision_ids = [item.get("id") for item in decision_classes if isinstance(item, dict)]
+    if decision_ids != list(GOVERNANCE_DECISION_WINDOWS):
+        errors.append("Governance decision classes or their order have drifted")
+    for item in decision_classes:
+        if not isinstance(item, dict):
+            continue
+        decision_id = item.get("id")
+        if decision_id in GOVERNANCE_DECISION_WINDOWS and item.get(
+            "minimum_review_days"
+        ) != GOVERNANCE_DECISION_WINDOWS[decision_id]:
+            errors.append(f"Governance review window has drifted: {decision_id}")
+        if item.get("decision_authority") != "maintainer":
+            errors.append(f"Governance decision authority has drifted: {decision_id}")
+        expected_emergency = decision_id == "security_emergency"
+        if item.get("emergency") is not expected_emergency:
+            errors.append(f"Governance emergency classification has drifted: {decision_id}")
+        if not expected_emergency and any(
+            field in item for field in ("record_within_hours", "retrospective_within_days")
+        ):
+            errors.append(f"Non-emergency governance class has emergency timing: {decision_id}")
+    security_decision = next(
+        (
+            item
+            for item in decision_classes
+            if isinstance(item, dict) and item.get("id") == "security_emergency"
+        ),
+        {},
+    )
+    if (
+        security_decision.get("emergency") is not True
+        or security_decision.get("record_within_hours") != 72
+        or security_decision.get("retrospective_within_days") != 7
+    ):
+        errors.append("Security emergency review bounds have drifted")
+
+    stages = model.get("stages", [])
+    stage_ids = [item.get("id") for item in stages if isinstance(item, dict)]
+    stage_orders = [item.get("order") for item in stages if isinstance(item, dict)]
+    if stage_ids != GOVERNANCE_STAGE_IDS or stage_orders != list(range(5)):
+        errors.append("Governance maturity stages or their order have drifted")
+    stage_by_id = {
+        str(item.get("id")): item for item in stages if isinstance(item, dict)
+    }
+    if stage_by_id.get("G0", {}).get("status") != "observed_current" or any(
+        stage_by_id.get(stage_id, {}).get("status") != "proposed_future"
+        for stage_id in GOVERNANCE_STAGE_IDS[1:]
+    ):
+        errors.append("Only G0 may be observed current; later governance stages stay proposed")
+    expected_thresholds = {
+        "G1": {
+            "minimum_observation_days": 90,
+            "minimum_distinct_human_contributors": 3,
+            "minimum_non_maintainer_contributors": 2,
+            "minimum_contribution_types": 2,
+            "minimum_resolved_public_deliberations": 2,
+        },
+        "G2": {
+            "minimum_observation_days": 180,
+            "minimum_distinct_human_contributors": 3,
+            "minimum_non_maintainer_contributors": 2,
+            "minimum_contribution_types": 2,
+            "minimum_resolved_public_deliberations": 3,
+        },
+    }
+    for stage_id, expected in expected_thresholds.items():
+        criteria = stage_by_id.get(stage_id, {}).get("entry_criteria", {})
+        if any(criteria.get(field) != value for field, value in expected.items()):
+            errors.append(f"Governance {stage_id} mixed-evidence thresholds have drifted")
+
+    promotion = model.get("promotion_policy", {})
+    required_promotion = {
+        "gate_model": "mixed_evidence",
+        "thresholds_are_eligibility_only": True,
+        "automatic_promotion": False,
+        "explicit_maintainer_decision": True,
+        "constitutional_review_days": 14,
+        "requires_resolved_deliberation": True,
+        "permission_changes_are_separate": True,
+        "rollback_supported": True,
+    }
+    if promotion != required_promotion:
+        errors.append("Governance promotion policy must stay explicit, evidence-gated, and reversible")
+    if model.get("token_policy") != GOVERNANCE_TOKEN_POLICY:
+        errors.append("Governance token-neutral authority boundary has drifted")
+    if model.get("external_effects") != GOVERNANCE_EXTERNAL_EFFECTS:
+        errors.append("Governance external effects must remain disabled in phase one")
+    if model.get("authority") != GOVERNANCE_AUTHORITY:
+        errors.append("Governance maintainer and public authority boundary has drifted")
+    if model.get("activation") != GOVERNANCE_ACTIVATION:
+        errors.append("Proposed governance must remain inactive until explicit adoption")
+
+    source_refs = model.get("source_refs", [])
+    if isinstance(source_refs, list):
+        for relative in source_refs:
+            if not isinstance(relative, str) or not (root / relative).is_file():
+                errors.append(f"Governance model source reference is missing: {relative}")
+    role_ids = [item.get("id") for item in model.get("roles", []) if isinstance(item, dict)]
+    if role_ids != ["public_contributor", "maintainer", "security_responder"]:
+        errors.append("Governance phase-one roles or their order have drifted")
+
+    rfc_path = root / "docs" / "rfcs" / "0004-progressive-governance.md"
+    if rfc_path.exists():
+        rfc_text = rfc_path.read_text(encoding="utf-8")
+        if "Status: **Proposed**" not in rfc_text:
+            errors.append("RFC 0004 must remain Proposed until public adoption")
+        if "Public deliberation: **not opened by this local implementation**" not in rfc_text:
+            errors.append("RFC 0004 must not claim that local implementation opened public review")
+    template_path = root / ".github" / "ISSUE_TEMPLATE" / "governance-proposal.yml"
+    if template_path.exists():
+        try:
+            template = load_workflow(template_path)
+        except (ConstructorError, yaml.YAMLError) as error:
+            errors.append(f"Governance proposal form is invalid YAML: {error}")
+        else:
+            body = template.get("body", []) if isinstance(template, dict) else []
+            ids = {
+                str(item.get("id"))
+                for item in body
+                if isinstance(item, dict) and item.get("id")
+            }
+            required_form_ids = {
+                "decision_class",
+                "governance_stage",
+                "proposal_or_rfc",
+                "problem",
+                "proposed_change",
+                "alternatives",
+                "authority_boundary",
+                "review_opened_at",
+                "review_not_before",
+                "adoption_and_execution",
+                "safety_acknowledgements",
+            }
+            if not required_form_ids.issubset(ids):
+                errors.append("Governance proposal form is missing required decision fields")
+            if template.get("labels") != ["rfc"]:
+                errors.append("Governance proposal form must route to the rfc label")
+    return errors
+
+
+def validate_agent_membership_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in sorted(REQUIRED_AGENT_MEMBERSHIP_FILES):
+        if not (root / relative).exists():
+            errors.append(f"Agent-native membership foundation is missing {relative}")
+    errors.extend(validate_agent_native_source_manifest(root))
+
+    model_path = root / "docs" / "governance" / "agent-membership-model.v1.json"
+    model_schema_path = root / "docs" / "governance" / "agent-membership-model.schema.json"
+    example_path = root / "docs" / "governance" / "agent-member.example.json"
+    member_schema_path = root / "docs" / "governance" / "agent-member.schema.json"
+    if not model_path.exists() or not example_path.exists():
+        return errors
+
+    model = load_json(model_path)
+    example = load_json(example_path)
+    errors.extend(
+        validate_json_schema_instance(model, model_schema_path, "Agent membership model")
+    )
+    errors.extend(validate_json_schema_instance(example, member_schema_path, "Agent member example"))
+
+    if model.get("schema") != "xr-foundry.agent_membership_model.v1":
+        errors.append("Agent membership model schema identifier is invalid")
+    if model.get("version") != "0.1.0":
+        errors.append("Agent membership model version must remain 0.1.0")
+    if model.get("status") != "proposed":
+        errors.append("Agent membership model must remain proposed until adoption")
+    if model.get("current_cell") != "G0xA0" or model.get("phase_one_target") != "G0xA1":
+        errors.append("Agent maturity must remain at current G0xA0 with proposed G0xA1 target")
+
+    stages = model.get("agent_stages", [])
+    stage_ids = [stage.get("id") for stage in stages if isinstance(stage, dict)]
+    stage_orders = [stage.get("order") for stage in stages if isinstance(stage, dict)]
+    if stage_ids != AGENT_STAGE_IDS or stage_orders != list(range(5)):
+        errors.append("Agent maturity stages or their order have drifted")
+    stage_by_id = {
+        str(stage.get("id")): stage for stage in stages if isinstance(stage, dict)
+    }
+    if stage_by_id.get("A0", {}).get("status") != "observed_current":
+        errors.append("A0 must remain the only observed current Agent stage")
+    if stage_by_id.get("A1", {}).get("status") != "proposed_phase_one":
+        errors.append("A1 must remain the proposed phase-one Agent stage")
+    if any(
+        stage_by_id.get(stage_id, {}).get("status") != "future_only"
+        or stage_by_id.get(stage_id, {}).get("activation_allowed") is not False
+        for stage_id in ("A2", "A3", "A4")
+    ):
+        errors.append("A2-A4 Agent stages must remain future-only and inactive")
+    if stage_by_id.get("A1", {}).get("activation_allowed") is not False:
+        errors.append("A1 must remain inactive until constitutional adoption")
+
+    identity_contract = model.get("identity_contract", {})
+    if identity_contract.get("required_fields") != AGENT_IDENTITY_REQUIRED_FIELDS:
+        errors.append("Agent identity required fields have drifted")
+    if identity_contract.get("identity_grants_authority") is not False:
+        errors.append("Agent identity must not grant authority")
+    mandate_contract = model.get("mandate_contract", {})
+    if mandate_contract.get("required_fields") != AGENT_MANDATE_REQUIRED_FIELDS:
+        errors.append("Agent mandate required fields have drifted")
+    if mandate_contract.get("delegated_repository_authority") is not False:
+        errors.append("A1 mandate must not grant delegated repository authority")
+
+    if model.get("authority_boundaries") != AGENT_AUTHORITY_BOUNDARIES:
+        errors.append("Agent membership, contribution, deliberation, token, or mandate authority boundary has drifted")
+    if model.get("independence_policy") != AGENT_INDEPENDENCE_POLICY:
+        errors.append("Agent principal-and-lineage independence policy has drifted")
+    if model.get("evidence_policy") != AGENT_EVIDENCE_POLICY:
+        errors.append("Agent evidence ancestry policy has drifted")
+    if model.get("external_effects") != AGENT_EXTERNAL_EFFECTS:
+        errors.append("Agent-native external effects must remain disabled in phase one")
+    if model.get("activation") != AGENT_ACTIVATION:
+        errors.append("Proposed Agent membership must remain inactive through A1 only")
+    if model.get("registry_policy") != {
+        "live_registry_created": False,
+        "example_is_authoritative": False,
+    }:
+        errors.append("Agent member registry and example must remain non-live and non-authoritative")
+
+    for field in AGENT_IDENTITY_REQUIRED_FIELDS:
+        if field not in example:
+            errors.append(f"Agent member example is missing required identity field: {field}")
+    if example.get("record_status") != "example_non_authoritative":
+        errors.append("Agent member example must remain explicitly non-authoritative")
+    if example.get("status") != "proposed_inactive" or example.get("autonomy_level") != "A1":
+        errors.append("Agent member example must remain proposed, inactive, and A1-only")
+    for mandate in example.get("mandates", []):
+        if not isinstance(mandate, dict):
+            continue
+        if mandate.get("agent_id") != example.get("agent_id"):
+            errors.append("Agent mandate agent_id must match its member record")
+        if mandate.get("principal_ref") != example.get("principal_ref"):
+            errors.append("Agent mandate principal_ref must match its member record")
+        for field in AGENT_MANDATE_REQUIRED_FIELDS:
+            if field not in mandate:
+                errors.append(f"Agent mandate is missing required field: {field}")
+        parsed_times: dict[str, datetime] = {}
+        for field in ("issued_at", "not_before", "expires_at"):
+            parsed, time_errors = _parse_governance_timestamp(
+                mandate.get(field), "Agent mandate", field
+            )
+            errors.extend(time_errors)
+            if parsed is not None:
+                parsed_times[field] = parsed
+        if all(field in parsed_times for field in ("issued_at", "not_before", "expires_at")):
+            if parsed_times["issued_at"] > parsed_times["not_before"]:
+                errors.append("Agent mandate issued_at must not follow not_before")
+            if parsed_times["not_before"] >= parsed_times["expires_at"]:
+                errors.append("Agent mandate expires_at must follow not_before")
+
+    source_refs = model.get("source_refs", [])
+    if isinstance(source_refs, list):
+        for relative in source_refs:
+            if not isinstance(relative, str) or not (root / relative).is_file():
+                errors.append(f"Agent membership source reference is missing: {relative}")
+
+    rfc_path = root / "docs" / "rfcs" / "0006-agent-native-xr-dao.md"
+    if rfc_path.exists():
+        rfc_text = rfc_path.read_text(encoding="utf-8")
+        if "Status: **Proposed**" not in rfc_text:
+            errors.append("RFC 0006 must remain Proposed until public adoption")
+        if "Activation: **inactive; current observed state remains G0 x A0**" not in rfc_text:
+            errors.append("RFC 0006 must preserve the inactive G0 x A0 current-state boundary")
+        if "Public deliberation: **not opened by this local implementation**" not in rfc_text:
+            errors.append("RFC 0006 must not claim that local implementation opened public review")
+    return errors
+
+
+OPERATING_MANDATE_DIRECTORY = "docs/governance/mandates"
+OPERATING_MANDATE_SCHEMA_PATH = "docs/governance/mandates/operating-mandate.schema.json"
+
+
+WORK_ITEMS_PATH = "docs/contributing/work-items.json"
+WORK_ITEMS_SCHEMA_PATH = "docs/contributing/work-items.schema.json"
+MILESTONES_PATH = "docs/milestones.md"
+WORK_ITEM_ACCEPTANCE_SCRIPTS = frozenset(
+    {
+        "validate_repository.py",
+        "merge_readiness.py",
+        "compose_system.py",
+        "open_work.py",
+        "run_unity_gates.py",
+        "scaffold_unity_package.py",
+    }
+)
+
+
+def validate_work_items(root: Path) -> list[str]:
+    """Work items must be self-contained and re-derivable from the tree.
+
+    Every item in ``docs/contributing/work-items.json`` must match its schema,
+    carry a unique id, name a milestone batch that exists as a ``### Batch`` heading
+    in ``docs/milestones.md``, depend only on items that exist without a cycle,
+    list ``read_first`` paths that exist, and name acceptance commands that run
+    scripts under ``scripts/``. A ``done`` item must name a ``done_proof`` path that
+    exists; any other status must not. ``allowed_paths`` and ``acceptance.artifacts``
+    may not exist yet (a item often creates them), so they are checked for shape
+    only: repository-relative, no ``..``, no leading slash.
+    """
+
+    errors: list[str] = []
+    path = root / WORK_ITEMS_PATH
+    if not path.is_file():
+        return errors
+    label = "work items"
+    try:
+        payload = load_json(path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return [f"{label}: invalid JSON ({exc})"]
+    schema_path = root / WORK_ITEMS_SCHEMA_PATH
+    if not schema_path.is_file():
+        return [f"{label}: schema {WORK_ITEMS_SCHEMA_PATH} is missing"]
+    errors.extend(validate_json_schema_instance(payload, schema_path, label))
+    if errors:
+        return errors
+
+    batches: set[str] = set()
+    milestones_path = root / MILESTONES_PATH
+    if milestones_path.is_file():
+        for line in milestones_path.read_text(encoding="utf-8").splitlines():
+            match = re.match(r"^###\s+Batch\s+([1-3][a-f])\b", line)
+            if match:
+                batches.add(match.group(1))
+    else:
+        errors.append(f"{label}: {MILESTONES_PATH} is missing")
+
+    items = payload.get("items", [])
+    ids = [item.get("id") for item in items]
+    seen: set[str] = set()
+    for item_id in ids:
+        if item_id in seen:
+            errors.append(f"{label}: duplicate item id {item_id}")
+        seen.add(item_id)
+    known = set(ids)
+
+    def bad_relative(value: str) -> bool:
+        return value.startswith("/") or ".." in value.split("/") or value != value.strip()
+
+    for item in items:
+        item_id = item.get("id")
+        plabel = f"{label} {item_id}"
+        batch = item.get("milestone_batch")
+        if batches and batch not in batches:
+            errors.append(f"{plabel}: milestone_batch {batch!r} is not a '### Batch' heading in {MILESTONES_PATH}")
+        for dependency in item.get("depends_on", []):
+            if dependency == item_id:
+                errors.append(f"{plabel}: depends on itself")
+            elif dependency not in known:
+                errors.append(f"{plabel}: depends_on names unknown item {dependency}")
+        for relative in item.get("read_first", []):
+            if bad_relative(relative) or not (root / relative).exists():
+                errors.append(f"{plabel}: read_first path does not exist: {relative}")
+        for relative in list(item.get("allowed_paths", [])) + list(item.get("acceptance", {}).get("artifacts", [])):
+            if bad_relative(relative):
+                errors.append(f"{plabel}: path must be repository-relative without '..': {relative}")
+        for command in item.get("acceptance", {}).get("commands", []):
+            script_match = re.match(r"^python scripts/([a-z_]+\.py)", command)
+            if script_match:
+                script_name = script_match.group(1)
+                if script_name not in WORK_ITEM_ACCEPTANCE_SCRIPTS or not (root / "scripts" / script_name).is_file():
+                    errors.append(f"{plabel}: acceptance command names a script that is not an accepted repository script: {command}")
+        status = item.get("status")
+        proof = item.get("done_proof")
+        if status == "done":
+            if not isinstance(proof, str) or bad_relative(proof) or not (root / proof).exists():
+                errors.append(f"{plabel}: status done requires a done_proof path that exists in the tree")
+        elif proof is not None:
+            errors.append(f"{plabel}: done_proof is only allowed when status is done")
+
+    # Dependency cycles.
+    graph = {item.get("id"): [d for d in item.get("depends_on", []) if d in known] for item in items}
+    state: dict[str, int] = {}
+
+    def visit(node: str, trail: list[str]) -> None:
+        marker = state.get(node, 0)
+        if marker == 2:
+            return
+        if marker == 1:
+            cycle = " -> ".join(trail[trail.index(node):] + [node])
+            errors.append(f"{label}: dependency cycle {cycle}")
+            return
+        state[node] = 1
+        for nxt in graph.get(node, []):
+            visit(nxt, trail + [node])
+        state[node] = 2
+
+    for node in graph:
+        visit(node, [])
+    return errors
+
+
+def validate_operating_mandates(root: Path) -> list[str]:
+    """Every recorded A0 operating mandate must match its schema and keep its time order."""
+
+    errors: list[str] = []
+    directory = root / OPERATING_MANDATE_DIRECTORY
+    if not directory.is_dir():
+        return errors
+    schema_path = root / OPERATING_MANDATE_SCHEMA_PATH
+    seen_ids: set[str] = set()
+    for path in sorted(directory.glob("*.mandate.json")):
+        label = f"operating mandate {path.name}"
+        try:
+            payload = load_json(path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        schema_errors = validate_json_schema_instance(payload, schema_path, label)
+        errors.extend(schema_errors)
+        if schema_errors or not isinstance(payload, dict):
+            continue
+        mandate_id = str(payload.get("mandate_id"))
+        if mandate_id in seen_ids:
+            errors.append(f"{label}: duplicate mandate_id {mandate_id}")
+        seen_ids.add(mandate_id)
+        parsed: dict[str, datetime] = {}
+        for field in ("issued_at", "not_before", "expires_at"):
+            value, time_errors = _parse_governance_timestamp(payload.get(field), label, field)
+            errors.extend(time_errors)
+            if value is not None:
+                parsed[field] = value
+        if len(parsed) == 3:
+            if parsed["issued_at"] > parsed["not_before"]:
+                errors.append(f"{label}: issued_at must not follow not_before")
+            if parsed["not_before"] >= parsed["expires_at"]:
+                errors.append(f"{label}: expires_at must follow not_before")
+        revocation = payload.get("revocation", {})
+        if revocation.get("status") == "revoked" and not revocation.get("revoked_at"):
+            errors.append(f"{label}: a revoked mandate must record revoked_at")
+        forbidden = " ".join(str(item) for item in payload.get("forbidden_actions", [])).casefold()
+        for required in ("pull request", "merge", "unity editor"):
+            if required not in forbidden:
+                errors.append(f"{label}: forbidden_actions must cover {required!r}")
+    return errors
+
+
+DELIBERATION_RECORD_DIRECTORY = "docs/governance/deliberations"
+DELIBERATION_RECORD_SCHEMA_PATH = "docs/contributing/deliberation-record.schema.json"
+GOVERNANCE_MODEL_PATH = "docs/governance/governance-model.v1.json"
+DELIBERATION_REPOSITORY_BLOB_PREFIX = "https://github.com/Lingkyn/xr-foundry/blob/main/"
+DELIBERATION_OBJECTION_DELTA_KINDS = frozenset({"risk", "counterexample"})
+DELIBERATION_PROCESS_DECIDED_BY_PREFIX = "process:"
+
+
+def validate_live_deliberation_records(root: Path) -> list[str]:
+    """Every live deliberation record must be re-derivable from the repository.
+
+    For each ``docs/governance/deliberations/*.json`` the rule requires: the record
+    matches the deliberation schema and ``validate_governance_deliberation_metadata``;
+    its ``id`` equals the uppercased filename stem and is unique; it names a
+    ``decision_class`` the governance model defines, so its review window is derived
+    from ``docs/governance/governance-model.v1.json`` rather than guessed; a decision
+    is not recorded before ``review_not_before``; a ``process:<mandate_id>`` decision
+    names a recorded operating mandate that was in force, unexpired, and unrevoked at
+    ``decided_at`` and the record carries no ``risk`` or ``counterexample`` delta
+    (lazy consensus needs no objection); and every evidence URL that points into this
+    repository names a path that exists. An open record whose window has already
+    closed is a pending process step, not a defect: this validator reports errors
+    only (``main`` has no warnings channel), so nothing is emitted for it.
+    """
+
+    errors: list[str] = []
+    directory = root / DELIBERATION_RECORD_DIRECTORY
+    if not directory.is_dir():
+        return errors
+    schema_path = root / DELIBERATION_RECORD_SCHEMA_PATH
+
+    windows_by_class: dict[str, int] | None = None
+    model_path = root / GOVERNANCE_MODEL_PATH
+    if model_path.is_file():
+        try:
+            model = load_json(model_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            model = None
+        if isinstance(model, dict):
+            windows_by_class = {
+                str(item.get("id")): int(item["minimum_review_days"])
+                for item in model.get("decision_classes", [])
+                if isinstance(item, dict)
+                and isinstance(item.get("minimum_review_days"), int)
+                and not isinstance(item.get("minimum_review_days"), bool)
+            }
+
+    mandates_by_id: dict[str, dict[str, Any]] = {}
+    mandate_directory = root / OPERATING_MANDATE_DIRECTORY
+    if mandate_directory.is_dir():
+        for mandate_path in sorted(mandate_directory.glob("*.mandate.json")):
+            try:
+                mandate = load_json(mandate_path)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue  # validate_operating_mandates reports the broken file
+            if isinstance(mandate, dict) and isinstance(mandate.get("mandate_id"), str):
+                mandates_by_id.setdefault(mandate["mandate_id"], mandate)
+
+    def mandate_in_force_errors(
+        mandate: dict[str, Any], mandate_id: str, decided_at: datetime, label: str
+    ) -> list[str]:
+        found: list[str] = []
+        parsed: dict[str, datetime] = {}
+        for field in ("not_before", "expires_at"):
+            value, _ = _parse_governance_timestamp(mandate.get(field), label, field)
+            if value is not None:
+                parsed[field] = value
+            else:
+                found.append(
+                    f"{label}: decided_by names mandate {mandate_id!r} whose {field} "
+                    "is not an RFC 3339 UTC timestamp"
+                )
+        if "not_before" in parsed and decided_at < parsed["not_before"]:
+            found.append(
+                f"{label}: decided_by names mandate {mandate_id!r} that was not yet in force "
+                f"at decided_at (not_before {mandate.get('not_before')})"
+            )
+        if "expires_at" in parsed and decided_at >= parsed["expires_at"]:
+            found.append(
+                f"{label}: decided_by names mandate {mandate_id!r} that had expired "
+                f"at decided_at (expires_at {mandate.get('expires_at')})"
+            )
+        revocation = mandate.get("revocation")
+        revocation = revocation if isinstance(revocation, dict) else {}
+        if revocation.get("status") == "revoked":
+            revoked_at, _ = _parse_governance_timestamp(
+                revocation.get("revoked_at"), label, "revoked_at"
+            )
+            if revoked_at is None or revoked_at <= decided_at:
+                found.append(
+                    f"{label}: decided_by names mandate {mandate_id!r} that was revoked "
+                    f"at decided_at (revoked_at {revocation.get('revoked_at')})"
+                )
+        return found
+
+    def evidence_urls(payload: dict[str, Any]) -> list[str]:
+        urls: list[str] = []
+        for group in ("assumptions", "options", "deltas"):
+            for item in payload.get(group, []):
+                if not isinstance(item, dict):
+                    continue
+                for url in item.get("evidence", []):
+                    if isinstance(url, str):
+                        urls.append(url)
+        return urls
+
+    seen_ids: dict[str, str] = {}
+    for path in sorted(directory.glob("*.json")):
+        relative = path.relative_to(root).as_posix()
+        label = f"deliberation record {relative}"
+        try:
+            payload = load_json(path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        if not isinstance(payload, dict):
+            errors.append(f"{label}: must be a JSON object")
+            continue
+        schema_errors = validate_json_schema_instance(payload, schema_path, label)
+        errors.extend(schema_errors)
+        if schema_errors:
+            continue
+
+        record_id = str(payload.get("id"))
+        expected_id = path.stem.upper()
+        if record_id != expected_id:
+            errors.append(
+                f"{label}: id {record_id!r} must equal the uppercased filename stem {expected_id!r}"
+            )
+        if record_id in seen_ids:
+            errors.append(
+                f"{label}: duplicate deliberation id {record_id} (also recorded by {seen_ids[record_id]})"
+            )
+        else:
+            seen_ids[record_id] = relative
+
+        metadata_errors = validate_governance_deliberation_metadata(payload, label)
+        errors.extend(metadata_errors)
+
+        decision_class = payload.get("decision_class")
+        if decision_class is None:
+            errors.append(
+                f"{label}: names no decision_class, so its review window cannot be derived "
+                "from the governance model"
+            )
+        elif windows_by_class is None:
+            errors.append(
+                f"{label}: the governance model is missing or unreadable, so the "
+                f"{decision_class} review window cannot be derived"
+            )
+        elif decision_class not in windows_by_class:
+            errors.append(
+                f"{label}: decision_class {decision_class!r} is not defined by the governance "
+                "model, so its review window cannot be derived"
+            )
+        else:
+            opened, _ = _parse_governance_timestamp(
+                payload.get("review_opened_at"), label, "review_opened_at"
+            )
+            not_before, _ = _parse_governance_timestamp(
+                payload.get("review_not_before"), label, "review_not_before"
+            )
+            minimum_days = windows_by_class[decision_class]
+            already_reported = any(
+                "review_not_before must be at least" in message for message in metadata_errors
+            )
+            if (
+                opened is not None
+                and not_before is not None
+                and not_before < opened + timedelta(days=minimum_days)
+                and not already_reported
+            ):
+                errors.append(
+                    f"{label}: {decision_class} review window is shorter than the governance "
+                    f"model minimum of {minimum_days} days"
+                )
+
+        decision = payload.get("decision")
+        if isinstance(decision, dict):
+            decided_by = str(decision.get("decided_by", ""))
+            decided_at, decided_errors = _parse_governance_timestamp(
+                decision.get("decided_at"), label, "decision.decided_at"
+            )
+            if payload.get("status") != "resolved":
+                errors.extend(decided_errors)  # resolved records were parsed above
+            if decided_by.startswith(DELIBERATION_PROCESS_DECIDED_BY_PREFIX):
+                mandate_id = decided_by[len(DELIBERATION_PROCESS_DECIDED_BY_PREFIX):]
+                mandate = mandates_by_id.get(mandate_id)
+                if mandate is None:
+                    errors.append(
+                        f"{label}: decided_by names mandate {mandate_id!r} but no "
+                        f"{OPERATING_MANDATE_DIRECTORY}/*.mandate.json carries that mandate_id"
+                    )
+                elif decided_at is not None:
+                    errors.extend(mandate_in_force_errors(mandate, mandate_id, decided_at, label))
+                objections = sorted(
+                    str(delta.get("id"))
+                    for delta in payload.get("deltas", [])
+                    if isinstance(delta, dict)
+                    and delta.get("kind") in DELIBERATION_OBJECTION_DELTA_KINDS
+                )
+                if objections:
+                    errors.append(
+                        f"{label}: lazy-consensus decision by {decided_by} is invalid while "
+                        f"objection deltas exist: {objections}"
+                    )
+
+        for url in evidence_urls(payload):
+            if not url.startswith(DELIBERATION_REPOSITORY_BLOB_PREFIX):
+                continue
+            referenced = url[len(DELIBERATION_REPOSITORY_BLOB_PREFIX):].split("#", 1)[0]
+            referenced = referenced.split("?", 1)[0]
+            target = safe_repository_path(root, referenced)
+            if target is None or not target.exists():
+                errors.append(f"{label}: referenced repository path does not exist: {referenced}")
     return errors
 
 
@@ -2279,6 +4549,7 @@ def validate_task_hall_contract(root: Path) -> list[str]:
             errors.extend(
                 validate_json_schema_instance(deliberation, deliberation_schema_path, label)
             )
+            errors.extend(validate_governance_deliberation_metadata(deliberation, label))
             if deliberation.get("status") != expected_status:
                 errors.append(f"{label}: status must remain {expected_status}")
     if review_schema_path.exists():
@@ -3332,7 +5603,10 @@ def validate_device_lab_execution_receipt(
             package_manifest: dict[str, Any] | None = None
             if manifest_result is not None and manifest_result.returncode == 0:
                 try:
-                    decoded = json.loads(manifest_result.stdout.decode("utf-8"))
+                    decoded = decode_json_document(
+                        manifest_result.stdout.decode("utf-8"),
+                        f"{commit_sha}:{package_path}/package.json",
+                    )
                     if isinstance(decoded, dict):
                         package_manifest = decoded
                 except (UnicodeDecodeError, json.JSONDecodeError):
@@ -4089,6 +6363,725 @@ def validate_workflow_security(root: Path) -> list[str]:
                 with_payload = owner.get("with")
                 if not isinstance(with_payload, dict) or with_payload.get("persist-credentials") is not False:
                     errors.append(f"{label}: checkout must set persist-credentials=false as a YAML boolean")
+    return errors
+
+
+def validate_repository_automation_contract(root: Path) -> list[str]:
+    """Keep the public CI and dependency-maintenance foundation reproducible."""
+
+    errors: list[str] = []
+    workflow_path = root / ".github" / "workflows" / "validate.yml"
+    if not workflow_path.exists():
+        return ["repository automation: .github/workflows/validate.yml is missing"]
+    try:
+        workflow = load_workflow(workflow_path)
+    except (yaml.YAMLError, UnicodeDecodeError) as error:
+        return [f"repository automation: validation workflow cannot be parsed safely: {error}"]
+    if not isinstance(workflow, dict):
+        return ["repository automation: validation workflow root must be a mapping"]
+
+    triggers = workflow.get("on")
+    trigger_names = set(triggers) if isinstance(triggers, dict) else set()
+    required_triggers = {"pull_request", "push", "workflow_dispatch"}
+    missing_triggers = sorted(required_triggers - trigger_names)
+    if missing_triggers:
+        errors.append(
+            "repository automation: validation workflow is missing required triggers: "
+            f"{missing_triggers}"
+        )
+    push = triggers.get("push") if isinstance(triggers, dict) else None
+    if not isinstance(push, dict) or push.get("branches") != ["main"]:
+        errors.append("repository automation: validation pushes must target only main")
+
+    jobs = workflow.get("jobs")
+    job = jobs.get("python-contract-matrix") if isinstance(jobs, dict) else None
+    if not isinstance(job, dict):
+        return errors + ["repository automation: python-contract-matrix job is missing"]
+    if job.get("runs-on") != "ubuntu-latest":
+        errors.append("repository automation: python-contract-matrix must use ubuntu-latest")
+    timeout = job.get("timeout-minutes")
+    if not isinstance(timeout, int) or timeout < 1 or timeout > 10:
+        errors.append("repository automation: python-contract-matrix timeout must be between 1 and 10 minutes")
+
+    strategy = job.get("strategy")
+    if not isinstance(strategy, dict) or strategy.get("fail-fast") is not False:
+        errors.append("repository automation: Python matrix must set fail-fast=false")
+    matrix = strategy.get("matrix") if isinstance(strategy, dict) else None
+    python_versions = matrix.get("python-version") if isinstance(matrix, dict) else None
+    if python_versions != VALIDATOR_PYTHON_VERSIONS:
+        errors.append(
+            "repository automation: Python matrix must equal "
+            f"{VALIDATOR_PYTHON_VERSIONS}, got {python_versions!r}"
+        )
+
+    steps = job.get("steps")
+    if not isinstance(steps, list):
+        return errors + ["repository automation: python-contract-matrix steps must be a list"]
+    checkout_step: dict[str, Any] | None = None
+    setup_python_step: dict[str, Any] | None = None
+    run_lines: list[str] = []
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        uses = step.get("uses")
+        if isinstance(uses, str):
+            action = uses.split("@", 1)[0].casefold()
+            if action == "actions/checkout":
+                checkout_step = step
+            elif action == "actions/setup-python":
+                setup_python_step = step
+        run = step.get("run")
+        if isinstance(run, str):
+            run_lines.extend(line.strip() for line in run.splitlines() if line.strip())
+
+    checkout_with = checkout_step.get("with") if isinstance(checkout_step, dict) else None
+    if not isinstance(checkout_with, dict) or checkout_with.get("fetch-depth") != 0:
+        errors.append("repository automation: checkout must fetch full history for public-revision evidence")
+    setup_with = setup_python_step.get("with") if isinstance(setup_python_step, dict) else None
+    if not isinstance(setup_with, dict):
+        errors.append("repository automation: actions/setup-python step is missing")
+    else:
+        if setup_with.get("python-version") != "${{ matrix.python-version }}":
+            errors.append("repository automation: setup-python must consume matrix.python-version")
+        if setup_with.get("cache") != "pip":
+            errors.append("repository automation: setup-python must enable the pip cache")
+        if setup_with.get("cache-dependency-path") != CONTRACT_REQUIREMENTS_PATH:
+            errors.append(
+                "repository automation: pip cache must bind scripts/contract-requirements.txt"
+            )
+
+    install_command = (
+        "python -m pip install --disable-pip-version-check "
+        f"-r {CONTRACT_REQUIREMENTS_PATH}"
+    )
+    if install_command not in run_lines:
+        errors.append("repository automation: pinned contract dependency install command is missing")
+    if CANONICAL_VALIDATION_COMMAND not in run_lines:
+        errors.append("repository automation: canonical full validation command is missing")
+
+    aggregate = jobs.get("repository-contract") if isinstance(jobs, dict) else None
+    if not isinstance(aggregate, dict):
+        errors.append("repository automation: stable repository-contract aggregate job is missing")
+    else:
+        if aggregate.get("name") != "repository-contract":
+            errors.append("repository automation: aggregate check name must remain repository-contract")
+        if aggregate.get("needs") != "python-contract-matrix":
+            errors.append("repository automation: aggregate check must need python-contract-matrix")
+        if aggregate.get("if") != "${{ always() }}":
+            errors.append("repository automation: aggregate check must run with always()")
+        aggregate_permissions = aggregate.get("permissions")
+        if aggregate_permissions != {"contents": "none"}:
+            errors.append("repository automation: aggregate check must override contents=none")
+        aggregate_steps = aggregate.get("steps")
+        aggregate_step = (
+            aggregate_steps[0]
+            if isinstance(aggregate_steps, list)
+            and len(aggregate_steps) == 1
+            and isinstance(aggregate_steps[0], dict)
+            else None
+        )
+        aggregate_env = aggregate_step.get("env") if isinstance(aggregate_step, dict) else None
+        if not isinstance(aggregate_env, dict) or aggregate_env.get(
+            "CONTRACT_MATRIX_RESULT"
+        ) != "${{ needs.python-contract-matrix.result }}":
+            errors.append("repository automation: aggregate check must bind the matrix result")
+        if not isinstance(aggregate_step, dict) or aggregate_step.get("run") != (
+            'test "$CONTRACT_MATRIX_RESULT" = success'
+        ):
+            errors.append("repository automation: aggregate check must fail unless the matrix passes")
+
+    dependabot_path = root / ".github" / "dependabot.yml"
+    if not dependabot_path.exists():
+        return errors + ["repository automation: .github/dependabot.yml is missing"]
+    try:
+        dependabot = load_workflow(dependabot_path)
+    except (yaml.YAMLError, UnicodeDecodeError) as error:
+        return errors + [f"repository automation: Dependabot config cannot be parsed safely: {error}"]
+    if not isinstance(dependabot, dict) or dependabot.get("version") != 2:
+        errors.append("repository automation: Dependabot config must use version 2")
+        updates: list[Any] = []
+    else:
+        raw_updates = dependabot.get("updates")
+        updates = raw_updates if isinstance(raw_updates, list) else []
+
+    expected_directories = {
+        "github-actions": "/",
+        "pip": "/scripts",
+    }
+    for ecosystem, directory in expected_directories.items():
+        matches = [
+            update
+            for update in updates
+            if isinstance(update, dict) and update.get("package-ecosystem") == ecosystem
+        ]
+        if len(matches) != 1:
+            errors.append(
+                f"repository automation: Dependabot requires one {ecosystem} update entry"
+            )
+            continue
+        update = matches[0]
+        if update.get("directory") != directory:
+            errors.append(
+                f"repository automation: Dependabot {ecosystem} directory must be {directory}"
+            )
+        schedule = update.get("schedule")
+        if not isinstance(schedule, dict) or schedule.get("interval") != "monthly":
+            errors.append(
+                f"repository automation: Dependabot {ecosystem} schedule must be monthly"
+            )
+        open_limit = update.get("open-pull-requests-limit")
+        if not isinstance(open_limit, int) or not 1 <= open_limit <= 5:
+            errors.append(
+                f"repository automation: Dependabot {ecosystem} open PR limit must be 1..5"
+            )
+    return errors
+
+
+LESSONS_REGISTER_PATH = "docs/standards/lessons/lessons-register.json"
+LESSONS_REGISTER_SCHEMA_PATH = "docs/standards/lessons/lessons-register.schema.json"
+LESSONS_REGISTER_SCHEMA_ID = "xr-foundry.consumer_lessons_register.v1"
+LESSONS_REGISTER_POLICY = {
+    "every_live_family_must_respond": True,
+    "consumer_material_is_not_derivation_input": True,
+    "gap_requires_follow_up": True,
+    "disposition_binds_current_revision_only": True,
+}
+
+
+def live_package_families(root: Path) -> set[str]:
+    """Return every family declared by a live package's colocated component manifest."""
+
+    families: set[str] = set()
+    catalog_path = root / "package-catalog.json"
+    if not catalog_path.exists():
+        return families
+    try:
+        catalog = load_json(catalog_path)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return families
+    for item in catalog.get("packages", []) if isinstance(catalog, dict) else []:
+        if not isinstance(item, dict):
+            continue
+        manifest_path = safe_repository_path(root, str(item.get("path", "")))
+        if manifest_path is None:
+            continue
+        manifest_path = manifest_path / "foundry.component.json"
+        if not manifest_path.exists():
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        family = manifest.get("family") if isinstance(manifest, dict) else None
+        if isinstance(family, str) and family.strip():
+            families.add(family)
+    return families
+
+
+def validate_consumer_lessons_register(root: Path) -> list[str]:
+    """Require every live package family to answer every recorded consumer lesson."""
+
+    label = "consumer lessons register"
+    path = root / LESSONS_REGISTER_PATH
+    if not path.exists():
+        return [f"{label} is missing: {LESSONS_REGISTER_PATH}"]
+    try:
+        payload = load_json(path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        return [f"{label}: invalid JSON: {error}"]
+    errors = validate_json_schema_instance(payload, root / LESSONS_REGISTER_SCHEMA_PATH, label)
+    if errors or not isinstance(payload, dict):
+        return errors
+    if payload.get("schema") != LESSONS_REGISTER_SCHEMA_ID:
+        errors.append(f"{label}: schema must be {LESSONS_REGISTER_SCHEMA_ID}")
+    errors.extend(policy_matches(payload.get("policy"), LESSONS_REGISTER_POLICY, f"{label} policy"))
+    families = live_package_families(root)
+    if not families:
+        errors.append(f"{label}: no live package family declares a component manifest family")
+        return errors
+    seen_ids: set[str] = set()
+    for lesson in payload.get("lessons", []):
+        lesson_id = str(lesson.get("id", ""))
+        if lesson_id in seen_ids:
+            errors.append(f"{label}: duplicate lesson id: {lesson_id}")
+        seen_ids.add(lesson_id)
+        if lesson.get("origin_family") not in families:
+            errors.append(
+                f"{label}: {lesson_id} origin_family is not a live package family: "
+                f"{lesson.get('origin_family')}"
+            )
+        for item in lesson.get("evidence", []):
+            if isinstance(item, str) and item.startswith("https://"):
+                continue
+            resolved = safe_repository_path(root, item)
+            if resolved is None or not resolved.exists():
+                errors.append(f"{label}: {lesson_id} evidence path does not exist: {item}")
+        responses: dict[str, int] = {}
+        for disposition in lesson.get("dispositions", []):
+            family = str(disposition.get("family", ""))
+            responses[family] = responses.get(family, 0) + 1
+            if family not in families:
+                errors.append(
+                    f"{label}: {lesson_id} disposition names an unknown family: {family}"
+                )
+            status = disposition.get("status")
+            if status in {"gap", "deferred"} and not str(disposition.get("follow_up", "")).strip():
+                errors.append(
+                    f"{label}: {lesson_id} {family} {status} disposition must name a follow_up"
+                )
+        for family in sorted(families):
+            count = responses.get(family, 0)
+            if count == 0:
+                errors.append(
+                    f"{label}: {lesson_id} must respond for every live family; missing {family}"
+                )
+            elif count > 1:
+                errors.append(f"{label}: {lesson_id} responds more than once for {family}")
+    return errors
+
+
+INVENTORY_PRESENTATION_ASMDEF = (
+    "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/Runtime/"
+    "Lingkyn.Inventory.Presentation.asmdef"
+)
+INVENTORY_AUTHORING_RUNTIME = "packages/unity/systems/inventory/com.lingkyn.inventory.unity/Runtime"
+SCENE_LOOKUP_PATTERN = re.compile(
+    r"\b(Resources\.Load|FindObjectOfType|FindObjectsOfType|FindAnyObjectByType|"
+    r"FindFirstObjectByType|FindObjectsByType)\b"
+)
+
+
+def validate_inventory_isolation_rules(root: Path) -> list[str]:
+    """Keep the Presentation assembly renderer-free and the authoring runtime lookup-free."""
+
+    errors: list[str] = []
+    asmdef_path = root / INVENTORY_PRESENTATION_ASMDEF
+    if asmdef_path.exists():
+        try:
+            asmdef = load_json(asmdef_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"Inventory Presentation asmdef is invalid JSON: {error}")
+            asmdef = None
+        if isinstance(asmdef, dict):
+            references = asmdef.get("references")
+            if references != ["Lingkyn.Inventory.Core"]:
+                errors.append(
+                    "Inventory Presentation assembly must reference only Lingkyn.Inventory.Core; "
+                    f"got {references!r}"
+                )
+            if asmdef.get("noEngineReferences") is not True:
+                errors.append("Inventory Presentation assembly must keep noEngineReferences=true")
+    runtime_root = root / INVENTORY_AUTHORING_RUNTIME
+    if runtime_root.is_dir():
+        for source in sorted(runtime_root.rglob("*.cs")):
+            text = source.read_text(encoding="utf-8", errors="replace")
+            match = SCENE_LOOKUP_PATTERN.search(text)
+            if match is not None:
+                errors.append(
+                    "Inventory authoring runtime must not use Resources or scene lookups: "
+                    f"{source.relative_to(root).as_posix()} uses {match.group(1)}"
+                )
+    return errors
+
+
+FOUNDATIONS_PACKAGES_ROOT = "packages/unity/foundations"
+FOUNDATION_REFERENCE_PREFIXES = ("Lingkyn.", "Unity.", "UnityEngine.", "UnityEditor.")
+
+
+def validate_foundation_assembly_references(root: Path) -> list[str]:
+    """Foundation assemblies may reference only Lingkyn.* and Unity-owned assemblies (PI-05)."""
+
+    errors: list[str] = []
+    foundations_root = root / FOUNDATIONS_PACKAGES_ROOT
+    if not foundations_root.is_dir():
+        return errors
+    for asmdef_path in sorted(foundations_root.rglob("*.asmdef")):
+        relative = asmdef_path.relative_to(root).as_posix()
+        try:
+            asmdef = load_json(asmdef_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"Foundation asmdef is invalid JSON: {relative}: {error}")
+            continue
+        if not isinstance(asmdef, dict):
+            errors.append(f"Foundation asmdef must be a JSON object: {relative}")
+            continue
+        references = asmdef.get("references", [])
+        if not isinstance(references, list):
+            errors.append(f"Foundation asmdef references must be a list: {relative}")
+            continue
+        for reference in references:
+            name = str(reference)
+            if name.startswith("GUID:") or not name.startswith(FOUNDATION_REFERENCE_PREFIXES):
+                errors.append(
+                    "Foundation assembly must reference only Lingkyn.* or Unity-owned assemblies by name: "
+                    f"{relative} references {name!r}"
+                )
+    return errors
+
+
+COVERAGE_MAP_GLOB = "docs/standards/*/coverage-map*.json"
+COVERAGE_MAP_SCHEMA_ID = "xr-foundry.verification_coverage_map.v1"
+COVERAGE_MAP_ASSEMBLY_ROOTS = ("packages", "staging")
+COVERAGE_MAP_PACKAGE_MANIFESTS = ("package.json", "package.staging.json")
+COVERAGE_STATES = ("covered", "partial", "unmapped")
+COVERAGE_MAP_ADDITIONAL = "additional_tests_outside_clauses"
+CSHARP_TEST_ATTRIBUTE = re.compile(r"^\s*\[\s*(?:Test|TestCase|UnityTest)\b")
+CSHARP_ATTRIBUTE_LINE = re.compile(r"^\s*\[")
+CSHARP_TEST_METHOD = re.compile(
+    r"(?:(?:public|internal|private|protected|static|async|new|virtual|override)\s+)*"
+    r"(?:void|IEnumerator|System\.Collections\.IEnumerator|Task|Task<[^>]+>)\s+(\w+)\s*\("
+)
+CSHARP_CLASS_NAME = re.compile(r"^\s*(?:(?:public|internal|private|static|sealed|abstract|partial)\s+)*class\s+(\w+)")
+PYTHON_TEST_REFERENCE = re.compile(r"^(?P<file>[\w./-]+\.py)::(?:(?P<class>\w+)::)?(?P<function>test_\w+)$")
+# TEMPORARY ALLOWLIST: self-declared, not yet verified — remove when fixed.
+# Each entry is the exact (coverage map path, error text) pair the rule still
+# produces on the main-tracked map. It suppresses only that pair; a pair that the
+# rule no longer produces is itself reported so the allowlist cannot outlive the fix.
+COVERAGE_MAP_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset()
+
+
+def csharp_test_methods(folder: Path, root: Path) -> dict[str, list[tuple[str, str]]]:
+    """Return {method: [(relative file, enclosing class)]} for every attributed test under folder.
+
+    A .cs file whose nearest .asmdef ancestor is a different assembly (nested Samples~ or
+    sub-assemblies) belongs to that assembly, not this one, and is skipped.
+    """
+
+    found: dict[str, list[tuple[str, str]]] = {}
+    for source in sorted(folder.rglob("*.cs")):
+        owner = source.parent
+        while owner != folder and not any(owner.glob("*.asmdef")):
+            owner = owner.parent
+        if owner != folder:
+            continue
+        text = read_decodable_text(source)
+        if text is None:
+            continue
+        relative = source.relative_to(root).as_posix()
+        enclosing = ""
+        pending = False
+        for line in text.splitlines():
+            class_match = CSHARP_CLASS_NAME.match(line)
+            if class_match is not None:
+                enclosing = class_match.group(1)
+                pending = False
+                continue
+            if CSHARP_TEST_ATTRIBUTE.match(line) is not None:
+                pending = True
+                inline = CSHARP_TEST_METHOD.search(line)  # `[Test] public void Name()` on one line
+                if inline is not None:
+                    found.setdefault(inline.group(1), []).append((relative, enclosing))
+                    pending = False
+                continue
+            if not pending:
+                continue
+            if CSHARP_ATTRIBUTE_LINE.match(line) is not None or not line.strip():
+                continue
+            method = CSHARP_TEST_METHOD.search(line)
+            if method is not None:
+                found.setdefault(method.group(1), []).append((relative, enclosing))
+            pending = False
+    return found
+
+
+def coverage_map_assembly_index(root: Path) -> dict[str, list[Path]]:
+    """Map every asmdef ``name`` under packages/ and staging/ to the asmdef files declaring it."""
+
+    index: dict[str, list[Path]] = {}
+    for base in COVERAGE_MAP_ASSEMBLY_ROOTS:
+        base_root = root / base
+        if not base_root.is_dir():
+            continue
+        for asmdef_path in sorted(base_root.rglob("*.asmdef")):
+            try:
+                payload = load_json(asmdef_path)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            if isinstance(payload, dict):
+                index.setdefault(str(payload.get("name", "")), []).append(asmdef_path)
+    return index
+
+
+def coverage_map_owning_package(asmdef_path: Path, root: Path) -> str | None:
+    """Return the package id (package.json or package.staging.json name) that owns an asmdef."""
+
+    for ancestor in asmdef_path.parents:
+        for manifest_name in COVERAGE_MAP_PACKAGE_MANIFESTS:
+            manifest_path = ancestor / manifest_name
+            if manifest_path.exists():
+                try:
+                    manifest = load_json(manifest_path)
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    return None
+                return str(manifest.get("name", "")) if isinstance(manifest, dict) else None
+        if ancestor == root:
+            break
+    return None
+
+
+def coverage_map_entry_resolves(
+    entry: str,
+    root: Path,
+    assembly_tests: dict[str, list[tuple[str, str]]] | None,
+    all_tests: dict[str, list[tuple[str, str]]],
+    validator_source: str,
+) -> str | None:
+    """Return None when a coverage-map test entry names something real, else the reason."""
+
+    if entry.startswith("validator:"):
+        function_name = entry[len("validator:") :]
+        if re.search(rf"^def {re.escape(function_name)}\(", validator_source, re.MULTILINE) is None:
+            return f"no function named {function_name} is defined in scripts/validate_repository.py"
+        return None
+    python_match = PYTHON_TEST_REFERENCE.match(entry)
+    if python_match is not None:
+        test_path = safe_repository_path(root, python_match.group("file"))
+        if test_path is None or not test_path.is_file():
+            return f"Python test file does not exist: {python_match.group('file')}"
+        text = read_decodable_text(test_path) or ""
+        class_name = python_match.group("class")
+        if class_name and re.search(rf"^class {re.escape(class_name)}\b", text, re.MULTILINE) is None:
+            return f"no class named {class_name} in {python_match.group('file')}"
+        function_name = python_match.group("function")
+        if re.search(rf"^\s*def {re.escape(function_name)}\(", text, re.MULTILINE) is None:
+            return f"no def {function_name} in {python_match.group('file')}"
+        return None
+    if ":" in entry or "/" in entry or entry.endswith(".py"):
+        return "unrecognised entry form; use <Method>, <Class>.<Method>, <File>.<Method>, validator:<function>, or tests/<file>.py::<Class>::<test>"
+    if "." in entry:
+        qualifier, _, method = entry.rpartition(".")
+        pool = assembly_tests if assembly_tests is not None else all_tests
+        records = pool.get(method, [])
+        for relative, enclosing in records:
+            if enclosing == qualifier or Path(relative).stem == qualifier or Path(relative).name == qualifier:
+                return None
+        if records:
+            return f"{method} exists but not in a class or file named {qualifier}"
+        return f"no [Test]/[TestCase]/[UnityTest] method named {method}"
+    if assembly_tests is not None:
+        if entry in assembly_tests:
+            return None
+        if entry in all_tests:
+            return "no [Test]/[TestCase]/[UnityTest] method with that name under the gate's assembly folder (it exists in " + ", ".join(sorted({record[0] for record in all_tests[entry]})) + ")"
+        return "no [Test]/[TestCase]/[UnityTest] method with that name under the gate's assembly folder"
+    if entry in all_tests:
+        return None
+    return "no [Test]/[TestCase]/[UnityTest] method with that name under packages/ or staging/"
+
+
+def validate_coverage_map_claims(root: Path) -> list[str]:
+    """Machine-check every self-declared verification coverage map against the tree.
+
+    For each docs/standards/*/coverage-map*.json the rule proves that every gate's
+    test_assembly is exactly one real asmdef owned by the declared package_id, that
+    every listed test (C# method, validator:function, or Python test) exists, that the
+    coverage state of each clause agrees with its tests/missing lists, that the
+    summary counts equal a recount, that clause ids are unique, and that no attributed
+    test method in a resolved assembly folder is missing from the map.
+    """
+
+    label_prefix = "coverage map"
+    errors: list[str] = []
+    map_paths = sorted(root.glob(COVERAGE_MAP_GLOB))
+    if not map_paths:
+        return errors
+    assembly_index = coverage_map_assembly_index(root)
+    all_tests: dict[str, list[tuple[str, str]]] = {}
+    for asmdef_paths in assembly_index.values():
+        for asmdef_path in asmdef_paths:
+            for method, records in csharp_test_methods(asmdef_path.parent, root).items():
+                all_tests.setdefault(method, []).extend(records)
+    validator_path = root / "scripts" / "validate_repository.py"
+    validator_source = read_decodable_text(validator_path) if validator_path.exists() else ""
+    validator_source = validator_source or ""
+    produced: set[tuple[str, str]] = set()
+
+    for map_path in map_paths:
+        relative_map = map_path.relative_to(root).as_posix()
+        label = f"{label_prefix} {relative_map}"
+        map_errors: list[str] = []
+
+        def report(message: str) -> None:
+            map_errors.append(message)
+
+        try:
+            payload = load_json(map_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        if not isinstance(payload, dict):
+            errors.append(f"{label}: top level must be an object")
+            continue
+        if payload.get("schema") != COVERAGE_MAP_SCHEMA_ID:
+            report(f"schema must be {COVERAGE_MAP_SCHEMA_ID}")
+        for key in ("contract", "core_gate_map"):
+            value = payload.get(key)
+            if value is not None:
+                resolved = safe_repository_path(root, value)
+                if resolved is None or not resolved.is_file():
+                    report(f"{key} path does not exist: {value}")
+        for source in payload.get("test_sources", []) or []:
+            resolved = safe_repository_path(root, source)
+            if resolved is None or not resolved.is_file():
+                report(f"test_sources path does not exist: {source}")
+        gates = payload.get("gates")
+        if gates is None and isinstance(payload.get("clauses"), list):
+            gates = [
+                {
+                    "id": str(payload.get("package_id") or "clauses"),
+                    "package_id": payload.get("package_id"),
+                    "test_assembly": payload.get("test_assembly"),
+                    "clauses": payload["clauses"],
+                    COVERAGE_MAP_ADDITIONAL: payload.get(COVERAGE_MAP_ADDITIONAL, []),
+                }
+            ]
+        if not isinstance(gates, list):
+            report("gates must be a list (or a flat clauses list)")
+            gates = []
+
+        counts = {"clauses": 0, "covered": 0, "partial": 0, "unmapped": 0}
+        seen_clause_ids: set[str] = set()
+        for gate_index, gate in enumerate(gates):
+            if not isinstance(gate, dict):
+                report(f"gate #{gate_index} must be an object")
+                continue
+            gate_id = str(gate.get("id") or f"#{gate_index}")
+            gate_label = f"gate {gate_id}"
+            clauses = gate.get("clauses")
+            if not isinstance(clauses, list):
+                report(f"{gate_label} clauses must be a list")
+                clauses = []
+            additional = gate.get(COVERAGE_MAP_ADDITIONAL, [])
+            if not isinstance(additional, list):
+                report(f"{gate_label} {COVERAGE_MAP_ADDITIONAL} must be a list")
+                additional = []
+            listed: list[tuple[str, str]] = []
+            for clause in clauses:
+                if not isinstance(clause, dict):
+                    report(f"{gate_label} clause must be an object")
+                    continue
+                clause_id = str(clause.get("id", ""))
+                if not clause_id:
+                    report(f"{gate_label} clause is missing an id")
+                elif clause_id in seen_clause_ids:
+                    report(f"{gate_label} duplicate clause id: {clause_id}")
+                seen_clause_ids.add(clause_id)
+                tests = clause.get("tests")
+                missing = clause.get("missing")
+                if not isinstance(tests, list):
+                    report(f"{gate_label} clause {clause_id} tests must be a list")
+                    tests = []
+                if not isinstance(missing, list):
+                    report(f"{gate_label} clause {clause_id} missing must be a list")
+                    missing = []
+                for entry in tests:
+                    listed.append((clause_id, str(entry)))
+                coverage = clause.get("coverage")
+                counts["clauses"] += 1
+                if coverage not in COVERAGE_STATES:
+                    report(f"{gate_label} clause {clause_id} coverage must be one of {', '.join(COVERAGE_STATES)}: {coverage!r}")
+                    continue
+                counts[str(coverage)] += 1
+                if coverage == "covered" and not tests:
+                    report(f"{gate_label} clause {clause_id} coverage state covered requires a non-empty tests list")
+                if coverage == "covered" and missing:
+                    report(f"{gate_label} clause {clause_id} coverage state covered forbids a missing list")
+                if coverage == "partial" and not missing:
+                    report(f"{gate_label} clause {clause_id} coverage state partial requires a non-empty missing list")
+                if coverage == "unmapped" and tests:
+                    report(f"{gate_label} clause {clause_id} coverage state unmapped forbids a tests list")
+                if coverage == "unmapped" and not missing:
+                    report(f"{gate_label} clause {clause_id} coverage state unmapped requires a non-empty missing list")
+            for entry in additional:
+                listed.append((COVERAGE_MAP_ADDITIONAL, str(entry)))
+
+            csharp_entries = [
+                entry for _, entry in listed
+                if not entry.startswith("validator:") and PYTHON_TEST_REFERENCE.match(entry) is None
+            ]
+            test_assembly = gate.get("test_assembly")
+            assembly_tests: dict[str, list[tuple[str, str]]] | None = None
+            if test_assembly is None:
+                if csharp_entries:
+                    report(f"{gate_label} lists C# tests but test_assembly is null")
+            elif not isinstance(test_assembly, str):
+                report(f"{gate_label} test_assembly must be a string or null")
+            else:
+                matches = assembly_index.get(test_assembly, [])
+                if len(matches) != 1:
+                    report(
+                        f"{gate_label} test_assembly must name exactly one asmdef under packages/ or staging/: "
+                        f"{test_assembly!r} matches {len(matches)}"
+                    )
+                else:
+                    asmdef_path = matches[0]
+                    if asmdef_path.stem != test_assembly:
+                        report(
+                            f"{gate_label} test_assembly asmdef filename must equal its name: "
+                            f"{asmdef_path.relative_to(root).as_posix()}"
+                        )
+                    owner = coverage_map_owning_package(asmdef_path, root)
+                    package_id = gate.get("package_id")
+                    if owner is None or owner != package_id:
+                        report(
+                            f"{gate_label} package_id does not match the package that owns "
+                            f"{test_assembly}: declared {package_id!r}, owner {owner!r}"
+                        )
+                    assembly_tests = csharp_test_methods(asmdef_path.parent, root)
+            for clause_id, entry in listed:
+                reason = coverage_map_entry_resolves(entry, root, assembly_tests, all_tests, validator_source)
+                if reason is not None:
+                    report(f"{gate_label} clause {clause_id} test entry does not resolve: {entry!r}: {reason}")
+            if assembly_tests is not None:
+                listed_methods: set[str] = set()
+                for _, entry in listed:
+                    if entry.startswith("validator:") or PYTHON_TEST_REFERENCE.match(entry):
+                        continue
+                    listed_methods.add(entry.rpartition(".")[2] if "." in entry else entry)
+                for method in sorted(set(assembly_tests) - listed_methods):
+                    files = ", ".join(sorted({record[0] for record in assembly_tests[method]}))
+                    report(
+                        f"{gate_label} test method is not listed in any clause or "
+                        f"{COVERAGE_MAP_ADDITIONAL}: {method} ({files})"
+                    )
+
+        summary = payload.get("summary")
+        if not isinstance(summary, dict):
+            report("summary must be an object")
+        else:
+            for key in ("clauses", "covered", "partial", "unmapped"):
+                declared = summary.get(key)
+                if declared != counts[key]:
+                    report(f"summary.{key} does not match the recounted clauses: declared {declared!r}, recounted {counts[key]}")
+            if "open_gap_tests" in summary:
+                open_gap_tests = summary.get("open_gap_tests")
+                open_evidence_gaps = summary.get("open_evidence_gaps", 0)
+                open_clauses = counts["partial"] + counts["unmapped"]
+                if (
+                    not isinstance(open_gap_tests, int)
+                    or not isinstance(open_evidence_gaps, int)
+                    or open_gap_tests + open_evidence_gaps != open_clauses
+                ):
+                    report(
+                        "summary.open_gap_tests + open_evidence_gaps must equal the recounted partial + unmapped clauses: "
+                        f"declared {open_gap_tests!r} + {open_evidence_gaps!r}, recounted {open_clauses}"
+                    )
+
+        for message in map_errors:
+            pair = (relative_map, message)
+            if pair in COVERAGE_MAP_UNVERIFIED_CLAIMS:
+                produced.add(pair)
+                continue
+            errors.append(f"{label}: {message}")
+
+    scanned = {map_path.relative_to(root).as_posix() for map_path in map_paths}
+    for relative_map, message in sorted(COVERAGE_MAP_UNVERIFIED_CLAIMS - produced):
+        if relative_map not in scanned:
+            continue
+        errors.append(
+            f"{label_prefix} {relative_map}: stale coverage-map allowlist entry no longer produced; "
+            f"remove it from COVERAGE_MAP_UNVERIFIED_CLAIMS: {message}"
+        )
     return errors
 
 
@@ -5074,7 +8067,9 @@ def load_json_at_git_revision(
     if result.returncode != 0:
         return None
     try:
-        payload = json.loads(result.stdout.decode("utf-8"))
+        payload = decode_json_document(
+            result.stdout.decode("utf-8"), f"{commit_sha}:{repository_path}"
+        )
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
     return payload if isinstance(payload, dict) else None
@@ -5552,7 +8547,9 @@ def validate_compatibility_profile_payload(
         if result.returncode != 0:
             return None
         try:
-            payload_at_commit = json.loads(result.stdout.decode("utf-8"))
+            payload_at_commit = decode_json_document(
+                result.stdout.decode("utf-8"), f"{commit_sha}:{repository_path}"
+            )
         except (UnicodeDecodeError, json.JSONDecodeError):
             return None
         return payload_at_commit if isinstance(payload_at_commit, dict) else None
@@ -6582,13 +9579,24 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_active_repository_path_references(root))
     errors.extend(validate_agent_guide_source_boundary(root))
+    errors.extend(validate_governance_contract(root))
+    errors.extend(validate_agent_membership_contract(root))
+    errors.extend(validate_operating_mandates(root))
+    errors.extend(validate_live_deliberation_records(root))
+    errors.extend(validate_work_items(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
+    errors.extend(validate_component_model(root))
     errors.extend(validate_device_lab_contract(root))
     errors.extend(validate_workflow_security(root))
+    errors.extend(validate_repository_automation_contract(root))
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))
+    errors.extend(validate_inventory_isolation_rules(root))
+    errors.extend(validate_foundation_assembly_references(root))
+    errors.extend(validate_consumer_lessons_register(root))
+    errors.extend(validate_coverage_map_claims(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")
@@ -6694,6 +9702,7 @@ def validate_fast_structure(root: Path) -> list[str]:
     errors: list[str] = scan_text_safety(root)
     errors.extend(validate_ignore_scope(root))
     errors.extend(validate_foundry_contract(root))
+    errors.extend(validate_component_model(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")
@@ -6723,6 +9732,70 @@ def validate_fast_structure(root: Path) -> list[str]:
         if manifest.get("name") != package_id or manifest.get("version") != item.get("version"):
             errors.append(f"fast structure: {package_id} catalog/manifest drift")
     return errors
+
+
+FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"work items .*milestone_batch .* is not a '### Batch' heading"), "Use a batch id that exists as a '### Batch <id>:' heading in docs/milestones.md (1a to 3c), or add the batch to the milestone page first."),
+    (re.compile(r"work items .*(depends_on names unknown item|depends on itself|dependency cycle)"), "depends_on may only name other existing item ids and must not form a cycle; split the item or drop the dependency."),
+    (re.compile(r"work items .*read_first path does not exist"), "read_first lists what a newcomer reads before starting; every entry must be a path that exists in the tree at the commit the item is published."),
+    (re.compile(r"work items .*acceptance command names a script that is not an accepted repository script"), "Acceptance commands run only scripts under scripts/ (validate_repository.py, merge_readiness.py, compose_system.py, open_work.py, run_unity_gates.py, scaffold_unity_package.py) or python -m unittest."),
+    (re.compile(r"work items .*(status done requires a done_proof|done_proof is only allowed when status is done)"), "A item is done only with a done_proof path in the tree (receipt, artifact, or record); leave done_proof null for any other status."),
+    (re.compile(r": missing \.meta$"), "Every .cs and .asmdef under packages/ needs a sibling .meta file; copy one from the same folder and give it a fresh 32-hex guid."),
+    (re.compile(r"namespace must start with Lingkyn\."), "Rename the namespace to Lingkyn.<Family>.<Layer>; package code never uses a consumer or product namespace."),
+    (re.compile(r"non-public marker in live repository"), "The file mentions a private tool, product, or workspace name; replace it with a neutral term (the marker list is in scan_text_safety)."),
+    (re.compile(r"machine-local Windows path in live repository"), "Remove the drive-letter path; build paths from environment variables or describe the location in words."),
+    (re.compile(r"component/package(\.json)? version mismatch|catalog/package version mismatch|package manifest identity/version drift|compatibility profile identity/version mismatch|current package version must match catalog"), "A package version moved without its evidence record (LESSON-008): keep package.json at the catalogued version and put the change under '## Unreleased', or update package-catalog.json, the batch file, and a verified compatibility profile in the same change."),
+    (re.compile(r"catalog/live package paths must agree|Foundry system admissions must cover every live system family"), "A com.lingkyn.* package.json exists outside the catalog, or vice versa; a new family stays under staging/ with package.staging.json until its admission and compatibility profile exist."),
+    (re.compile(r"Foundry staging scaffold cannot enter live packages"), "Delete the .foundry-scaffold.json marker only after replacing the scaffold's failing test with real tests, and keep unadmitted scaffolds under staging/."),
+    (re.compile(r"responds more than once for|has no disposition|lesson.*disposition|dispositions must cover"), "Every live family needs exactly one disposition per lesson in docs/standards/lessons/lessons-register.json (adopted, gap, deferred, or not_applicable) with a rationale."),
+    (re.compile(r"third-party Action must use a full commit SHA|external Action lacks an immutable revision"), "Pin the action to a 40-character commit SHA with the version in a trailing comment, e.g. actions/checkout@<sha> # v6."),
+    (re.compile(r"checkout must set persist-credentials=false"), "Add 'with: persist-credentials: false' to every actions/checkout step."),
+    (re.compile(r"permissions must|permission .* must be read or none"), "Workflow and job permissions are read or none only; a write-capable token is never granted to CI."),
+    (re.compile(r"workflow uses forbidden or unreviewed triggers|comment-trigger workflows are forbidden|pull_request_target"), "Only pull_request, push, and workflow_dispatch triggers are admitted."),
+    (re.compile(r"reference evidence path does not exist"), "Every evidence path in reference-catalog.json must exist in the tree; point it at the committed record or remove the entry."),
+    (re.compile(r"README Git install"), "Install examples pin every sibling package to the same full-SHA placeholder (LESSON-006); copy the matrix shape from an existing package README."),
+    (re.compile(r"Foundation assembly must reference only|Inventory Presentation assembly must reference only|must not use Resources or scene lookups"), "The assembly reached outside its declared seam; reference only Lingkyn.* and Unity-owned assemblies, and resolve dependencies explicitly instead of Resources.Load or FindObject*."),
+    (re.compile(r"coverage map .*test_assembly must name exactly one asmdef|test_assembly asmdef filename must equal|lists C# tests but test_assembly is null|test_assembly must be a string or null"), "Set gates[].test_assembly to the exact name of one <name>.asmdef under packages/ or staging/ (one gate per test assembly); use null only for a gate that lists no C# tests."),
+    (re.compile(r"coverage map .*package_id does not match the package that owns"), "Set gates[].package_id to the name in the package.json (or package.staging.json) whose folder contains the gate's test asmdef."),
+    (re.compile(r"coverage map .*test entry does not resolve"), "Every tests[] and additional_tests_outside_clauses[] entry must be a real [Test]/[TestCase]/[UnityTest] method under the gate's assembly folder (optionally Class.Method or File.Method), a validator:<function> defined in scripts/validate_repository.py, or tests/<file>.py::<Class>::<test_name>; fix the stale name or remove the claim."),
+    (re.compile(r"coverage map .*coverage state (covered|partial|unmapped) (requires|forbids)"), "covered needs a non-empty tests list and an empty missing list; partial needs a non-empty missing list; unmapped needs an empty tests list and a non-empty missing list. Change the state or the lists so they agree."),
+    (re.compile(r"coverage map .*summary\.(clauses|covered|partial|unmapped|open_gap_tests)"), "Recount the clauses: summary.clauses/covered/partial/unmapped equal the clause states, and open_gap_tests + open_evidence_gaps equal the partial + unmapped clauses."),
+    (re.compile(r"coverage map .*duplicate clause id|clause is missing an id"), "Every clause id in a coverage map is unique across all gates; rename the duplicate or give the clause an id."),
+    (re.compile(r"coverage map .*test method is not listed in any clause"), "An attributed test exists that the map does not claim; add it to the clause it proves or to additional_tests_outside_clauses so the map stays complete."),
+    (re.compile(r"stale coverage-map allowlist entry"), "The map was fixed; delete that (map, message) pair from COVERAGE_MAP_UNVERIFIED_CLAIMS in scripts/validate_repository.py."),
+    (re.compile(r"coverage map .*(schema must be|path does not exist|must be a list|must be an object|coverage must be one of)"), "The coverage map must use schema xr-foundry.verification_coverage_map.v1 with gates[].clauses[] objects carrying id, clause, coverage (covered|partial|unmapped), tests[], missing[], and a summary object; every contract, core_gate_map, and test_sources path must exist."),
+    (re.compile(r"Contract test suite failed"), "Run 'python -m unittest discover -s tests -p \"test_*.py\"' and read the first FAIL; recorded test counts live in tests/test_audit_unity_test_inventory.py and tests/test_run_unity_gates.py."),
+    (re.compile(r"missing root community/product file"), "Restore the named root file; the repository contract requires it."),
+    (re.compile(r"repository JSON is invalid"), "A JSON file does not parse; the message names it. Validate with 'python -m json.tool <file>'."),
+    (re.compile(r"placeholder text is prohibited"), "Replace TODO/TBD/lorem placeholders with real content or remove the entry."),
+    (re.compile(r"must remain Proposed|must remain inactive"), "Proposed governance stays Proposed and inactive until a resolved deliberation record and maintainer decision exist; edit the RFC text back."),
+    (re.compile(r"deliberation record .*(invalid JSON|must be a JSON object)"), "The record under docs/governance/deliberations/ does not parse as a JSON object; validate it with 'python -m json.tool <file>' and start from docs/contributing/deliberation-record.open.example.json."),
+    (re.compile(r"deliberation record .*JSON Schema violation"), "Make the record conform to docs/contributing/deliberation-record.schema.json (the message names the field); copy the shape from the open or resolved example under docs/contributing/ and read docs/contributing/deliberation-protocol.md."),
+    (re.compile(r"deliberation record .*must equal the uppercased filename stem"), "Name the file DLB-<NNNN>-<slug>.json so that its stem, uppercased, equals the record's id (for example DLB-0001-operating-mandates.json carries id DLB-0001-OPERATING-MANDATES)."),
+    (re.compile(r"deliberation record .*duplicate deliberation id"), "Two files under docs/governance/deliberations/ carry the same id; give the newer record the next unused DLB number and rename its file to match."),
+    (re.compile(r"deliberation record .*review window cannot be derived"), "A live deliberation record must carry decision_class (one of the ids in docs/governance/governance-model.v1.json decision_classes), governance_stage, review_opened_at, and review_not_before together; the validator derives the minimum window from the model and never guesses a class."),
+    (re.compile(r"deliberation record .*(must be an RFC 3339 timestamp|must include a timezone|must use UTC)"), "Write every review_opened_at, review_not_before, and decided_at as an RFC 3339 UTC timestamp with a trailing Z, for example 2026-09-22T09:00:00Z."),
+    (re.compile(r"deliberation record .*(review_not_before must be at least|review window is shorter than the governance model minimum)"), "Set review_not_before to review_opened_at plus at least the class minimum from docs/governance/governance-model.v1.json (governance_policy 7 days, constitutional_change 14 days); a window is a minimum, so a later date is always allowed."),
+    (re.compile(r"deliberation record .*resolved governance decision predates review_not_before"), "A decision may be recorded only once the review window has closed; set decision.decided_at at or after review_not_before, or keep the record open until then."),
+    (re.compile(r"deliberation record .*decided_by names mandate .*(but no .*carries that mandate_id|whose .* is not an RFC 3339)"), "process:<mandate_id> must name the mandate_id of a file under docs/governance/mandates/*.mandate.json with valid not_before and expires_at; fix the id or, if no mandate applies, let a person resolve the record with their @github identity."),
+    (re.compile(r"deliberation record .*decided_by names mandate .*(not yet in force|had expired|was revoked)"), "A lazy-consensus decision is valid only under a mandate that was in force at decided_at (not_before <= decided_at < expires_at and not revoked by then); a person must resolve the record with their @github identity, or the maintainer records a fresh mandate before the decision is made."),
+    (re.compile(r"deliberation record .*lazy-consensus decision .* is invalid while objection deltas exist"), "Lazy consensus needs a window that closed with no risk or counterexample delta (GOVERNANCE.md, Process-decided merges and lazy consensus); with an objection on record a person resolves the deliberation with their @github identity as decided_by."),
+    (re.compile(r"deliberation record .*referenced repository path does not exist"), "Every https://github.com/Lingkyn/xr-foundry/blob/main/<path> evidence link in a live record must name a path that exists in the tree; fix the path or point the evidence at the file that replaced it."),
+]
+
+
+def explain_errors(errors: list[str]) -> list[dict[str, str]]:
+    """Attach a fix hint to every error so a first-time contributor knows the next step."""
+
+    explained: list[dict[str, str]] = []
+    for error in errors:
+        hint = "No specific hint is recorded for this rule yet; search scripts/validate_repository.py for the message text to find the check, and read docs/contributing/start-here.md."
+        for pattern, candidate in FIX_HINTS:
+            if pattern.search(error):
+                hint = candidate
+                break
+        explained.append({"error": error, "hint": hint})
+    return explained
 
 
 def run_contract_test_gate(root: Path, repository_errors: list[str]) -> dict[str, Any]:
@@ -6784,7 +9857,14 @@ def main() -> int:
     if args.fast_structure and (args.run_contract_tests or args.device_lab_receipt is not None):
         parser.error("--fast-structure cannot be combined with full tests or Device Lab receipt validation")
     root = args.root.resolve()
-    errors = validate_fast_structure(root) if args.fast_structure else validate_repository(root)
+    try:
+        errors = (
+            validate_fast_structure(root)
+            if args.fast_structure
+            else validate_repository(root)
+        )
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        errors = [f"repository JSON is invalid: {error}"]
     device_lab_receipt_path: Path | None = None
     if args.device_lab_receipt is not None:
         device_lab_receipt_path = args.device_lab_receipt
@@ -6799,24 +9879,37 @@ def main() -> int:
             except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                 errors.append(f"Device Lab receipt is invalid JSON: {exc}")
             else:
-                profiles = {
-                    str(payload.get("profile_id", "")): payload
-                    for path in (root / "docs" / "device-lab" / "profiles").glob("*.json")
-                    if isinstance(payload := load_json(path), dict)
-                }
-                plans = {
-                    str(payload.get("test_plan_id", "")): payload
-                    for path in (root / "docs" / "device-lab" / "test-plans").glob("*.json")
-                    if isinstance(payload := load_json(path), dict)
-                }
-                errors.extend(
-                    validate_device_lab_execution_receipt(
-                        receipt,
-                        profiles,
-                        plans,
-                        "Device Lab CLI receipt",
+                profiles: dict[str, dict[str, Any]] | None = None
+                plans: dict[str, dict[str, Any]] | None = None
+                try:
+                    profiles = {
+                        str(payload.get("profile_id", "")): payload
+                        for path in (
+                            root / "docs" / "device-lab" / "profiles"
+                        ).glob("*.json")
+                        if isinstance(payload := load_json(path), dict)
+                    }
+                except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                    errors.append(f"Device Lab profile is invalid JSON: {exc}")
+                try:
+                    plans = {
+                        str(payload.get("test_plan_id", "")): payload
+                        for path in (
+                            root / "docs" / "device-lab" / "test-plans"
+                        ).glob("*.json")
+                        if isinstance(payload := load_json(path), dict)
+                    }
+                except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                    errors.append(f"Device Lab test plan is invalid JSON: {exc}")
+                if profiles is not None and plans is not None:
+                    errors.extend(
+                        validate_device_lab_execution_receipt(
+                            receipt,
+                            profiles,
+                            plans,
+                            "Device Lab CLI receipt",
+                        )
                     )
-                )
     contract_tests: dict[str, Any] | None = None
     if args.run_contract_tests:
         contract_tests = run_contract_test_gate(root, errors)
@@ -6827,6 +9920,8 @@ def main() -> int:
         "status": "pass" if not errors else "fail",
         "errors": errors,
     }
+    if errors:
+        report["hints"] = explain_errors(errors)
     if device_lab_receipt_path is not None:
         report["device_lab_receipt"] = str(device_lab_receipt_path)
     if contract_tests is not None:

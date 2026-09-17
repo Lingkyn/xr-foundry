@@ -29,10 +29,14 @@ namespace Lingkyn.Settings.Core
             {
                 foreach (var pair in unknownValues)
                 {
-                    if (!string.IsNullOrEmpty(pair.Key))
+                    if (string.IsNullOrEmpty(pair.Key))
                     {
-                        _unknownValues[pair.Key] = pair.Value;
+                        throw new ArgumentException(
+                            "Unknown setting raw key must not be null or empty.",
+                            nameof(unknownValues));
                     }
+
+                    _unknownValues[pair.Key] = pair.Value;
                 }
             }
         }
@@ -98,6 +102,12 @@ namespace Lingkyn.Settings.Core
     public static class SettingsSnapshotValidator
     {
         public static SettingsResult<SettingsSnapshot> ValidateLoaded(SettingsRegistry registry, SettingsSnapshot snapshot)
+            => ValidateLoaded(registry, snapshot, null);
+
+        public static SettingsResult<SettingsSnapshot> ValidateLoaded(
+            SettingsRegistry registry,
+            SettingsSnapshot snapshot,
+            IEnumerable<ISettingsConstraint> constraints)
         {
             if (registry == null)
             {
@@ -113,7 +123,8 @@ namespace Lingkyn.Settings.Core
                     "Snapshot is required.");
             }
 
-            foreach (var pair in snapshot.KnownValues)
+            var knownValues = new Dictionary<ScopedSettingKey, SettingValue>(snapshot.KnownValues);
+            foreach (var pair in knownValues)
             {
                 var keyValidation = SettingKey.TryCreate(pair.Key.Key.Value);
                 if (!keyValidation.Succeeded)
@@ -151,7 +162,36 @@ namespace Lingkyn.Settings.Core
                 }
             }
 
-            return SettingsResult<SettingsSnapshot>.Success(snapshot);
+            foreach (var definition in registry.Definitions)
+            {
+                var defaultScopedKey = new ScopedSettingKey(definition.Key, definition.DefaultScope);
+                if (!knownValues.ContainsKey(defaultScopedKey))
+                {
+                    knownValues[defaultScopedKey] = definition.DefaultValue;
+                }
+            }
+
+            var normalized = new SettingsSnapshot(snapshot.Revision, knownValues, snapshot.UnknownValues);
+            foreach (var constraint in constraints ?? Array.Empty<ISettingsConstraint>())
+            {
+                if (constraint == null)
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(
+                        SettingsValidationCode.CrossConstraintViolation,
+                        "Loaded snapshot constraint must not be null.");
+                }
+
+                var constraintResult = constraint.Validate(registry, normalized);
+                if (!constraintResult.Succeeded)
+                {
+                    return SettingsResult<SettingsSnapshot>.Fail(
+                        SettingsValidationCode.CrossConstraintViolation,
+                        constraintResult.Error.Message,
+                        constraintResult.Error.Key);
+                }
+            }
+
+            return SettingsResult<SettingsSnapshot>.Success(normalized);
         }
     }
 

@@ -694,11 +694,6 @@ namespace Lingkyn.Persistence.Core
                 throw new ArgumentException("Candidate id cannot be empty.", nameof(id));
             }
 
-            if (bytes.Length == 0)
-            {
-                throw new ArgumentException("Candidate bytes cannot be empty.", nameof(bytes));
-            }
-
             Kind = kind;
             Id = id;
             _bytes = CopyCandidateBytes(bytes);

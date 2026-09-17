@@ -1,0 +1,345 @@
+{
+  "schema": "xr-foundry.consumer_lessons_register.v1",
+  "version": "0.1.0",
+  "policy": {
+    "every_live_family_must_respond": true,
+    "consumer_material_is_not_derivation_input": true,
+    "gap_requires_follow_up": true,
+    "disposition_binds_current_revision_only": true
+  },
+  "disposition_states": [
+    "adopted",
+    "gap",
+    "deferred",
+    "not_applicable"
+  ],
+  "lessons": [
+    {
+      "id": "LESSON-001",
+      "title": "Keep a closed, versioned classification separate from open tags",
+      "origin_family": "inventory",
+      "observed": "The first product consumer of the Inventory family needed a stable, closed item classification (kinds such as model, audio, or light) to drive presentation filters and grouping. Inventory Core exposes only freeform ItemDefinition.Tags, and the category_or_tag policy seam governs placement acceptance rather than classification, so the consumer had to invent a parallel kind system of its own.",
+      "rule": "When a family lets consumers classify domain objects, keep open metadata (freeform tags or strings) separate from a closed, versioned identity that presentation and policy can rely on. A freeform string field is not a taxonomy and a placement policy is not a classification contract. Decide explicitly whether a closed identity belongs in Core, in a profile, or is deferred, and record that decision in the family standard.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/issues/85",
+        "docs/standards/inventory/architecture-contract.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.core/Runtime/InventoryDomain.cs"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "gap",
+          "rationale": "ItemDefinition carries Tags only. docs/standards/inventory/proposals/0001-item-kind-taxonomy.md lays out the three options from Issue #85 with a recommendation and the required source check; the maintainer decision is pending.",
+          "follow_up": "Maintainer records the decision in proposal 0001 and the coverage matrix before the public API compatibility review. If option A is admitted, add a validated ItemKindId to Core and read-only FilterByKind and ClearKindFilter intents to Presentation; chrome stays in renderer adapters."
+        },
+        {
+          "family": "settings",
+          "status": "gap",
+          "rationale": "AccessibilityMetadata.Category and FeatureId are freeform strings with no admitted category set, so two consumers can spell the same accessibility category differently and a settings screen cannot group by it reliably.",
+          "follow_up": "Decide whether an admitted accessibility category set belongs in Core as a validated identity (like SettingKey) or in a profile document. Until then the Settings standard must state that Category is open metadata, not a taxonomy."
+        },
+        {
+          "family": "interaction",
+          "status": "adopted",
+          "rationale": "IntentId, ContextId, RouteId, SourceId, and BindingSuggestionId are validated closed identities, and InteractionCapability and InteractionModality are closed enums. Freeform strings do not enter routing."
+        },
+        {
+          "family": "persistence",
+          "status": "not_applicable",
+          "rationale": "The family classifies nothing. Domain snapshots are consumer-owned, and SaveSlotId plus the schema id are validated identities rather than taxonomies."
+        },
+        {
+          "family": "foundations",
+          "status": "not_applicable",
+          "rationale": "Foundations scaffold folders, scenes, and greybox assets and expose no domain classification."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-002",
+      "title": "Consumers strand on old revisions when a breaking change ships without a migration path",
+      "origin_family": "inventory",
+      "observed": "The first product consumer stayed pinned to a pre-presentation-split Inventory revision. Hosting the UGUI skin branch (#81) there would have required a breaking upgrade of roughly two dozen consumer files, so the editor evidence pass (#82) had no valid host and the branch stalled.",
+      "rule": "Every breaking change to a public package surface ships a migration note in the package changelog and the family standard at the same commit, and the repository keeps at least one consumer that tracks the current architecture so any branch can be hosted for evidence. A consumer that cannot upgrade is a signal about the package, not about the consumer.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/issues/82",
+        "https://github.com/Lingkyn/xr-foundry/pull/81",
+        "compositions/unity/reference-system/README.md"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "gap",
+          "rationale": "The move from the single-renderer layout to the presentation-split graph (Core 0.1.1, Presentation 0.1.0, UGUI 0.2.0) shipped without a consumer migration note. docs/standards/inventory/migration-presentation-split.md now records the steps, but no upgrade or rollback from a released revision has been executed and recorded.",
+          "follow_up": "Execute one consumer upgrade and rollback against the migration note from unity-first-batch-v0.1.0 and record the tuple. This is the upgrade_and_rollback_across_a_release gate."
+        },
+        {
+          "family": "persistence",
+          "status": "deferred",
+          "rationale": "One immutable release (unity-next-systems-v0.1.0) exists and no breaking change has shipped since it.",
+          "follow_up": "The first breaking change must add a Migration section to the package changelog and exercise upgrade and rollback from unity-next-systems-v0.1.0 in a clean consumer."
+        },
+        {
+          "family": "settings",
+          "status": "deferred",
+          "rationale": "One immutable release (unity-next-systems-v0.1.0) exists and no breaking change has shipped since it.",
+          "follow_up": "The first breaking change must add a Migration section to the package changelog and exercise upgrade and rollback from unity-next-systems-v0.1.0 in a clean consumer."
+        },
+        {
+          "family": "interaction",
+          "status": "deferred",
+          "rationale": "One immutable release (unity-next-systems-v0.1.0) exists and no breaking change has shipped since it.",
+          "follow_up": "The first breaking change must add a Migration section to the package changelog and exercise upgrade and rollback from unity-next-systems-v0.1.0 in a clean consumer."
+        },
+        {
+          "family": "foundations",
+          "status": "deferred",
+          "rationale": "unity-first-batch-v0.1.0 is the only release, and the foundations expose editor menus and generated-path conventions rather than a consumer-bound runtime API.",
+          "follow_up": "Any change to a generated path convention, asset name, or menu item must ship a migration note and be exercised from unity-first-batch-v0.1.0."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-003",
+      "title": "An automated gate that only one workstation can run is a manual gate",
+      "origin_family": "inventory",
+      "observed": "PR #81 was authored without an Editor pass because Unity opened only on the consuming product, not on the package repository. Every Inventory compatibility profile is verified at commit a25bbc7, more than one hundred commits behind main, and the package catalog still lists core_atomic_mutation_tests as the earliest unsatisfied Core gate although the recorded Core EditMode run passed 21 of 21 tests at that commit. Evidence and bookkeeping drifted apart because both depended on a person re-running them.",
+      "rule": "The *_tests, local_clean_consumer, and immutable_git_url_clean_consumer gates must be re-runnable on every revision by a repository-owned Unity consumer and continuous integration, not by a maintainer workstation. Promotion bookkeeping is derived from receipts by a script and never edited by hand, so a stale receipt shows up as a stale gate instead of as a claim.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/pull/81",
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md",
+        "compositions/unity/reference-system/consumer/Packages/manifest.json",
+        "package-catalog.json"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "gap",
+          "rationale": "The unity-consumer-tests workflow now runs every test assembly of the reference consumer in CI with source-audited exact counts, but it has no license secret yet and no green run on main. The seven Inventory profiles remain anchored at a superseded commit and the promotion fields in package-catalog.json still disagree with the recorded receipts.",
+          "follow_up": "Configure the Unity license secret, obtain the first green unity-consumer-tests run on main, then regenerate the promotion fields in package-catalog.json from the receipts instead of editing them by hand."
+        },
+        {
+          "family": "persistence",
+          "status": "gap",
+          "rationale": "Verified profiles exist only at their recorded evidence commit. The unity-consumer-tests workflow includes this family's test assemblies through the reference consumer, but it has no license secret yet and no green run on main.",
+          "follow_up": "Add the Persistence Core and Unity test assemblies to the continuous-integration Unity consumer."
+        },
+        {
+          "family": "settings",
+          "status": "gap",
+          "rationale": "Verified profiles exist only at their recorded evidence commit. The unity-consumer-tests workflow includes this family's test assemblies through the reference consumer, but it has no license secret yet and no green run on main.",
+          "follow_up": "Add the Settings Core and Unity test assemblies to the continuous-integration Unity consumer."
+        },
+        {
+          "family": "interaction",
+          "status": "gap",
+          "rationale": "Verified profiles exist only at their recorded evidence commit. The unity-consumer-tests workflow includes this family's test assemblies through the reference consumer, but it has no license secret yet and no green run on main.",
+          "follow_up": "Add the Interaction Core and Unity test assemblies to the continuous-integration Unity consumer."
+        },
+        {
+          "family": "foundations",
+          "status": "gap",
+          "rationale": "The project-initializer and xr-baseline profiles are verified only at the evidence commit, and neither foundation package is embedded in the reference consumer that unity-consumer-tests runs, so CI does not cover them yet.",
+          "follow_up": "Add both foundation packages to the materialized consumer so unity-consumer-tests runs their EditMode assemblies, then extend project-initializer beyond its single default-safety test."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-004",
+      "title": "Code that resolves upstream members by name must fail closed",
+      "origin_family": "foundations",
+      "observed": "XrRigInteractionRepair searched legacy serialized fields for the far cast distance. XR Interaction Toolkit 3.x moved far casting to ICurveInteractionCaster, so a too-short CurveInteractionCaster.castDistance stays unchanged while the repair reports success (#21). The runtime GrabbableHoverVisual resolves XRGrabInteractable.isHovered by reflection and silently does nothing when the type or property is absent.",
+      "rule": "Any code that resolves an upstream type, serialized field, or property by name or reflection must pin the upstream version it was validated against, return an explicit failure or validation error when the target is missing or incompatible, and carry a negative test for the missing target. Silent fallback to success is a defect, not a compatibility feature.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/issues/21",
+        "packages/unity/foundations/com.lingkyn.xr-baseline/Editor/XrRigInteractionRepair.cs",
+        "packages/unity/foundations/com.lingkyn.xr-baseline/Runtime/Interaction/GrabbableHoverVisual.cs",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.xr.uitoolkit/Runtime/InventoryUIToolkitWorldSpaceProfile.cs"
+      ],
+      "dispositions": [
+        {
+          "family": "foundations",
+          "status": "adopted",
+          "rationale": "The #21 repair path resolves the referenced ICurveInteractionCaster, returns diagnostics, and has three EditMode tests; GrabbableHoverVisual warns once when it cannot resolve XRGrabInteractable or isHovered; and every remaining Type.GetType, FindProperty, Shader.Find, and asset-path lookup in the xr-baseline Editor tools reports through XrBaselineDiagnostics.Unresolved with a stable key, so Initialize Sandbox ends with an unresolved warning instead of a clean success. The upstream tuples are pinned in the package manifest and compatibility profiles. None of these changes has executed in a Unity Editor yet; run_unity_gates.py or the unity-consumer-tests workflow must confirm them before they are cited as evidence."
+        },
+        {
+          "family": "inventory",
+          "status": "adopted",
+          "rationale": "The XR UI Toolkit profile reads non-public PanelSettings collider properties by reflection but returns false on any failure, which the fail-closed scene validation reports as a rejection. The UGUI State Gallery sample throws when InputSystemUIInputModule cannot be resolved."
+        },
+        {
+          "family": "persistence",
+          "status": "adopted",
+          "rationale": "JsonUtilitySaveCodec reflects over the consumer's own DTO fields rather than upstream internals and rejects unsupported shapes with a documented fail-closed tuple."
+        },
+        {
+          "family": "settings",
+          "status": "not_applicable",
+          "rationale": "No runtime or editor code in the family resolves upstream members by name or reflection."
+        },
+        {
+          "family": "interaction",
+          "status": "adopted",
+          "rationale": "InputActionReference identity is mapped explicitly and the adapter captures Input System callback order itself. No by-name resolution of Input System internals exists."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-005",
+      "title": "Verification contracts drift from tests unless clause coverage is enumerated",
+      "origin_family": "inventory",
+      "observed": "The Inventory verification contract required deterministic coverage of unresolved definitions and failed-operation immutability, but no Editor test asserted MutationFailure.UnknownDefinition until the XAG-INV-01 experiment added one. The same experiment recorded that UnknownContainer and SourceEmpty rejections were also public in the contract and still untested.",
+      "rule": "Each verification-contract clause maps to named tests in the package test assembly. An unmapped clause is an open gap in the coverage matrix, not implied coverage, and a clause cannot be cited as evidence for a promotion gate until its tests exist and have run.",
+      "evidence": [
+        "docs/validation/experiments/2026-07-15-xag-inv-01-cursor-result.md",
+        "docs/standards/inventory/verification-contract.md"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "adopted",
+          "rationale": "coverage-map.core.json maps all twelve Core clauses to named tests with no partial or unmapped clause, and coverage-map.json maps the Unity authoring, Presentation, package-and-consumer, and XR gates with fourteen covered clauses and nine partials that are all evidence gates (exact consumer, player build, upgrade/rollback, API review, and named-device receipts). IA-04 and IP-01 are enforced by the validate_inventory_isolation_rules repository rule rather than a Unity test. The tests added since the first audit have not executed in a Unity Editor; the maps record authored coverage, and execution evidence stays with run_unity_gates.py receipts, the CI workflow, and the Device Lab."
+        },
+        {
+          "family": "persistence",
+          "status": "adopted",
+          "rationale": "docs/standards/persistence/coverage-map.json maps all sixteen Core and Unity adapter clauses to named tests with no partial or unmapped clause after three Core tests were added (same-version round trip, Integrity stage failure, StageWrite and Flush results); those three await Editor execution, and execution evidence stays with the compatibility profiles."
+        },
+        {
+          "family": "settings",
+          "status": "adopted",
+          "rationale": "docs/standards/settings/coverage-map.json maps all twelve Core and Unity adapter clauses to named tests with no partial or unmapped clause; the map is authored coverage, and execution evidence stays with the compatibility profiles."
+        },
+        {
+          "family": "interaction",
+          "status": "adopted",
+          "rationale": "docs/standards/interaction/coverage-map.json maps all twenty Core and Unity adapter clauses to named tests with no partial or unmapped clause after five Core tests were added (identity validation per id type, multi-modal sources, collection immutability, handler outcomes, opaque route tokens); those five await Editor execution, and execution evidence stays with the compatibility profiles."
+        },
+        {
+          "family": "foundations",
+          "status": "adopted",
+          "rationale": "docs/standards/foundations/verification-contract.md names the Project Initializer and XR Baseline Editor gates and the claim ceiling; docs/standards/foundations/coverage-map.json maps thirteen clauses (eight covered, four missing named tests, one Device Lab evidence gate) to the six existing EditMode tests and the validate_foundation_assembly_references repository rule. The missing tests are enumerated as open gaps rather than implied, and the map is not execution evidence."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-006",
+      "title": "Multi-package Git consumers pin every sibling to one full SHA and declare the test harness",
+      "origin_family": "inventory",
+      "observed": "The canonical nested Git consumer validation found that Unity Package Manager rejects a short SHA in a Git URL, that a Git URL cannot be a package-to-package dependency so the consumer must list every com.lingkyn.* sibling itself, and that a test harness without an explicit com.unity.test-framework dependency fails compilation with unresolved NUnit types.",
+      "rule": "Every install example pins each sibling package to the same full 40-character commit SHA, lists every transitive com.lingkyn.* dependency explicitly, and declares the test framework in the harness manifest rather than in package manifests. Repository validation enforces the README install matrix and release notes repeat the sibling rule.",
+      "evidence": [
+        "docs/validation/2026-07-15-canonical-nested-git-consumer.md",
+        "docs/architecture/repository-layout.md",
+        "docs/releases/unity-next-systems-v0.1.0.md"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "adopted",
+          "rationale": "The README install matrix pins every Inventory sibling to one full-SHA placeholder and repository validation rejects short SHAs, mixed SHAs, and a matrix that is not dependency-closed."
+        },
+        {
+          "family": "persistence",
+          "status": "adopted",
+          "rationale": "The unity-next-systems-v0.1.0 release notes instruct consumers to add the matching Core selector explicitly on the same tag, and the README matrix covers both packages."
+        },
+        {
+          "family": "settings",
+          "status": "adopted",
+          "rationale": "The unity-next-systems-v0.1.0 release notes instruct consumers to add the matching Core selector explicitly on the same tag, and the README matrix covers both packages."
+        },
+        {
+          "family": "interaction",
+          "status": "adopted",
+          "rationale": "The unity-next-systems-v0.1.0 release notes instruct consumers to add the matching Core selector explicitly on the same tag, and the README matrix covers both packages."
+        },
+        {
+          "family": "foundations",
+          "status": "adopted",
+          "rationale": "Both foundation packages appear in the validated README install matrix with the same full-SHA placeholder."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-007",
+      "title": "Renderer adapters expose a skin seam from their first version",
+      "origin_family": "inventory",
+      "observed": "The Inventory UGUI adapter shipped with per-slot serialized colors, editor factory constants, and legacy Text, while the UI Toolkit sibling externalized its look in USS. Restyling UGUI without forking prefabs required a retrofitted InventorySkin seam (#81), and the shared design language (#84) now has to be adopted after the fact.",
+      "rule": "A renderer adapter ships one injectable skin or theme seam that maps the shared design-language tokens plus a default skin with the canonical values in its first version. Visual vocabulary never lives in serialized per-view fields or editor factory constants.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/issues/84",
+        "https://github.com/Lingkyn/xr-foundry/pull/81",
+        "docs/standards/design-language/README.md"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "adopted",
+          "rationale": "Both renderer adapters expose one injectable skin seam mapping the shared design-language tokens: InventoryUiToolkitSkin (injected through InventoryDocumentView.ApplySkin) and InventorySkin for UGUI (ScriptableObject applied through InventoryShellView.ApplySkin, re-skinning pooled slots, with a spatial-glass default when none is injected; ported from #81 without its version bump). Each seam carries an EditMode test; both are authored and unexecuted until the next Editor gate, which is the #82 evidence pass. Evidence: packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Runtime/InventorySkin.cs, packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Runtime/InventoryUiToolkitSkin.cs, docs/standards/inventory/coverage-map.json."
+        },
+        {
+          "family": "settings",
+          "status": "deferred",
+          "rationale": "No UI-bearing Settings package exists; the family owns definitions, profiles, and applicators only.",
+          "follow_up": "Any future Settings UI adapter defaults to the design language and ships the skin seam and default skin in its first version (DL-ADOPT-03 under #84)."
+        },
+        {
+          "family": "interaction",
+          "status": "not_applicable",
+          "rationale": "The family routes semantic intents and owns no rendering."
+        },
+        {
+          "family": "persistence",
+          "status": "not_applicable",
+          "rationale": "The family owns save orchestration and storage adapters and renders nothing."
+        },
+        {
+          "family": "foundations",
+          "status": "not_applicable",
+          "rationale": "The xr-baseline greybox colors are smoke-test tuning in VrBaselineConfig, not product UI."
+        }
+      ]
+    },
+    {
+      "id": "LESSON-008",
+      "title": "A package version bump is a verification claim, not a changelog convenience",
+      "origin_family": "inventory",
+      "observed": "PR #81 added the UGUI InventorySkin seam and bumped com.lingkyn.inventory.ugui from 0.2.0 to 0.3.0 in the same unverified change. The repository contract rejected it because the package catalog, the Foundry batch manifest, and two compatibility profiles still bind 0.2.0 to the last Editor evidence commit; recording 0.3.0 there without an Editor run would fabricate verification, so the pull request has been blocked since July 2026 waiting on the #82 editor pass.",
+      "rule": "A package version changes only in the same change that records the evidence for that version in the package catalog, batch manifest, and compatibility profiles. Code and test changes that have not executed in the gate stay under an Unreleased changelog heading at the currently catalogued version, so they can merge without a verification claim and the version moves when the receipt exists.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/pull/81#issuecomment-5013152152",
+        "https://github.com/Lingkyn/xr-foundry/issues/82",
+        "scripts/validate_repository.py"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "gap",
+          "rationale": "PR #81 still carries the 0.3.0 bump ahead of any Editor evidence, and the component/package.json, catalog/package, batch manifest, and compatibility profile version rules in scripts/validate_repository.py fail on a merge of that branch onto main. The Inventory changes merged since then keep every package at its catalogued version under Unreleased.",
+          "follow_up": "Rework #81 to keep com.lingkyn.inventory.ugui at 0.2.0 with the seam under Unreleased, or land it together with the #82 receipt that re-records the catalog, batch manifest, and profiles for 0.3.0."
+        },
+        {
+          "family": "foundations",
+          "status": "adopted",
+          "rationale": "Both foundation packages carry their pending test and diagnostics changes under Unreleased at the catalogued 0.1.0, and the version parity rules pass at the current revision."
+        },
+        {
+          "family": "persistence",
+          "status": "adopted",
+          "rationale": "The three added Core tests are recorded under Unreleased at the catalogued package versions, and the version parity rules pass at the current revision."
+        },
+        {
+          "family": "settings",
+          "status": "adopted",
+          "rationale": "The Settings standard note and coverage map were added without a version change, and the version parity rules pass at the current revision."
+        },
+        {
+          "family": "interaction",
+          "status": "adopted",
+          "rationale": "The five added Core tests are recorded under Unreleased at the catalogued package versions, and the version parity rules pass at the current revision."
+        }
+      ]
+    }
+  ]
+}

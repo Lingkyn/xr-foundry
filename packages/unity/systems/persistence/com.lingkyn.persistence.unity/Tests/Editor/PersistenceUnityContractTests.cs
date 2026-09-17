@@ -229,6 +229,132 @@ namespace Lingkyn.Persistence.Unity.Editor.Tests
         }
 
         [Test]
+        public void EmptyPrimaryDoesNotBlockRecoveryFromValidBackup()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);
+            var coordinator = CreateCoordinator(
+                LocalFileCommitStrategy.RecoverableCopyReplace,
+                SaveCommitCapabilities.RecoverableReplace);
+            var slot = MustSlot("empty_primary");
+            var paths = MustPaths(slot);
+            Directory.CreateDirectory(paths.SlotDirectory);
+
+            File.WriteAllBytes(paths.PrimaryPath, Array.Empty<byte>());
+            File.WriteAllBytes(
+                paths.BackupPath,
+                SampleDtoEnvelopeBytes(new SupportedPlainDto { score = 17, label = "backup" }, 1));
+
+            var read = store.ReadCandidates(slot);
+            Assert.That(read.Succeeded, Is.True, read.Error.Message);
+            Assert.That(read.Value.Candidates.Count, Is.EqualTo(2));
+            Assert.That(read.Value.Candidates[0].Kind, Is.EqualTo(SaveCandidateKind.Primary));
+            Assert.That(read.Value.Candidates[0].Bytes.Length, Is.EqualTo(0));
+            Assert.That(read.Value.Candidates[1].Kind, Is.EqualTo(SaveCandidateKind.Backup));
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.True, loaded.Error.Message);
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Backup));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.True);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Not.Null);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Stage, Is.EqualTo(SaveStage.Envelope));
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic.Value.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+            Assert.That(loaded.Value.State.score, Is.EqualTo(17));
+            Assert.That(loaded.Value.State.label, Is.EqualTo("backup"));
+        }
+
+        [Test]
+        public void EmptyBackupDoesNotBlockValidPrimary()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);
+            var coordinator = CreateCoordinator(
+                LocalFileCommitStrategy.RecoverableCopyReplace,
+                SaveCommitCapabilities.RecoverableReplace);
+            var slot = MustSlot("empty_backup");
+            var paths = MustPaths(slot);
+            Directory.CreateDirectory(paths.SlotDirectory);
+
+            File.WriteAllBytes(
+                paths.PrimaryPath,
+                SampleDtoEnvelopeBytes(new SupportedPlainDto { score = 23, label = "primary" }, 1));
+            File.WriteAllBytes(paths.BackupPath, Array.Empty<byte>());
+
+            var read = store.ReadCandidates(slot);
+            Assert.That(read.Succeeded, Is.True, read.Error.Message);
+            Assert.That(read.Value.Candidates.Count, Is.EqualTo(2));
+            Assert.That(read.Value.Candidates[1].Kind, Is.EqualTo(SaveCandidateKind.Backup));
+            Assert.That(read.Value.Candidates[1].Bytes.Length, Is.EqualTo(0));
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.True, loaded.Error.Message);
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Primary));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.False);
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Null);
+            Assert.That(loaded.Value.State.score, Is.EqualTo(23));
+            Assert.That(loaded.Value.State.label, Is.EqualTo("primary"));
+        }
+
+        [Test]
+        public void EmptyStagingDoesNotBlockValidDurableCandidate()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);
+            var coordinator = CreateCoordinator(
+                LocalFileCommitStrategy.RecoverableCopyReplace,
+                SaveCommitCapabilities.RecoverableReplace);
+            var slot = MustSlot("empty_staging");
+            var paths = MustPaths(slot);
+            Directory.CreateDirectory(paths.SlotDirectory);
+
+            File.WriteAllBytes(
+                paths.PrimaryPath,
+                SampleDtoEnvelopeBytes(new SupportedPlainDto { score = 31, label = "primary" }, 1));
+            File.WriteAllBytes(
+                Path.Combine(paths.SlotDirectory, paths.SlotIdStem + ".staging.empty.save"),
+                Array.Empty<byte>());
+
+            var read = store.ReadCandidates(slot);
+            Assert.That(read.Succeeded, Is.True, read.Error.Message);
+            Assert.That(read.Value.Candidates.Count, Is.EqualTo(2));
+            Assert.That(read.Value.Candidates[0].Kind, Is.EqualTo(SaveCandidateKind.Primary));
+            Assert.That(read.Value.Candidates[1].Kind, Is.EqualTo(SaveCandidateKind.Staging));
+            Assert.That(read.Value.Candidates[1].Bytes.Length, Is.EqualTo(0));
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.True, loaded.Error.Message);
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Primary));
+            Assert.That(loaded.Value.State.score, Is.EqualTo(31));
+        }
+
+        [Test]
+        public void EmptyFilesFailClosedWhenNoSelectableCandidateRemains()
+        {
+            var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);
+            var coordinator = CreateCoordinator(
+                LocalFileCommitStrategy.RecoverableCopyReplace,
+                SaveCommitCapabilities.RecoverableReplace);
+            var slot = MustSlot("all_empty");
+            var paths = MustPaths(slot);
+            Directory.CreateDirectory(paths.SlotDirectory);
+
+            File.WriteAllBytes(paths.PrimaryPath, Array.Empty<byte>());
+            File.WriteAllBytes(paths.BackupPath, Array.Empty<byte>());
+            File.WriteAllBytes(
+                Path.Combine(paths.SlotDirectory, paths.SlotIdStem + ".staging.empty.save"),
+                Array.Empty<byte>());
+
+            var read = store.ReadCandidates(slot);
+            Assert.That(read.Succeeded, Is.True, read.Error.Message);
+            Assert.That(read.Value.Candidates.Count, Is.EqualTo(3));
+            Assert.That(read.Value.Candidates[0].Bytes.Length, Is.EqualTo(0));
+            Assert.That(read.Value.Candidates[1].Bytes.Length, Is.EqualTo(0));
+            Assert.That(read.Value.Candidates[2].Bytes.Length, Is.EqualTo(0));
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.False);
+            Assert.That(loaded.Error.Stage, Is.EqualTo(SaveStage.Envelope));
+            Assert.That(loaded.Error.Code, Is.EqualTo(SaveErrorCode.UnsupportedFormat));
+        }
+
+        [Test]
         public void StagingCandidatesAreEnumeratedInDeterministicOrder()
         {
             var store = CreateStore(LocalFileCommitStrategy.RecoverableCopyReplace);

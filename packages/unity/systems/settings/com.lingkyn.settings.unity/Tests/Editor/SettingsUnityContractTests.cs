@@ -179,6 +179,85 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
         }
 
         [Test]
+        public void FactoryCompletesLoadedDefaultsWhilePreservingRevisionOverridesAndUnknownValues()
+        {
+            var catalog = BuildValidCatalog();
+            const string opaqueUnknownKey = "  future/raw key  ";
+            var loaded = new SettingsSnapshot(
+                11,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    {
+                        new ScopedSettingKey(MustKey("audio.mute"), SettingScope.Session),
+                        SettingValue.FromBoolean(true)
+                    },
+                },
+                new Dictionary<string, SettingValue>
+                {
+                    { opaqueUnknownKey, SettingValue.FromInteger(7) },
+                });
+
+            var created = SettingsUnityFactory.CreateCoordinator(new SettingsUnityFactoryConfig
+            {
+                Catalog = catalog,
+                Repository = new InvalidLoadedRepository(loaded),
+            });
+
+            Assert.That(created.Succeeded, Is.True, created.Error.Message);
+            Assert.That(created.Value.CommittedSnapshot.Revision, Is.EqualTo(11));
+            Assert.That(
+                created.Value.CommittedSnapshot.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.mute"), SettingScope.Session),
+                    out var sessionMute),
+                Is.True);
+            Assert.That(sessionMute.BooleanValue, Is.True);
+            Assert.That(
+                created.Value.CommittedSnapshot.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                    out var defaultMute),
+                Is.True);
+            Assert.That(defaultMute.BooleanValue, Is.False);
+            Assert.That(
+                created.Value.CommittedSnapshot.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User),
+                    out var defaultVolume),
+                Is.True);
+            Assert.That(defaultVolume.FloatValue, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(
+                created.Value.CommittedSnapshot.TryGetUnknownValue(opaqueUnknownKey, out var unknown),
+                Is.True);
+            Assert.That(unknown.IntegerValue, Is.EqualTo(7));
+        }
+
+        [Test]
+        public void FactoryRunsConstraintsAfterCompletingDefaultsAndDoesNotFallbackFromValidationFailure()
+        {
+            var catalog = BuildValidCatalog();
+            var incompleteLoaded = new SettingsSnapshot(
+                12,
+                new Dictionary<ScopedSettingKey, SettingValue>
+                {
+                    {
+                        new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                        SettingValue.FromBoolean(true)
+                    },
+                },
+                new Dictionary<string, SettingValue>());
+
+            var rejected = SettingsUnityFactory.CreateCoordinator(new SettingsUnityFactoryConfig
+            {
+                Catalog = catalog,
+                Repository = new InvalidLoadedRepository(incompleteLoaded),
+                Constraints = new ISettingsConstraint[] { new DependentVolumeConstraint() },
+                InitialRevision = 3,
+                UseDefaultsOnRepositoryLoadFailure = true,
+            });
+
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(rejected.Error.Code, Is.EqualTo(SettingsValidationCode.CrossConstraintViolation));
+        }
+
+        [Test]
         public void AccessibilityMetadataConvertsWithoutComplianceClaims()
         {
             var definition = BuildDefinition("comfort.head_bob", SettingValueKindRecord.Boolean);
@@ -265,6 +344,33 @@ namespace Lingkyn.Settings.Unity.Editor.Tests
 
             public SettingsApplicatorStepResult Rollback(IReadOnlyList<SettingChange> changes)
                 => SettingsApplicatorStepResult.Success();
+        }
+
+        private sealed class DependentVolumeConstraint : ISettingsConstraint
+        {
+            public string ConstraintId => "mute-zeroes-volume";
+
+            public SettingsResult Validate(SettingsRegistry registry, SettingsSnapshot candidate)
+            {
+                var hasMute = candidate.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.mute"), SettingScope.User),
+                    out var mute);
+                var hasVolume = candidate.TryGetKnownValue(
+                    new ScopedSettingKey(MustKey("audio.volume"), SettingScope.User),
+                    out var volume);
+                if (!hasMute || !hasVolume)
+                {
+                    return SettingsResult.Fail(
+                        SettingsValidationCode.CrossConstraintViolation,
+                        "Constraint requires the complete default-scope snapshot.");
+                }
+
+                return mute.BooleanValue && volume.FloatValue > 0
+                    ? SettingsResult.Fail(
+                        SettingsValidationCode.CrossConstraintViolation,
+                        "Muted audio must have zero volume.")
+                    : SettingsResult.Success();
+            }
         }
 
         private sealed class InvalidLoadedRepository : ISettingsSnapshotRepository

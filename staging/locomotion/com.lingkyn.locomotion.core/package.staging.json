@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.locomotion.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Locomotion Core",
+  "description": "Engine-light locomotion and comfort substrate: a closed set of locomotion mode identities and an open anchor identity sharing one canonical form, a closed typed comfort policy (vignette, turn mode, turn increment, movement speed, posture) with fail-closed rejection, teleport/turn/move intents applied to an immutable locomotion state with an anchor registry, deterministic replay with a fingerprint, and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "ComfortPolicy",
+      "description": "Domain-only walkthrough of the comfort policy, anchor registry, and a replayed teleport/turn/move intent sequence; needs no scene.",
+      "path": "Samples~/ComfortPolicy"
+    }
+  ]
+}

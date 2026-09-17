@@ -1,0 +1,60 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "locomotion",
+  "contract": "docs/standards/locomotion/verification-contract.md",
+  "audited_at_commit": "staging",
+  "policy": {
+    "mapping_basis": "test method names and bodies in staging/locomotion, matched against contract clause text; the code has not compiled or executed",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.locomotion.core",
+      "test_assembly": "Lingkyn.Locomotion.Core.Editor.Tests",
+      "clauses": [
+        {"id": "LC-01", "clause": "locomotion mode identity: a closed set of modes (teleport, snap_turn, smooth_turn, continuous_move) with a canonical form, rejection of empty, whitespace, and malformed identifiers with a stable identity.malformed failure, and value equality between two identities with the same text", "coverage": "covered", "tests": ["ModeIdCanonicalizesCaseForDeclaredModes", "ModeIdRejectsEmptyWhitespaceAndMalformedShapesWithIdentityMalformed", "ModeIdRejectsTextNotInTheClosedSet", "ModeIdsWithTheSameTextAreEqualValues"], "missing": []},
+        {"id": "LC-02", "clause": "anchor identity (AnchorId) shares the mode identity's canonicalization rules but is an open vocabulary rather than a closed set", "coverage": "covered", "tests": ["AnchorIdSharesCanonicalizationRulesWithModeId", "AnchorIdAcceptsArbitraryWellFormedText", "ParseThrowsWithTheFailureMessageForMalformedIdentity"], "missing": []},
+        {"id": "LC-03", "clause": "a comfort policy as a closed set of typed options: vignette (enabled with an intensity declared as a closed numeric range), turn mode (snap or smooth, never both for one input source), turn increment (a declared closed set of degrees), movement speed (a declared closed numeric range), and posture (seated or standing)", "coverage": "covered", "tests": ["ComfortOptionsDeclareClosedKindsWithRangeOrValueSet", "ComfortOptionContractConstructionRejectsInvalidDeclarations"], "missing": []},
+        {"id": "LC-04", "clause": "fail-closed rejection of an unknown option (option.unknown) without changing state", "coverage": "covered", "tests": ["SetComfortOptionOnUnknownNameFailsClosedWithOptionUnknown"], "missing": []},
+        {"id": "LC-05", "clause": "fail-closed rejection of a value of the wrong kind (option.kind.mismatch) without changing state", "coverage": "covered", "tests": ["SetComfortOptionWithWrongKindFailsClosedWithKindMismatch"], "missing": []},
+        {"id": "LC-06", "clause": "fail-closed rejection of an out-of-range or undeclared value (option.out_of_range) without changing state", "coverage": "covered", "tests": ["SetComfortOptionOutOfRangeOrUndeclaredFailsClosedWithoutChangingPolicy", "DiscreteTurnIncrementRejectsUndeclaredDegreeValue", "EnumeratedTurnModeAndPostureRejectUndeclaredChoice"], "missing": []},
+        {"id": "LC-07", "clause": "a teleport request to a registered anchor id, with an unknown anchor rejected with anchor.unknown", "coverage": "covered", "tests": ["TeleportToRegisteredAnchorUpdatesCurrentAnchor", "TeleportToUnregisteredAnchorFailsWithAnchorUnknown"], "missing": []},
+        {"id": "LC-08", "clause": "a turn by one declared increment, with an intent whose mode the policy disables rejected with mode.disabled", "coverage": "covered", "tests": ["TurnAppliesThePolicysDeclaredIncrementInTheRequestedDirection", "TurnWithModeThePolicyDoesNotSelectFailsWithModeDisabled", "TurnIntentConstructionRejectsANonTurnMode"], "missing": []},
+        {"id": "LC-09", "clause": "a move vector for one tick with an explicit tick duration, with an intent that the current posture does not admit rejected with posture.mismatch", "coverage": "covered", "tests": ["MoveAccumulatesPlanarOffsetByPolicySpeedAndTickDuration", "MoveIsRejectedWithPostureMismatchWhenPostureIsSeated"], "missing": []},
+        {"id": "LC-10", "clause": "state immutability: a state is immutable, an accepted intent produces a new state and leaves the prior state intact, and a rejected intent leaves the prior state intact and returns it unchanged", "coverage": "covered", "tests": ["AcceptedIntentProducesNewStateAndLeavesPriorIntact", "StateIsImmutableAcrossApplications", "RejectedIntentLeavesPriorStateIntactInsideASequence"], "missing": []},
+        {"id": "LC-11", "clause": "deterministic replay: the same intent sequence over the same initial state and policy produces an equal final state and an equal fingerprint", "coverage": "covered", "tests": ["SameIntentSequenceProducesEqualStateAndFingerprint"], "missing": []},
+        {"id": "LC-12", "clause": "a state enumerates the active mode set, the comfort policy, the current anchor, the accumulated heading, and the accumulated planar offset", "coverage": "covered", "tests": ["StateEnumeratesActiveModesPolicyAnchorHeadingAndOffset", "InitialStateStartsAtZeroHeadingZeroOffsetNoAnchorWithDefaultPolicy"], "missing": []},
+        {"id": "LC-13", "clause": "structured results with stable failure codes for a malformed identity, an unknown option, a kind mismatch, an out-of-range value, an unknown anchor, a disabled mode, and a posture mismatch", "coverage": "covered", "tests": ["AllSevenFailureCodesAreStableAcrossFailureSites", "LocomotionResultCarriesCodeAndMessageAndOkHasEmptyCode"], "missing": []},
+        {"id": "LC-14", "clause": "a valid intent sequence passing clean with every outcome accepted", "coverage": "covered", "tests": ["ValidIntentSequencePassesCleanWithEveryOutcomeAccepted"], "missing": []}
+      ],
+      "additional_tests_outside_clauses": ["RegisterAnchorRejectsDuplicateRegistration", "UnregisterAnchorClearsCurrentAnchorWhenItWasTheRegisteredOne"]
+    },
+    {
+      "id": "unity_adapter",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.locomotion.unity",
+      "test_assembly": "Lingkyn.Locomotion.Unity.Editor.Tests",
+      "clauses": [
+        {"id": "AU-01", "clause": "a thin binding of each Core mode to the matching XR Interaction Toolkit locomotion provider (teleportation, snap turn, continuous turn, continuous move) and of the vignette option to the tunneling vignette controller, with stable codes, field paths, and the source asset for a missing provider reference (provider.missing), a provider of the wrong mode (provider.mode.mismatch), a duplicate binding, and a missing vignette reference when the policy enables the vignette (vignette.missing), and construction that throws with the same report", "coverage": "partial", "tests": ["BindingAssetConvertsToBindingWithoutMutation", "BindingValidationReportsMissingProviderWithFieldPathAndSource", "BindingValidationReportsProviderModeMismatch", "BindingValidationReportsDuplicateBindings", "BindingValidationReportsVignetteMissingOnlyWhenPolicyEnablesIt", "BindingConstructionThrowsWithTheSameReport", "BindingValidationReportsUnknownModeIdentitiesAndMalformedText"], "missing": ["the real LocomotionProviderSurface's provider-present-and-matching branch: ProviderMatchesMode confirming a genuinely bound XR Interaction Toolkit provider's concrete type; XR Interaction Toolkit locomotion providers cannot be constructed in EditMode without a rig, so this needs a checked-in rig prefab in the first Unity run"]},
+        {"id": "AU-02", "clause": "an explicit diagnostic for every by-name or optional resolution: a provider member, an input action reference, or a body transformer that the adapter resolves by name, by serialized field, or by an optional lookup must report an explicit failure with a stable code when the target is missing or incompatible, and must carry a negative test for the missing target (LESSON-004); silence or a reported success is a defect", "coverage": "covered", "tests": ["BindingValidationReportsBodyTransformerMissingForContinuousModesOnly", "BindingValidationReportsInputActionUnresolved", "RuntimeReportsDiagnosticWhenTurnIncrementWriteFails", "RuntimeReportsDiagnosticWhenMoveSpeedWriteFails", "RuntimeReportsDiagnosticWhenVignetteWriteFails", "RuntimeReportsDiagnosticWhenTeleportRequestFails", "RuntimeReportsDiagnosticsWhenTurnOrMoveForwardingFails"], "missing": []},
+        {"id": "AU-03", "clause": "application of an accepted comfort policy to the bound providers: the selected turn mode enables exactly one turn provider, the selected increment and speed are written to the matching provider settings, the vignette option is written to the vignette controller, and a rejected policy is never applied", "coverage": "covered", "tests": ["RuntimeAppliesInitialPolicyToProvidersOnConstruction", "RuntimeSwitchesExactlyOneTurnProviderWhenPolicyChanges", "RuntimeWritesChangedTurnIncrementAndMoveSpeedToProviders", "RuntimeWritesVignetteOptionsWhenPolicyEnablesVignette", "RejectedComfortPolicyIsNeverAppliedToProviders"], "missing": []},
+        {"id": "AU-04", "clause": "a runtime constructed with explicit references that forwards accepted intents to the bound providers in the order they were accepted and reports accepted and rejected state", "coverage": "covered", "tests": ["RuntimeAppliesAcceptedIntentsInOrderAndReportsRejectedState", "RuntimeConstructorRejectsNullBindingOrState"], "missing": []},
+        {"id": "AU-05", "clause": "no scene singleton, static instance, scene search, or reflection discovery in the adapter, verified by a test that constructs two independent runtimes side by side", "coverage": "covered", "tests": ["TwoRuntimesAreIndependentWithoutSharedState"], "missing": []}
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 19,
+    "covered": 18,
+    "partial": 1,
+    "unmapped": 0,
+    "open_gap_tests": 1,
+    "execution_note": "All 54 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. Every adapter test drives the providers through the ILocomotionProviderSurface seam with a fake, because XR Interaction Toolkit locomotion providers, body transformers, and input actions cannot be reliably constructed in EditMode without a rig; the real LocomotionProviderSurface is exercised only in its provider-absent branch, so AU-01 stays partial until a Unity run holds a bound rig prefab."
+  }
+}

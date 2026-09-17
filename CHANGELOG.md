@@ -5,6 +5,19 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged the Locomotion and comfort family under `staging/locomotion/` (WI-002):
+  `com.lingkyn.locomotion.core` (mode identity closed to teleport, snap turn,
+  smooth turn, and continuous move; an anchor registry; a closed typed comfort
+  policy over vignette, turn mode, turn increment, movement speed, and posture
+  with fail-closed option codes; teleport, turn, move, and set-option intents on
+  an immutable state with deterministic replay and a fingerprint; 32 authored
+  tests) and `com.lingkyn.locomotion.unity` (a provider binding asset, binding
+  validation with stable codes and field paths, an injectable provider surface,
+  and a runtime that reports every by-name or optional resolution as a
+  diagnostic; 22 authored tests). `docs/standards/locomotion/coverage-map.json`
+  maps the contract to those tests: 18 of 19 clauses covered, AU-01 partial
+  because an XR Interaction Toolkit provider cannot be constructed in EditMode
+  without a rig. Nothing here has compiled or run.
 - The repository now asks one question before any work is taken: what do you
   bring? `docs/contributing/capability-profiles.json` declares four capabilities
   (`ai_tokens_only`, `unity_editor`, `xr_headset`, `maintainer`), each with the

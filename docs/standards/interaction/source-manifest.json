@@ -2,6 +2,7 @@
   "schema": "xr-foundry.interaction_source_manifest.v1",
   "scope": "Engine-light semantic interaction routing with a thin Unity Input System adapter and explicit modality/device evidence boundaries",
   "derivation_policy": "positive_external_public_sources_only",
+  "review_note": "The source URLs in this manifest were not fetched from the authoring environment, whose network egress policy blocks them: the admitted claims come from the author's prior reading of these documents, and a person must confirm every URL, exact page path, and version pin before any claim here is treated as confirmed.",
   "consumer_material_allowed": false,
   "sources": [
     {

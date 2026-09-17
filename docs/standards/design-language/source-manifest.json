@@ -2,6 +2,7 @@
   "schema": "xr-foundry.design_language_source_manifest.v1",
   "scope": "A shared, renderer-neutral UI visual and interaction design language for XR Foundry systems, expressed as neutral design tokens, state model, and content/interaction principles that every renderer adapter maps to. Vision Pro is the primary visual reference; PICO and Meta Horizon OS are the primary interaction references.",
   "derivation_policy": "positive_external_public_sources_only",
+  "review_note": "The source URLs in this manifest were not fetched from the authoring environment, whose network egress policy blocks them: the admitted claims come from the author's prior reading of these documents, and a person must confirm every URL, exact page path, and version pin before any claim here is treated as confirmed.",
   "consumer_material_allowed": false,
   "reference_split_rationale": "Apple visionOS is admitted for spatial visual language only (materials, depth, layout spacing, typography). Its primary interaction paradigm is system-mediated gaze-and-pinch with no app-drawn pointer, which does not transfer to controller/ray XR runtimes such as PICO and Meta Horizon OS. Controller and ray interaction facts (pointer feedback, hit-target sizing, button emphasis and state) are therefore derived from PICO and Meta Horizon OS, which target the same controller-based headset class this foundation builds for.",
   "sources": [

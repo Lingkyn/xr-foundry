@@ -5,6 +5,44 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- The four family source manifests that carried no review note (Interaction,
+  Persistence, Settings, Design language) now state that their URLs were not
+  fetched from the authoring environment and that a person must confirm every URL,
+  page path, and version pin, so `validate_family_source_manifests` suppresses
+  nothing about them. Two findings remain allowlisted and are now work item
+  WI-017: the design-language standard has a source manifest and no
+  verification contract, and the foundations standard has a contract and no source
+  manifest.
+- Generalised the Inventory-only source-manifest rule to every family (WI-006):
+  `scripts/validate_repository.py` gains `validate_family_source_manifests`,
+  registered next to `validate_consumer_lessons_register`, which checks every
+  `docs/standards/<family>/source-manifest.json` other than Inventory's (which
+  keeps its own stricter, unchanged rule) for a `schema` string matching
+  `xr-foundry.<family>_source_manifest.v<N>`, a per-source `id`/`url`/`authority`/
+  `admitted_role`/`admitted_claims`/`excluded_uses`/`license_or_terms`/
+  `maintenance_evidence` field set, no source naming a private or consumer
+  marker, a `verification-contract.md` and `source-manifest.json` existing
+  together or neither, and a `review_note` (top-level or per-source) recording
+  that source URLs were not fetched. `tests/test_source_manifests.py` covers
+  every new error shape and pins the repository to zero errors. Design
+  Language's missing verification contract, Foundations' missing source
+  manifest, and the missing review note in Interaction, Persistence, Settings,
+  and Design Language are allowlisted in `FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS`
+  until those files are fixed. `docs/validation/checked-claims.md` moves the
+  "Source manifests of every other family" row from self-declared to
+  machine-checked.
+- Added the cold-start receipt (WI-009): `docs/contributing/cold-start-receipt.schema.json`
+  and `docs/contributing/cold-start-receipt.template.json` are what an outside
+  contributor fills after following `start-here.md` from a fork and landing one
+  routine change — tool, starting commit, minutes per step, the pull request URL,
+  the verdict, what was confusing, and at least one non-claim; `not_tested` is
+  forbidden anywhere in a committed receipt. `scripts/validate_repository.py`
+  gains `validate_cold_start_receipts`, which checks every
+  `docs/validation/cold-start/*.json` against the schema, its filename against
+  its own `id`, its `contributor` against the repository owner, its `capability`
+  against `capability-profiles.json`, its `started_from_commit` against a
+  fetched public origin ref, its `pull_request` URL, and unique step names.
+  `start-here.md` points to it as milestone batch 1f's proof.
 - Staged the Scene flow family under `staging/scene-flow/` (WI-004):
   `com.lingkyn.scene-flow.core` (scene set and scene identity, an immutable
   scene graph with one active scene per set, typed transition durations, the

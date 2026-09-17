@@ -25,15 +25,23 @@ decision record is [RFC 0003](../rfcs/0003-foundry-production-line.md).
    python scripts/scaffold_unity_package.py blueprint.json --output-root . --json
    ```
 
-6. Only an admitted blueprint may add `--write`. The target must not exist.
-7. Replace the deliberate failing scaffold test with real implementation and
-   focused tests before proposing catalog admission.
-8. Run fast structure checks during iteration, then the complete repository and
+6. Author the family under `staging/<family>/` while its Unity evidence does not
+   yet exist: sources, tests, samples, and a `package.staging.json` manifest that
+   repository validation does not treat as a live `com.lingkyn.*` package. Staged
+   material is in no catalog, batch, compatibility profile, or release. It moves
+   into `packages/` only after admission and a verified compatibility profile.
+   The queue's current staged example is
+   [`staging/localization`](../../staging/localization/README.md).
+7. Only an admitted blueprint may add `--write`. The target must not exist.
+8. Replace the deliberate failing scaffold test with real implementation and
+   focused tests (or the reviewed staged sources) before proposing catalog
+   admission.
+9. Run fast structure checks during iteration, then the complete repository and
    exact-consumer gates before promotion or release.
-9. Use Device Lab separately for every claimed headset/input/renderer tuple.
+10. Use Device Lab separately for every claimed headset/input/renderer tuple.
 
 The scaffolder never edits catalogs, batches, compatibility profiles, releases,
-GitHub state, or maturity. Its output is staging material, not a finished package.
+GitHub state, or maturity. Its output is a scaffold, not a finished package.
 
 ## Package batches
 

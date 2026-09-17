@@ -24,7 +24,8 @@ evidence remain explicit gates.
 | Find reusable reference material | [`reference-catalog.json`](reference-catalog.json) |
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
-| Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Make a routine change (documentation, tests, tooling, non-breaking package change) | [`docs/contributing/start-here.md`](docs/contributing/start-here.md) and the [merge-readiness verdict](docs/contributing/merge-readiness.md) |
+| Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md); a new family is authored under [`staging/`](staging/localization/README.md) before its Unity evidence exists |
 | Find or claim bounded public work | [`Public Task Hall V1`](docs/contributing/task-hall.md) and the [live Project](https://github.com/users/Lingkyn/projects/2) |
 | Build the next reusable package family | [`Foundry V1 production line`](docs/foundry/README.md), [first batch](docs/foundry/batches/unity-first-batch.v1.json), and [next source-gate queue](docs/foundry/queue/next-batch.json) |
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
@@ -105,7 +106,11 @@ release is an immutable discovery/install surface; it does not promote package
 maturity or inherit device claims. The
 [`Foundry V1 production line`](docs/foundry/README.md) governs how later package
 families move from positive-source proposal to independently reviewed release.
-The exact named-device handoff uses the generic
+A new family is authored under `staging/` before its Unity evidence exists and
+moves into `packages/` only after admission and a verified compatibility profile;
+the current staged example is
+[`staging/localization`](staging/localization/README.md), which is in no catalog,
+batch, profile, or release. The exact named-device handoff uses the generic
 [`Public Device Lab V1`](docs/device-lab/README.md), its
 [`Inventory world-space UI plan`](docs/device-lab/test-plans/inventory-world-space-ui-v1.json),
 and the machine-validatable
@@ -229,7 +234,11 @@ python scripts/validate_repository.py --json --run-contract-tests
 pushes to `main`, and manual workflow runs execute the full contract across that
 matrix. GitHub Actions and the exactly pinned Python contract dependencies are both
 checked monthly by Dependabot; changes remain reviewable pull requests and do not
-gain merge authority from automation.
+gain merge authority from automation. Whether any pull request may merge is
+answered by the [merge-readiness verdict](docs/contributing/merge-readiness.md):
+a routine change on a branch named by a live operating mandate merges by GitHub
+auto-merge once the verdict is `ready` and the required checks pass, and a
+non-routine change waits for a maintainer who reads the same verdict.
 
 The fast structure command is iteration feedback and cannot support promotion or
 release. The full command runs repository validation first and skips the test
@@ -253,7 +262,9 @@ The [Task Hall](docs/contributing/task-hall.md) publishes bounded research, buil
 review, and integration work. The [Device Lab](docs/device-lab/README.md) lets
 contributors submit revision-bound headset evidence without code or repository
 write access. Claiming work coordinates a lease only; it never grants GitHub
-permissions or merge authority.
+permissions or merge authority. A routine change needs no claim, lease, anchor, or
+governance window: it follows
+[`docs/contributing/start-here.md`](docs/contributing/start-here.md).
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.
@@ -295,6 +306,8 @@ public checkpoint boundary; local-only output is never assumed complete.
 Contribution is not limited to code. Research, documentation, design, review,
 tests, device/user testing, and infrastructure can all be acknowledged through
 accepted evidence. They remain separate categories rather than a total points
-ranking, and no activity score grants repository permission. Start with the
-[Task Hall](docs/contributing/task-hall.md), choose one certified checkpoint, and
-use a fork pull request unless you already hold an appropriate repository role.
+ranking, and no activity score grants repository permission. For bounded
+coordinated work, start with the [Task Hall](docs/contributing/task-hall.md),
+choose one certified checkpoint, and use a fork pull request unless you already
+hold an appropriate repository role; for a routine change, start with
+[`docs/contributing/start-here.md`](docs/contributing/start-here.md) instead.

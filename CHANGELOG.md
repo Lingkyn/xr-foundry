@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Documentation consistency sweep: the root README, docs index, Agent guide,
+  Foundry production line (new staging step between blueprint preview and
+  `--write`), governance README, Agent contribution protocol, deliberation
+  protocol (lazy consensus), GitHub playbook, and CONTRIBUTING now describe the
+  merge-readiness verdict, the routine lane, and `staging/` for new families
+  instead of the older maintainer-merge wording. Maturity, release, device,
+  setting, and permission authority statements are unchanged.
 - Localization staging: added the optional, fail-closed bridge to the Unity
   Localization package (presence via a `versionDefines` guard, string-table data
   through a consumer-filled delegate seam, stable `bridge.*` codes) with four

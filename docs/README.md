@@ -40,6 +40,18 @@ and run `python scripts/compose_system.py --check --json`.
 [`foundry/system-admission.md`](foundry/system-admission.md), then
 [`foundry/queue/next-batch.json`](foundry/queue/next-batch.json), and model the
 new family on an existing `standards/<family>/` source manifest and contract set.
+Author the family under `../staging/<family>/` while its Unity evidence does not
+yet exist; it moves into `packages/` only after admission and a verified
+compatibility profile. The current staged example is
+[`../staging/localization/README.md`](../staging/localization/README.md).
+
+**Make a routine change.** Read [`contributing/start-here.md`](contributing/start-here.md):
+branch, change, run `python scripts/merge_readiness.py`, push, five-line pull
+request. No claim, lease, anchor, or governance window applies. The
+[merge-readiness verdict](contributing/merge-readiness.md) answers whether the
+change may merge: a routine change on a branch named by a live operating mandate
+merges by GitHub auto-merge once the verdict is `ready`, and a non-routine change
+waits for a maintainer who reads the same verdict.
 
 **Contribute bounded work.** Read
 [`contributing/task-hall.md`](contributing/task-hall.md), select one Ready

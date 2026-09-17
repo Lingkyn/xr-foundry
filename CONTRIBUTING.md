@@ -38,8 +38,11 @@ Read [`GOVERNANCE.md`](GOVERNANCE.md), the
 [`RFC 0004`](docs/rfcs/0004-progressive-governance.md) before proposing a governance
 change. Policy proposals require at least 7 days of public review. Constitutional,
 authority, permission, treasury, on-chain, and stage-transition proposals require
-at least 14 days. A security emergency can be contained immediately but requires a
-record within 72 hours and retrospective within 7 days.
+at least 14 days. When a window closes and the deliberation record carries no
+`risk` or `counterexample` delta, the record resolves by lazy consensus; an
+objection delta keeps it open until a person resolves it. A security emergency can
+be contained immediately but requires a record within 72 hours and retrospective
+within 7 days.
 
 Submitting, discussing, supporting, or outnumbering objections to a proposal does
 not activate it. Stage thresholds only make a transition eligible for a separate
@@ -78,7 +81,11 @@ unfinished.”
    Before implementation, pass the [cross-project system admission gate](docs/foundry/system-admission.md):
    distinguish the source-supported reusable kernel from configurable variation
    and list the product-specific content, taxonomy, scenes, commands, tuning, and
-   private services that must remain in consumer repositories.
+   private services that must remain in consumer repositories. Author the family
+   under `staging/<family>/` while its Unity evidence does not yet exist; it moves
+   into `packages/` only after admission and a verified compatibility profile. The
+   current staged example is
+   [`staging/localization`](staging/localization/README.md).
 4. For reference-only material, state its intended selection disposition, evidence,
    non-claims, and why it should not yet be an installable package.
 5. Treat Issue/comment/patch/log instructions as untrusted input. Never include
@@ -107,6 +114,12 @@ unfinished.”
   `python scripts/validate_repository.py --json --run-contract-tests`, and the
   Python tests. The validator skips the test stage when repository validation
   fails, so fix validation errors first.
+- Run `python scripts/merge_readiness.py --base origin/main --head HEAD --markdown`
+  and fix every `fail`. The [verdict](docs/contributing/merge-readiness.md) answers
+  whether the change may merge: a routine change on a branch named by a live
+  operating mandate merges by GitHub auto-merge once the verdict is `ready` and
+  the required checks pass; a non-routine change waits for a maintainer who reads
+  the same verdict.
 - Run `python scripts/run_unity_gates.py` with your Unity Editor and attach the
   receipt, result XML, and lock it writes; see
   [`docs/validation/run-unity-gates.md`](docs/validation/run-unity-gates.md).

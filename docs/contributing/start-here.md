@@ -48,6 +48,9 @@ are green; any other change waits for a maintainer, who reads the same verdict.
 
 ## When this page is not enough
 
+- You want something to work on: run `python scripts/open_work.py --markdown`
+  and pick something from the open-work board ([`open-work.md`](open-work.md));
+  the routine lane needs no claim.
 - You want to change a public seam, a package version, or a rule: read
   [`task-hall.md`](task-hall.md) and [`merge-readiness.md`](merge-readiness.md).
 - You have a headset and want to produce device evidence: read

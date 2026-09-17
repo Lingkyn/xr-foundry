@@ -5,6 +5,14 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the open-work board: `scripts/open_work.py` derives open items
+  (`test_gap`, `evidence_gap`, `lesson_gap`, `family_proposal`,
+  `staging_promotion`, `deliberation_open`, `roadmap_step`) from the coverage
+  maps, lessons register, source-gate queue, staging READMEs, open deliberation
+  records, and the roadmap execution order, classifies what each waits on and
+  whether it is routine, and prints JSON or Markdown; `tests/test_open_work.py`
+  covers it and `docs/contributing/open-work.md` explains that the board is
+  generated, assigns nothing, and is never authoritative over its sources.
 - `tests/test_repository_contract.py` now removes each `docs/validation/evidence/device-receipt-test-*` fixture directory when its test finishes (via `addCleanup`), keeps an `atexit` fallback for helpers used outside a `TestCase`, and sweeps stale fixture directories older than one hour at module setup so interrupted or concurrent runs no longer leave untracked evidence directories behind.
 - Added public API surface inventories for the Persistence (39 public types),
   Settings (52), and Interaction (65) families under

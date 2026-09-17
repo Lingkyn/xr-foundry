@@ -62,6 +62,9 @@ Families beyond these enter only through the queue with their own admission
 record. The section below ranks the candidates so the queue takes the most-used
 systems first; it grants no admission, package id, or directory.
 
+The milestones that turn this order into a qualified repository, then a
+community, then an organization are in [`docs/milestones.md`](docs/milestones.md).
+
 ## Family priority by consumer frequency
 
 The library builds the systems that almost every XR project needs before the

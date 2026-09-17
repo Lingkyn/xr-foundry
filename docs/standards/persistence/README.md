@@ -49,6 +49,7 @@ commit mode; it must never inherit an `atomic` claim.
 
 See also:
 
+- [`api-surface.md`](api-surface.md) (public API inventory for the compatibility review)
 - [`architecture-contract.md`](architecture-contract.md)
 - [`coverage-matrix.md`](coverage-matrix.md)
 - [`persistence-standard.json`](persistence-standard.json)

@@ -5,6 +5,14 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added public API surface inventories for the Persistence (39 public types),
+  Settings (52), and Interaction (65) families under
+  `docs/standards/<family>/api-surface.md`, derived from the Runtime sources, as
+  the input to each family's next gate, the public API compatibility review.
+  Each names the seams a consumer extends, the types recommended to stay
+  binary-compatible, candidates for internal or sealed before a first release,
+  and open questions (mixed throw-versus-result failure model, public seams
+  nothing consumes, de facto wire formats without a bump policy).
 - Inventory UI Toolkit: added the injectable `InventoryUiToolkitSkin` seam
   (LESSON-007) mapping the shared design-language tokens to inline styles on the
   document view, with a default skin carrying the canonical values, back-compat

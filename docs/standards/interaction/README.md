@@ -28,6 +28,10 @@ receives an independent PASS. Read the [architecture contract](architecture-cont
 [verification contract](verification-contract.md), and
 [positive-source manifest](source-manifest.json) before implementation or reuse.
 
+See also:
+
+- [`api-surface.md`](api-surface.md) (public API inventory for the compatibility review)
+
 ## Coverage record
 
 [`coverage-map.json`](coverage-map.json) maps every clause of the Core and Unity

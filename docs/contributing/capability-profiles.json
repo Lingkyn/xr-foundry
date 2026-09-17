@@ -1,0 +1,100 @@
+{
+  "schema": "xr-foundry.capability_profiles.v1",
+  "version": "0.1.0",
+  "policy": {
+    "declaration_precedes_work": true,
+    "profile_grants_no_permission": true,
+    "undeclared_capability_is_never_assumed": true,
+    "a_profile_cannot_produce_evidence_it_lacks": true
+  },
+  "profiles": [
+    {
+      "id": "ai_tokens_only",
+      "title": "AI budget and a clone",
+      "question": "Do you bring an AI budget (or your own reading and typing) and nothing else: no Unity Editor, no headset, no repository rights?",
+      "brings": "A clone of the default branch, Python 3.11 or later, the pinned contract dependencies, and an AI budget or the time to do the same work by hand.",
+      "satisfies_needs": [
+        "none",
+        "outside_contributor"
+      ],
+      "satisfies_blockers": [
+        "nothing",
+        "outside_contributor"
+      ],
+      "may_never_claim": [
+        "that any C# compiled or any test executed, because no Editor ran; every such change stays authored and unexecuted under Unreleased",
+        "a package version bump, a maturity change, a compatibility profile, a release, or a tag",
+        "any XR runtime, controller, comfort, spatial-audio, or headset behaviour"
+      ],
+      "start_at": "docs/contributing/start-here.md",
+      "first_command": "python scripts/open_work.py --capability ai_tokens_only --markdown"
+    },
+    {
+      "id": "unity_editor",
+      "title": "A machine with the pinned Unity Editor",
+      "question": "Do you bring a machine that can open the Unity Editor version the compatibility profiles pin, in addition to a clone?",
+      "brings": "Everything the AI-budget profile brings, plus an Editor that can run the package EditMode and PlayMode tests and write a gate receipt.",
+      "satisfies_needs": [
+        "none",
+        "unity_editor",
+        "outside_contributor"
+      ],
+      "satisfies_blockers": [
+        "nothing",
+        "unity_editor",
+        "outside_contributor"
+      ],
+      "may_never_claim": [
+        "any XR runtime, controller, comfort, spatial-audio, or headset behaviour, which needs a Device Lab receipt from a named device",
+        "a maturity promotion or a release, which stay a recorded maintainer decision",
+        "that an Editor result transfers to another Unity, renderer, provider, or device tuple than the one the receipt names"
+      ],
+      "start_at": "docs/validation/run-unity-gates.md",
+      "first_command": "python scripts/open_work.py --capability unity_editor --markdown"
+    },
+    {
+      "id": "xr_headset",
+      "title": "A named headset you can install a build on",
+      "question": "Do you bring a headset the Device Lab names, and the ability to install a build on it and record what you observe?",
+      "brings": "A named device, a way to install a build of an exact commit (your own Editor build or a published artifact), and the patience to fill every field of a device receipt.",
+      "satisfies_needs": [
+        "none",
+        "headset",
+        "outside_contributor"
+      ],
+      "satisfies_blockers": [
+        "nothing",
+        "headset",
+        "outside_contributor"
+      ],
+      "may_never_claim": [
+        "behaviour on any device, build target, renderer, or input route other than the exact tuple the receipt records",
+        "a maturity promotion or a release, which stay a recorded maintainer decision",
+        "an observation without the commit, artifact digest, dependency lock, environment, input sources, posture, and duration the receipt schema requires; not_tested is never evidence"
+      ],
+      "start_at": "docs/device-lab/README.md",
+      "first_command": "python scripts/open_work.py --capability xr_headset --markdown"
+    },
+    {
+      "id": "maintainer",
+      "title": "Repository rights on this repository",
+      "question": "Do you hold rights on this repository: settings, secrets, branch protection, tags, releases, and the signature on an admission or maturity decision?",
+      "brings": "The acts no contributor and no Agent can perform: repository settings and secrets, required checks and auto-merge, tags and releases, admission and maturity signatures, and closing a governance record a person must resolve.",
+      "satisfies_needs": [
+        "none",
+        "maintainer"
+      ],
+      "satisfies_blockers": [
+        "nothing",
+        "maintainer",
+        "review_window"
+      ],
+      "may_never_claim": [
+        "an Editor or device result without its receipt; rights are not evidence",
+        "that a signature replaces the gate it signs, or that a merge against a blocked verdict needs no recorded reason"
+      ],
+      "start_at": "docs/milestones.md",
+      "first_command": "python scripts/open_work.py --capability maintainer --markdown"
+    }
+  ]
+}

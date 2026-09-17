@@ -5,6 +5,47 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged the Scene flow family under `staging/scene-flow/` (WI-004):
+  `com.lingkyn.scene-flow.core` (scene set and scene identity, an immutable
+  scene graph with one active scene per set, typed transition durations, the
+  fade-out, loading, holding, fade-in machine advanced only by elapsed-time,
+  load-completed, and load-failed intents, recovery to a declared fallback set,
+  deterministic replay with a fingerprint; 32 authored tests) and
+  `com.lingkyn.scene-flow.unity` (a scene binding asset, binding validation with
+  stable codes and field paths, an injectable loader surface so EditMode loads no
+  scene, and a runtime that reports every by-name resolution as a diagnostic; 21
+  authored tests). `docs/standards/scene-flow/coverage-map.json` maps the
+  contract to those tests: 18 of 19 clauses covered, CU-01 partial because the
+  real loader surface needs a build-list scene. Nothing here has compiled or run.
+- Staged the Locomotion and comfort family under `staging/locomotion/` (WI-002):
+  `com.lingkyn.locomotion.core` (mode identity closed to teleport, snap turn,
+  smooth turn, and continuous move; an anchor registry; a closed typed comfort
+  policy over vignette, turn mode, turn increment, movement speed, and posture
+  with fail-closed option codes; teleport, turn, move, and set-option intents on
+  an immutable state with deterministic replay and a fingerprint; 32 authored
+  tests) and `com.lingkyn.locomotion.unity` (a provider binding asset, binding
+  validation with stable codes and field paths, an injectable provider surface,
+  and a runtime that reports every by-name or optional resolution as a
+  diagnostic; 22 authored tests). `docs/standards/locomotion/coverage-map.json`
+  maps the contract to those tests: 18 of 19 clauses covered, AU-01 partial
+  because an XR Interaction Toolkit provider cannot be constructed in EditMode
+  without a rig. Nothing here has compiled or run.
+- The repository now asks one question before any work is taken: what do you
+  bring? `docs/contributing/capability-profiles.json` declares four capabilities
+  (`ai_tokens_only`, `unity_editor`, `xr_headset`, `maintainer`), each with the
+  question it answers, the work it reaches, and the claims it may never make;
+  `docs/contributing/capabilities.md` is the page, and `AGENTS.md`, start-here,
+  and the work-item protocol route through it. `scripts/open_work.py` gains
+  `--list-capabilities` and `--capability <id>`, which narrows the board to the
+  work that declaration can finish and says how many items need a different one;
+  the board also surfaces the curated work items themselves (kind `work_item`,
+  with `outside_contributor` as a blocker), so a token-only contributor sees real
+  work instead of an almost empty board. `validate_capability_profiles` checks the
+  schema, unique ids, that every profile reaches the `nothing` blocker, that
+  `start_at` and `first_command` resolve, that the profiles' blocker vocabulary
+  equals the board's with none unreachable, and that every capability a work item
+  needs is declared by some profile; `tests/test_capability_profiles.py` covers
+  the rule and the filtering.
 - XR UI shell source gate (WI-005): `docs/standards/xr-ui-shell/` gains a
   source manifest (thirteen public sources, URLs not fetched and marked for a
   person to confirm), a verification contract (renderer-neutral Core gate with

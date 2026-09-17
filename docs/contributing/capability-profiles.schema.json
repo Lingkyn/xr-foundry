@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/capability-profiles.schema.json",
+  "title": "XR Foundry capability profiles",
+  "description": "What an arriving person or coding Agent declares it brings, and which work that declaration can reach. A profile routes work; it grants no permission and produces no evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "policy",
+    "profiles"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xr-foundry.capability_profiles.v1"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "declaration_precedes_work",
+        "profile_grants_no_permission",
+        "undeclared_capability_is_never_assumed",
+        "a_profile_cannot_produce_evidence_it_lacks"
+      ],
+      "properties": {
+        "declaration_precedes_work": {
+          "const": true
+        },
+        "profile_grants_no_permission": {
+          "const": true
+        },
+        "undeclared_capability_is_never_assumed": {
+          "const": true
+        },
+        "a_profile_cannot_produce_evidence_it_lacks": {
+          "const": true
+        }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "question",
+          "brings",
+          "satisfies_needs",
+          "satisfies_blockers",
+          "may_never_claim",
+          "start_at",
+          "first_command"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{2,31}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 4
+          },
+          "question": {
+            "type": "string",
+            "minLength": 12
+          },
+          "brings": {
+            "type": "string",
+            "minLength": 12
+          },
+          "satisfies_needs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "none",
+                "unity_editor",
+                "headset",
+                "maintainer",
+                "outside_contributor"
+              ]
+            }
+          },
+          "satisfies_blockers": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "nothing",
+                "unity_editor",
+                "headset",
+                "maintainer",
+                "review_window",
+                "outside_contributor"
+              ]
+            }
+          },
+          "may_never_claim": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 8
+            }
+          },
+          "start_at": {
+            "type": "string",
+            "minLength": 4
+          },
+          "first_command": {
+            "type": "string",
+            "pattern": "^python scripts/[a-z_]+\\.py( .*)?$"
+          }
+        }
+      }
+    }
+  }
+}

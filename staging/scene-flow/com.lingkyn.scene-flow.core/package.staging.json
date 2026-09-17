@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.scene-flow.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Scene Flow Core",
+  "description": "Engine-light scene flow substrate: stable scene set and scene identity with a canonical form, an immutable declared scene graph with one active scene per set and one fallback set, typed non-negative transition durations, load/unload/switch intents on an immutable flow state advanced through a transition state machine by explicit elapsed-time, load-completed, and load-failed intents only, fail-closed error recovery to the declared fallback set, deterministic replay with a fingerprint, and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "SceneGraph",
+      "description": "Domain-only scene graph, transition options, a full load/switch/unload cycle driven by explicit intents, one failed load recovering to the fallback set, and a replayed intent sequence; needs no scene.",
+      "path": "Samples~/SceneGraph"
+    }
+  ]
+}

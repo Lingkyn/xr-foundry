@@ -1,0 +1,14 @@
+{
+  "name": "Lingkyn.Locomotion.Core",
+  "rootNamespace": "Lingkyn.Locomotion.Core",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

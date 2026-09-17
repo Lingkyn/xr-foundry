@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.Locomotion.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.Locomotion.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.Locomotion.Core",
+    "Lingkyn.Locomotion.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

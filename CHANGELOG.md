@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Locomotion and comfort source gate (WI-001): `docs/standards/locomotion/`
+  gains a source manifest (twelve public sources, URLs not fetched and marked for
+  a person to confirm), a verification contract (Core gate, Unity adapter gate,
+  claim ceiling), a README with a disposition for every lesson, and an admission
+  draft; `NEXT-LOCOMOTION-COMFORT` joins the source-gate queue as a proposal with
+  no package ids.
 - Proposed RFC 0008, scheduled steward execution inside the repository: one
   mandate-listed workflow on a `schedule` trigger with a read-only
   `GITHUB_TOKEN` and one scoped write secret, so the repository keeps moving when

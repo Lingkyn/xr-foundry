@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 - 2026-07-18
+## Unreleased
 
 - Added `InventorySkin`, the first injectable visual seam for the UGUI adapter:
   a ScriptableObject carrying surface/text/slot-state colors, an optional font,
@@ -14,7 +14,9 @@
   public spatial-UI design language (visionOS windows/materials, PICO OS spatial
   UI, Meta Horizon MR); no consumer product, scene, or brand is hardcoded.
 - Consumers can fully restyle by injecting their own `InventorySkin` asset without
-  forking prefabs or code.
+  forking prefabs or code. Ported from pull request #81 without its version
+  bump: the seam is authored and unexecuted until an Editor gate runs it
+  (LESSON-008), so the version stays 0.2.0 under this heading.
 
 ## 0.2.0 - 2026-07-15
 

@@ -7,7 +7,12 @@
     "gap_requires_follow_up": true,
     "disposition_binds_current_revision_only": true
   },
-  "disposition_states": ["adopted", "gap", "deferred", "not_applicable"],
+  "disposition_states": [
+    "adopted",
+    "gap",
+    "deferred",
+    "not_applicable"
+  ],
   "lessons": [
     {
       "id": "LESSON-001",
@@ -270,9 +275,8 @@
       "dispositions": [
         {
           "family": "inventory",
-          "status": "gap",
-          "rationale": "The UGUI seam is proposed in #81 and gated by the #82 editor evidence pass. The UI Toolkit adapter now exposes the equivalent injectable seam (InventoryUiToolkitSkin with the canonical token defaults, injected through InventoryDocumentView.ApplySkin and covered by EditMode tests) under its Unreleased changelog heading; the family stays a gap until the UGUI seam lands and both seams have executed in an Editor gate.",
-          "follow_up": "Land #81 with the #82 editor evidence, then expose the equivalent injectable seam in the UI Toolkit adapter (DL-ADOPT-02 under #84)."
+          "status": "adopted",
+          "rationale": "Both renderer adapters expose one injectable skin seam mapping the shared design-language tokens: InventoryUiToolkitSkin (injected through InventoryDocumentView.ApplySkin) and InventorySkin for UGUI (ScriptableObject applied through InventoryShellView.ApplySkin, re-skinning pooled slots, with a spatial-glass default when none is injected; ported from #81 without its version bump). Each seam carries an EditMode test; both are authored and unexecuted until the next Editor gate, which is the #82 evidence pass. Evidence: packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Runtime/InventorySkin.cs, packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Runtime/InventoryUiToolkitSkin.cs, docs/standards/inventory/coverage-map.json."
         },
         {
           "family": "settings",

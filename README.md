@@ -311,3 +311,14 @@ coordinated work, start with the [Task Hall](docs/contributing/task-hall.md),
 choose one certified checkpoint, and use a fork pull request unless you already
 hold an appropriate repository role; for a routine change, start with
 [`docs/contributing/start-here.md`](docs/contributing/start-here.md) instead.
+
+Where the project stands and what comes next is written down, not remembered:
+[`docs/milestones.md`](docs/milestones.md) sets the batches that make this a
+qualified repository, then a community, then an organization, with the status
+of every cell; [`docs/contributing/work-items.json`](docs/contributing/work-items.json)
+cuts that plan into self-contained items any person or coding Agent can take
+without session context; and `python scripts/open_work.py --markdown` generates
+the open-work board from the tree. The merge verdict from
+`python scripts/merge_readiness.py` decides whether a routine change merges;
+[`docs/validation/checked-claims.md`](docs/validation/checked-claims.md) says
+which claims a machine checks and which are still self-declared.

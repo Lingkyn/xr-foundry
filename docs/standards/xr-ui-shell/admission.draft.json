@@ -1,0 +1,62 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "xr-ui-shell",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-17",
+  "source_manifest": "docs/standards/xr-ui-shell/source-manifest.json",
+  "consumer_contexts": [
+    "games and social experiences on several headset platforms that open world-anchored panels, a wrist menu, and a palm-summoned hand menu, route controller-ray, poke, and gaze input to exactly one panel, and restyle every panel from one skin without forking prefabs",
+    "training, industrial, and accessibility XR applications that dock secondary controls to a primary panel, let a panel follow the person with lag, replay a session's panel state deterministically for review, and switch between UGUI and UI Toolkit compositions without changing the shell contract"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UICanvas.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ui-setup.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ui-toolkit-support.html",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/UIE-World-Space-UI.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/xr-gaze-interactor.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/samples-hands-interaction-demo.html",
+      "https://developer.apple.com/design/human-interface-guidelines/windows",
+      "https://developer.apple.com/design/human-interface-guidelines/ornaments",
+      "https://developers.meta.com/horizon/design/spatial-ui-bp/",
+      "https://developers.meta.com/horizon/design/hand-menu-bp/",
+      "https://developer.picoxr.com/document/design-guidelines/ui/"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/MixedRealityToolkit/MixedRealityToolkit-Unity",
+      "https://github.com/GodotVR/godot-xr-tools"
+    ]
+  },
+  "common_kernel": [
+    "panel, wrist-menu, and hand-menu identity as validated identities separate from the Canvas, document, transform, or hand pose that implements them",
+    "a shell layout model with a closed set of anchor kinds (world, head-locked, wrist, hand) and placement intents (open, close, focus, dock, follow) applied to an immutable state with stable failure codes and deterministic replay",
+    "pointer and gaze routing as typed hover, select, and scroll intents from a named input source that resolve to exactly one panel or an explicit ambiguity failure",
+    "a skin contract that maps the shared design-language tokens to a closed set of named slots with fail-closed rejection of an unknown token, an unknown slot, or an unmapped slot",
+    "sibling UGUI and UI Toolkit adapters that each expose one injectable skin seam and a default skin carrying the canonical values, with evidence that never transfers between them"
+  ],
+  "configurable_variation": [
+    "which panels, menus, and anchor kinds a product declares, which panel holds exclusive focus, and which input sources it registers",
+    "adapter-side binding to world-space Canvas or UIDocument surfaces, event cameras, raycasters, input modules, anchor transforms, and follow parameters",
+    "consumer-owned skins injected through the seam, panel content, menu items, prefabs, and scene layout"
+  ],
+  "excluded_project_specific": [
+    "one product's menu structure, panel content, brand skin, prefab hierarchy, and scene placement values",
+    "one project's hand-tracking pose thresholds, input bindings, comfort presets, and platform store review outcome"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "A world-space UI shell is a recurring cross-project need whose kernel (validated panel and menu identity, a closed anchor-kind and placement-intent model over immutable state, routing of a named pointer or gaze source to exactly one panel, and a token-to-slot skin contract) is shared by the engine's own world-space Canvas, UI Toolkit, and XR UI integration, by three platform spatial-UI guidelines, and by two independent open-source implementations across two engines, while every product keeps its own menus, content, skin, prefabs, pose thresholds, and placement values outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim legibility, comfort, reach, hand-tracking behaviour, eye-tracking behaviour, pointer precision, latency, panel visibility on a headset, or any named-device behaviour; those require a Device Lab receipt.",
+    "Admission does not transfer any Inventory presentation, renderer, XR composition, or device evidence to this family, and no UGUI adapter evidence transfers to the UI Toolkit adapter or the reverse.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, versions, and the maintenance state of each open-source implementation."
+  ]
+}

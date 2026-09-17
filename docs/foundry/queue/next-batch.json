@@ -32,6 +32,48 @@
       ],
       "package_ids": [],
       "exact_next_action": "Run the cross-project admission gate and the positive-source gate after Localization moves out of staging; decide whether event identity, mix state, and spatial attachment are stable enough to admit a Core and Unity blueprint."
+    },
+    {
+      "id": "NEXT-LOCOMOTION-COMFORT",
+      "title": "Locomotion modes, comfort policy, and locomotion intent family",
+      "state": "proposal",
+      "objective": "Define engine-light locomotion mode identity (teleport, snap turn, smooth turn, continuous move), a closed typed comfort policy (vignette, turn mode, turn increment, movement speed, posture), and locomotion intents applied to an immutable state with deterministic replay, with a thin Unity XR Interaction Toolkit locomotion-provider adapter, so gameplay and XR systems raise typed locomotion intents without coupling to a rig, an input reader, or a scene singleton.",
+      "source_requirements": [
+        "Official XR Interaction Toolkit locomotion documentation (locomotion mediator and body transformer, teleportation, snap turn, continuous turn, continuous move, tunneling vignette) at the version pinned by the compatibility profiles",
+        "Public platform comfort and locomotion guidance from Meta, PICO, and Apple as first-party evidence that the mode set and comfort options recur across headset platforms",
+        "Maintained open-source locomotion implementations (a second-engine XR toolkit and an independent Unity teleport locomotor) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Motion-sickness, comfort, latency, and device-behaviour evidence boundaries that route every such claim to a Device Lab receipt"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, version pins, and open-source maintenance state in docs/standards/locomotion/source-manifest.json; then run the cross-project admission gate on docs/standards/locomotion/admission.draft.json and decide whether mode identity, comfort policy, and intent state are stable enough to admit a Core and Unity blueprint."
+    },
+    {
+      "id": "NEXT-SCENE-FLOW",
+      "title": "Scene set identity, transition state machine, and scene-flow intent family",
+      "state": "proposal",
+      "objective": "Define engine-light scene set and scene identity, a declared scene graph with one active scene per set, load, unload, and switch intents applied to an immutable flow state through a transition state machine with typed fade and hold durations, recovery to a declared fallback set, and deterministic replay, with a thin Unity additive scene-loading adapter, so gameplay and XR systems request scene changes as typed intents without coupling to scene names, a loader singleton, or objects that survive loads by discovery.",
+      "source_requirements": [
+        "Official Unity scene-management documentation (SceneManager, LoadSceneAsync, allowSceneActivation, UnloadSceneAsync, SetActiveScene, multi-scene editing, the build scene list) at the version pinned by the compatibility profiles, with Addressables scene loading admitted only as an optional sibling adapter",
+        "Public platform guidance on loading, transitions, and comfort during scene changes from Meta, PICO, and Apple as first-party evidence that fade, hold, and recovery recur across headset platforms",
+        "Maintained open-source scene-flow implementations (an engine-published open project and an independent scene-reference utility) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Load-time, hitching, and comfort evidence boundaries that route every such claim to a Device Lab receipt"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, version pins, and open-source maintenance state in docs/standards/scene-flow/source-manifest.json; then run the cross-project admission gate on docs/standards/scene-flow/admission.draft.json and decide whether set identity, the transition machine, and recovery are stable enough to admit a Core and Unity blueprint."
+    },
+    {
+      "id": "NEXT-XR-UI-SHELL",
+      "title": "XR UI shell: panels, wrist and hand menus, pointer and gaze routing, and the shared skin contract",
+      "state": "proposal",
+      "objective": "Define a renderer-neutral, engine-light shell model (panel, wrist-menu, and hand-menu identity; world, head-locked, wrist, and hand anchor kinds; open, close, focus, dock, and follow intents on an immutable state with deterministic replay), typed pointer and gaze routing from named input sources that resolves to exactly one panel, and a skin contract mapping the shared design-language tokens to a closed slot set, with UGUI and UI Toolkit as sibling adapters that each expose one injectable skin seam with a default skin, so every UI-bearing family composes on one shell instead of re-deriving spatial UI, and the Inventory presentation adapters become one client of it without transferring any Inventory evidence.",
+      "source_requirements": [
+        "Official engine world-space UI and XR UI documentation (UGUI world-space canvas and XR UI input, UI Toolkit world-space support, XR Interaction Toolkit UI, gaze, and hand interaction) at the version pinned by the compatibility profiles",
+        "Public platform spatial-UI guidance from Apple (windows and ornaments), Meta (spatial UI and hand menus), and PICO as first-party evidence that panels, wrist and hand menus, and pointer and gaze routing recur across headset platforms",
+        "Maintained open-source XR UI implementations (a mixed-reality toolkit and a second-engine XR toolkit) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Legibility, comfort, reach, and hand-tracking evidence boundaries that route every such claim to a Device Lab receipt, and the rule that automated or device evidence never transfers between the two renderer adapters"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, and version pins in docs/standards/xr-ui-shell/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether the shell model, routing, and skin contract are stable enough to admit a Core blueprint and two sibling adapter blueprints."
     }
   ]
 }

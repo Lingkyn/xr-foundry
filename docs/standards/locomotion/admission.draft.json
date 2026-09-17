@@ -1,0 +1,59 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "locomotion",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-17",
+  "source_manifest": "docs/standards/locomotion/source-manifest.json",
+  "consumer_contexts": [
+    "room-scale and seated games shipped on several headset platforms that must offer teleport, snap or smooth turn, and continuous movement as a person's choice with a comfort policy the platform review can inspect",
+    "training, industrial, and accessibility XR applications that move a person between authored anchors, constrain movement by posture, and replay a session deterministically for review"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/locomotion.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/teleportation-provider.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/snap-turn-provider.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/continuous-turn-provider.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/continuous-move-provider.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/tunneling-vignette-controller.html",
+      "https://developers.meta.com/horizon/design/locomotion/",
+      "https://developer.picoxr.com/document/design-guidelines/locomotion/",
+      "https://developer.apple.com/design/human-interface-guidelines/motion",
+      "https://developer.apple.com/design/human-interface-guidelines/immersive-experiences"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/GodotVR/godot-xr-tools",
+      "https://github.com/ExtendRealityLtd/Tilia.Locomotors.Teleporter.Unity"
+    ]
+  },
+  "common_kernel": [
+    "a closed set of locomotion modes (teleport, snap turn, smooth turn, continuous move) as validated identities separate from the provider, rig, or input that implements them",
+    "a comfort policy as a closed set of typed options (vignette, turn mode, turn increment, movement speed, posture) with declared ranges and fail-closed rejection",
+    "locomotion intents (teleport to an anchor id, turn by an increment, move a vector for a tick) applied to an immutable state with stable failure codes",
+    "deterministic replay of an intent sequence to an equal state and fingerprint"
+  ],
+  "configurable_variation": [
+    "the admitted increment set, speed range, vignette intensity range, default posture, and which modes a product enables",
+    "adapter-side binding to XR Interaction Toolkit providers, input action references, forward source, gravity, and vignette parameters",
+    "consumer-owned anchors, rig prefab, scene layout, and platform comfort presets"
+  ],
+  "excluded_project_specific": [
+    "one product's comfort preset values, level layout, teleport anchor set, and rig prefab",
+    "one project's input bindings, boundary handling, fade art, and platform store comfort rating"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Locomotion and comfort are a recurring cross-project need whose kernel (a closed mode set, a typed comfort policy, anchor-referenced teleport and increment-based turn intents, and deterministic state) is shared by the engine's own locomotion providers, three platform comfort guidelines, and two independent open-source implementations, while every product keeps its own anchors, presets, rig, input bindings, and comfort rating outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim motion sickness reduction, comfort, latency, frame timing, rig motion, input reading, tracking, boundary behaviour, or any named-device behaviour; those require a Device Lab receipt.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, versions, and the maintenance state of each open-source implementation."
+  ]
+}

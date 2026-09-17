@@ -1,0 +1,266 @@
+{
+  "schema": "xr-foundry.xr_ui_shell_source_manifest.v1",
+  "scope": "Engine-light XR UI shell: panel, wrist-menu, and hand-menu identity, a shell layout model (anchor kinds world, head-locked, wrist, hand; placement intents open, close, focus, dock, follow) applied to an immutable shell state with stable failure codes and deterministic replay, pointer and gaze routing as typed intents that resolve to exactly one panel, and a skin contract mapping the shared design-language tokens to a closed set of named slots, with sibling UGUI and UI Toolkit adapters planned separately, each carrying one injectable skin seam and a default skin",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths and version pins, before the admission record is signed.",
+  "sources": [
+    {
+      "id": "ugui-canvas-render-modes",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UICanvas.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity UI code copied",
+      "maintenance_evidence": "Unity UI (UGUI) 2.0 is the version pinned by this repository's compatibility profiles and its Canvas manual is maintained with the package; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "UGUI adapter boundary: a world-space Canvas is the renderer surface that one shell panel binds to, and its placement is a transform owned outside the Canvas",
+      "admitted_claims": [
+        "A Canvas has a render mode, and World Space places the Canvas as a rectangle in the scene whose position, rotation, and scale come from its transform rather than from the screen",
+        "A world-space Canvas needs an event camera reference for UI raycasting, and a missing event camera is a configuration fault rather than a rendering choice",
+        "Every UI element must be a child of a Canvas, so one panel maps to one Canvas subtree rather than to loose elements"
+      ],
+      "excluded_uses": [
+        "Core does not reference Canvas, RectTransform, Graphic, EventSystem, or any other engine or UI type",
+        "No claim that a world-space Canvas is legible, reachable, or comfortable at any distance or on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-ui-setup",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ui-setup.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5 is the version pinned by this repository's compatibility profiles and its UI setup manual is maintained with the package; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "UGUI adapter routing boundary: the toolkit's XR UI input module and tracked-device graphic raycaster are the components that turn an interactor into UGUI pointer events for a world-space Canvas",
+      "admitted_claims": [
+        "UGUI interaction in XR requires one EventSystem with an XR UI input module in place of the standalone input module, and a tracked-device graphic raycaster on each world-space Canvas",
+        "Ray and poke interactors implement a UI interactor contract and the input module polls them to produce hover, press, and scroll pointer events",
+        "A Canvas without the tracked-device raycaster, or a scene without the XR UI input module, receives no XR pointer events and reports nothing"
+      ],
+      "excluded_uses": [
+        "Core does not reference XRUIInputModule, TrackedDeviceGraphicRaycaster, IUIInteractor, or any other toolkit type",
+        "No claim that pointer events arrive with any latency, precision, or hand-tracking behaviour without a compatibility profile, an EditMode run on that exact tuple, and a Device Lab receipt for device behaviour"
+      ]
+    },
+    {
+      "id": "xri-ui-toolkit-support",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ui-toolkit-support.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "UI Toolkit world-space support is documented with XR Interaction Toolkit 3.5 for Unity 6.2 and later; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "UI Toolkit adapter routing boundary: a toolkit manager component bridges XR interactors to world-space UI Toolkit panels without an EventSystem",
+      "admitted_claims": [
+        "World-space UI Toolkit panels receive XR interaction through a dedicated toolkit manager component that must be present and active in the scene",
+        "The same ray, poke, and gaze interactors that drive UGUI can drive UI Toolkit panels once the panel exposes a collider and the manager is active",
+        "Bypassing UI Toolkit events on the manager or the panel disables routing silently unless the composition validates the setting"
+      ],
+      "excluded_uses": [
+        "Core does not reference the manager, PanelSettings, UIDocument, or any other toolkit or UI Toolkit type",
+        "No UGUI evidence transfers to UI Toolkit routing or the reverse; each adapter is validated on its own tuple"
+      ]
+    },
+    {
+      "id": "unity-ui-toolkit-world-space",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/UIE-World-Space-UI.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity code copied",
+      "maintenance_evidence": "Unity 6000.3 is the editor pinned by this repository's compatibility profiles and documents world-space UI Toolkit panels; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "UI Toolkit adapter boundary: a world-space UIDocument with world-space PanelSettings is the renderer surface that one shell panel binds to",
+      "admitted_claims": [
+        "A UIDocument can render in world space when its PanelSettings render mode is world space, and the document's transform places the panel in the scene",
+        "A world-space panel exposes a collider for physics-based input so that raycasts from interactors can hit it, and the collider update mode is a PanelSettings choice",
+        "Screen-space and world-space documents are distinct configurations rather than one document that switches at runtime"
+      ],
+      "excluded_uses": [
+        "Core does not reference UIDocument, PanelSettings, VisualElement, or USS",
+        "No claim that a world-space document is legible, reachable, or comfortable without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-gaze-interactor",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/xr-gaze-interactor.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "Shipped gaze interactor documented in the XR Interaction Toolkit 3.5 manual; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Routing boundary for gaze as a named input source: gaze hovers and assists, and selection from gaze is an explicit, opt-in configuration rather than the default pointer",
+      "admitted_claims": [
+        "A gaze interactor is a ray interactor driven by eye or head pose whose hover is separate from selection, and interactables opt in to gaze interaction rather than receiving it by default",
+        "Gaze assistance can snap or enlarge targeting for another interactor, so gaze and a controller or hand ray are distinct named sources that can act on the same target",
+        "Eye gaze falls back to head gaze when eye tracking is unavailable, so the source that produced a gaze event is a runtime fact rather than a design constant"
+      ],
+      "excluded_uses": [
+        "Core models gaze as an input source kind whose hover is routed and whose select requires an explicit commit source; it never reads eye or head pose",
+        "No claim about eye-tracking availability, accuracy, or comfort on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-hands-interaction-demo",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/samples-hands-interaction-demo.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no sample code or asset copied",
+      "maintenance_evidence": "Shipped sample documented with the XR Interaction Toolkit 3.5 manual and the XR Hands package; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Engine evidence that a hand menu is a panel anchored to a tracked hand with an explicit show condition, distinct from a world-anchored panel",
+      "admitted_claims": [
+        "The sample presents a hand menu anchored to a tracked hand that appears when the palm faces the viewer and hides otherwise",
+        "The hand menu is a UGUI world-space Canvas driven by the same UI input path as other world-space UI rather than a separate UI system",
+        "Hand-anchored placement is a component decision layered on the same Canvas, so anchoring and content are separable"
+      ],
+      "excluded_uses": [
+        "Core models the hand anchor kind and a follow intent; it owns no hand-tracking pose, palm-facing test, or hand-tracking type",
+        "No claim about hand-tracking behaviour, palm detection, or menu reach without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "apple-hig-windows",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/windows",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Human Interface Guidelines Windows page with visionOS guidance; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Primary visual reference for the panel as a spatial window: a placed, resizable, translucent surface that the person positions and that the system keeps stable in the world",
+      "admitted_claims": [
+        "Spatial windows are placed in the person's space and stay where they are placed rather than following the head by default",
+        "A window has a system-drawn frame, a stable size range, and glass material so the environment stays visible behind content",
+        "Content is centred in the window and important controls are kept away from the window edges so they remain reachable and legible"
+      ],
+      "excluded_uses": [
+        "No Apple window API, scene type, material, or numeric spec is copied; only the role of a world-anchored, translucent, stable panel informs the anchor kinds and the skin slots",
+        "Apple visual guidance imports no gaze-and-pinch interaction model and grants no device claim"
+      ]
+    },
+    {
+      "id": "apple-hig-ornaments",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/ornaments",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Human Interface Guidelines Ornaments page with visionOS guidance; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Visual evidence that a secondary control surface docks to a primary panel at a fixed edge and moves with it, which the shell models as a dock placement intent",
+      "admitted_claims": [
+        "An ornament is a secondary surface attached to a window edge that floats slightly in front of the window and moves with it",
+        "Ornaments hold controls that relate to the window's content and are kept few so they do not crowd the window",
+        "A docked surface keeps its relative placement while the primary window is moved or resized"
+      ],
+      "excluded_uses": [
+        "No ornament API or visual asset is copied; only the docked-surface role informs the dock intent and the docked state",
+        "No claim about ornament reach or legibility on any device"
+      ]
+    },
+    {
+      "id": "meta-horizon-spatial-ui-bp",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/spatial-ui-bp/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer design guidance that this repository already cites for interaction references; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Primary interaction reference for panel placement: world-anchored panels at a comfortable distance and height, head-locked content reserved for brief transient use, and a follow behaviour that lags rather than locks",
+      "admitted_claims": [
+        "Spatial panels should be world-anchored at a comfortable viewing distance and within the natural field of view rather than locked to the head",
+        "Head-locked UI is reserved for brief, transient content because persistent head-locked panels cause discomfort",
+        "A panel that follows the person should do so with lag and a threshold, so it settles rather than continuously tracking the head"
+      ],
+      "excluded_uses": [
+        "No numeric distance, angle, or size figure is transferred as a rendered guarantee; the shell records anchor kinds and a follow intent, and any placement value is adapter configuration validated on a device",
+        "No claim that a placement is comfortable without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-horizon-hand-menu",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/hand-menu-bp/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer design guidance for hand tracking; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Interaction evidence that wrist and hand menus are distinct anchor kinds with an explicit show condition and a small closed control set",
+      "admitted_claims": [
+        "A hand menu is summoned by an explicit condition such as a palm-up pose and is dismissed when the condition ends, rather than staying visible",
+        "Wrist-anchored controls are kept few and large because the anchor moves with the arm and the other hand must reach them",
+        "Hand and wrist menus avoid occluding the interacting hand and keep controls on the side away from the fingers"
+      ],
+      "excluded_uses": [
+        "No hand-tracking SDK, gesture recogniser, or pose threshold is depended upon; Core owns the anchor kind and an open or close intent, not the pose that raised it",
+        "No claim about hand-tracking or reach behaviour without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "pico-spatial-ui-design",
+      "kind": "official_platform_design_guidance",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/design-guidelines/ui/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO developer design guidance that this repository already cites for interaction references; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Second-platform interaction evidence that the same panel placement, controller-ray pointing, and hit-target rules recur across headset platforms",
+      "admitted_claims": [
+        "UI panels are placed in world space in front of the person at a comfortable distance and are pointed at with a controller ray that renders a visible cursor on the panel",
+        "Panels avoid the far periphery and avoid being locked to the head for sustained content",
+        "Interactive controls keep generous size and spacing for ray pointing and provide hover and pressed feedback"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, prefab, or sample is depended upon by the Core or the adapters",
+        "No claim about PICO device behaviour without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "mrtk3-ux-components",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Mixed Reality Toolkit Organization",
+      "url": "https://github.com/MixedRealityToolkit/MixedRealityToolkit-Unity",
+      "license_or_terms": "BSD-3-Clause; architecture facts only, no code copied",
+      "maintenance_evidence": "Widely adopted open-source XR UX toolkit for Unity with tagged releases, a hand menu, near menu, slate, and solver components; adoption count, release cadence, and an immutable review ref to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent implementation evidence that panel placement (world, follow, hand-constrained) is a separable behaviour layered on a panel, that hand menus have an explicit show condition, and that theming is an injectable data asset rather than per-view fields",
+      "admitted_claims": [
+        "Placement behaviours are separate solver components (follow, radial view, hand constraint) attached to a panel, so anchoring and content are independent",
+        "A hand menu uses a hand-constraint solver with a palm-up activation condition and an explicit safe zone relative to the hand",
+        "Visual theming is applied through a data-driven theme asset that maps named roles to values, so a panel can be restyled without editing its prefab"
+      ],
+      "excluded_uses": [
+        "No toolkit type, solver, prefab, shader, or theme asset is copied and the Core has no dependency on it",
+        "Maintenance must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    },
+    {
+      "id": "godot-xr-tools-viewport-2d-in-3d",
+      "kind": "maintained_open_source_implementation",
+      "authority": "GodotVR community",
+      "url": "https://github.com/GodotVR/godot-xr-tools",
+      "license_or_terms": "MIT; architecture facts only, no code copied",
+      "maintenance_evidence": "Widely adopted second-engine XR helper library with tagged releases and a documented world-space UI viewport component; adoption count, release cadence, and an immutable review ref to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent second-engine evidence that a world-space UI panel is a 2D surface projected onto a 3D collider that receives pointer events from a named pointer, and that the panel and the pointer are separate objects",
+      "admitted_claims": [
+        "A world-space UI panel is a 2D viewport rendered onto a 3D surface with a collider, and a pointer function raycasts against that collider to deliver hover, press, and scroll events",
+        "The pointer and the panel are separate nodes so several pointers can target one panel and one pointer can target several panels",
+        "Panel placement is owned by the parent node rather than by the UI content"
+      ],
+      "excluded_uses": [
+        "No Godot type, scene, or script is copied and the Core has no Godot implementation",
+        "Godot is a roadmap direction only for this repository; this source proves recurrence, not support"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "design-language-standard",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/design-language/ui-design-language-standard.json",
+      "reason": "The shared design language defines the tokens, state model, and renderer adapter contract that this family's skin contract maps to a closed slot set; it is the visual and interaction reference the shell adopts, not a derivation input for the shell's layout or routing model"
+    },
+    {
+      "id": "inventory-presentation-contract",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/packages/unity/systems/inventory/com.lingkyn.inventory.presentation/README.md",
+      "reason": "The Inventory presentation adapters become one client of the shell through the renderer-named XR compositions; Inventory code, samples, and evidence are neither derivation inputs nor transferable evidence for this family"
+    },
+    {
+      "id": "interaction-family-routing",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/interaction/README.md",
+      "reason": "The Interaction family routes semantic intents to handlers; the shell resolves which panel a pointer or gaze event targets. The two must not duplicate each other, and a panel-as-context seam is a later proposal"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority",
+    "The first implementation is a panel-identity, layout-state, routing, and skin-contract substrate, not a window manager, a raycaster, an input reader, a hand-tracking consumer, or a rendering component",
+    "Legibility, comfort, reach, hand-tracking behaviour, and any headset, controller, or eye-tracking behaviour are device claims that require a Device Lab receipt, never an EditMode result or a source citation",
+    "Automated or device evidence recorded for the UGUI adapter never transfers to the UI Toolkit adapter or the reverse"
+  ]
+}

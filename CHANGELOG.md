@@ -5,6 +5,36 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- XR UI shell source gate (WI-005): `docs/standards/xr-ui-shell/` gains a
+  source manifest (thirteen public sources, URLs not fetched and marked for a
+  person to confirm), a verification contract (renderer-neutral Core gate with
+  panel, wrist-menu, and hand-menu identity, anchor kinds, placement intents,
+  pointer and gaze routing, and the design-language skin contract; UGUI and UI
+  Toolkit sibling adapter gates each with one injectable skin seam; claim
+  ceiling), a README with a disposition for every lesson and the rule that the
+  Inventory presentation adapters become one client of the shell, and an
+  admission draft; `NEXT-XR-UI-SHELL` joins the source-gate queue as a proposal
+  with no package ids.
+- Scene flow source gate (WI-003): `docs/standards/scene-flow/` gains a source
+  manifest (seventeen public sources, URLs not fetched and marked for a person to
+  confirm), a verification contract (Core gate with the transition state machine
+  and fallback recovery, Unity adapter gate with the `scene.unregistered`
+  diagnostic, claim ceiling), a README with a disposition for every lesson, and an
+  admission draft; `NEXT-SCENE-FLOW` joins the source-gate queue as a proposal
+  with no package ids.
+- Locomotion and comfort source gate (WI-001): `docs/standards/locomotion/`
+  gains a source manifest (twelve public sources, URLs not fetched and marked for
+  a person to confirm), a verification contract (Core gate, Unity adapter gate,
+  claim ceiling), a README with a disposition for every lesson, and an admission
+  draft; `NEXT-LOCOMOTION-COMFORT` joins the source-gate queue as a proposal with
+  no package ids.
+- Proposed RFC 0008, scheduled steward execution inside the repository: one
+  mandate-listed workflow on a `schedule` trigger with a read-only
+  `GITHUB_TOKEN` and one scoped write secret, so the repository keeps moving when
+  a person supplies only tokens instead of depending on one vendor's hosted
+  session. Nothing takes effect until deliberation record DLB-0004 resolves
+  (window closes 2026-10-01T19:00:00Z); the workflow file lands only after that
+  with a person confirming the pinned action SHA.
 - Added tool-neutral work items: `docs/contributing/work-items.json` cuts the
   milestone plan in `docs/milestones.md` into self-contained units (what to read,
   allowed paths, steps, acceptance commands, proof path) that any person or coding

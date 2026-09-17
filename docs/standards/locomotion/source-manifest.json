@@ -1,0 +1,234 @@
+{
+  "schema": "xr-foundry.locomotion_source_manifest.v1",
+  "scope": "Engine-light locomotion mode identity (teleport, snap turn, smooth turn, continuous move), a closed typed comfort policy, locomotion intents applied to an immutable state with stable failure codes, and deterministic replay, with a thin Unity XR Interaction Toolkit locomotion-provider adapter planned separately",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths and version pins, before the admission record is signed.",
+  "sources": [
+    {
+      "id": "xri-locomotion-overview",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/locomotion.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5 is the version pinned by this repository's compatibility profiles and its locomotion manual is maintained with the package; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary: the locomotion mediator, body transformer, and provider objects that the Unity adapter binds to and that the Core must not depend on",
+      "admitted_claims": [
+        "Locomotion is modelled as providers that request control of the XR Origin through a mediator, which grants or denies the request so that only compatible providers move the rig at the same time",
+        "A body transformer applies queued transformations to the XR Origin in a defined order rather than each provider moving the rig directly",
+        "Teleportation, snap turn, continuous turn, and continuous move are shipped as separate provider components with their own enable state and input bindings"
+      ],
+      "excluded_uses": [
+        "Core does not reference LocomotionProvider, LocomotionMediator, XRBodyTransformer, XROrigin, or any other engine or toolkit type",
+        "No claim that the mediator's arbitration, transform ordering, or input reading behaves as documented without a compatibility profile and an EditMode run on that exact tuple"
+      ]
+    },
+    {
+      "id": "xri-teleportation-provider",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/teleportation-provider.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "Shipped provider component documented in the XR Interaction Toolkit 3.5 manual; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the teleport mode: a teleport is a request carrying a destination and an orientation rule that the provider queues and the rig applies",
+      "admitted_claims": [
+        "A teleport request carries a destination position, a destination rotation, and a match-orientation rule, and is queued on the provider rather than applied by the interactable that produced it",
+        "Teleport anchors and teleport areas are scene objects that produce requests; the provider does not know which anchor the request came from",
+        "A request is consumed once and the provider reports whether it was applied"
+      ],
+      "excluded_uses": [
+        "Core models a teleport as an intent to a registered anchor identity, not as a world position, and never as a scene object reference",
+        "No claim about fade, delay, or arrival behaviour on a headset without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-snap-turn-provider",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/snap-turn-provider.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "Shipped provider component documented in the XR Interaction Toolkit 3.5 manual; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the snap-turn mode: a discrete rotation by a configured increment with optional turn-around",
+      "admitted_claims": [
+        "Snap turn rotates the rig by a fixed configured increment per input activation, with a debounce time between turns",
+        "Left and right turns and an optional 180-degree turn-around are separate enable flags on the provider",
+        "The increment and the enable flags are serialized provider settings rather than per-input values"
+      ],
+      "excluded_uses": [
+        "Core owns the set of admitted increments as a comfort-policy option; the adapter writes the selected increment to the provider and never reads product tuning from the scene",
+        "No claim that a given increment is comfortable for any person or device"
+      ]
+    },
+    {
+      "id": "xri-continuous-turn-provider",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/continuous-turn-provider.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "Shipped provider component documented in the XR Interaction Toolkit 3.5 manual; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the smooth-turn mode: a rotation rate applied over frame time from a continuous input axis",
+      "admitted_claims": [
+        "Continuous turn rotates the rig at a configured turn speed in degrees per second scaled by the input axis and the frame delta",
+        "Snap turn and continuous turn are separate providers and a project enables one or the other for a given input rather than both",
+        "Turn speed is a serialized provider setting"
+      ],
+      "excluded_uses": [
+        "Core represents the turn mode as a closed choice between snap and smooth and never both at once for one input source",
+        "No claim about perceived rotation smoothness or discomfort without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-continuous-move-provider",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/continuous-move-provider.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "Shipped provider component documented in the XR Interaction Toolkit 3.5 manual; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the continuous-move mode: a planar move vector per tick at a configured speed, with a forward source and gravity handled by the provider",
+      "admitted_claims": [
+        "Continuous move translates the rig by a two-axis input scaled by a configured move speed and the frame delta, relative to a chosen forward source such as the head or a controller",
+        "Strafe, fly, and gravity are provider settings that change how the input vector is applied",
+        "Move speed is a serialized provider setting"
+      ],
+      "excluded_uses": [
+        "Core represents movement as an intent carrying a normalized planar vector and a tick duration, never a world-space delta computed from engine transforms",
+        "No claim about collision, ground detection, or gravity behaviour in a scene"
+      ]
+    },
+    {
+      "id": "xri-tunneling-vignette",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/tunneling-vignette-controller.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "Shipped comfort component documented in the XR Interaction Toolkit 3.5 manual; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the vignette comfort option: a field-of-view reduction driven by locomotion providers with a configurable aperture and fade",
+      "admitted_claims": [
+        "A tunneling vignette controller reduces the visible field of view while a registered locomotion provider is active, then fades it back",
+        "Aperture size, feathering, ease-in and ease-out times are parameters that a provider can override while it drives the vignette",
+        "The vignette is a rendered effect attached to the camera rather than a locomotion provider"
+      ],
+      "excluded_uses": [
+        "Core models the vignette as a closed comfort option (enabled with an intensity range) and owns no rendering or camera type",
+        "No claim that the vignette reduces discomfort for any person or on any device"
+      ]
+    },
+    {
+      "id": "meta-locomotion-design-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/locomotion/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer design guidance that this repository already cites for interaction references; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Platform comfort evidence that teleport, snap turn, and vignetting are recognised comfort techniques and that the locomotion mode and turn style are user choices rather than fixed product values",
+      "admitted_claims": [
+        "Teleportation and snap turning are presented as comfort-preserving alternatives to continuous motion and continuous rotation",
+        "Reducing the field of view during artificial motion is a recognised comfort technique",
+        "Applications are expected to let the person choose between locomotion and turning styles rather than imposing one"
+      ],
+      "excluded_uses": [
+        "No numeric comfort threshold, comfort rating, or store-review outcome is transferred into the Core",
+        "No claim that any option set satisfies a platform comfort rating without that platform's own review"
+      ]
+    },
+    {
+      "id": "pico-locomotion-design-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/design-guidelines/locomotion/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO developer design guidance that this repository already cites for interaction references; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Second-platform comfort evidence that the same closed set of locomotion and turn styles recurs across headset platforms and that seated and standing use are distinct postures the application must respect",
+      "admitted_claims": [
+        "Teleport, snap turn, and smooth movement are described as the common locomotion styles with different comfort trade-offs",
+        "Seated and standing play are distinct configurations that change how motion and turning should be offered",
+        "Sudden, uncontrolled, or acceleration-heavy camera motion is discouraged"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, sample, or boundary behaviour is depended upon by the Core",
+        "No claim about PICO device behaviour without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "apple-hig-motion",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/motion",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Human Interface Guidelines Motion page, already admitted by the Settings family source manifest on 2026-07-16; not re-fetched from this environment",
+      "admitted_role": "Third-platform comfort evidence that artificial motion must be optional and that the comfort decision is platform- and person-specific rather than universal",
+      "admitted_claims": [
+        "Motion should be purposeful and optional where possible, with a way to reduce or avoid it",
+        "Peripheral, full-field, world-rotation, and sustained motion are treated as distinct comfort considerations in immersive experiences"
+      ],
+      "excluded_uses": [
+        "Apple guidance is not a Unity implementation prescription and grants no device support claim",
+        "No numeric comfort threshold or medical claim is transferred"
+      ]
+    },
+    {
+      "id": "apple-hig-immersive-experiences",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/immersive-experiences",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Human Interface Guidelines immersive-experiences page; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Evidence that the immersion level and the presence of artificial motion are choices the person controls and that the application must keep a stable frame of reference",
+      "admitted_claims": [
+        "People should stay in control of how immersive an experience is and be able to leave it",
+        "A stable frame of reference and gradual transitions are preferred over abrupt viewpoint changes"
+      ],
+      "excluded_uses": [
+        "No visionOS API, immersion style enumeration, or scene type is depended upon",
+        "No claim that a locomotion mode is appropriate on any Apple device without device evidence"
+      ]
+    },
+    {
+      "id": "godot-xr-tools",
+      "kind": "maintained_open_source_implementation",
+      "authority": "GodotVR community",
+      "url": "https://github.com/GodotVR/godot-xr-tools",
+      "license_or_terms": "MIT; architecture facts only, no code copied",
+      "maintenance_evidence": "Widely adopted second-engine XR helper library with tagged releases and a documented locomotion set; adoption count, release cadence, and an immutable review ref to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent second-engine evidence that teleport, direct (continuous) movement, snap and smooth turn, and a vignette are the recurring locomotion kernel and that each is a separately enabled movement function",
+      "admitted_claims": [
+        "Locomotion is provided as separate movement functions (teleport, direct movement, turn, and others) that can be enabled independently on the same player body",
+        "Turn is configurable as snap by a step angle or as smooth by a rate",
+        "A vignette effect is provided as a separate comfort function driven by player motion"
+      ],
+      "excluded_uses": [
+        "No Godot type, scene, or script is copied and the Core has no Godot implementation",
+        "Godot is a roadmap direction only for this repository; this source proves recurrence, not support"
+      ]
+    },
+    {
+      "id": "tilia-locomotors-teleporter",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Extend Reality Ltd",
+      "url": "https://github.com/ExtendRealityLtd/Tilia.Locomotors.Teleporter.Unity",
+      "license_or_terms": "MIT; architecture facts only, no code copied",
+      "maintenance_evidence": "Open-source Unity teleport locomotor from the VRTK successor package set with tagged releases; current maintenance state, adoption, and an immutable review ref to be recorded by a person before this source is relied on; not fetched from this environment",
+      "admitted_role": "Independent Unity-side evidence that a teleport is a request to a destination with a separate blink or fade transition, produced by scene targets and consumed by one locomotor",
+      "admitted_claims": [
+        "A teleporter consumes destination requests and applies them as one transform change with an optional camera blink",
+        "Teleport destinations are separate objects from the locomotor that moves the player"
+      ],
+      "excluded_uses": [
+        "No Tilia or VRTK type, prefab, or event chain is depended upon",
+        "Maintenance must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "settings-family-comfort-boundary",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/settings/architecture-contract.md",
+      "reason": "The Settings family already states that its Comfort category is discoverability metadata and not a locomotion policy; this family owns the locomotion policy and the two must not duplicate each other"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform comfort rating, or device authority",
+    "The first implementation is a mode-identity, comfort-policy, intent, and immutable-state substrate, not a rig controller, an input reader, or a rendering effect",
+    "Motion sickness, comfort, latency, frame timing, and any headset or controller behaviour are device claims that require a Device Lab receipt, never an EditMode result or a source citation"
+  ]
+}

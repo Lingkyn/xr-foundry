@@ -1,0 +1,87 @@
+{
+  "schema": "xr-foundry.deliberation.v1",
+  "version": "0.1.0",
+  "id": "DLB-0004-SCHEDULED-STEWARD",
+  "title": "Scheduled steward execution inside the repository (RFC 0008)",
+  "status": "open",
+  "decision_class": "constitutional_change",
+  "governance_stage": "G0",
+  "review_opened_at": "2026-09-17T19:00:00Z",
+  "review_not_before": "2026-10-01T19:00:00Z",
+  "objective": "Decide whether the steward's schedule and entry point may live in the repository as one designated scheduled workflow with a scoped write token, so the repository keeps moving when a person supplies only tokens, instead of depending on one vendor's hosted session.",
+  "current_question": "Does admitting a schedule trigger and a scoped write-capable secret for one mandate-listed workflow keep the workflow-security boundary that RFC 0001 set, given a ruleset on main, a read-only GITHUB_TOKEN, and the merge-readiness verdict as the gate?",
+  "assumptions": [
+    {
+      "statement": "The current steward runs from one vendor's hosted session under one person's account; the tree records neither the schedule nor the credentials, so a lost session stops the repository silently.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/mandates/weekly-steward.mandate.json"
+      ]
+    },
+    {
+      "statement": "A scheduled job with a write token and an LLM reading untrusted Issues is the shape prompt-injection attacks target, so the amendment must stay narrow and machine-checked.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/AGENTS.md"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "id": "OPT-IN-REPO-SCHEDULE",
+      "summary": "Admit a schedule trigger only on a workflow named in a live mandate, with read-only GITHUB_TOKEN, one named scoped secret, SHA-pinned actions, and a ruleset on main; the undo is one revert plus deleting the workflow.",
+      "trade_offs": [
+        "The repository moves without any vendor session or person present",
+        "A scoped write token exists in repository secrets; misuse is bounded by the ruleset and the verdict, not eliminated"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0008-scheduled-steward-in-repository.md"
+      ]
+    },
+    {
+      "id": "OPT-KEEP-HOSTED-ONLY",
+      "summary": "Keep the steward in vendor-hosted sessions; the tree stays free of write tokens.",
+      "trade_offs": [
+        "No new secret or trigger in the tree",
+        "Continuity depends on one account and one vendor; the schedule is invisible to contributors"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/validation/checked-claims.md"
+      ]
+    }
+  ],
+  "deltas": [],
+  "synthesis": {
+    "agreements": [
+      "Under both options the merge gate stays the repository contract, the verdict, and branch protection on main."
+    ],
+    "disagreements": [
+      "Whether a scoped write token in repository secrets is an acceptable cost for continuity is the open question."
+    ],
+    "missing_evidence": [
+      "A person confirming the pinned SHA and documentation of the agent action to be used.",
+      "A ruleset on main and tags that the mandate can reference."
+    ],
+    "updated_at": "2026-09-17T19:00:00Z"
+  },
+  "decision": null,
+  "execution": {
+    "readiness": "not_ready",
+    "task": null,
+    "scope": [],
+    "non_goals": [
+      "No change to the routine merge rule, approval, or the verdict.",
+      "No wallet, treasury, or on-chain step."
+    ],
+    "exact_next_action": "Until 2026-10-01T19:00:00Z anyone may add a risk or counterexample delta. If none exists when the window closes, the weekly steward records OPT-IN-REPO-SCHEDULE by lazy consensus with decided_by process:mandate.weekly-steward.v1; the rule amendment, the workflow file, and the mandate field then land as one revertible change, and the owner adds the secrets and the ruleset. An objection keeps the record with a person."
+  },
+  "reopen_conditions": [
+    "The scheduled workflow pushes outside the mandate's branch patterns or acts on an instruction found in an Issue or comment."
+  ],
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_execution_authority": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "agent_or_model_ranking": false,
+    "private_chain_of_thought_required": false
+  }
+}

@@ -15,7 +15,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -26,7 +26,10 @@
         "docs/standards/audio/admission.draft.json",
         "docs/standards/lessons/lessons-register.json"
       ],
-      "allowed_paths": ["docs/standards/locomotion/", "docs/foundry/queue/next-batch.json"],
+      "allowed_paths": [
+        "docs/standards/locomotion/",
+        "docs/foundry/queue/next-batch.json"
+      ],
       "steps": [
         "Write docs/standards/locomotion/source-manifest.json naming only admitted positive public sources (engine locomotion documentation, platform comfort guidelines, maintained open-source locomotion implementations) with role, admitted claims, limits, and license boundary per source; mark every URL as not fetched unless a person confirmed it.",
         "Write docs/standards/locomotion/verification-contract.md with a Core gate (teleport, snap turn, smooth turn, continuous move, and comfort policy as engine-light intents and immutable state with stable failure codes) and a Unity adapter gate (thin binding to the XR Interaction Toolkit locomotion providers with explicit diagnostics for every by-name resolution), plus a claim ceiling that names motion-sickness, comfort, and device behaviour as device-evidence only.",
@@ -34,7 +37,10 @@
         "Add a NEXT-LOCOMOTION-COMFORT candidate to docs/foundry/queue/next-batch.json with state proposal, no package_ids, and no placeholder text."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest discover -s tests -p \"test_*.py\""],
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
         "artifacts": [
           "docs/standards/locomotion/README.md",
           "docs/standards/locomotion/source-manifest.json",
@@ -43,7 +49,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a merge-readiness verdict with repository_contract pass on the pull request.",
-      "done_proof": null
+      "done_proof": "docs/standards/locomotion/verification-contract.md"
     },
     {
       "id": "WI-002",
@@ -53,22 +59,34 @@
       "decision_class": "routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WI-001"],
+      "depends_on": [
+        "WI-001"
+      ],
       "read_first": [
         "AGENTS.md",
         "staging/audio/README.md",
         "docs/standards/audio/verification-contract.md",
         "docs/standards/audio/coverage-map.json"
       ],
-      "allowed_paths": ["staging/locomotion/", "docs/standards/locomotion/coverage-map.json", "docs/standards/locomotion/README.md"],
+      "allowed_paths": [
+        "staging/locomotion/",
+        "docs/standards/locomotion/coverage-map.json",
+        "docs/standards/locomotion/README.md"
+      ],
       "steps": [
         "Read docs/standards/locomotion/verification-contract.md, which WI-001 produced, then author staging/locomotion/com.lingkyn.locomotion.core and com.lingkyn.locomotion.unity with package.staging.json, asmdefs, Runtime sources, NUnit EditMode tests, and a domain-only sample, modelled on staging/audio.",
         "Write docs/standards/locomotion/coverage-map.json mapping every contract clause to named tests; every listed test must exist and every test must be listed.",
         "Write staging/locomotion/README.md with the status line, the what-is-here table, the promotion steps, and the statement that the code is authored and unexecuted."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest tests.test_coverage_claims"],
-        "artifacts": ["staging/locomotion/README.md", "docs/standards/locomotion/coverage-map.json"]
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/locomotion/README.md",
+          "docs/standards/locomotion/coverage-map.json"
+        ]
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
       "done_proof": null
@@ -80,7 +98,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -89,13 +107,19 @@
         "docs/standards/audio/verification-contract.md",
         "docs/standards/lessons/lessons-register.json"
       ],
-      "allowed_paths": ["docs/standards/scene-flow/", "docs/foundry/queue/next-batch.json"],
+      "allowed_paths": [
+        "docs/standards/scene-flow/",
+        "docs/foundry/queue/next-batch.json"
+      ],
       "steps": [
         "Write the source manifest, verification contract (Core gate: scene set identity, load and unload intents, transition state machine with fade and hold, error recovery with stable codes; Unity adapter gate: thin binding over additive scene loading with explicit diagnostics), README with lesson dispositions, and admission draft for the Scene flow family.",
         "Add a NEXT-SCENE-FLOW candidate to the queue with state proposal and no package_ids."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest discover -s tests -p \"test_*.py\""],
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
         "artifacts": [
           "docs/standards/scene-flow/README.md",
           "docs/standards/scene-flow/source-manifest.json",
@@ -104,7 +128,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
-      "done_proof": null
+      "done_proof": "docs/standards/scene-flow/verification-contract.md"
     },
     {
       "id": "WI-004",
@@ -114,16 +138,32 @@
       "decision_class": "routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WI-003"],
-      "read_first": ["AGENTS.md", "staging/audio/README.md", "docs/standards/audio/verification-contract.md"],
-      "allowed_paths": ["staging/scene-flow/", "docs/standards/scene-flow/coverage-map.json", "docs/standards/scene-flow/README.md"],
+      "depends_on": [
+        "WI-003"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "staging/audio/README.md",
+        "docs/standards/audio/verification-contract.md"
+      ],
+      "allowed_paths": [
+        "staging/scene-flow/",
+        "docs/standards/scene-flow/coverage-map.json",
+        "docs/standards/scene-flow/README.md"
+      ],
       "steps": [
         "Read docs/standards/scene-flow/verification-contract.md, which WI-003 produced, then author the staged Core and Unity adapter packages with tests and a sample, modelled on staging/audio.",
         "Write the coverage map and the staging README."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest tests.test_coverage_claims"],
-        "artifacts": ["staging/scene-flow/README.md", "docs/standards/scene-flow/coverage-map.json"]
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/scene-flow/README.md",
+          "docs/standards/scene-flow/coverage-map.json"
+        ]
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
       "done_proof": null
@@ -135,7 +175,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -145,14 +185,20 @@
         "docs/standards/audio/verification-contract.md",
         "docs/standards/lessons/lessons-register.json"
       ],
-      "allowed_paths": ["docs/standards/xr-ui-shell/", "docs/foundry/queue/next-batch.json"],
+      "allowed_paths": [
+        "docs/standards/xr-ui-shell/",
+        "docs/foundry/queue/next-batch.json"
+      ],
       "steps": [
         "Write the source manifest, verification contract (Core gate: panel, wrist and hand menu, pointer and gaze routing as renderer-neutral intents and state; adapter gates for UGUI and UI Toolkit as siblings with one injectable skin seam mapping the shared design-language tokens), README with lesson dispositions, and admission draft for the XR UI shell family.",
         "State how the Inventory presentation adapters become one client of the shell without transferring any Inventory evidence.",
         "Add a NEXT-XR-UI-SHELL candidate to the queue with state proposal and no package_ids."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest discover -s tests -p \"test_*.py\""],
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
         "artifacts": [
           "docs/standards/xr-ui-shell/README.md",
           "docs/standards/xr-ui-shell/source-manifest.json",
@@ -161,7 +207,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
-      "done_proof": null
+      "done_proof": "docs/standards/xr-ui-shell/verification-contract.md"
     },
     {
       "id": "WI-006",
@@ -172,15 +218,30 @@
       "size": "medium",
       "status": "open",
       "depends_on": [],
-      "read_first": ["AGENTS.md", "docs/validation/checked-claims.md", "scripts/validate_repository.py", "tests/test_coverage_claims.py"],
-      "allowed_paths": ["scripts/validate_repository.py", "tests/test_source_manifests.py", "docs/validation/checked-claims.md", "CHANGELOG.md"],
+      "read_first": [
+        "AGENTS.md",
+        "docs/validation/checked-claims.md",
+        "scripts/validate_repository.py",
+        "tests/test_coverage_claims.py"
+      ],
+      "allowed_paths": [
+        "scripts/validate_repository.py",
+        "tests/test_source_manifests.py",
+        "docs/validation/checked-claims.md",
+        "CHANGELOG.md"
+      ],
       "steps": [
         "Generalise validate_inventory_source_manifest into a rule that validates docs/standards/*/source-manifest.json for every family with the same admission, HTTPS, role, evidence, and license-boundary requirements, keeping the Inventory rule's behaviour unchanged.",
         "Add fix hints, a test module, and move the register row from self-declared to machine-checked."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest discover -s tests -p \"test_*.py\""],
-        "artifacts": ["tests/test_source_manifests.py"]
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "tests/test_source_manifests.py"
+        ]
       },
       "evidence": "The register row names the new function and the tests; the repository contract passes on every existing manifest or the exact findings are allowlisted with the removal comment.",
       "done_proof": null
@@ -194,15 +255,33 @@
       "size": "medium",
       "status": "open",
       "depends_on": [],
-      "read_first": ["AGENTS.md", "docs/validation/checked-claims.md", "docs/standards/persistence/api-surface.md", "scripts/validate_repository.py"],
-      "allowed_paths": ["scripts/validate_repository.py", "tests/test_api_surfaces.py", "docs/standards/persistence/api-surface.md", "docs/standards/settings/api-surface.md", "docs/standards/interaction/api-surface.md", "docs/validation/checked-claims.md", "CHANGELOG.md"],
+      "read_first": [
+        "AGENTS.md",
+        "docs/validation/checked-claims.md",
+        "docs/standards/persistence/api-surface.md",
+        "scripts/validate_repository.py"
+      ],
+      "allowed_paths": [
+        "scripts/validate_repository.py",
+        "tests/test_api_surfaces.py",
+        "docs/standards/persistence/api-surface.md",
+        "docs/standards/settings/api-surface.md",
+        "docs/standards/interaction/api-surface.md",
+        "docs/validation/checked-claims.md",
+        "CHANGELOG.md"
+      ],
       "steps": [
         "Add a rule that compares each docs/standards/<family>/api-surface.md type list with the public type declarations found in that family's Runtime sources, reporting every missing or extra type.",
         "Correct the three inventories where the rule finds drift, add fix hints and tests, and update the register row."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest discover -s tests -p \"test_*.py\""],
-        "artifacts": ["tests/test_api_surfaces.py"]
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "tests/test_api_surfaces.py"
+        ]
       },
       "evidence": "The register row names the new function and the tests.",
       "done_proof": null
@@ -216,15 +295,33 @@
       "size": "small",
       "status": "open",
       "depends_on": [],
-      "read_first": ["AGENTS.md", ".github/workflows/validate.yml", "scripts/merge_readiness.py", "docs/contributing/merge-readiness.md", "docs/validation/checked-claims.md"],
-      "allowed_paths": [".github/workflows/validate.yml", "scripts/merge_readiness.py", "tests/test_merge_readiness.py", "docs/contributing/merge-readiness.md", "docs/validation/checked-claims.md", "CHANGELOG.md"],
+      "read_first": [
+        "AGENTS.md",
+        ".github/workflows/validate.yml",
+        "scripts/merge_readiness.py",
+        "docs/contributing/merge-readiness.md",
+        "docs/validation/checked-claims.md"
+      ],
+      "allowed_paths": [
+        ".github/workflows/validate.yml",
+        "scripts/merge_readiness.py",
+        "tests/test_merge_readiness.py",
+        "docs/contributing/merge-readiness.md",
+        "docs/validation/checked-claims.md",
+        "CHANGELOG.md"
+      ],
       "steps": [
         "Make merge_readiness.py discover the deliberation record for a governance change from the changed files (a record added or modified under docs/governance/deliberations/ in the candidate) when --deliberation-record is not passed, and make the CI job rely on that discovery.",
         "Add a test where a governance change without any record is blocked and one with an open record inside its window is blocked, and update the register's first known gap."
       ],
       "acceptance": {
-        "commands": ["python -m unittest tests.test_merge_readiness", "python scripts/validate_repository.py --json"],
-        "artifacts": [".github/workflows/validate.yml"]
+        "commands": [
+          "python -m unittest tests.test_merge_readiness",
+          "python scripts/validate_repository.py --json"
+        ],
+        "artifacts": [
+          ".github/workflows/validate.yml"
+        ]
       },
       "evidence": "validate_workflow_security still passes and the new tests are green.",
       "done_proof": null
@@ -238,15 +335,33 @@
       "size": "small",
       "status": "open",
       "depends_on": [],
-      "read_first": ["AGENTS.md", "docs/contributing/start-here.md", "docs/device-lab/device-receipt.template.json", "docs/contributing/work-continuation.schema.json"],
-      "allowed_paths": ["docs/contributing/cold-start-receipt.schema.json", "docs/contributing/cold-start-receipt.template.json", "docs/contributing/start-here.md", "scripts/validate_repository.py", "tests/test_cold_start_receipt.py", "CHANGELOG.md"],
+      "read_first": [
+        "AGENTS.md",
+        "docs/contributing/start-here.md",
+        "docs/device-lab/device-receipt.template.json",
+        "docs/contributing/work-continuation.schema.json"
+      ],
+      "allowed_paths": [
+        "docs/contributing/cold-start-receipt.schema.json",
+        "docs/contributing/cold-start-receipt.template.json",
+        "docs/contributing/start-here.md",
+        "scripts/validate_repository.py",
+        "tests/test_cold_start_receipt.py",
+        "CHANGELOG.md"
+      ],
       "steps": [
         "Define a receipt an outside contributor or Agent fills after following start-here.md from a fork: tool used, commit started from, minutes per step, the pull request URL, the verdict, and what was confusing; the schema forbids not_tested and requires a public commit and pull request.",
         "Validate committed receipts under docs/validation/cold-start/ with a validator rule and a test."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json", "python -m unittest tests.test_cold_start_receipt"],
-        "artifacts": ["docs/contributing/cold-start-receipt.schema.json", "docs/contributing/cold-start-receipt.template.json"]
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_cold_start_receipt"
+        ],
+        "artifacts": [
+          "docs/contributing/cold-start-receipt.schema.json",
+          "docs/contributing/cold-start-receipt.template.json"
+        ]
       },
       "evidence": "The template validates against the schema and the start-here page links both.",
       "done_proof": null
@@ -259,15 +374,25 @@
       "decision_class": "routine",
       "size": "small",
       "status": "open",
-      "depends_on": ["WI-009"],
-      "read_first": ["docs/contributing/start-here.md"],
-      "allowed_paths": ["docs/validation/cold-start/"],
+      "depends_on": [
+        "WI-009"
+      ],
+      "read_first": [
+        "docs/contributing/start-here.md"
+      ],
+      "allowed_paths": [
+        "docs/validation/cold-start/"
+      ],
       "steps": [
         "From a fork, follow start-here.md with any tool (a person, or an Agent such as a coding assistant in an editor or a terminal), land one routine change, and commit the filled receipt."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json"],
-        "artifacts": ["docs/validation/cold-start/"]
+        "commands": [
+          "python scripts/validate_repository.py --json"
+        ],
+        "artifacts": [
+          "docs/validation/cold-start/"
+        ]
       },
       "evidence": "A receipt naming a merged pull request from an account other than the maintainer.",
       "done_proof": null
@@ -281,15 +406,29 @@
       "size": "medium",
       "status": "open",
       "depends_on": [],
-      "read_first": ["docs/validation/run-unity-gates.md", "compatibility-profiles.json", "docs/contributing/merge-readiness.md"],
-      "allowed_paths": ["docs/validation/evidence/", "compatibility-profiles.json", "package-catalog.json", "packages/"],
+      "read_first": [
+        "docs/validation/run-unity-gates.md",
+        "compatibility-profiles.json",
+        "docs/contributing/merge-readiness.md"
+      ],
+      "allowed_paths": [
+        "docs/validation/evidence/",
+        "compatibility-profiles.json",
+        "package-catalog.json",
+        "packages/"
+      ],
       "steps": [
         "Run python scripts/run_unity_gates.py for every live package on the default-branch commit and commit the receipts, result XML, and locks under docs/validation/evidence/<profile>/.",
         "Move every compatibility profile to that commit; fix any test the run turns red before rebinding."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json --run-contract-tests", "python scripts/merge_readiness.py --base origin/main --head HEAD --json"],
-        "artifacts": ["docs/validation/evidence/"]
+        "commands": [
+          "python scripts/validate_repository.py --json --run-contract-tests",
+          "python scripts/merge_readiness.py --base origin/main --head HEAD --json"
+        ],
+        "artifacts": [
+          "docs/validation/evidence/"
+        ]
       },
       "evidence": "unity_evidence reports pass in the merge-readiness verdict.",
       "done_proof": null
@@ -302,16 +441,41 @@
       "decision_class": "non_routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WI-011"],
-      "read_first": ["staging/localization/README.md", "docs/foundry/README.md", "docs/standards/localization/admission.draft.json"],
-      "allowed_paths": ["packages/unity/systems/localization/", "staging/localization/", "docs/foundry/", "docs/standards/localization/", "package-catalog.json", "component-catalog.json", "capability-registry.json", "compatibility-profiles.json", "reference-catalog.json", "docs/standards/lessons/lessons-register.json", "README.md", "ROADMAP.md", "CHANGELOG.md"],
+      "depends_on": [
+        "WI-011"
+      ],
+      "read_first": [
+        "staging/localization/README.md",
+        "docs/foundry/README.md",
+        "docs/standards/localization/admission.draft.json"
+      ],
+      "allowed_paths": [
+        "packages/unity/systems/localization/",
+        "staging/localization/",
+        "docs/foundry/",
+        "docs/standards/localization/",
+        "package-catalog.json",
+        "component-catalog.json",
+        "capability-registry.json",
+        "compatibility-profiles.json",
+        "reference-catalog.json",
+        "docs/standards/lessons/lessons-register.json",
+        "README.md",
+        "ROADMAP.md",
+        "CHANGELOG.md"
+      ],
       "steps": [
         "Follow the five promotion steps in staging/localization/README.md; the admission signature is a maintainer decision.",
         "Delete staging/localization once the packages are live."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json --run-contract-tests", "python scripts/compose_system.py --check --json"],
-        "artifacts": ["docs/foundry/admissions/localization.v1.json"]
+        "commands": [
+          "python scripts/validate_repository.py --json --run-contract-tests",
+          "python scripts/compose_system.py --check --json"
+        ],
+        "artifacts": [
+          "docs/foundry/admissions/localization.v1.json"
+        ]
       },
       "evidence": "A verified compatibility profile for each Localization package at the promotion commit.",
       "done_proof": null
@@ -324,16 +488,41 @@
       "decision_class": "non_routine",
       "size": "large",
       "status": "open",
-      "depends_on": ["WI-011"],
-      "read_first": ["staging/audio/README.md", "docs/foundry/README.md", "docs/standards/audio/admission.draft.json"],
-      "allowed_paths": ["packages/unity/systems/audio/", "staging/audio/", "docs/foundry/", "docs/standards/audio/", "package-catalog.json", "component-catalog.json", "capability-registry.json", "compatibility-profiles.json", "reference-catalog.json", "docs/standards/lessons/lessons-register.json", "README.md", "ROADMAP.md", "CHANGELOG.md"],
+      "depends_on": [
+        "WI-011"
+      ],
+      "read_first": [
+        "staging/audio/README.md",
+        "docs/foundry/README.md",
+        "docs/standards/audio/admission.draft.json"
+      ],
+      "allowed_paths": [
+        "packages/unity/systems/audio/",
+        "staging/audio/",
+        "docs/foundry/",
+        "docs/standards/audio/",
+        "package-catalog.json",
+        "component-catalog.json",
+        "capability-registry.json",
+        "compatibility-profiles.json",
+        "reference-catalog.json",
+        "docs/standards/lessons/lessons-register.json",
+        "README.md",
+        "ROADMAP.md",
+        "CHANGELOG.md"
+      ],
       "steps": [
         "Follow the promotion steps in staging/audio/README.md; the admission signature is a maintainer decision.",
         "Delete staging/audio once the packages are live."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json --run-contract-tests", "python scripts/compose_system.py --check --json"],
-        "artifacts": ["docs/foundry/admissions/audio.v1.json"]
+        "commands": [
+          "python scripts/validate_repository.py --json --run-contract-tests",
+          "python scripts/compose_system.py --check --json"
+        ],
+        "artifacts": [
+          "docs/foundry/admissions/audio.v1.json"
+        ]
       },
       "evidence": "A verified compatibility profile for each Audio package at the promotion commit.",
       "done_proof": null
@@ -346,15 +535,28 @@
       "decision_class": "non_routine",
       "size": "medium",
       "status": "open",
-      "depends_on": ["WI-011"],
-      "read_first": ["docs/device-lab/README.md", "docs/device-lab/test-plans/inventory-world-space-ui-v1.json", "docs/device-lab/device-receipt.template.json"],
-      "allowed_paths": ["docs/device-lab/receipts/", "docs/device-lab/profiles/"],
+      "depends_on": [
+        "WI-011"
+      ],
+      "read_first": [
+        "docs/device-lab/README.md",
+        "docs/device-lab/test-plans/inventory-world-space-ui-v1.json",
+        "docs/device-lab/device-receipt.template.json"
+      ],
+      "allowed_paths": [
+        "docs/device-lab/receipts/",
+        "docs/device-lab/profiles/"
+      ],
       "steps": [
         "Build the XR composition at a public commit, run the plan on one named headset, fill the receipt with every binding the schema requires, and validate it with --device-lab-receipt before committing."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json"],
-        "artifacts": ["docs/device-lab/receipts/"]
+        "commands": [
+          "python scripts/validate_repository.py --json"
+        ],
+        "artifacts": [
+          "docs/device-lab/receipts/"
+        ]
       },
       "evidence": "One device profile leaves not_tested.",
       "done_proof": null
@@ -368,16 +570,26 @@
       "size": "small",
       "status": "open",
       "depends_on": [],
-      "read_first": ["docs/contributing/merge-readiness.md", "docs/validation/run-unity-gates.md", "docs/foundry/batches/batch-registry.v1.json"],
-      "allowed_paths": ["docs/contributing/merge-readiness.md"],
+      "read_first": [
+        "docs/contributing/merge-readiness.md",
+        "docs/validation/run-unity-gates.md",
+        "docs/foundry/batches/batch-registry.v1.json"
+      ],
+      "allowed_paths": [
+        "docs/contributing/merge-readiness.md"
+      ],
       "steps": [
         "In the repository settings: make repository-contract and merge-readiness required checks on the default branch and enable auto-merge; add the Unity license secret the unity-consumer-tests workflow names.",
         "Create the Git tags named in the batch registry at the evidence commits.",
         "Record the date each setting was made in docs/contributing/merge-readiness.md so the tree carries the claim."
       ],
       "acceptance": {
-        "commands": ["python scripts/validate_repository.py --json"],
-        "artifacts": ["docs/contributing/merge-readiness.md"]
+        "commands": [
+          "python scripts/validate_repository.py --json"
+        ],
+        "artifacts": [
+          "docs/contributing/merge-readiness.md"
+        ]
       },
       "evidence": "A green merge-readiness check visible on a pull request and the tags resolvable from a fresh clone.",
       "done_proof": null
@@ -390,15 +602,27 @@
       "decision_class": "routine",
       "size": "small",
       "status": "open",
-      "depends_on": ["WI-009"],
-      "read_first": ["CONTRIBUTING.md", "docs/contributing/open-work.md", "docs/contributing/label-contract.json"],
-      "allowed_paths": ["docs/contributing/tasks/"],
+      "depends_on": [
+        "WI-009"
+      ],
+      "read_first": [
+        "CONTRIBUTING.md",
+        "docs/contributing/open-work.md",
+        "docs/contributing/label-contract.json"
+      ],
+      "allowed_paths": [
+        "docs/contributing/tasks/"
+      ],
       "steps": [
         "Pick five routine items from python scripts/open_work.py --markdown that need nothing but a clone, and open one Issue each with setup context, exact change and test locations, bounded size, and a named shepherd, as CONTRIBUTING.md requires for the certified subset."
       ],
       "acceptance": {
-        "commands": ["python scripts/open_work.py --json"],
-        "artifacts": ["docs/contributing/tasks/"]
+        "commands": [
+          "python scripts/open_work.py --json"
+        ],
+        "artifacts": [
+          "docs/contributing/tasks/"
+        ]
       },
       "evidence": "Five Issues carrying the good first issue label that each meet the certified subset.",
       "done_proof": null

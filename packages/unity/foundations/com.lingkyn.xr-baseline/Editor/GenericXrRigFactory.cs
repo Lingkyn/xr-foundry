@@ -14,21 +14,33 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
     {
         public const string RigObjectName = "XROriginRig";
 
-        public static GameObject EnsureRig(Scene scene, Transform playerParent, VrBaselineConfig config = null)
+        public static GameObject EnsureRig(Scene scene, Transform playerParent, VrBaselineConfig config = null) =>
+            EnsureRig(scene, playerParent, config, XrPrefabFactory.LoadOrResolveOriginSource);
+
+        /// <summary>
+        /// Same as <see cref="EnsureRig(Scene, Transform, VrBaselineConfig)"/> with the rig source
+        /// lookup injected; the menu passes the resolver from its <c>SandboxInitializationOptions</c>.
+        /// The resolver runs only when no rig already exists in the scene.
+        /// </summary>
+        internal static GameObject EnsureRig(
+            Scene scene,
+            Transform playerParent,
+            VrBaselineConfig config,
+            System.Func<GameObject> resolveSource)
         {
             var existing = FindRigUnderPlayer(playerParent) ?? FindRigInScene(scene);
             if (existing != null)
             {
                 ReparentUnderPlayer(existing, playerParent);
                 XrCameraTrackingRepair.Repair(existing);
-                XrRigInteractionRepair.Repair(existing, config);
+                ReportRepair(XrRigInteractionRepair.Repair(existing, config), existing);
                 EnsureXrRigAnchor(existing);
                 return existing;
             }
 
             RemoveStaleRigsUnder(playerParent);
 
-            var source = XrPrefabFactory.LoadOrResolveOriginSource();
+            var source = resolveSource != null ? resolveSource() : XrPrefabFactory.LoadOrResolveOriginSource();
             if (source == null) return null;
 
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(source, playerParent);
@@ -39,9 +51,21 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             instance.SetActive(true);
 
             XrCameraTrackingRepair.Repair(instance);
-            XrRigInteractionRepair.Repair(instance, config);
+            ReportRepair(XrRigInteractionRepair.Repair(instance, config), instance);
             EnsureXrRigAnchor(instance);
             return instance;
+        }
+
+        /// <summary>
+        /// A repair that could not configure an interactor is an error in the Console, not a
+        /// silently "initialized" Sandbox. The rig is still returned so the caller can inspect it.
+        /// </summary>
+        static void ReportRepair(XrRigInteractionRepairResult result, GameObject rig)
+        {
+            foreach (var diagnostic in result.Diagnostics)
+            {
+                Debug.LogError($"xr_baseline_repair_failed: {diagnostic}", rig);
+            }
         }
 
         public static GameObject FindRigInScene(Scene scene)

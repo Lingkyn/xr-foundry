@@ -25,6 +25,7 @@ directory does not create a parallel voting or proposal system.
 | [`agent-member.example.json`](agent-member.example.json) | Anonymous, unverified, non-authoritative example; not a member registry |
 | [`agent-native-source-manifest.json`](agent-native-source-manifest.json) | Research-Lite references, adopted lessons, and transfer limits |
 | [Deliberation record](../contributing/deliberation-record.schema.json) | Existing proposal-to-decision record with optional governance metadata |
+| [Merge-readiness contract](../contributing/merge-readiness.md) | The process-computed verdict that answers whether a change may merge; prototype-stage rule in `GOVERNANCE.md`, "Process-decided merges and lazy consensus" |
 
 The JSON model has `status=proposed` and `activation.active_policy=false`. Its
 `current_stage=G0` records the repository's observable topology; it does not mean
@@ -49,7 +50,16 @@ generating additional reports. Human maintainers retain final authority.
 
 The maintainer owns final repository, release, security, permission, and promotion
 decisions. Anyone may contribute through public, evidence-bound routes. No proposal,
-contribution, token, payment, or count grants authority.
+contribution, token, payment, or count grants authority. Under the prototype-stage
+rule in [`GOVERNANCE.md`](../../GOVERNANCE.md), "Process-decided merges and lazy
+consensus", whether a change may merge is answered by the
+[merge-readiness verdict](../contributing/merge-readiness.md): a routine change on
+a branch named by a live operating mandate merges by GitHub auto-merge once the
+verdict is `ready` and the required checks pass; a non-routine change never
+auto-merges and waits for a maintainer who reads the same verdict. A governance
+record whose review window closed with no `risk` or `counterexample` delta
+resolves by lazy consensus; an objection delta keeps it open until a person
+resolves it. A merge against a blocked verdict is a recorded override.
 
 ### G1 — Participatory commons
 

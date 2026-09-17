@@ -1,0 +1,85 @@
+{
+  "schema": "xr-foundry.deliberation.v1",
+  "version": "0.1.0",
+  "id": "DLB-0003-ROUTINE-LANE",
+  "title": "Routine lane: no claim, lease, anchor, or window for routine changes",
+  "status": "open",
+  "decision_class": "governance_policy",
+  "governance_stage": "G0",
+  "review_opened_at": "2026-09-16T14:00:00Z",
+  "review_not_before": "2026-09-23T14:00:00Z",
+  "objective": "Keep the Task Hall's checkpoint, claim, lease, anchor, and continuation machinery for coordinated, evidence-bearing, or rule-changing work, and let routine changes (documentation, tests, tooling, non-breaking package changes) enter through the start-here path with the merge-readiness verdict as the only gate.",
+  "current_question": "Does exempting routine changes from the checkpoint machinery lose any accountability the repository needs, given that every routine change still carries an accountable GitHub identity, a changelog entry, the repository contract, and the verdict?",
+  "assumptions": [
+    {
+      "statement": "The maintainer and their Agent needed five round trips to land a routine change; an outside contributor faces the same cost plus the reading load of the Task Hall, which is a barrier the contribution route was not meant to be.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/start-here.md"
+      ]
+    },
+    {
+      "statement": "The rule took effect on 2026-09-16 by maintainer direction under the prototype principle of acting and keeping the undo; the introducing commit named in CHANGELOG.md is the undo.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/task-hall.md"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "id": "OPT-ROUTINE-LANE",
+      "summary": "Routine changes skip claims, leases, anchors, continuation receipts, and windows; the verdict, changelog discipline, and a named identity are the accountability.",
+      "trade_offs": [
+        "Ten-minute path for people and Agents",
+        "Two routine changes can collide on the same file; git and the verdict's conflict check resolve it after the fact instead of a lease preventing it"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/merge-readiness.md"
+      ]
+    },
+    {
+      "id": "OPT-KEEP-CLAIMS",
+      "summary": "Keep the claim and lease requirement for every change.",
+      "trade_offs": [
+        "Prevents duplicate work by reservation",
+        "Keeps the entry fee that stopped the maintainer's own contributions"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/task-hall.md"
+      ]
+    }
+  ],
+  "deltas": [],
+  "synthesis": {
+    "agreements": [
+      "Non-routine work keeps the full checkpoint machinery under both options."
+    ],
+    "disagreements": [
+      "Whether reservation is worth its cost for small changes is the open question."
+    ],
+    "missing_evidence": [
+      "One outside contributor completing the start-here path end to end."
+    ],
+    "updated_at": "2026-09-16T14:00:00Z"
+  },
+  "decision": null,
+  "execution": {
+    "readiness": "not_ready",
+    "task": null,
+    "scope": [],
+    "non_goals": [
+      "No change to claims, leases, or continuation receipts for non-routine work."
+    ],
+    "exact_next_action": "Until 2026-09-23T14:00:00Z anyone may add a risk or counterexample delta. If none exists when the window closes, the weekly steward records OPT-ROUTINE-LANE by lazy consensus with decided_by process:mandate.weekly-steward.v1; an objection keeps the record with a person and the maintainer reverts the introducing commit if it holds."
+  },
+  "reopen_conditions": [
+    "Two routine changes collide in a way the verdict did not catch before merge."
+  ],
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_execution_authority": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "agent_or_model_ranking": false,
+    "private_chain_of_thought_required": false
+  }
+}

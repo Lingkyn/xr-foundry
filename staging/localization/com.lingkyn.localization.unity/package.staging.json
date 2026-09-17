@@ -1,0 +1,16 @@
+{
+  "name": "com.lingkyn.localization.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Localization Unity",
+  "description": "ScriptableObject message tables and catalogs with fail-closed authoring validation, an explicit SystemLanguage-to-locale map, and a plain runtime that owns the current locale, for the Lingkyn Localization Core.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.localization.core": "0.1.0"
+  },
+  "samples": []
+}

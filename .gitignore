@@ -12,3 +12,7 @@ Thumbs.db
 /Builds/
 __pycache__/
 *.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.unity-gates/

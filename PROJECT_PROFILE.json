@@ -206,10 +206,16 @@
   "next_entry_check": "Run project_profile_entry.py, then require a session-local AIOS Work Packet before durable work.",
   "deferred_or_gated": [
     {
-      "item": "Global host installation, MCP, hooks, plugin trust, or background automation",
+      "item": "Global host installation, MCP, hooks, or plugin trust",
       "status": "gated",
       "owner": "project owner",
       "trigger": "Separate activation decision with rollback and host proof"
+    },
+    {
+      "item": "Background automation under a written A0 operating mandate",
+      "status": "activated_bounded",
+      "owner": "project owner",
+      "trigger": "Recorded in docs/governance/mandates/weekly-steward.mandate.json on 2026-09-13; revocable at any time by the maintainer"
     },
     {
       "item": "Remote publication, pull request, account, wallet, token, or on-chain operation",

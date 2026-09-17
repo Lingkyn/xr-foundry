@@ -1,0 +1,62 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "localization",
+  "contract": "docs/standards/localization/verification-contract.md",
+  "audited_at_commit": "staging",
+  "policy": {
+    "mapping_basis": "test method names and bodies in staging/localization, matched against contract clause text; the code has not compiled or executed",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.localization.core",
+      "test_assembly": "Lingkyn.Localization.Core.Editor.Tests",
+      "clauses": [
+        {"id": "LC-01", "clause": "locale tag parsing, canonical casing, rejection of unsupported subtag shapes, and the parent chain down to root", "coverage": "covered", "tests": ["LocaleIdParsesAndCanonicalizesSubtags", "LocaleIdRejectsUnsupportedShapes"], "missing": []},
+        {"id": "LC-02", "clause": "message identity validation", "coverage": "covered", "tests": ["MessageIdAcceptsStableShapeAndRejectsOthers"], "missing": []},
+        {"id": "LC-03", "clause": "template parsing of placeholders, plural, select, exact selectors, the number sign, and apostrophe quoting, with a stable failure for every malformed shape and for conflicting argument kinds", "coverage": "covered", "tests": ["TemplateParsesPlaceholdersPluralSelectAndReportsArgumentKinds", "TemplateRejectsMalformedInputWithStableFailure", "FormatQuotingProducesLiteralBracesHashesAndApostrophes"], "missing": []},
+        {"id": "LC-04", "clause": "formatting of text and number arguments", "coverage": "covered", "tests": ["FormatSubstitutesTextAndNumbers"], "missing": []},
+        {"id": "LC-05", "clause": "plural selection for the declared language set across the five rule shapes", "coverage": "covered", "tests": ["FormatPluralEnglishUsesExactBranchThenCategories", "FormatPluralRussianSelectsOneFewManyOther", "FormatPluralArabicCoversSixCategories", "FormatPluralFrenchTreatsZeroAsOne", "CldrRulesDeclareSupportedLanguagesAndCategories"], "missing": []},
+        {"id": "LC-06", "clause": "select branches with fallback to other", "coverage": "covered", "tests": ["FormatSelectFallsBackToOther"], "missing": []},
+        {"id": "LC-07", "clause": "missing-argument, argument-type, and unknown-plural-rules failures as distinct results, with the other-only exemption", "coverage": "covered", "tests": ["FormatMissingArgumentFailsWithCode", "FormatPluralWithTextArgumentIsTypeMismatch", "FormatWithUnknownPluralRulesFailsUnlessOnlyOtherIsUsed"], "missing": []},
+        {"id": "LC-08", "clause": "table immutability and rejection of duplicate or malformed messages", "coverage": "covered", "tests": ["TableBuilderRejectsDuplicateAndMalformedMessages", "TablesAreImmutableAfterBuild"], "missing": []},
+        {"id": "LC-09", "clause": "catalog construction requiring the default locale and unique locales", "coverage": "covered", "tests": ["CatalogRequiresDefaultLocaleTableAndUniqueLocales"], "missing": []},
+        {"id": "LC-10", "clause": "the fallback chain: requested chain, then default chain, then root, de-duplicated", "coverage": "covered", "tests": ["FallbackChainFollowsLookupThenDefaultThenRoot"], "missing": []},
+        {"id": "LC-11", "clause": "resolution reports the resolved locale, fallback use, and the chain; a missing message names the chain", "coverage": "covered", "tests": ["ResolveReportsFallbackLocaleAndChain", "ResolveMissingEverywhereFailsWithChain"], "missing": []},
+        {"id": "LC-12", "clause": "formatting through the catalog with the plural rules of the resolved locale", "coverage": "covered", "tests": ["CatalogFormatUsesPluralRulesOfTheResolvedLocale"], "missing": []},
+        {"id": "LC-13", "clause": "validation codes for missing and extra messages, placeholder mismatch, missing and unused plural categories, unknown plural rules, a missing source table, and a clean pass", "coverage": "covered", "tests": ["ValidatorReportsMissingExtraAndPlaceholderMismatch", "ValidatorReportsPluralCategoryGapsPerLocale", "ValidatorReportsUnknownPluralRulesAsError", "ValidatorPassesAConsistentCatalog", "ValidatorFailsWhenSourceLocaleHasNoTable"], "missing": []}
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "unity_adapter",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.localization.unity",
+      "test_assembly": "Lingkyn.Localization.Unity.Editor.Tests",
+      "clauses": [
+        {"id": "LU-01", "clause": "a table asset converts to a domain table without mutating the asset", "coverage": "covered", "tests": ["TableAssetConvertsToDomainTableWithoutMutation"], "missing": []},
+        {"id": "LU-02", "clause": "table authoring validation reports invalid locale, invalid id, duplicate id, and malformed template with stable codes, field paths, and the source asset, and conversion throws with the same report", "coverage": "covered", "tests": ["TableAssetValidationReportsStableCodesAndConversionThrows"], "missing": []},
+        {"id": "LU-03", "clause": "catalog authoring validation reports a missing table reference, a duplicate locale, an invalid default locale, and a default locale without a table", "coverage": "covered", "tests": ["CatalogAssetValidationReportsMissingTableDuplicateLocaleAndDefaultWithoutTable"], "missing": []},
+        {"id": "LU-04", "clause": "a valid catalog asset converts to a domain catalog that resolves with fallback and formats with the resolved locale's plural rules", "coverage": "covered", "tests": ["CatalogAssetConvertsAndFormatsWithFallback"], "missing": []},
+        {"id": "LU-05", "clause": "the SystemLanguage map is explicit and fails closed for Unknown", "coverage": "covered", "tests": ["SystemLanguageMapIsExplicitAndFailsClosed"], "missing": []},
+        {"id": "LU-06", "clause": "the runtime raises LocaleChanged once per actual change and formats in the new locale", "coverage": "covered", "tests": ["RuntimeRaisesLocaleChangedOnceAndFormatsInNewLocale"], "missing": []},
+        {"id": "LU-07", "clause": "the runtime reports whether a locale has a direct table and whether a message used fallback", "coverage": "covered", "tests": ["RuntimeReportsFallbackWhenLocaleHasNoDirectTable"], "missing": []},
+        {"id": "LU-08", "clause": "a bridge to the Unity Localization package reports the package's absence instead of silently ignoring it (LESSON-004)", "coverage": "covered", "tests": ["BridgeFailsClosedWithoutPackageAndNeverInvokesReader", "BridgeReportsMissingTableWhenReaderReturnsNothing", "BridgeBuildsOneTablePerLocaleFromReaderData", "BridgeRejectsInvalidLocaleOrEntryWithStableCode"], "missing": []}
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 21,
+    "covered": 21,
+    "partial": 0,
+    "unmapped": 0,
+    "open_gap_tests": 0,
+    "execution_note": "All 39 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. The LU-08 bridge tests branch on UnityLocalizationBridge.IsPackagePresent, so the package-absent assertions execute only in a project without com.unity.localization and the import assertions only in one with it; a full pass needs one run of each configuration."
+  }
+}

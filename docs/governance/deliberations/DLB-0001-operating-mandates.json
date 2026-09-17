@@ -1,0 +1,98 @@
+{
+  "schema": "xr-foundry.deliberation.v1",
+  "version": "0.1.0",
+  "id": "DLB-0001-OPERATING-MANDATES",
+  "title": "Prototype-stage operating mandates for Agents under G0 x A0",
+  "status": "open",
+  "decision_class": "governance_policy",
+  "governance_stage": "G0",
+  "review_opened_at": "2026-09-15T09:00:00Z",
+  "review_not_before": "2026-09-22T09:00:00Z",
+  "objective": "Decide whether the maintainer may grant an Agent a written, expiring operating mandate under the active A0 path so it acts inside a bounded scope without asking for each step, while merge, release, Unity Editor, headset, and GitHub permission decisions stay with people.",
+  "current_question": "Does the Prototype-stage operating mandates section added to GOVERNANCE.md, together with docs/governance/mandates/, stay inside the G0 x A0 authority boundary, and should it remain after the 7-day policy review?",
+  "assumptions": [
+    {
+      "statement": "A mandate grants no GitHub write, review, merge, release, or administrative permission and does not activate RFC 0006 membership.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/GOVERNANCE.md",
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0006-agent-native-xr-dao.md"
+      ]
+    },
+    {
+      "statement": "The section was added by direct maintainer instruction on 2026-09-13 before a public review window had opened, so the change is a governance-policy edit that still owes its 7-day review.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/mandates/weekly-steward.mandate.json"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "id": "OPT-KEEP-MANDATES",
+      "summary": "Keep the mandate mechanism as written: maintainer-granted, expiring, path- and action-bounded, no review window for grant or revocation, no GitHub permission.",
+      "trade_offs": [
+        "Lets Agents run recurring stewardship without a person poking each step",
+        "Relies on the mandate file and the repository contract as the only guard rails until RFC 0006 activates"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/governance/mandates/README.md"
+      ]
+    },
+    {
+      "id": "OPT-MANDATES-WITH-WINDOW",
+      "summary": "Keep the mechanism but require a 7-day public notice before a new mandate takes effect.",
+      "trade_offs": [
+        "More visibility for each grant",
+        "Slows every prototype-stage adjustment by a week"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/deliberation-protocol.md"
+      ]
+    },
+    {
+      "id": "OPT-REVERT",
+      "summary": "Revert the section and return to per-instruction Agent work until RFC 0006 is activated.",
+      "trade_offs": [
+        "Cleanest authority story",
+        "Reintroduces the dependence on a person for every step that the maintainer asked to remove"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/GOVERNANCE.md"
+      ]
+    }
+  ],
+  "deltas": [],
+  "synthesis": {
+    "agreements": [
+      "Any option keeps merge, release, Unity Editor, headset, and GitHub permission decisions with people."
+    ],
+    "disagreements": [
+      "Whether a grant needs public notice before it takes effect is unresolved."
+    ],
+    "missing_evidence": [
+      "One completed weekly steward run reviewed by someone other than the mandate's principal."
+    ],
+    "updated_at": "2026-09-15T09:00:00Z"
+  },
+  "decision": null,
+  "execution": {
+    "readiness": "not_ready",
+    "task": null,
+    "scope": [],
+    "non_goals": [
+      "No GitHub permission, branch-protection, or App installation change under any option."
+    ],
+    "exact_next_action": "Until 2026-09-22T09:00:00Z anyone may add a risk or counterexample delta. If none exists when the window closes, the weekly steward records OPT-KEEP-MANDATES by lazy consensus with decided_by process:mandate.weekly-steward.v1; if one exists, a person resolves the record."
+  },
+  "reopen_conditions": [
+    "RFC 0006 activation replaces mandates with Agent membership records.",
+    "A mandate run causes an effect outside its declared scope."
+  ],
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_execution_authority": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "agent_or_model_ranking": false,
+    "private_chain_of_thought_required": false
+  }
+}

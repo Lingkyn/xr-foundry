@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -47,7 +48,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         public static void ConfigureGrabbableCube(GameObject root)
         {
             var grabType = Type.GetType(GrabInteractableTypeName);
-            if (grabType == null) return;
+            if (grabType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.grab-interactable", "XRGrabInteractable type is not loaded; install XR Interaction Toolkit. The cube was not made grabbable.", root);
+                return;
+            }
 
             var collider = root.GetComponent<Collider>() ?? root.AddComponent<BoxCollider>();
 
@@ -65,6 +70,10 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
                 collidersProp.arraySize = 1;
                 collidersProp.GetArrayElementAtIndex(0).objectReferenceValue = collider;
                 serializedGrab.ApplyModifiedPropertiesWithoutUndo();
+            }
+            else
+            {
+                XrBaselineDiagnostics.Unresolved("xri.grab-interactable.m_Colliders", "XRGrabInteractable exposes no m_Colliders field in this XRI revision; the grab collider was not bound.", root);
             }
         }
     }

@@ -4,6 +4,7 @@ using UnityEngine.Rendering;
 using Lingkyn.Unity.XrBaseline.Editor.SceneSetup;
 using Lingkyn.Unity.XrBaseline.Config;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
 {
@@ -13,42 +14,46 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
     /// </summary>
     public static class VrBaselineAssetFactory
     {
-        public static void EnsureBaselineAssets(VrBaselineConfig config = null)
-        {
-            config ??= VrBaselineConfigAccess.EnsureExists();
-            EnsureFolder(VrBaselineVisualPaths.MaterialsFolder);
-            EnsureFolder(VrBaselineVisualPaths.PropsFolder);
+        public static void EnsureBaselineAssets(VrBaselineConfig config = null) =>
+            EnsureBaselineAssets(config, VrBaselineProjectLayout.Default);
 
-            CreateFloorMaterial(config);
+        /// <summary>Same as <see cref="EnsureBaselineAssets(VrBaselineConfig)"/> under an injected project layout.</summary>
+        internal static void EnsureBaselineAssets(VrBaselineConfig config, VrBaselineProjectLayout layout)
+        {
+            config ??= VrBaselineConfigAccess.EnsureExists(layout.ConfigAsset);
+            EnsureFolder(layout.MaterialsFolder);
+            EnsureFolder(layout.PropsFolder);
+
+            CreateFloorMaterial(config, layout);
             UpgradeLitMaterial(
-                VrBaselineVisualPaths.Interactable,
+                layout.InteractableMaterial,
                 config.interactableBaseColor,
                 config.interactableSmoothness,
                 Color.black);
-            CreateLit(VrBaselineVisualPaths.Interactable, config.interactableBaseColor, config.interactableSmoothness);
+            CreateLit(layout.InteractableMaterial, config.interactableBaseColor, config.interactableSmoothness);
             UpgradeEmissiveMaterial(
-                VrBaselineVisualPaths.InteractableHighlight,
+                layout.InteractableHighlightMaterial,
                 new Color(0.45f, 0.78f, 0.95f),
                 new Color(0.12f, 0.35f, 0.45f),
                 0.45f);
             CreateEmissive(
-                VrBaselineVisualPaths.InteractableHighlight,
+                layout.InteractableHighlightMaterial,
                 new Color(0.45f, 0.78f, 0.95f),
                 new Color(0.12f, 0.35f, 0.45f),
                 0.45f);
-            CreateLit(VrBaselineVisualPaths.Environment, new Color(0.55f, 0.58f, 0.62f), 0.08f);
-            CreateLit(VrBaselineVisualPaths.Disabled, new Color(0.25f, 0.25f, 0.27f), 0.05f);
+            CreateLit(layout.EnvironmentMaterial, new Color(0.55f, 0.58f, 0.62f), 0.08f);
+            CreateLit(layout.DisabledMaterial, new Color(0.25f, 0.25f, 0.27f), 0.05f);
 
-            CreateFloorPlanePrefab();
-            CreateGrabbableCubePrefab(config);
-            VrBaselineScaleReferenceSetup.EnsureScaleReferencePrefab();
+            CreateFloorPlanePrefab(layout);
+            CreateGrabbableCubePrefab(config, layout);
+            VrBaselineScaleReferenceSetup.EnsureScaleReferencePrefab(layout);
 
             AssetDatabase.SaveAssets();
         }
 
-        static void CreateFloorPlanePrefab()
+        static void CreateFloorPlanePrefab(VrBaselineProjectLayout layout)
         {
-            var path = VrBaselineVisualPaths.FloorPlanePrefab;
+            var path = layout.FloorPlanePrefab;
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (existing != null)
             {
@@ -66,7 +71,7 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
                     upgrade.AddComponent<MeshCollider>();
                 }
 
-                Apply(upgrade, VrBaselineVisualPaths.Floor);
+                Apply(upgrade, layout.FloorMaterial);
                 VrBaselineLocomotionSetup.ConfigureFloorTeleportArea(upgrade);
                 PrefabUtility.SaveAsPrefabAsset(upgrade, path);
                 Object.DestroyImmediate(upgrade);
@@ -76,14 +81,14 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
             var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
             plane.name = "FloorPlane";
             plane.transform.localScale = VrBaselineVisualPaths.FloorPlanePrefabScale;
-            Apply(plane, VrBaselineVisualPaths.Floor);
+            Apply(plane, layout.FloorMaterial);
             VrBaselineLocomotionSetup.ConfigureFloorTeleportArea(plane);
             Save(plane, path);
         }
 
-        static void CreateGrabbableCubePrefab(VrBaselineConfig config)
+        static void CreateGrabbableCubePrefab(VrBaselineConfig config, VrBaselineProjectLayout layout)
         {
-            var path = VrBaselineVisualPaths.GrabbableCubePrefab;
+            var path = layout.GrabbableCubePrefab;
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (existing != null)
             {
@@ -96,7 +101,7 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
 
                 var upgrade = (GameObject)PrefabUtility.InstantiatePrefab(existing);
                 upgrade.transform.localScale = VrBaselineVisualPaths.GrabbableCubePrefabScale;
-                Apply(upgrade, VrBaselineVisualPaths.Interactable);
+                Apply(upgrade, layout.InteractableMaterial);
                 VrBaselineInteractableSetup.ConfigureGrabbableCube(upgrade);
                 VrBaselineHoverVisualSetup.Configure(upgrade, config);
                 PrefabUtility.SaveAsPrefabAsset(upgrade, path);
@@ -107,17 +112,21 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = "GrabbableCube";
             cube.transform.localScale = VrBaselineVisualPaths.GrabbableCubePrefabScale;
-            Apply(cube, VrBaselineVisualPaths.Interactable);
+            Apply(cube, layout.InteractableMaterial);
             VrBaselineInteractableSetup.ConfigureGrabbableCube(cube);
             VrBaselineHoverVisualSetup.Configure(cube, config);
             Save(cube, path);
         }
 
-        static void CreateFloorMaterial(VrBaselineConfig config)
+        static void CreateFloorMaterial(VrBaselineConfig config, VrBaselineProjectLayout layout)
         {
-            var path = VrBaselineVisualPaths.Floor;
+            var path = layout.FloorMaterial;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                XrBaselineDiagnostics.Unresolved("shader.lit", "neither the URP Lit nor the Standard shader is available; greybox materials were not created.");
+                return;
+            }
 
             var checker = AssetDatabase.GetBuiltinExtraResource<Texture2D>("Default-Checker-Gray.png");
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -145,7 +154,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
         {
             if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) return;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                XrBaselineDiagnostics.Unresolved("shader.lit", "neither the URP Lit nor the Standard shader is available; greybox materials were not created.");
+                return;
+            }
 
             var material = new Material(shader) { name = System.IO.Path.GetFileNameWithoutExtension(path) };
             material.SetColor("_BaseColor", color);
@@ -185,7 +198,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
         {
             if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) return;
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                XrBaselineDiagnostics.Unresolved("shader.lit", "neither the URP Lit nor the Standard shader is available; greybox materials were not created.");
+                return;
+            }
 
             var material = new Material(shader) { name = System.IO.Path.GetFileNameWithoutExtension(path) };
             material.SetColor("_BaseColor", baseColor);

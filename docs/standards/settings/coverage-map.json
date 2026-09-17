@@ -1,0 +1,124 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "settings",
+  "contract": "docs/standards/settings/verification-contract.md",
+  "audited_at_commit": "c23935694637438584d5bb531acbf8003da640fa",
+  "policy": {
+    "mapping_basis": "test method names and bodies read at the audited commit, matched against contract clause text",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.settings.core",
+      "test_assembly": "Lingkyn.Settings.Core.Editor.Tests",
+      "clauses": [
+        {
+          "id": "SC-01",
+          "clause": "invalid keys, duplicate definitions, kind mismatch, invalid defaults, non-finite floats, ranges, steps, options, and string bounds",
+          "coverage": "covered",
+          "tests": ["SettingKeyRejectsInvalidInputs", "RegistryRejectsDuplicateDefinitions", "DefinitionRejectsKindMismatchInvalidDefaultsAndNonFiniteConstraints", "ValueValidationRejectsRangeStepOptionAndStringBounds", "RegistryLookupRejectsInvalidKeysWithoutThrowing", "DefinitionAndOptionConstraintRejectDefaultIdentities"],
+          "missing": []
+        },
+        {
+          "id": "SC-02",
+          "clause": "profile layering, duplicate overrides, reset by scope, and stale transactions",
+          "coverage": "covered",
+          "tests": ["ProfileLayeringAppliesOrderedOverridesAndRejectsConstraintViolations", "ProfileLayerAndProfileRejectNullAndDuplicateLayerIds", "ResetScopeClearsScopedOverridesAndRestoresDefaultsWithoutTouchingOtherScopesOrUnknownValues", "ResetScopeChangeSetReportsRemovedFalseBooleanOverride", "ResetScopeChangeSetReportsRemovedNonBooleanOverride", "InvalidScopeIsRejectedForResetAndLoadedSnapshots", "ApplyRejectsStaleTransactionAfterCommittedRevisionAdvances"],
+          "missing": []
+        },
+        {
+          "id": "SC-03",
+          "clause": "complete-snapshot cross-setting constraints",
+          "coverage": "covered",
+          "tests": ["CrossSettingConstraintValidatesCompleteSnapshot", "ConstraintAwareRepositoryLoadValidatesCompletedSnapshotAndPreservesCommittedOnFailure"],
+          "missing": []
+        },
+        {
+          "id": "SC-04",
+          "clause": "stable change ordering and no notification for no-op or failed apply",
+          "coverage": "covered",
+          "tests": ["ChangeSetIsDeterministicallyKeySorted", "NoOpAndFailedApplyDoNotNotify", "MaxRevisionRejectsRealChangeBeforeSideEffectsButStillAllowsNoOp"],
+          "missing": []
+        },
+        {
+          "id": "SC-05",
+          "clause": "partial applicator failure, reverse rollback, and rollback diagnostics, with failure injected before the first applicator, after each intermediate applicator, during reverse rollback, and during persistence",
+          "coverage": "covered",
+          "tests": ["ApplicatorFailureBeforeFirstApplicatorRollsBackNothing", "ApplicatorFailureAfterIntermediateApplicatorRollsBackPriorEffectsInReverseOrder", "RollbackFailureOnPreviouslyAppliedApplicatorReturnsRollbackDiagnostics", "PersistenceSuccessAbsenceAppliedNotPersistedAndLoadValidation"],
+          "missing": []
+        },
+        {
+          "id": "SC-06",
+          "clause": "persistence success, absence, and applied_not_persisted failure",
+          "coverage": "covered",
+          "tests": ["PersistenceSuccessAbsenceAppliedNotPersistedAndLoadValidation", "ConstraintAwareRepositoryLoadValidatesCompletedSnapshotAndPreservesCommittedOnFailure"],
+          "missing": []
+        },
+        {
+          "id": "SC-07",
+          "clause": "unknown stored keys preserved but never treated as registered definitions",
+          "coverage": "covered",
+          "tests": ["UnknownStoredKeysArePreservedButNotRegistered", "LoadedSnapshotRejectsUnregisteredKnownKeysWhilePreservingUnknownBucket", "LoadedSnapshotIsCompletedFromRegistryDefaultsWithoutLosingOverridesRevisionOrUnknownValues", "SnapshotRejectsNullOrEmptyUnknownRawKeysAndPreservesOpaqueKeysExactly"],
+          "missing": []
+        },
+        {
+          "id": "SC-08",
+          "clause": "accessibility metadata round trip without promoting feature/compliance claims",
+          "coverage": "covered",
+          "tests": ["AccessibilityMetadataRoundTripsWithoutComplianceClaims"],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": ["PublicCollectionsAreImmutableAgainstMutation", "FreezeListCopiesCallerOwnedArrays"]
+    },
+    {
+      "id": "unity_adapter",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.settings.unity",
+      "test_assembly": "Lingkyn.Settings.Unity.Editor.Tests",
+      "clauses": [
+        {
+          "id": "SU-01",
+          "clause": "ScriptableObject catalogs and profiles convert deterministically to Core",
+          "coverage": "covered",
+          "tests": ["CatalogConvertsDeterministicallyToCoreRegistry", "ProfileConversionRejectsNullRegistryDuplicateLayersAndConstraintViolations"],
+          "missing": []
+        },
+        {
+          "id": "SU-02",
+          "clause": "validation reports asset/index/key-specific errors for duplicate IDs, invalid value kinds, defaults, ranges, options, metadata, and profile overrides",
+          "coverage": "covered",
+          "tests": ["ValidationReportsAssetIndexAndKeySpecificErrors", "ProfileConversionRejectsNullRegistryDuplicateLayersAndConstraintViolations", "AccessibilityMetadataConvertsWithoutComplianceClaims"],
+          "missing": []
+        },
+        {
+          "id": "SU-03",
+          "clause": "runtime snapshots do not mutate source assets",
+          "coverage": "covered",
+          "tests": ["FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets"],
+          "missing": []
+        },
+        {
+          "id": "SU-04",
+          "clause": "consumer-provided applicators are explicit; no scene search or renderer is required",
+          "coverage": "covered",
+          "tests": ["FactoryRequiresExplicitApplicatorsRejectsInvalidLoadedSnapshotAndDoesNotMutateAssets", "FactoryPropagatesRepositoryLoadFailureByDefaultAndSupportsOptInFallback", "FactoryCompletesLoadedDefaultsWhilePreservingRevisionOverridesAndUnknownValues", "FactoryRunsConstraintsAfterCompletingDefaultsAndDoesNotFallbackFromValidationFailure"],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 12,
+    "covered": 12,
+    "partial": 0,
+    "unmapped": 0,
+    "open_gap_tests": 0
+  }
+}

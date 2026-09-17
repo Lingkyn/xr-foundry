@@ -44,7 +44,7 @@ is:
 
 | Assembly | Mode | Exact cases |
 | --- | --- | ---: |
-| `Lingkyn.Interaction.Core.Editor.Tests` | EditMode | 16 |
+| `Lingkyn.Interaction.Core.Editor.Tests` | EditMode | 21 |
 | `Lingkyn.Interaction.Unity.Editor.Tests` | EditMode | 17 |
 | `Lingkyn.Inventory.Presentation.Editor.Tests` | EditMode | 5 |
 | `Lingkyn.Settings.Core.Editor.Tests` | EditMode | 29 |
@@ -52,7 +52,7 @@ is:
 | `XRFoundry.ReferenceSystem.EditMode.Tests` | EditMode | 71 |
 | `XRFoundry.ReferenceSystem.PlayMode.Tests` | PlayMode | 4 |
 
-That is 146 EditMode cases plus 4 PlayMode cases, or 150 total. Changing the
+That is 151 EditMode cases plus 4 PlayMode cases, or 155 total. Changing the
 test inventory requires changing the expected count from a source audit, not
 learning it from the result under test. A passing Editor harness is not a player,
 controller or headset claim.

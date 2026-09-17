@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.Localization.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.Localization.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.Localization.Core",
+    "Lingkyn.Localization.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

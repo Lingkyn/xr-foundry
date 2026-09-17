@@ -45,7 +45,16 @@ authority, permission, treasury, on-chain, and stage-transition proposals stay
 open for at least 14 days. These are minimum decision windows, not deadlines or
 automatic acceptance. A maintainer may extend review, reject a proposal, or record
 that more evidence is needed. No metric, vote count, contribution total, payment,
-or token balance can close the review or grant a role.
+or token balance can close the review or grant a role. Under the prototype-stage
+rule in [`GOVERNANCE.md`](../../GOVERNANCE.md), "Process-decided merges and lazy
+consensus", a governance record whose window has closed with no `risk` or
+`counterexample` delta resolves by lazy consensus: the steward records the
+proposed option with `decided_by: process:<mandate_id>`. An objection delta keeps
+the record open until a person resolves it. The
+[merge-readiness verdict](merge-readiness.md) reads that record; a routine change
+on a branch named by a live operating mandate merges by GitHub auto-merge once the
+verdict is `ready`, and a non-routine change waits for a maintainer who reads the
+same verdict.
 
 A security emergency may be contained immediately. The safe public or private
 record is created within 72 hours and a retrospective is completed within 7 days;
@@ -93,7 +102,7 @@ GitHub identity owns the contribution.
 
 | From | To | Required evidence |
 | --- | --- | --- |
-| `open` | `resolved` | Options and trade-offs are recorded; synthesis names remaining uncertainty; a maintainer records a bounded decision, reopen conditions, and a separate execution checkpoint. |
+| `open` | `resolved` | Options and trade-offs are recorded; synthesis names remaining uncertainty; a maintainer records a bounded decision, reopen conditions, and a separate execution checkpoint, or a governance record whose window closed with no `risk` or `counterexample` delta resolves by lazy consensus with `decided_by: process:<mandate_id>`. |
 | `open` | `rejected` | The rejection rationale and evidence are public; `decision` stays null and execution is `not_ready` with no task. |
 | `resolved` | `superseded` | A newer immutable decision record is linked; existing history is retained and execution becomes `superseded`, never `ready`. |
 | `resolved` | `open` | Do not mutate history in place. Create a successor record when a reopen condition fires. |

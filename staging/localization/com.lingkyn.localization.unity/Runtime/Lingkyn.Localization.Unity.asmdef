@@ -1,0 +1,22 @@
+{
+  "name": "Lingkyn.Localization.Unity",
+  "rootNamespace": "Lingkyn.Localization.Unity",
+  "references": [
+    "Lingkyn.Localization.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.unity.localization",
+      "expression": "1.0.0",
+      "define": "LINGKYN_UNITY_LOCALIZATION"
+    }
+  ],
+  "noEngineReferences": false
+}

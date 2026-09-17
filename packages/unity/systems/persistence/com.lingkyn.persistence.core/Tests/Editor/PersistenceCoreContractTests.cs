@@ -921,6 +921,77 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             Assert.That(observerCalls, Is.EqualTo(0));
         }
 
+        [Test]
+        public void SameVersionRoundTripThroughInMemoryStoreRestoresEqualState()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_round_trip");
+
+            var saved = coordinator.Save(slot, "state-v0");
+            Assert.That(saved.Committed, Is.True);
+            Assert.That(store.CommitCallCount, Is.EqualTo(1));
+            Assert.That(store.Bytes.Length, Is.GreaterThan(0));
+
+            var loaded = coordinator.LoadValidated(slot, _ => SaveResult.Success());
+            Assert.That(loaded.Succeeded, Is.True);
+            Assert.That(loaded.Value.State, Is.EqualTo("state-v0"));
+            Assert.That(loaded.Value.RecoveryOccurred, Is.False);
+            Assert.That(loaded.Value.SelectedCandidateKind, Is.EqualTo(SaveCandidateKind.Primary));
+            Assert.That(loaded.Value.PrimaryFailureDiagnostic, Is.Null);
+        }
+
+        [Test]
+        public void IntegrityProviderFailureSurfacesAsIntegrityStageBeforeCommit()
+        {
+            var store = new InMemoryStore();
+            var coordinator = new SaveCoordinator<string>(
+                "lingkyn.state",
+                0,
+                "bc59960",
+                new Utf8StringCodec(),
+                new FailingIntegrityProvider(),
+                new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()),
+                store,
+                SaveCommitCapabilities.BestEffortWrite);
+
+            var result = coordinator.Save(MustSlot("slot_integrity"), "payload");
+
+            Assert.That(result.Committed, Is.False);
+            Assert.That(result.PriorCommittedRecordPreserved, Is.True);
+            Assert.That(result.Error.Stage, Is.EqualTo(SaveStage.Integrity));
+            Assert.That(result.Error.Code, Is.EqualTo(SaveErrorCode.ProviderFailure));
+            Assert.That(store.CommitCallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void StageWriteAndFlushFailuresAreDistinctResultsThatPreservePriorBytes()
+        {
+            var store = new InMemoryStore();
+            var coordinator = CreateCoordinator(store, new Utf8StringCodec(), new MigrationPipeline<string>(Array.Empty<ISaveMigration<string>>()));
+            var slot = MustSlot("slot_stage_flush");
+            store.Bytes = SaveEnvelopeBinaryCodec.Encode(BuildEnvelope("stable-prior", 0)).Value;
+            var priorBytes = (byte[])store.Bytes.Clone();
+
+            store.ForcedCommitResult = SaveCommitResult.NotCommitted(SaveStage.StageWrite, SaveErrorCode.IoDenied, "staging file denied", true);
+            var stageWrite = coordinator.Save(slot, "new-state");
+            Assert.That(stageWrite.Committed, Is.False);
+            Assert.That(stageWrite.Error.Stage, Is.EqualTo(SaveStage.StageWrite));
+            Assert.That(stageWrite.Error.Code, Is.EqualTo(SaveErrorCode.IoDenied));
+            Assert.That(stageWrite.PriorCommittedRecordPreserved, Is.True);
+
+            store.ForcedCommitResult = SaveCommitResult.NotCommitted(SaveStage.Flush, SaveErrorCode.OutOfSpace, "flush failed", true);
+            var flush = coordinator.Save(slot, "new-state");
+            Assert.That(flush.Committed, Is.False);
+            Assert.That(flush.Error.Stage, Is.EqualTo(SaveStage.Flush));
+            Assert.That(flush.Error.Code, Is.EqualTo(SaveErrorCode.OutOfSpace));
+            Assert.That(flush.PriorCommittedRecordPreserved, Is.True);
+
+            Assert.That(stageWrite.Error, Is.Not.EqualTo(flush.Error));
+            Assert.That(store.CommitCallCount, Is.EqualTo(2));
+            Assert.That(store.Bytes, Is.EqualTo(priorBytes));
+        }
+
         private static SaveCoordinator<string> CreateCoordinator(
             ISaveStore store,
             Utf8StringCodec codec,
@@ -1156,6 +1227,16 @@ namespace Lingkyn.Persistence.Core.Editor.Tests
             {
                 _onCommitted(notification);
             }
+        }
+
+        private sealed class FailingIntegrityProvider : IIntegrityProvider
+        {
+            public string AlgorithmName => "sha-256";
+
+            public SaveResult<byte[]> ComputeDigest(ReadOnlySpan<byte> payload) =>
+                SaveResult<byte[]>.Fail(SaveStage.Integrity, SaveErrorCode.ProviderFailure, "digest unavailable");
+
+            public SaveResult Verify(ReadOnlySpan<byte> payload, ReadOnlySpan<byte> expectedDigest) => SaveResult.Success();
         }
 
         private sealed class FixedDigestIntegrityProvider : IIntegrityProvider

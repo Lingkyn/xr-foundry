@@ -27,6 +27,7 @@ namespace Lingkyn.Unity.XrBaseline.Interaction
         Component _grabComponent;
         PropertyInfo _isHoveredProperty;
         bool _isHovered;
+        bool _reportedUnresolved;
 
         void Reset()
         {
@@ -60,18 +61,51 @@ namespace Lingkyn.Unity.XrBaseline.Interaction
             ApplyVisual(hovered);
         }
 
+        /// <summary>
+        /// Test seam: re-runs the by-name resolution and reports whether the grab interactable and
+        /// its <c>isHovered</c> property resolved. Repeated calls never produce a second warning.
+        /// </summary>
+        internal bool TryResolveGrabInteractable()
+        {
+            CacheGrabComponent();
+            return _grabComponent != null && _isHoveredProperty != null;
+        }
+
         void CacheGrabComponent()
         {
             _grabComponent = null;
             _isHoveredProperty = null;
 
             var grabType = Type.GetType(GrabInteractableTypeName);
-            if (grabType == null) return;
+            if (grabType == null)
+            {
+                ReportUnresolved("XRGrabInteractable type is not loaded; is XR Interaction Toolkit installed?");
+                return;
+            }
 
             _grabComponent = GetComponent(grabType);
-            if (_grabComponent == null) return;
+            if (_grabComponent == null)
+            {
+                ReportUnresolved("no XRGrabInteractable on this GameObject; the hover visual will stay idle.");
+                return;
+            }
 
             _isHoveredProperty = grabType.GetProperty("isHovered", BindingFlags.Instance | BindingFlags.Public);
+            if (_isHoveredProperty == null)
+            {
+                ReportUnresolved("XRGrabInteractable exposes no public isHovered property in this XRI revision.");
+            }
+        }
+
+        /// <summary>
+        /// A hover visual that silently never lights up hides a broken rig. Report once per
+        /// component instead of falling back to success (consumer lessons register, LESSON-004).
+        /// </summary>
+        void ReportUnresolved(string reason)
+        {
+            if (_reportedUnresolved) return;
+            _reportedUnresolved = true;
+            Debug.LogWarning($"xr_baseline_hover_visual_unresolved: {reason}", this);
         }
 
         void ApplyVisual(bool hovered)

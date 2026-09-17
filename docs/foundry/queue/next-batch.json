@@ -19,6 +19,19 @@
       ],
       "package_ids": [],
       "exact_next_action": "Run the positive-source gate and decide whether message identity, locale fallback, formatting, and renderer boundaries are stable enough to admit a Core and Unity blueprint."
+    },
+    {
+      "id": "NEXT-AUDIO-EVENTS",
+      "title": "Audio events, mix state, and spatial attachment family",
+      "state": "proposal",
+      "objective": "Define engine-light audio event identity, bus and snapshot state, parameter contracts, and spatial attachment intents with a thin Unity AudioMixer adapter, so gameplay and XR systems raise typed audio intents without coupling to a middleware or a scene singleton.",
+      "source_requirements": [
+        "Official Unity Audio, AudioMixer, and spatializer documentation plus OpenXR or platform spatial-audio guidance",
+        "Independent professional middleware documentation (FMOD Studio, Audiokinetic Wwise) and Unreal Engine sound and MetaSounds documentation as second-engine evidence",
+        "Accessibility, loudness, and comfort evidence boundaries for headset audio"
+      ],
+      "package_ids": [],
+      "exact_next_action": "Run the cross-project admission gate and the positive-source gate after Localization moves out of staging; decide whether event identity, mix state, and spatial attachment are stable enough to admit a Core and Unity blueprint."
     }
   ]
 }

@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.Audio.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.Audio.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.Audio.Core",
+    "Lingkyn.Audio.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

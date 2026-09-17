@@ -1,0 +1,52 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "localization",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-16",
+  "source_manifest": "docs/standards/localization/source-manifest.json",
+  "consumer_contexts": [
+    "menu, inventory, tutorial, and dialogue text in games shipped to several regions",
+    "training, industrial, and accessibility XR applications that must switch language at runtime"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://www.rfc-editor.org/rfc/rfc5646",
+      "https://www.rfc-editor.org/rfc/rfc4647",
+      "https://cldr.unicode.org/index/cldr-spec/plural-rules",
+      "https://unicode-org.github.io/icu/userguide/format_parse/messages/",
+      "https://docs.unity3d.com/Packages/com.unity.localization@1.5/manual/index.html"
+    ],
+    "independent_professional_sources": [
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/localization-overview-for-unreal-engine",
+      "https://projectfluent.org/"
+    ]
+  },
+  "common_kernel": [
+    "stable message identity separate from translated content",
+    "locale identity with explicit, reported fallback",
+    "message formatting with plural and select branches",
+    "per-locale content validation with stable diagnostic codes"
+  ],
+  "configurable_variation": [
+    "default locale, fallback preferences, declared plural language set, and adapter-side table storage",
+    "consumer-owned strings, tone, fonts, layout, and translation workflow"
+  ],
+  "excluded_project_specific": [
+    "one product's string tables, glossary, voice, and brand names",
+    "one project's asset layout, loading strategy, UI, and font choices"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Localization is a recurring cross-project need whose kernel (identity, fallback, formatting, validation) is fixed by public standards, while every product keeps its own content, fonts, and pipeline outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim CLDR completeness, script rendering, right-to-left layout, or Unity Localization runtime behavior; this draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after confirming the sources."
+  ]
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -14,11 +15,33 @@ namespace Lingkyn.Unity.ProjectInitializer.Editor.ConfigTools
             public List<string> CreatedGitKeeps { get; } = new();
         }
 
-        public static ScaffoldResult EnsureIndieDirectories()
+        /// <summary>
+        /// Scaffolds the contract folders under <see cref="IndieDirectoryContract.ProjectRoot"/>.
+        /// </summary>
+        public static ScaffoldResult EnsureIndieDirectories() =>
+            EnsureDirectories(IndieDirectoryContract.ProjectRoot, IndieDirectoryContract.RequiredFolders);
+
+        /// <summary>
+        /// Ensures every folder in <paramref name="folders"/> exists under <paramref name="projectRoot"/>
+        /// and drops a <c>.gitkeep</c> into each folder that is otherwise empty. Every folder is an
+        /// asset path (<c>Assets/...</c>) that starts with the project root. Running it twice reuses
+        /// every folder the first run created and adds nothing new.
+        /// </summary>
+        /// <exception cref="ArgumentException">A folder is not under <paramref name="projectRoot"/>.</exception>
+        public static ScaffoldResult EnsureDirectories(string projectRoot, IEnumerable<string> folders)
         {
+            if (string.IsNullOrEmpty(projectRoot)) throw new ArgumentException("Project root must not be empty.", nameof(projectRoot));
+            if (folders == null) throw new ArgumentNullException(nameof(folders));
+
+            var root = projectRoot.TrimEnd('/');
             var result = new ScaffoldResult();
-            foreach (var folder in IndieDirectoryContract.RequiredFolders)
+            foreach (var folder in folders)
             {
+                if (!IsUnderRoot(root, folder))
+                {
+                    throw new ArgumentException($"Folder '{folder}' is not under project root '{root}'.", nameof(folders));
+                }
+
                 if (EnsureFolderChain(folder, out var createdChain))
                 {
                     if (createdChain) result.CreatedFolders.Add(folder);
@@ -34,6 +57,12 @@ namespace Lingkyn.Unity.ProjectInitializer.Editor.ConfigTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             return result;
+        }
+
+        static bool IsUnderRoot(string root, string folder)
+        {
+            if (string.IsNullOrEmpty(folder)) return false;
+            return folder == root || folder.StartsWith(root + "/", StringComparison.Ordinal);
         }
 
         static bool EnsureFolderChain(string assetPath, out bool createdAny)

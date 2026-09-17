@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -39,10 +40,18 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         public static void ConfigureFloorTeleportArea(GameObject floor)
         {
             var teleportType = Type.GetType(TeleportAreaTypeName);
-            if (teleportType == null) return;
+            if (teleportType == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.teleportation-area", "TeleportationArea type is not loaded; the floor was not made a teleport target.", floor);
+                return;
+            }
 
             var collider = floor.GetComponent<Collider>();
-            if (collider == null) return;
+            if (collider == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.floor.collider", "the floor has no Collider; the teleport area was not configured.", floor);
+                return;
+            }
 
             var teleportArea = floor.GetComponent(teleportType) ?? floor.AddComponent(teleportType);
             var serializedArea = new SerializedObject(teleportArea);
@@ -58,6 +67,11 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             if (layersProp != null)
             {
                 layersProp.intValue = TeleportInteractionLayerMask;
+            }
+
+            if (collidersProp == null || layersProp == null)
+            {
+                XrBaselineDiagnostics.Unresolved("xri.teleportation-area.fields", "TeleportationArea exposes no m_Colliders or m_InteractionLayers field in this XRI revision; teleport layers were not configured.", floor);
             }
 
             serializedArea.ApplyModifiedPropertiesWithoutUndo();

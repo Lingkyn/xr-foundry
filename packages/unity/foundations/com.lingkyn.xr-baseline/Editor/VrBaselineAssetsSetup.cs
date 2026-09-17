@@ -9,14 +9,18 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
     /// </summary>
     public static class VrBaselineAssetsSetup
     {
-        public static void EnsureAssets(VrBaselineConfig config = null)
+        public static void EnsureAssets(VrBaselineConfig config = null) =>
+            EnsureAssets(config, VrBaselineProjectLayout.Default);
+
+        /// <summary>Same as <see cref="EnsureAssets(VrBaselineConfig)"/> under an injected project layout.</summary>
+        internal static void EnsureAssets(VrBaselineConfig config, VrBaselineProjectLayout layout)
         {
-            config ??= VrBaselineConfigAccess.EnsureExists();
+            config ??= VrBaselineConfigAccess.EnsureExists(layout.ConfigAsset);
 
             try
             {
                 EditorApplication.LockReloadAssemblies();
-                VrBaselineAssetFactory.EnsureBaselineAssets(config);
+                VrBaselineAssetFactory.EnsureBaselineAssets(config, layout);
             }
             finally
             {

@@ -20,17 +20,23 @@ evidence remain explicit gates.
 | Need | Entry point |
 | --- | --- |
 | Choose an available system or package | [`package-catalog.json`](package-catalog.json) |
+| Compose packages as one system | [`XFCM v0.2`](docs/architecture/component-composition-model.md), [`component-catalog.json`](component-catalog.json), and the [Unity reference composition](compositions/unity/reference-system/) |
 | Find reusable reference material | [`reference-catalog.json`](reference-catalog.json) |
 | Work with a coding agent | [`AGENTS.md`](AGENTS.md) and [`docs/for-agents.md`](docs/for-agents.md) |
 | Install a Unity package | [Install for evaluation](#install-for-evaluation) |
-| Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Make a routine change (documentation, tests, tooling, non-breaking package change) | [`docs/contributing/start-here.md`](docs/contributing/start-here.md) and the [merge-readiness verdict](docs/contributing/merge-readiness.md) |
+| Propose a reusable system | [`CONTRIBUTING.md`](CONTRIBUTING.md); a new family is authored under [`staging/`](staging/localization/README.md) before its Unity evidence exists |
 | Find or claim bounded public work | [`Public Task Hall V1`](docs/contributing/task-hall.md) and the [live Project](https://github.com/users/Lingkyn/projects/2) |
 | Build the next reusable package family | [`Foundry V1 production line`](docs/foundry/README.md), [first batch](docs/foundry/batches/unity-first-batch.v1.json), and [next source-gate queue](docs/foundry/queue/next-batch.json) |
 | Discuss a public RFC | [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22) and the Ideas RFC form |
 | Contribute hardware evidence | [`Public Device Lab V1`](docs/device-lab/README.md) |
 | See how contributions are recognized | [`Recognition policy`](docs/contributing/recognition-policy.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md) |
+| Understand governance and its maturity path | [`GOVERNANCE.md`](GOVERNANCE.md), [`governance model`](docs/governance/README.md), [`RFC 0004`](docs/rfcs/0004-progressive-governance.md), and proposed [`RFC 0006`](docs/rfcs/0006-agent-native-xr-dao.md) |
 | Understand repository workflow | [`PROJECT_GITHUB_PLAYBOOK.md`](PROJECT_GITHUB_PLAYBOOK.md) |
 | Check evidence and maturity | [`docs/validation`](docs/validation/) and [`ROADMAP.md`](ROADMAP.md) |
+| Test the packages with your own Unity Editor in one command | [`docs/validation/run-unity-gates.md`](docs/validation/run-unity-gates.md) |
+| Install a released batch by tag | [`docs/releases`](docs/releases/) and the [batch registry](docs/foundry/batches/batch-registry.v1.json) |
+| Navigate the documentation tree | [`docs/README.md`](docs/README.md) |
 
 Thin adapters are included for tools that discover repository instructions in
 different ways: `CLAUDE.md`, `.cursor/rules/`, and `SKILL.md`. They all point back
@@ -55,6 +61,30 @@ person or Agent progressively disclose the installable modules. The machine-read
 separately because dependency, version, maturity, and evidence gates remain
 module-specific.
 
+## One composable system
+
+Every current Unity package also has a colocated `foundry.component.json`. The
+[`component catalog`](component-catalog.json) and
+[`capability registry`](capability-registry.json) turn those independent modules
+into one versioned product-line graph. A consumer composition selects fixed
+components plus exactly one renderer and XR-surface variant, then resolves the graph
+into a deterministic lock.
+
+The first [Unity reference composition](compositions/unity/reference-system/)
+selects the UGUI route and structurally resolves 13 components. UI Toolkit remains
+a peer option rather than an accidental cumulative dependency. Its three
+cross-family boundaries now resolve to consumer-owned typed adapter sources, and
+the v0.2 lock binds each source path, assembly, and SHA-256. A separate clean
+consumer exercises the eight packages needed at those binding endpoints. That
+bounded evidence includes one production `LocalFileSaveStore` zero-byte-primary
+backup-recovery path in a temporary directory. It does not cover all 13
+components, general filesystem durability, a player build, XR input, rendering,
+or a device, so the composition deliberately keeps `runtime_ready: false`.
+
+XFCM keeps runtime communication strongly typed and in process. JSON manifests are
+the composition/control plane. MCP may later expose that control plane to editors
+or coding Agents, but it is not a global runtime event bus.
+
 ## Incubating system standards
 
 The first reusable game-system candidate is the
@@ -70,13 +100,17 @@ consumer evidence, and each XR renderer/device tuple needs its own real-device
 receipt. No old package path or renderer-ambiguous XR compatibility layer is part
 of the active repository surface.
 
-These nine packages form the
+The cataloged Unity packages form the
 [`Unity first batch`](docs/foundry/batches/unity-first-batch.v1.json). A batch
 release is an immutable discovery/install surface; it does not promote package
 maturity or inherit device claims. The
 [`Foundry V1 production line`](docs/foundry/README.md) governs how later package
 families move from positive-source proposal to independently reviewed release.
-The exact named-device handoff uses the generic
+A new family is authored under `staging/` before its Unity evidence exists and
+moves into `packages/` only after admission and a verified compatibility profile;
+the current staged example is
+[`staging/localization`](staging/localization/README.md), which is in no catalog,
+batch, profile, or release. The exact named-device handoff uses the generic
 [`Public Device Lab V1`](docs/device-lab/README.md), its
 [`Inventory world-space UI plan`](docs/device-lab/test-plans/inventory-world-space-ui-v1.json),
 and the machine-validatable
@@ -184,19 +218,39 @@ Every live package must provide:
 - an independent consumer compile before candidate promotion; and
 - device evidence before XR/controller/headset behavior is called stable.
 
-Run the local checks:
+Run the local checks from a project-local virtual environment so the exactly
+pinned contract dependencies never collide with a distribution-managed Python:
 
-```powershell
+```bash
+python -m venv .venv
+. .venv/bin/activate            # PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install -r scripts/contract-requirements.txt
+python scripts/compose_system.py --check --json
 python scripts/validate_repository.py --json --fast-structure
 python scripts/validate_repository.py --json --run-contract-tests
 ```
+
+`.venv/` is ignored by Git. The repository contract supports Python `3.11`, `3.12`, and `3.13`. Pull requests,
+pushes to `main`, and manual workflow runs execute the full contract across that
+matrix. GitHub Actions and the exactly pinned Python contract dependencies are both
+checked monthly by Dependabot; changes remain reviewable pull requests and do not
+gain merge authority from automation. Whether any pull request may merge is
+answered by the [merge-readiness verdict](docs/contributing/merge-readiness.md):
+a routine change on a branch named by a live operating mandate merges by GitHub
+auto-merge once the verdict is `ready` and the required checks pass, and a
+non-routine change waits for a maintainer who reads the same verdict.
 
 The fast structure command is iteration feedback and cannot support promotion or
 release. The full command runs repository validation first and skips the test
 suite if that first stage fails.
 
-Unity package tests run from a Unity consumer through the Test Framework.
+Unity package tests run from a Unity consumer through the Test Framework. The
+`unity-consumer-tests` workflow runs them in CI from the repository-owned reference
+consumer, one assembly per Unity process, and accepts each result only through
+`scripts/verify_unity_test_results.py` against a case count audited from source by
+`scripts/audit_unity_test_inventory.py`. It needs a Unity license stored as a
+repository secret (`UNITY_LICENSE`, or `UNITY_EMAIL` and `UNITY_PASSWORD`) and skips
+itself on fork pull requests, where secrets are unavailable.
 
 ## Contributing and license
 
@@ -208,10 +262,31 @@ The [Task Hall](docs/contributing/task-hall.md) publishes bounded research, buil
 review, and integration work. The [Device Lab](docs/device-lab/README.md) lets
 contributors submit revision-bound headset evidence without code or repository
 write access. Claiming work coordinates a lease only; it never grants GitHub
-permissions or merge authority.
+permissions or merge authority. A routine change needs no claim, lease, anchor, or
+governance window: it follows
+[`docs/contributing/start-here.md`](docs/contributing/start-here.md).
 
 The repository is MIT licensed. See [`LICENSE`](LICENSE). Third-party dependencies
 keep their own licenses.
+
+## DAO-ready Open Commons
+
+XR Foundry is being prepared as public infrastructure that can support progressively
+broader stewardship without pretending a DAO already exists. The current observed
+stage is maintainer-led `G0`; the progressive model and RFC 0004 are proposed and
+inactive until public deliberation and an explicit maintainer decision adopt them.
+Participation, recognition, payment, tokens, and repository permission remain
+separate. This phase creates no wallet, treasury, multisig, token governance,
+smart contract, on-chain action, organization transfer, or remote settings change.
+
+See [`GOVERNANCE.md`](GOVERNANCE.md) for the human-readable boundary and
+[`governance-model.v1.json`](docs/governance/governance-model.v1.json) for the
+machine-enforced contract.
+
+RFC 0006 adds a proposed Agent maturity axis without activating Agent membership.
+The observed state remains `G0 x A0`; `G0 x A1` is a review target with accountable
+principals, declared lineage, evidence-bound capabilities, revocable mandates, and
+human maintainer authority.
 
 ## Public workbench for people and Agents
 
@@ -231,6 +306,19 @@ public checkpoint boundary; local-only output is never assumed complete.
 Contribution is not limited to code. Research, documentation, design, review,
 tests, device/user testing, and infrastructure can all be acknowledged through
 accepted evidence. They remain separate categories rather than a total points
-ranking, and no activity score grants repository permission. Start with the
-[Task Hall](docs/contributing/task-hall.md), choose one certified checkpoint, and
-use a fork pull request unless you already hold an appropriate repository role.
+ranking, and no activity score grants repository permission. For bounded
+coordinated work, start with the [Task Hall](docs/contributing/task-hall.md),
+choose one certified checkpoint, and use a fork pull request unless you already
+hold an appropriate repository role; for a routine change, start with
+[`docs/contributing/start-here.md`](docs/contributing/start-here.md) instead.
+
+Where the project stands and what comes next is written down, not remembered:
+[`docs/milestones.md`](docs/milestones.md) sets the batches that make this a
+qualified repository, then a community, then an organization, with the status
+of every cell; [`docs/contributing/work-items.json`](docs/contributing/work-items.json)
+cuts that plan into self-contained items any person or coding Agent can take
+without session context; and `python scripts/open_work.py --markdown` generates
+the open-work board from the tree. The merge verdict from
+`python scripts/merge_readiness.py` decides whether a routine change merges;
+[`docs/validation/checked-claims.md`](docs/validation/checked-claims.md) says
+which claims a machine checks and which are still self-declared.

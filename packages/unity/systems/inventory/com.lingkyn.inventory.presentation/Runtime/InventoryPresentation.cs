@@ -83,7 +83,16 @@ namespace Lingkyn.Inventory.Presentation
             _view = view ?? throw new ArgumentNullException(nameof(view));
             _inventory.Changed += OnChanged;
             _inventory.Restored += OnRestored;
-            Refresh();
+            try
+            {
+                Refresh();
+            }
+            catch
+            {
+                _inventory.Changed -= OnChanged;
+                _inventory.Restored -= OnRestored;
+                throw;
+            }
         }
 
         public InventoryViewModel Current { get; private set; }

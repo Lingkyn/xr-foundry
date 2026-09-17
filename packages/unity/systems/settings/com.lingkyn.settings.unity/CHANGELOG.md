@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Documentation
+
+- Expanded `Documentation~/index.md` with the authoring asset table, conversion
+  and validation entry points, the `SettingsUnityFactoryConfig` field reference,
+  and non-goals. No API, version, or evidence change.
+
 ## [0.1.0] - 2026-07-16
 
 ### Added

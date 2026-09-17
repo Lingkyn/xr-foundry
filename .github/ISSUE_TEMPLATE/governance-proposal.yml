@@ -1,0 +1,98 @@
+name: Governance proposal
+description: Propose a policy, authority, permission, treasury, on-chain, or maturity-stage change
+title: "[Governance]: "
+labels:
+  - rfc
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A proposal opens review; it grants no repository permission, execution authority, role, payment, token right, or automatic stage transition. Read GOVERNANCE.md and RFC 0004 before submitting.
+  - type: dropdown
+    id: decision_class
+    attributes:
+      label: Decision class
+      description: Select the minimum review class. Maintainers may require a longer class.
+      options:
+        - Governance policy — minimum 7 days
+        - Constitutional, authority, permission, treasury, on-chain, or stage change — minimum 14 days
+        - Security emergency — immediate containment plus bounded record and retrospective
+    validations:
+      required: true
+  - type: input
+    id: governance_stage
+    attributes:
+      label: Current governance stage
+      description: Name the stage whose authority applies. The observed current stage is G0.
+      value: G0
+    validations:
+      required: true
+  - type: input
+    id: proposal_or_rfc
+    attributes:
+      label: Proposal or RFC link
+      description: Link the public draft or name the RFC path that this issue introduces.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and evidence
+      description: State the durable problem, affected people, public evidence, and why the current contract is insufficient.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_change
+    attributes:
+      label: Proposed change
+      description: State the exact policy, authority, permission, stage, or external effect being requested.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and trade-offs
+      description: Include the status quo and at least one materially different option.
+    validations:
+      required: true
+  - type: textarea
+    id: authority_boundary
+    attributes:
+      label: Authority and non-goals
+      description: State who can decide, what this proposal cannot authorize, and what needs separately authorized execution.
+    validations:
+      required: true
+  - type: input
+    id: review_opened_at
+    attributes:
+      label: Review opened at
+      description: Public review start in RFC 3339 UTC, for example 2026-09-03T12:00:00Z.
+    validations:
+      required: true
+  - type: input
+    id: review_not_before
+    attributes:
+      label: Earliest decision time
+      description: RFC 3339 UTC time after the required review window. This is not an acceptance deadline.
+    validations:
+      required: true
+  - type: textarea
+    id: adoption_and_execution
+    attributes:
+      label: Adoption and implementation checkpoint
+      description: Define acceptance, rollback, evidence, and the separate Task Hall checkpoint needed after a decision.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety_acknowledgements
+    attributes:
+      label: Safety acknowledgements
+      options:
+        - label: I understand this proposal grants no repository permission or execution authority.
+          required: true
+        - label: I understand contribution, payment, credit, votes, and tokens grant no governance or repository authority.
+          required: true
+        - label: I understand external account, wallet, treasury, organization, remote-setting, and on-chain actions require separate authorization.
+          required: true
+        - label: I have not included credentials, private data, exploit details, or machine-local paths.
+          required: true

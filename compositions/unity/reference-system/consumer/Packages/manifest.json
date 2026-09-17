@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.lingkyn.interaction.core",
+    "com.lingkyn.interaction.unity",
+    "com.lingkyn.inventory.core",
+    "com.lingkyn.inventory.presentation",
+    "com.lingkyn.inventory.ugui",
+    "com.lingkyn.inventory.unity",
+    "com.lingkyn.inventory.xr.ugui",
+    "com.lingkyn.persistence.core",
+    "com.lingkyn.persistence.unity",
+    "com.lingkyn.settings.core",
+    "com.lingkyn.settings.unity"
+  ]
+}

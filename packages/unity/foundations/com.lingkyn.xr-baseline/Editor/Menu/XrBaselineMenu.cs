@@ -4,21 +4,37 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Lingkyn.Unity.XrBaseline.Config;
-using Lingkyn.Unity.XrBaseline.Constants;
 using Lingkyn.Unity.XrBaseline.Editor.ConfigTools;
 using Lingkyn.Unity.XrBaseline.Editor.SceneSetup;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.Menu
 {
     public static class XrBaselineMenu
     {
         [MenuItem("Tools/Lingkyn/XR Baseline/Initialize Sandbox")]
-        public static void InitializeSandbox()
+        public static void InitializeSandbox() => InitializeSandbox(SandboxInitializationOptions.Default);
+
+        /// <summary>
+        /// The Initialize Sandbox pipeline with its project root, scene path, scene mode, save
+        /// step, and rig source lookup injected. The menu item passes
+        /// <see cref="SandboxInitializationOptions.Default"/>; EditMode tests pass a disposable root
+        /// and an additive scene. Returns the composed scene so a caller can inspect or close it.
+        /// </summary>
+        internal static Scene InitializeSandbox(SandboxInitializationOptions options)
         {
-            EnsureAssetFolder("Assets/_Project/Scenes");
-            var scene = File.Exists(VrBaselineProjectPaths.SandboxScene)
-                ? EditorSceneManager.OpenScene(VrBaselineProjectPaths.SandboxScene, OpenSceneMode.Single)
-                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var layout = options.Layout;
+            XrBaselineDiagnostics.Reset();
+            EnsureAssetFolder(layout.ScenesFolder);
+            var scene = File.Exists(options.ScenePath)
+                ? EditorSceneManager.OpenScene(options.ScenePath, ToOpenSceneMode(options.SceneMode))
+                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, options.SceneMode);
+            if (SceneManager.GetActiveScene() != scene)
+            {
+                // Single mode already made the scene active; an additive test scene must be active so
+                // the lighting setup writes RenderSettings into the disposable scene, not the caller's.
+                SceneManager.SetActiveScene(scene);
+            }
 
             var sceneRoot = EnsureSceneRoot(scene);
             var player = EnsurePath(sceneRoot.transform, "_Actors/Player");
@@ -27,19 +43,35 @@ namespace Lingkyn.Unity.XrBaseline.Editor.Menu
             EnsurePath(sceneRoot.transform, "_World/Environment");
             EnsurePath(sceneRoot.transform, "_Gameplay/Interactables");
 
-            var config = VrBaselineConfigAccess.EnsureExists();
-            VrBaselineAssetsSetup.EnsureAssets(config);
-            VrBaselineScenePlacer.PlaceGreybox(scene, sceneRoot.transform, config);
-            var rig = GenericXrRigFactory.EnsureRig(scene, player, config);
+            var config = VrBaselineConfigAccess.EnsureExists(layout.ConfigAsset);
+            VrBaselineAssetsSetup.EnsureAssets(config, layout);
+            VrBaselineScenePlacer.PlaceGreybox(scene, sceneRoot.transform, config, layout);
+            var rig = GenericXrRigFactory.EnsureRig(scene, player, config, options.RigSourceResolver);
             if (rig == null)
             {
                 Debug.LogWarning("xr_baseline: no XRI Starter Assets rig source was found; import the current XRI Starter Assets sample and run Initialize Sandbox again.");
             }
 
             EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, VrBaselineProjectPaths.SandboxScene);
-            Debug.Log("xr_baseline_initialized: Sandbox saved. Device behavior remains unverified until a headset test is recorded.");
+            if (options.SaveScene)
+            {
+                EditorSceneManager.SaveScene(scene, options.ScenePath);
+            }
+
+            if (XrBaselineDiagnostics.ReportedKeys.Count > 0)
+            {
+                Debug.LogWarning($"xr_baseline_initialized_with_unresolved: Sandbox saved, but {XrBaselineDiagnostics.ReportedKeys.Count} item(s) could not be configured; see the xr_baseline_unresolved warnings above.");
+            }
+            else
+            {
+                Debug.Log("xr_baseline_initialized: Sandbox saved. Device behavior remains unverified until a headset test is recorded.");
+            }
+
+            return scene;
         }
+
+        static OpenSceneMode ToOpenSceneMode(NewSceneMode mode) =>
+            mode == NewSceneMode.Additive ? OpenSceneMode.Additive : OpenSceneMode.Single;
 
         [MenuItem("Tools/Lingkyn/XR Baseline/Apply Config")]
         public static void ApplyConfig() => InitializeSandbox();

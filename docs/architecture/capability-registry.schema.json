@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/capability-registry.schema.json",
+  "title": "XR Foundry capability registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "model_version", "policies", "capabilities"],
+  "properties": {
+    "schema": {"const": "xr-foundry.capability_registry.v1"},
+    "model_version": {"const": "0.1.0"},
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_data_plane", "control_plane", "discovery", "lifecycle", "breaking_change", "mcp_role"],
+      "properties": {
+        "runtime_data_plane": {"const": "typed_in_process"},
+        "control_plane": {"const": "manifest_capability_composition_lock"},
+        "discovery": {"const": "explicit_static"},
+        "lifecycle": {"const": "consumer_owned_configure_start_stop_v1"},
+        "breaking_change": {"const": "new_capability_major_version"},
+        "mcp_role": {"const": "optional_external_control_plane_adapter_only"}
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "plane", "scope", "multiplicity", "providers", "contract_refs", "description"],
+        "properties": {
+          "id": {"$ref": "#/$defs/capabilityId"},
+          "version": {"$ref": "#/$defs/semver"},
+          "plane": {"enum": ["runtime", "composition"]},
+          "scope": {
+            "enum": ["foundation", "domain", "engine_adapter", "presentation", "renderer", "xr_composition"]
+          },
+          "multiplicity": {"const": "exactly_one_per_composition"},
+          "providers": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"}
+          },
+          "contract_refs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"$ref": "#/$defs/repositoryPath"}
+          },
+          "description": {"type": "string", "minLength": 16}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._~/-]+$",
+      "minLength": 1
+    }
+  }
+}

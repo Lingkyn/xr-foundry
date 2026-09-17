@@ -1,0 +1,29 @@
+{
+  "schema": "xr-foundry.component_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "com.lingkyn.persistence.core",
+  "version": "0.1.0",
+  "engine": "unity",
+  "family": "persistence",
+  "kind": "domain_core",
+  "maturity": "incubating",
+  "package_manifest": "package.json",
+  "runtime_data_plane": "typed_in_process",
+  "discovery": "explicit_static",
+  "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
+  "provides": [
+    {"id": "xr-foundry.persistence.contract", "version": "1.0.0"}
+  ],
+  "requires": [],
+  "contract_refs": [
+    "packages/unity/systems/persistence/com.lingkyn.persistence.core/Documentation~/index.md"
+  ],
+  "evidence": {
+    "manifest_contract": "declared",
+    "runtime_integration": "not_claimed",
+    "device_runtime": "not_claimed"
+  },
+  "non_claims": [
+    "The persistence contract does not select a filesystem, cloud, or platform provider."
+  ]
+}

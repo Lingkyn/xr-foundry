@@ -33,10 +33,15 @@ packages/
       interaction/
         com.lingkyn.interaction.core/
         com.lingkyn.interaction.unity/
+compositions/
+  unity/
+    reference-system/
 docs/
   architecture/
   standards/
   validation/
+component-catalog.json
+capability-registry.json
 scripts/
 tests/
 ```
@@ -56,6 +61,10 @@ See [`version-adaptive-reference-model.md`](version-adaptive-reference-model.md)
   progressively discloses its installable modules and recommended compositions.
 - `package-catalog.json` and `reference-catalog.json` retain one entry per package
   because version, maturity, dependencies, evidence, and install paths differ.
+- Every package has one colocated `foundry.component.json` registered by
+  `component-catalog.json`. `capability-registry.json` owns its versioned semantic
+  roles, while `compositions/` owns explicit system selections and deterministic
+  locks. See [`component-composition-model.md`](component-composition-model.md).
 - Every package leaf directory equals its `package.json` name. The catalog path is
   the repository-relative source of truth; package IDs do not encode repository
   folders.

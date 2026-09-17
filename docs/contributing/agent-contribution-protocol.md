@@ -6,6 +6,13 @@ work as automatically trusted or correct.
 
 ## Contributor path
 
+A routine change (documentation, tests, tooling, or a non-breaking package change)
+follows [`start-here.md`](start-here.md): branch, change, run
+`python scripts/merge_readiness.py --base origin/main --head HEAD --markdown`,
+push, five-line pull request. It needs no claim, lease, execution anchor,
+continuation receipt, or governance window. The path below is for bounded
+coordinated work, for anything that claims evidence, and for rule changes.
+
 1. Select a `task:ready` Issue and read its linked RFC, package/reference entry,
    source manifest, tests, samples, and evidence boundary.
 2. Select one named checkpoint whose dependencies are complete. Comment `/claim`
@@ -16,14 +23,19 @@ work as automatically trusted or correct.
    draft-PR execution anchor before material work.
 4. Keep the change inside the checkpoint's allowed paths. Schedule newly discovered
    work as a separate checkpoint or Issue instead of silently expanding scope.
-5. Run repository checks and the task-specific checks. Do not turn a missing device
-   run into a passing claim.
+5. Run repository checks, the task-specific checks, and
+   `python scripts/merge_readiness.py`; fix every `fail`. Do not turn a missing
+   device run into a passing claim.
 6. Open a pull request linked to the task and checkpoint. State the accountable
    human/GitHub identity and disclose material coding-assistant help with
    `Assisted-by: TOOL:MODEL` when known.
 7. Respond to review, but do not approve, merge, release, change maturity, or alter
    repository settings unless the GitHub identity already has that authority and
-   the task explicitly includes the action.
+   the task explicitly includes the action. Whether the change may merge is
+   answered by the [merge-readiness verdict](merge-readiness.md): a routine change
+   on a branch named by a live operating mandate merges by GitHub auto-merge once
+   the verdict is `ready` and the required checks pass; a non-routine change waits
+   for a maintainer who reads the same verdict.
 8. Before pausing, releasing, transferring, or letting a lease expire, publish a
    continuation receipt. Bind completed checkpoints, branch/PR/commit, evidence,
    remaining work, blockers, allowed paths, do-not-touch paths, and the exact next

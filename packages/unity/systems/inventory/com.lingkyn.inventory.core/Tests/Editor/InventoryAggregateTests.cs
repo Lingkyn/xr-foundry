@@ -546,6 +546,124 @@ namespace Lingkyn.Inventory.Core.Tests
                 registry.Create(lookalike, new DurabilityState(1)));
         }
 
+        [Test]
+        public void RemoveFromEmptySlotIsRejectedAsSourceEmptyWithoutMutation()
+        {
+            var inventory = CreateInventory(bagCapacity: 2);
+            Assert.That(inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 3), BagId)).Succeeded, Is.True);
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+
+            var emptySlot = inventory.Execute(MutationRequest.Remove(new SlotAddress(BagId, 1), 1));
+            Assert.That(emptySlot.Succeeded, Is.False);
+            Assert.That(emptySlot.Failure, Is.EqualTo(MutationFailure.SourceEmpty));
+
+            var tooMany = inventory.Execute(MutationRequest.Remove(new SlotAddress(BagId, 0), 4));
+            Assert.That(tooMany.Succeeded, Is.False);
+            Assert.That(tooMany.Failure, Is.EqualTo(MutationFailure.InsufficientQuantity));
+
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void NonPositiveStackQuantityIsRejectedAtConstruction()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemStack(PotionId, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemStack(PotionId, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ItemStack(SwordId, 0, new ItemInstanceId("sword-000")));
+        }
+
+        [Test]
+        public void AddExactlyAtMaximumStackAndCapacityBoundarySucceedsWithoutOverflow()
+        {
+            var inventory = CreateInventory(bagCapacity: 2);
+
+            var exact = inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 10), BagId));
+            Assert.That(exact.Succeeded, Is.True);
+            Assert.That(exact.AcceptedQuantity, Is.EqualTo(10));
+            Assert.That(Total(inventory.GetSnapshot()), Is.EqualTo(10));
+            Assert.That(inventory.GetSnapshot().Get(new SlotAddress(BagId, 0)).Quantity, Is.EqualTo(5));
+            Assert.That(inventory.GetSnapshot().Get(new SlotAddress(BagId, 1)).Quantity, Is.EqualTo(5));
+
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+            var overflow = inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 1), BagId));
+            Assert.That(overflow.Succeeded, Is.False);
+            Assert.That(overflow.Failure, Is.EqualTo(MutationFailure.CapacityExceeded));
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void ZeroQuantityRemoveAndMoveAreRejectedAsInvalidRequestWithoutMutation()
+        {
+            var inventory = CreateInventory(bagCapacity: 2);
+            Assert.That(inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 3), BagId)).Succeeded, Is.True);
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+            var source = new SlotAddress(BagId, 0);
+            var destination = new SlotAddress(BagId, 1);
+
+            var zeroRemove = inventory.Execute(MutationRequest.Remove(source, 0));
+            Assert.That(zeroRemove.Succeeded, Is.False);
+            Assert.That(zeroRemove.Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+
+            var negativeRemove = inventory.Execute(MutationRequest.Remove(source, -1));
+            Assert.That(negativeRemove.Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+
+            Assert.That(inventory.Execute(MutationRequest.Move(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+            Assert.That(inventory.Execute(MutationRequest.Split(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+            Assert.That(inventory.Execute(MutationRequest.Merge(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+            Assert.That(inventory.Execute(MutationRequest.Transfer(source, destination, 0)).Failure, Is.EqualTo(MutationFailure.InvalidRequest));
+
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void UnknownContainerAndInvalidSlotAreRejectedWithoutMutation()
+        {
+            var inventory = CreateInventory(bagCapacity: 2);
+            Assert.That(inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 2), BagId)).Succeeded, Is.True);
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+            var nowhere = new ContainerId("nowhere");
+
+            var addUnknown = inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 1), nowhere));
+            Assert.That(addUnknown.Succeeded, Is.False);
+            Assert.That(addUnknown.Failure, Is.EqualTo(MutationFailure.UnknownContainer));
+
+            var moveUnknown = inventory.Execute(MutationRequest.Move(new SlotAddress(BagId, 0), new SlotAddress(nowhere, 0), 1));
+            Assert.That(moveUnknown.Succeeded, Is.False);
+            Assert.That(moveUnknown.Failure, Is.EqualTo(MutationFailure.UnknownContainer));
+
+            var moveOutside = inventory.Execute(MutationRequest.Move(new SlotAddress(BagId, 0), new SlotAddress(BagId, 99), 1));
+            Assert.That(moveOutside.Succeeded, Is.False);
+            Assert.That(moveOutside.Failure, Is.EqualTo(MutationFailure.InvalidSlot));
+
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void TransferIntoOccupiedDestinationIsRejectedWithoutMutatingSource()
+        {
+            var inventory = CreateInventory(bagCapacity: 2, stashCapacity: 1);
+            Assert.That(inventory.Execute(MutationRequest.Add(new ItemStack(PotionId, 4), BagId)).Succeeded, Is.True);
+            Assert.That(inventory.Execute(MutationRequest.Add(new ItemStack(SwordId, 1, new ItemInstanceId("sword-001")), StashId)).Succeeded, Is.True);
+            var before = Describe(inventory.GetSnapshot());
+            var revisionBefore = inventory.Revision;
+
+            var transfer = inventory.Execute(MutationRequest.Transfer(new SlotAddress(BagId, 0), new SlotAddress(StashId, 0), 2));
+
+            Assert.That(transfer.Succeeded, Is.False);
+            Assert.That(transfer.Failure, Is.EqualTo(MutationFailure.DestinationOccupied));
+            Assert.That(inventory.Revision, Is.EqualTo(revisionBefore));
+            Assert.That(Describe(inventory.GetSnapshot()), Is.EqualTo(before));
+            Assert.That(inventory.GetSnapshot().Get(new SlotAddress(BagId, 0)).Quantity, Is.EqualTo(4));
+        }
+
         private static InventoryAggregate CreateInventory(
             int bagCapacity,
             int? stashCapacity = null,

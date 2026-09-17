@@ -28,6 +28,44 @@ the repository-specific authority and self-improvement boundary.
    execution state is `ready`, and a separate Task Hall checkpoint grants bounded
    execution authority. The deliberation record never grants repository access.
 
+## Governance review metadata
+
+[RFC 0004](../rfcs/0004-progressive-governance.md) reuses this protocol for
+governance decisions instead of creating a second voting or proposal database. A
+governance record adds all four optional fields together:
+
+- `decision_class`: `routine_change`, `governance_policy`,
+  `constitutional_change`, or `security_emergency`;
+- `governance_stage`: the stage whose authority applies, currently `G0`;
+- `review_opened_at`: the public review start time; and
+- `review_not_before`: the earliest permitted decision time.
+
+Governance-policy review stays open for at least 7 days. Constitutional,
+authority, permission, treasury, on-chain, and stage-transition proposals stay
+open for at least 14 days. These are minimum decision windows, not deadlines or
+automatic acceptance. A maintainer may extend review, reject a proposal, or record
+that more evidence is needed. No metric, vote count, contribution total, payment,
+or token balance can close the review or grant a role. Under the prototype-stage
+rule in [`GOVERNANCE.md`](../../GOVERNANCE.md), "Process-decided merges and lazy
+consensus", a governance record whose window has closed with no `risk` or
+`counterexample` delta resolves by lazy consensus: the steward records the
+proposed option with `decided_by: process:<mandate_id>`. An objection delta keeps
+the record open until a person resolves it. The
+[merge-readiness verdict](merge-readiness.md) reads that record; a routine change
+on a branch named by a live operating mandate merges by GitHub auto-merge once the
+verdict is `ready`, and a non-routine change waits for a maintainer who reads the
+same verdict.
+
+A security emergency may be contained immediately. The safe public or private
+record is created within 72 hours and a retrospective is completed within 7 days;
+the emergency route cannot permanently amend governance. Sensitive disclosure may
+be delayed under [`SECURITY.md`](../../SECURITY.md).
+
+The schema enforces that the four metadata fields travel together. Repository
+validation additionally checks the time interval and prevents a resolved decision
+from predating `review_not_before`. Records without governance metadata remain
+valid for ordinary Task Hall deliberation.
+
 ## Stable kernel, experiments, and adapters
 
 - The **stable kernel** is the currently adopted Task Hall authority, security,
@@ -64,7 +102,7 @@ GitHub identity owns the contribution.
 
 | From | To | Required evidence |
 | --- | --- | --- |
-| `open` | `resolved` | Options and trade-offs are recorded; synthesis names remaining uncertainty; a maintainer records a bounded decision, reopen conditions, and a separate execution checkpoint. |
+| `open` | `resolved` | Options and trade-offs are recorded; synthesis names remaining uncertainty; a maintainer records a bounded decision, reopen conditions, and a separate execution checkpoint, or a governance record whose window closed with no `risk` or `counterexample` delta resolves by lazy consensus with `decided_by: process:<mandate_id>`. |
 | `open` | `rejected` | The rejection rationale and evidence are public; `decision` stays null and execution is `not_ready` with no task. |
 | `resolved` | `superseded` | A newer immutable decision record is linked; existing history is retained and execution becomes `superseded`, never `ready`. |
 | `resolved` | `open` | Do not mutate history in place. Create a successor record when a reopen condition fires. |

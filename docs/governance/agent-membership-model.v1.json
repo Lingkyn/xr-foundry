@@ -1,0 +1,134 @@
+{
+  "$schema": "agent-membership-model.schema.json",
+  "schema": "xr-foundry.agent_membership_model.v1",
+  "version": "0.1.0",
+  "status": "proposed",
+  "current_cell": "G0xA0",
+  "phase_one_target": "G0xA1",
+  "agent_stages": [
+    {
+      "id": "A0",
+      "order": 0,
+      "name": "human_accountable_agent_assistance",
+      "status": "observed_current",
+      "activation_allowed": true,
+      "capabilities": ["agent_assisted_contribution_under_human_github_identity"],
+      "authority_limit": "RFC 0001 human accountability remains the only active agent participation path"
+    },
+    {
+      "id": "A1",
+      "order": 1,
+      "name": "accountable_agent_member",
+      "status": "proposed_phase_one",
+      "activation_allowed": false,
+      "capabilities": ["public_contribution", "evidence_submission", "advisory_deliberation"],
+      "authority_limit": "No repository permission or high-impact execution; every action requires a bounded mandate"
+    },
+    {
+      "id": "A2",
+      "order": 2,
+      "name": "delegated_task_actor",
+      "status": "future_only",
+      "activation_allowed": false,
+      "capabilities": ["future_bounded_task_claim_and_low_risk_execution"],
+      "authority_limit": "Requires a successor RFC, Task Hall v2, incidents and revocation evidence, and separate activation"
+    },
+    {
+      "id": "A3",
+      "order": 3,
+      "name": "governed_service_agent",
+      "status": "future_only",
+      "activation_allowed": false,
+      "capabilities": ["future_persistent_service_operation"],
+      "authority_limit": "Requires service ownership, observability, recovery, security, privacy, and incident controls"
+    },
+    {
+      "id": "A4",
+      "order": 4,
+      "name": "bounded_autonomous_executor",
+      "status": "future_only",
+      "activation_allowed": false,
+      "capabilities": ["future_explicit_high_assurance_actions_named_by_separate_constitutional_rfc"],
+      "authority_limit": "No general autonomy; GitHub and external authority remain separately granted and revocable"
+    }
+  ],
+  "identity_contract": {
+    "agent_id_pattern": "^xr-foundry\\.agent\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$",
+    "required_fields": ["agent_id", "lineage_id", "principal_ref", "action_identities", "status", "autonomy_level", "capability_claims", "mandates"],
+    "identity_grants_authority": false,
+    "principal_accountability_required": true
+  },
+  "mandate_contract": {
+    "required_fields": ["mandate_id", "agent_id", "principal_ref", "issuer_ref", "checkpoint_ref", "allowed_actions", "resource_scope", "issued_at", "not_before", "expires_at", "revocation"],
+    "phase_one_allowed_actions": ["draft", "comment", "propose", "submit_evidence"],
+    "delegated_repository_authority": false
+  },
+  "authority_boundaries": {
+    "membership_grants_write": false,
+    "membership_grants_merge": false,
+    "membership_grants_release": false,
+    "membership_grants_admin": false,
+    "contribution_grants_write": false,
+    "deliberation_grants_write": false,
+    "token_grants_authority": false,
+    "mandate_grants_github_role": false
+  },
+  "independence_policy": {
+    "distinct_principal_required": true,
+    "distinct_lineage_required": true,
+    "same_principal_counts_as_independent": false,
+    "same_lineage_counts_as_independent": false,
+    "same_principal_formal_review": false,
+    "same_lineage_formal_review": false
+  },
+  "evidence_policy": {
+    "capability_claims_require_evidence": true,
+    "ancestry_root_required": true,
+    "same_ancestry_multiplies_evidence": false,
+    "independent_primary_evidence_required_for_additional_count": true
+  },
+  "registry_policy": {
+    "live_registry_created": false,
+    "example_is_authoritative": false
+  },
+  "external_effects": {
+    "account_operation": false,
+    "github_app_installation": false,
+    "organization_transfer": false,
+    "wallet": false,
+    "treasury": false,
+    "multisig": false,
+    "token": false,
+    "smart_contract": false,
+    "onchain_execution": false,
+    "remote_settings_change": false
+  },
+  "activation": {
+    "active_policy": false,
+    "active_agent_membership": false,
+    "maximum_activatable_stage": "A1",
+    "requires_constitutional_review_days": 14,
+    "requires_resolved_deliberation": true,
+    "requires_explicit_maintainer_decision": true,
+    "requires_task_hall_checkpoint": true,
+    "requires_revocation_exercise": true,
+    "requires_independent_review": true
+  },
+  "retrofit_targets": [
+    "rfc_0001_successor_amendment",
+    "rfc_0004_two_axis_amendment",
+    "task_hall_v2_claimant_union",
+    "xfcm_external_control_receipt_refs"
+  ],
+  "source_refs": [
+    "GOVERNANCE.md",
+    "docs/rfcs/0001-agent-commons.md",
+    "docs/rfcs/0004-progressive-governance.md",
+    "docs/rfcs/0005-xr-foundry-component-composition-model.md",
+    "docs/rfcs/0006-agent-native-xr-dao.md",
+    "docs/contributing/task-hall.md",
+    "docs/governance/agent-member.schema.json",
+    "docs/governance/agent-member.example.json",
+    "docs/governance/agent-native-source-manifest.json"
+  ]
+}

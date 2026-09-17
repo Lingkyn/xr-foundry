@@ -26,3 +26,16 @@ must not expose secrets to forked pull requests.
 Changes that add comment-trigger execution, broaden workflow permissions, consume
 secrets, install unpinned code, or alter review/merge authority require an explicit
 security review and maintainer decision.
+
+## Emergency governance
+
+A maintainer or assigned security responder may take the narrowest reversible
+action needed to contain an active vulnerability without waiting for a public
+governance window. A safe incident record must be created within 72 hours and a
+retrospective completed within 7 days. Public disclosure may be delayed when it
+would expose users, credentials, or an unfixed exploit.
+
+Emergency action grants no permanent constitutional, permission, treasury, token,
+wallet, or on-chain change. Any lasting governance change returns to the review and
+decision path in [`GOVERNANCE.md`](GOVERNANCE.md) and
+[`RFC 0004`](docs/rfcs/0004-progressive-governance.md).

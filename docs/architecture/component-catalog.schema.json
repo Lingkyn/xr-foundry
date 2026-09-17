@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/component-catalog.schema.json",
+  "title": "XR Foundry component catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "model_version", "component_manifest_schema", "lifecycle_policies", "components", "slots"],
+  "properties": {
+    "schema": {"const": "xr-foundry.component_catalog.v1"},
+    "model_version": {"const": "0.1.0"},
+    "component_manifest_schema": {"const": "docs/architecture/component-manifest.schema.json"},
+    "lifecycle_policies": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "owner", "phases", "start_order", "stop_order"],
+        "properties": {
+          "id": {"const": "consumer_owned_configure_start_stop_v1"},
+          "owner": {"const": "consumer_composition_root"},
+          "phases": {
+            "type": "array",
+            "prefixItems": [
+              {"const": "configure"},
+              {"const": "start"},
+              {"const": "stop"}
+            ],
+            "items": false,
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "start_order": {"const": "dependency_order"},
+          "stop_order": {"const": "reverse_dependency_order"}
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "package_path", "manifest_path"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"},
+          "package_path": {"$ref": "#/$defs/repositoryPath"},
+          "manifest_path": {"$ref": "#/$defs/repositoryPath"}
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "capability", "candidates"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
+          "capability": {"type": "string", "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
+          "candidates": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"}
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._~/-]+$",
+      "minLength": 1
+    }
+  }
+}

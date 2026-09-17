@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/component-manifest.schema.json",
+  "title": "XR Foundry component manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "model_version",
+    "id",
+    "version",
+    "engine",
+    "family",
+    "kind",
+    "maturity",
+    "package_manifest",
+    "runtime_data_plane",
+    "discovery",
+    "lifecycle_policy",
+    "provides",
+    "requires",
+    "contract_refs",
+    "evidence",
+    "non_claims"
+  ],
+  "properties": {
+    "schema": {"const": "xr-foundry.component_manifest.v1"},
+    "model_version": {"const": "0.1.0"},
+    "id": {"type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$"},
+    "version": {"$ref": "#/$defs/semver"},
+    "engine": {"const": "unity"},
+    "family": {
+      "enum": ["foundations", "interaction", "inventory", "persistence", "settings"]
+    },
+    "kind": {
+      "enum": [
+        "foundation",
+        "domain_core",
+        "engine_adapter",
+        "presentation",
+        "renderer_adapter",
+        "xr_composition"
+      ]
+    },
+    "maturity": {"enum": ["incubating", "candidate", "stable", "deprecated"]},
+    "package_manifest": {"const": "package.json"},
+    "runtime_data_plane": {"const": "typed_in_process"},
+    "discovery": {"const": "explicit_static"},
+    "lifecycle_policy": {"const": "consumer_owned_configure_start_stop_v1"},
+    "provides": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/capabilityReference"}
+    },
+    "requires": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/capabilityReference"}
+    },
+    "contract_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/repositoryPath"}
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_contract", "runtime_integration", "device_runtime"],
+      "properties": {
+        "manifest_contract": {"const": "declared"},
+        "runtime_integration": {"const": "not_claimed"},
+        "device_runtime": {"const": "not_claimed"}
+      }
+    },
+    "non_claims": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 12}
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^xr-foundry\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "capabilityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"$ref": "#/$defs/capabilityId"},
+        "version": {"$ref": "#/$defs/semver"}
+      }
+    },
+    "repositoryPath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._~/-]+$",
+      "minLength": 1
+    }
+  }
+}

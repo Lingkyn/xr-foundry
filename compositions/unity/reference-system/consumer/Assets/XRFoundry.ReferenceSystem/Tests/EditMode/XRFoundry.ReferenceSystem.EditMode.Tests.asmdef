@@ -1,0 +1,35 @@
+{
+  "name": "XRFoundry.ReferenceSystem.EditMode.Tests",
+  "rootNamespace": "XRFoundry.ReferenceSystem.Tests",
+  "references": [
+    "XRFoundry.ReferenceSystem",
+    "Lingkyn.Interaction.Core",
+    "Lingkyn.Interaction.Unity",
+    "Lingkyn.Inventory.Core",
+    "Lingkyn.Inventory.Presentation",
+    "Lingkyn.Inventory.UGUI",
+    "Lingkyn.Inventory.XR.UGUI",
+    "Lingkyn.Persistence.Core",
+    "Lingkyn.Persistence.Unity",
+    "Lingkyn.Settings.Core",
+    "Lingkyn.Settings.Unity",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework",
+    "Unity.ugui",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

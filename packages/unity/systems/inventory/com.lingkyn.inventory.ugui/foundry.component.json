@@ -1,0 +1,33 @@
+{
+  "schema": "xr-foundry.component_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "com.lingkyn.inventory.ugui",
+  "version": "0.2.0",
+  "engine": "unity",
+  "family": "inventory",
+  "kind": "renderer_adapter",
+  "maturity": "incubating",
+  "package_manifest": "package.json",
+  "runtime_data_plane": "typed_in_process",
+  "discovery": "explicit_static",
+  "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
+  "provides": [
+    {"id": "xr-foundry.inventory.renderer", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.renderer.ugui", "version": "1.0.0"}
+  ],
+  "requires": [
+    {"id": "xr-foundry.inventory.domain", "version": "1.0.0"},
+    {"id": "xr-foundry.inventory.presentation", "version": "1.0.0"}
+  ],
+  "contract_refs": [
+    "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Documentation~/index.md"
+  ],
+  "evidence": {
+    "manifest_contract": "declared",
+    "runtime_integration": "not_claimed",
+    "device_runtime": "not_claimed"
+  },
+  "non_claims": [
+    "UGUI is one selectable renderer and does not become a library-wide dependency."
+  ]
+}

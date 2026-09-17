@@ -1,0 +1,31 @@
+{
+  "schema": "xr-foundry.component_manifest.v1",
+  "model_version": "0.1.0",
+  "id": "com.lingkyn.settings.unity",
+  "version": "0.1.0",
+  "engine": "unity",
+  "family": "settings",
+  "kind": "engine_adapter",
+  "maturity": "incubating",
+  "package_manifest": "package.json",
+  "runtime_data_plane": "typed_in_process",
+  "discovery": "explicit_static",
+  "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
+  "provides": [
+    {"id": "xr-foundry.settings.unity-authoring", "version": "1.0.0"}
+  ],
+  "requires": [
+    {"id": "xr-foundry.settings.domain", "version": "1.0.0"}
+  ],
+  "contract_refs": [
+    "packages/unity/systems/settings/com.lingkyn.settings.unity/Documentation~/index.md"
+  ],
+  "evidence": {
+    "manifest_contract": "declared",
+    "runtime_integration": "not_claimed",
+    "device_runtime": "not_claimed"
+  },
+  "non_claims": [
+    "The authoring adapter does not wire settings into interaction or rendering systems."
+  ]
+}

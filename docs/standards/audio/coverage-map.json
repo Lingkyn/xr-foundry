@@ -1,0 +1,58 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "audio",
+  "contract": "docs/standards/audio/verification-contract.md",
+  "audited_at_commit": "staging",
+  "policy": {
+    "mapping_basis": "test method names and bodies in staging/audio, matched against contract clause text; the code has not compiled or executed",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.audio.core",
+      "test_assembly": "Lingkyn.Audio.Core.Editor.Tests",
+      "clauses": [
+        {"id": "AC-01", "clause": "event identity validation: canonical form, rejection of empty, whitespace, and malformed identifiers with a stable identity.malformed failure, and value equality between two identities with the same text", "coverage": "covered", "tests": ["EventIdCanonicalizesCaseAndKeepsSeparators", "EventIdRejectsEmptyWhitespaceAndMalformedShapesWithIdentityMalformed", "EventIdsWithTheSameTextAreEqualValues", "ParseThrowsWithTheFailureMessageForMalformedIdentity"], "missing": []},
+        {"id": "AC-02", "clause": "bus and snapshot identity validation with the same rules (anchor and parameter identity share them)", "coverage": "covered", "tests": ["BusSnapshotAnchorAndParameterIdsShareTheIdentityRules"], "missing": []},
+        {"id": "AC-03", "clause": "a mix graph that requires a root bus, rejects duplicate bus or snapshot ids, and rejects a snapshot that references a bus outside the graph", "coverage": "covered", "tests": ["MixGraphRequiresExactlyOneRootBus", "MixGraphRejectsDuplicateBusIds", "MixGraphRejectsDuplicateSnapshotIds", "MixGraphRejectsSnapshotReferencingBusOutsideGraph", "MixGraphRejectsBusWithUnknownParentOrUnreachableFromRoot", "MixGraphRejectsDuplicateParametersOnOneBusAndDuplicateOrUnroutedEvents", "MixGraphIsImmutableAfterBuild", "MixGraphResolvesParametersWithBusUnknownAndParameterUnknown"], "missing": []},
+        {"id": "AC-04", "clause": "parameter contracts: a closed parameter kind (float, bool, enumerated) and a declared range or value set per parameter", "coverage": "covered", "tests": ["ParameterContractsDeclareClosedKindsWithRangeOrValueSet", "ParameterContractRejectsInvalidDeclarations"], "missing": []},
+        {"id": "AC-05", "clause": "fail-closed rejection of an unknown parameter (parameter.unknown), a wrong kind (parameter.kind.mismatch), and an out-of-range or undeclared value (parameter.out_of_range) without changing state", "coverage": "covered", "tests": ["FloatContractAcceptsInRangeAndRejectsOutOfRange", "ContractRejectsWrongKindAsKindMismatchBeforeRangeCheck", "EnumeratedContractRejectsUndeclaredValueAsOutOfRange", "SetParameterOnUnknownBusOrParameterFailsClosedWithoutChangingState", "SetParameterKindMismatchAndOutOfRangeLeaveStateIntact", "SetParameterAcceptedValueIsVisibleInTheNewStateOnly"], "missing": []},
+        {"id": "AC-06", "clause": "spatial attachment intents that reference an anchor id: attach, move between anchors, and detach as distinct intents, an unknown anchor rejected with anchor.unknown, and an event that is either attached to exactly one anchor or unattached", "coverage": "covered", "tests": ["AttachRequiresRegisteredAnchorAndActiveEvent", "AttachMoveAndDetachAreDistinctIntents", "EventIsAttachedToExactlyOneAnchorOrUnattached", "UnregisterAnchorDetachesItsEventsAndUnknownAnchorIsRejected"], "missing": []},
+        {"id": "AC-07", "clause": "the same intent sequence produces an equal snapshot", "coverage": "covered", "tests": ["SameIntentSequenceProducesEqualStateAndFingerprint"], "missing": []},
+        {"id": "AC-08", "clause": "a snapshot is immutable", "coverage": "covered", "tests": ["StateIsImmutableAcrossApplications"], "missing": []},
+        {"id": "AC-09", "clause": "a rejected intent leaves the prior snapshot intact", "coverage": "covered", "tests": ["RejectedIntentLeavesPriorStateIntactInsideASequence", "SetParameterOnUnknownBusOrParameterFailsClosedWithoutChangingState", "SetParameterKindMismatchAndOutOfRangeLeaveStateIntact"], "missing": []},
+        {"id": "AC-10", "clause": "a snapshot enumerates active events, the current mix snapshot, bus parameter values, and attachments", "coverage": "covered", "tests": ["StateEnumeratesActiveEventsSnapshotBusParametersAndAttachments", "InitialStateCarriesDeclaredDefaultsAndNoSnapshot"], "missing": []},
+        {"id": "AC-11", "clause": "structured results with stable failure codes for an unknown event, bus, snapshot, parameter, or anchor", "coverage": "covered", "tests": ["UnknownEventBusSnapshotParameterAndAnchorReportStableCodes", "AudioResultCarriesCodeAndMessageAndOkHasEmptyCode"], "missing": []},
+        {"id": "AC-12", "clause": "a valid intent sequence passing clean", "coverage": "covered", "tests": ["ValidIntentSequencePassesCleanWithEveryOutcomeAccepted"], "missing": []}
+      ],
+      "additional_tests_outside_clauses": ["SnapshotTransitionRequiresNonNegativeDurationAndRecordsTheSnapshot", "PostingActiveEventOrStoppingInactiveEventIsRejected"]
+    },
+    {
+      "id": "unity_adapter",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.audio.unity",
+      "test_assembly": "Lingkyn.Audio.Unity.Editor.Tests",
+      "clauses": [
+        {"id": "AU-01", "clause": "binding validation of bus and parameter ids to an AudioMixer and its exposed parameters with stable codes, field paths, and the source asset for a missing mixer reference (mixer.missing), a parameter that is not exposed (mixer.parameter.unexposed), a duplicate binding, and a kind that the mixer cannot represent (mixer.parameter.kind.mismatch), and construction that throws with the same report", "coverage": "covered", "tests": ["BindingAssetConvertsToBindingWithoutMutation", "BindingValidationReportsMissingMixerWithFieldPathAndSource", "BindingValidationReportsUnexposedParameter", "BindingValidationReportsKindMismatchForEnumeratedParameter", "BindingValidationReportsDuplicateBindings", "BindingValidationReportsUnknownIdentitiesAndMalformedText", "BindingConstructionThrowsWithTheSameReport"], "missing": []},
+        {"id": "AU-02", "clause": "snapshot transition intents that map a SnapshotId to an AudioMixerSnapshot with an explicit transition duration, and a missing snapshot binding reported as mixer.snapshot.missing rather than ignored", "coverage": "partial", "tests": ["SnapshotBindingMapsIdToMixerSnapshotNameAndMissingSnapshotIsReported", "RuntimeTransitionsSnapshotWithExplicitDuration", "RuntimeReportsDiagnosticWhenSnapshotLookupFailsByName"], "missing": ["the AudioMixerSnapshot reference path: SnapshotBindingEntry.EffectiveName taken from a real snapshot reference and AudioMixerSurface.TryTransitionToSnapshot over a present mixer; AudioMixer and AudioMixerSnapshot cannot be created from script, so this needs a checked-in mixer asset in the Unity run"]},
+        {"id": "AU-03", "clause": "an explicit diagnostic when a mixer, exposed parameter, or snapshot is missing at runtime, because the engine resolves exposed parameters and snapshots by name and reports an unknown name only through a return value (LESSON-004); silence or a reported success is a defect", "coverage": "covered", "tests": ["RuntimeReportsDiagnosticWhenSetFloatFailsInsteadOfSilentSuccess", "RuntimeReportsDiagnosticWhenSnapshotLookupFailsByName", "RuntimeReportsDiagnosticWhenMixerIsAbsentAtRuntime", "RuntimeReportsUnboundParameterInsteadOfSilence", "RealMixerSurfaceFailsClosedWithoutMixer"], "missing": []},
+        {"id": "AU-04", "clause": "a runtime constructed with explicit references that applies parameter values in the order they were accepted and reports direct and rejected state", "coverage": "covered", "tests": ["RuntimeAppliesAcceptedParametersInOrderAndReportsRejected", "RuntimeMapsBoolParametersToZeroOrOne", "RuntimeRejectsStateBuiltOverAnotherGraph"], "missing": []},
+        {"id": "AU-05", "clause": "no scene singleton, static instance, scene search, or reflection discovery in the adapter, verified by a test that constructs two independent runtimes side by side", "coverage": "covered", "tests": ["TwoRuntimesAreIndependentWithoutSharedState"], "missing": []}
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 17,
+    "covered": 16,
+    "partial": 1,
+    "unmapped": 0,
+    "open_gap_tests": 1,
+    "execution_note": "All 53 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. Every adapter test drives the mixer through the IMixerSurface seam with a fake, because AudioMixer and AudioMixerSnapshot cannot be created from script; the real AudioMixerSurface is exercised only in its mixer-absent branch, so AU-02 stays partial until a Unity run holds a mixer asset."
+  }
+}

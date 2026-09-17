@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Lingkyn.Unity.ProjectInitializer.Editor.ConfigTools
 {
     /// <summary>
@@ -6,6 +9,37 @@ namespace Lingkyn.Unity.ProjectInitializer.Editor.ConfigTools
     /// </summary>
     public static class IndieDirectoryContract
     {
+        /// <summary>
+        /// The activation marker path the contract would use if the project root were
+        /// <paramref name="projectRoot"/> instead of <see cref="ProjectRoot"/>.
+        /// </summary>
+        public static string ActivationMarkerUnder(string projectRoot) => Rebase(ActivationMarker, projectRoot);
+
+        /// <summary>
+        /// The baseline scene paths rebased under <paramref name="projectRoot"/>, in contract order.
+        /// </summary>
+        public static IReadOnlyList<string> BaselineScenesUnder(string projectRoot) => RebaseAll(BaselineScenes, projectRoot);
+
+        /// <summary>
+        /// The required folders rebased under <paramref name="projectRoot"/>, in contract order.
+        /// </summary>
+        public static IReadOnlyList<string> RequiredFoldersUnder(string projectRoot) => RebaseAll(RequiredFolders, projectRoot);
+
+        static IReadOnlyList<string> RebaseAll(string[] paths, string projectRoot)
+        {
+            var result = new string[paths.Length];
+            for (var i = 0; i < paths.Length; i++) result[i] = Rebase(paths[i], projectRoot);
+            return result;
+        }
+
+        static string Rebase(string contractPath, string projectRoot)
+        {
+            if (string.IsNullOrEmpty(projectRoot)) throw new ArgumentException("Project root must not be empty.", nameof(projectRoot));
+            var root = projectRoot.Replace('\\', '/').TrimEnd('/');
+            if (root.Length == 0) throw new ArgumentException("Project root must not be empty.", nameof(projectRoot));
+            return root + contractPath.Substring(ProjectRoot.Length);
+        }
+
         public const string ProjectRoot = "Assets/_Project";
         public const string SettingsRoot = ProjectRoot + "/Settings";
         public const string ActivationMarker = SettingsRoot + "/LingkynProjectInitializer.marker";

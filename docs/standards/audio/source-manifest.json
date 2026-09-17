@@ -1,0 +1,159 @@
+{
+  "schema": "xr-foundry.audio_source_manifest.v1",
+  "scope": "Engine-light audio event identity, bus and snapshot state, typed parameter contracts, and spatial attachment intents that reference an anchor id, with a thin Unity AudioMixer adapter planned separately",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person before the admission record is signed.",
+  "sources": [
+    {
+      "id": "unity-audio-manual",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Manual/Audio.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only",
+      "maintenance_evidence": "The Unity Manual audio section is the engine's maintained primary audio documentation; version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Engine boundary: the source, listener, clip, and mixer objects that the adapter binds to and that the Core must not depend on",
+      "admitted_claims": [
+        "Audio playback is modelled as sources in the scene heard by a listener, with clips as the played content",
+        "Sources can be routed to an AudioMixer group instead of directly to the output",
+        "Spatial blend, distance attenuation, and spatializer plug-ins are configured on the engine side per source"
+      ],
+      "excluded_uses": [
+        "Core does not reference AudioSource, AudioListener, AudioClip, or any other engine type",
+        "No claim about playback, DSP, or spatializer behavior without a compatibility profile and device evidence"
+      ]
+    },
+    {
+      "id": "unity-audiomixer",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Manual/AudioMixer.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only",
+      "maintenance_evidence": "AudioMixer is a shipped, maintained engine feature documented in the Unity Manual; version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary: mixer groups as buses, snapshots as mix states, and exposed parameters as the only script-settable values",
+      "admitted_claims": [
+        "A mixer is a tree of groups with a master group at the root, and each group carries effects with parameters",
+        "Snapshots capture group and effect parameter values and can be transitioned to over a duration",
+        "Only parameters explicitly exposed by name can be set from script, and setting an unknown name reports failure through the return value"
+      ],
+      "excluded_uses": [
+        "No mixer asset, group layout, or effect chain is copied or prescribed",
+        "Core does not model effects, send levels, or the mixer's authoring window"
+      ]
+    },
+    {
+      "id": "unity-audio-spatializer-sdk",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Manual/AudioSpatializerSDK.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only",
+      "maintenance_evidence": "The Audio Spatializer SDK page is part of the maintained Unity Manual; version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Evidence that spatialization is a per-source plug-in concern selected at the project level, which places it outside the Core and outside the adapter's validation claims",
+      "admitted_claims": [
+        "A spatializer is a native audio plug-in selected in project settings and enabled per source",
+        "The spatializer receives the source and listener positions from the engine rather than from gameplay code",
+        "Distance attenuation and the spatializer's own processing are separate stages"
+      ],
+      "excluded_uses": [
+        "No spatializer plug-in is implemented, bundled, or selected by the family",
+        "No claim about spatialization quality, latency, or platform spatial-audio behavior"
+      ]
+    },
+    {
+      "id": "fmod-studio-docs",
+      "kind": "independent_professional_implementation",
+      "authority": "Firelight Technologies",
+      "url": "https://www.fmod.com/docs/2.03/studio/",
+      "license_or_terms": "FMOD documentation terms; architecture facts only, no FMOD code, API, or content copied",
+      "maintenance_evidence": "FMOD Studio is a shipped, maintained, widely licensed middleware with versioned documentation; not fetched from this environment",
+      "admitted_role": "Independent evidence that event identity, buses, snapshots, and typed parameters form the common kernel of a game audio system",
+      "admitted_claims": [
+        "Events are the unit that gameplay triggers, identified separately from the audio assets they play",
+        "Buses form a routing hierarchy and snapshots override mixer property values as a whole state",
+        "Parameters have a declared type and range and are the contract between game code and the audio design"
+      ],
+      "excluded_uses": [
+        "No FMOD runtime, bank format, or API surface is wrapped or depended upon",
+        "No claim that the Core is compatible with any FMOD version"
+      ]
+    },
+    {
+      "id": "wwise-docs",
+      "kind": "independent_professional_implementation",
+      "authority": "Audiokinetic",
+      "url": "https://www.audiokinetic.com/en/library/",
+      "license_or_terms": "Audiokinetic documentation terms; architecture facts only, no Wwise code, API, or content copied",
+      "maintenance_evidence": "Wwise is a shipped, maintained, widely licensed middleware with versioned documentation; not fetched from this environment",
+      "admitted_role": "Second independent evidence for event identity, bus routing, state and switch groups as closed mix state, and game parameters with ranges",
+      "admitted_claims": [
+        "Events posted from game code are identified by name or id separately from the sound objects they act on",
+        "States describe global mix changes and switches select among closed alternatives, both distinct from continuous game parameters",
+        "Game parameters carry a declared range and are set per game object or globally"
+      ],
+      "excluded_uses": [
+        "No Wwise runtime, SoundBank format, or API surface is wrapped or depended upon",
+        "No claim that the Core is compatible with any Wwise version"
+      ]
+    },
+    {
+      "id": "unreal-metasounds",
+      "kind": "independent_professional_implementation",
+      "authority": "Epic Games",
+      "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/metasounds-in-unreal-engine",
+      "license_or_terms": "Epic documentation terms; architecture facts only",
+      "maintenance_evidence": "MetaSounds is a shipped, maintained second-engine audio implementation; not fetched from this environment",
+      "admitted_role": "Second-engine evidence that typed inputs with declared kinds separate gameplay from the sound graph and that the graph itself stays outside gameplay code",
+      "admitted_claims": [
+        "A MetaSound exposes typed input parameters that gameplay sets by name",
+        "Triggers and continuous values are distinct input kinds",
+        "The sound graph is authored as an asset separate from the code that drives it"
+      ],
+      "excluded_uses": [
+        "No Unreal type, asset format, or graph node is copied",
+        "No claim about DSP or procedural sound generation in the family"
+      ]
+    },
+    {
+      "id": "unreal-sound-classes",
+      "kind": "independent_professional_implementation",
+      "authority": "Epic Games",
+      "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/sound-classes-in-unreal-engine",
+      "license_or_terms": "Epic documentation terms; architecture facts only",
+      "maintenance_evidence": "Sound Classes and Sound Mixes are a shipped, maintained second-engine implementation; not fetched from this environment",
+      "admitted_role": "Second-engine evidence that a bus hierarchy with inherited properties and named mix states is the common kernel of mix state",
+      "admitted_claims": [
+        "Sound classes form a hierarchy in which child classes inherit property adjustments from parents",
+        "A sound mix applies a set of class adjustments as one state with fade in and fade out durations",
+        "Mix states can be pushed and popped rather than edited in place"
+      ],
+      "excluded_uses": [
+        "No Unreal type, asset format, or tool is copied",
+        "No claim that the Core reproduces Unreal mix modifier semantics"
+      ]
+    },
+    {
+      "id": "ebu-r128-loudness",
+      "kind": "official_open_standard",
+      "authority": "European Broadcasting Union",
+      "url": "https://tech.ebu.ch/publications/r128",
+      "license_or_terms": "EBU publication terms; definition facts only, no measurement code copied",
+      "maintenance_evidence": "EBU R 128 is the maintained loudness normalization recommendation referenced by broadcast and streaming platforms; not fetched from this environment",
+      "admitted_role": "Evidence boundary: loudness is measured in defined units over a programme, so it is a measurement claim outside an EditMode test and outside the Core",
+      "admitted_claims": [
+        "Loudness is normalized to a target programme level expressed in LUFS rather than by peak level",
+        "Loudness range and true peak are separate measurements from programme loudness",
+        "Measurement follows the ITU-R BS.1770 algorithm with gating"
+      ],
+      "excluded_uses": [
+        "No loudness meter, gating, or true-peak measurement is implemented by the family",
+        "No claim that a mix graph or a parameter contract makes output compliant with any loudness target"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, or platform authority",
+    "The first implementation is an identity, mix-state, parameter-contract, and attachment-intent substrate, not a playback engine, middleware bridge, or mixing tool",
+    "Spatialization, latency, loudness, and headset comfort are measurement and device claims that require a Device Lab receipt or a defined measurement procedure, never an EditMode result"
+  ]
+}

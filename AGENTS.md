@@ -64,6 +64,15 @@ successful profile does not prove other Unity, UI Toolkit, XRI, provider, or dev
 tuples; an Agent may generate a new candidate from raw material, then must validate
 that exact candidate before registering support.
 
+## Picking up work without session context
+
+Any person or coding Agent, in any tool, takes the next unit of work from
+`docs/contributing/work-packets.json` following
+`docs/contributing/work-packets.md`: choose a packet whose `needs` you satisfy,
+stay inside its `allowed_paths`, run its acceptance commands, and mark it `done`
+only with a proof path in the tree. The milestone plan those packets serve is
+`docs/milestones.md`.
+
 ## Public contribution route
 
 A routine change (documentation, tests, tooling, or a non-breaking package change)

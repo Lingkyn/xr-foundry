@@ -144,6 +144,15 @@ Nothing here starts before M3 is reached. The repository stays token-neutral, no
 wallet or contract exists, and the first treasury or on-chain step is its own
 RFC with a 14-day window. This page lists no deliverables for it on purpose.
 
+## How the work is picked up
+
+Each open cell that a contributor can act on is a packet in
+[`contributing/work-packets.json`](contributing/work-packets.json), written so
+that a person, the steward Agent, or any other coding assistant can take it with
+no session context: what to read, where to write, what to do, and the commands
+that prove it. [`contributing/work-packets.md`](contributing/work-packets.md) is
+the protocol.
+
 ## How this page is kept honest
 
 An Agent under mandate updates a status cell only with a link to the tree, a

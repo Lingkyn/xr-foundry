@@ -1,0 +1,16 @@
+{
+  "name": "com.lingkyn.scene-flow.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Scene Flow Unity",
+  "description": "ScriptableObject binding of each Core SceneId to one scene registered in the pinned editor's build scene list, with fail-closed binding validation and stable codes, an injectable ISceneLoaderSurface seam over additive scene loading with a real wrapper and a test fake, a plain runtime constructed with explicit references that maps Core phases to additive asynchronous loads, activation, unloads, and a fade surface, forwards engine completion and failure as Core intents, and reports every by-name resolution failure as a diagnostic, for the Lingkyn Scene Flow Core.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.scene-flow.core": "0.1.0"
+  },
+  "samples": []
+}

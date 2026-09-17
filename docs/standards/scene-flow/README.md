@@ -1,7 +1,7 @@
 # Scene flow package-family standard
 
-Status: proposal in the source-gate queue (`NEXT-SCENE-FLOW`); no Core or Unity
-adapter implementation is staged yet, and no package directory or package id exists
+Status: proposal in the source-gate queue (`NEXT-SCENE-FLOW`); Core and Unity adapter
+implementation staged in [`staging/scene-flow/`](../../../staging/scene-flow/README.md)
 
 This standard defines reusable scene flow: scene set and scene identity, a declared
 scene graph with one active scene per set, load, unload, and switch intents applied
@@ -71,10 +71,24 @@ transition; those claims require a Device Lab receipt as
 | LESSON-002 migration path | deferred | No release exists yet; the first release records its compatibility policy and the first breaking change ships a migration note in the same commit |
 | LESSON-003 single-workstation gate | adopted | Tests will run in `run_unity_gates.py` and the consumer workflow like every family; the adapter's EditMode tests use a fake loader seam so no gate depends on a maintainer workstation or a scene list |
 | LESSON-004 by-name resolution fails closed | adopted | The Core resolves nothing by name; the Unity adapter pins the editor version, reports every scene missing from or disabled in the build list as `scene.unregistered`, every unbound scene id, duplicate binding, missing fade surface, and refused active-scene change with a stable code, forwards engine failures as `load.failed` rather than inferring success, and carries a negative test for each missing target |
-| LESSON-005 clause coverage | deferred | No staged tests exist; the staged implementation item writes `coverage-map.json` mapping every Core and Unity adapter clause to named tests before any clause is cited as evidence |
+| LESSON-005 clause coverage | deferred | [`coverage-map.json`](coverage-map.json) maps every Core and Unity adapter clause to named staged tests (18 of 19 covered, CU-01 partial); the tests are authored and unexecuted, so the disposition stays deferred until the first Unity gate runs them |
 | LESSON-006 sibling pinning | deferred | Applies at the first Git-consumer validation; the README install matrix will pin every sibling to one full SHA |
 | LESSON-007 skin seam | not_applicable | The family renders nothing; the fade surface is an injected seam that the consumer's own renderer implements, and loading-screen content is consumer-owned |
 | LESSON-008 version bump is a verification claim | adopted | No package version exists; the first scaffold enters at 0.1.0 and stays there until its first verified profile |
+
+## Staged implementation
+
+The first implementation of both layers lives in
+[`staging/scene-flow/`](../../../staging/scene-flow/README.md) as staging material,
+not a live package: `com.lingkyn.scene-flow.core` (scene set and scene identity, the
+scene graph, transition options, intents, the transition state machine, immutable
+state, error recovery, deterministic replay, results) and
+`com.lingkyn.scene-flow.unity` (scene binding asset, binding validation, the
+`ISceneLoaderSurface` seam, the runtime). [`coverage-map.json`](coverage-map.json)
+maps every Core and Unity adapter gate clause of the verification contract to named
+tests. All of that code and every test is authored and unexecuted: nothing has
+compiled or run until the first Unity gate records a receipt, and the coverage map
+is a mapping, not execution evidence.
 
 ## Next steps
 
@@ -84,14 +98,17 @@ transition; those claims require a Device Lab receipt as
 2. The maintainer copies [`admission.draft.json`](admission.draft.json) into
    `docs/foundry/admissions/` as the durable record through the
    [system admission gate](../../foundry/system-admission.md).
-3. The staged implementation item authors the Core and Unity adapter under
-   `staging/scene-flow/` against [`verification-contract.md`](verification-contract.md)
-   and writes the coverage map; nothing enters `packages/` before admission and a
+3. A person with a Unity Editor runs `python scripts/scaffold_unity_package.py`
+   against the admitted blueprints, replaces the generated scaffold sources with the
+   files staged under `staging/scene-flow/`, and runs
+   `python scripts/run_unity_gates.py` to turn the authored, unexecuted code into a
+   verified compatibility profile; nothing enters `packages/` before admission and a
    green gate.
 
 See also:
 
 - [`verification-contract.md`](verification-contract.md)
+- [`coverage-map.json`](coverage-map.json)
 - [`source-manifest.json`](source-manifest.json)
 - [`admission.draft.json`](admission.draft.json)
 - [`next-batch.json`](../../foundry/queue/next-batch.json) queue entry and the

@@ -5,6 +5,18 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged the Scene flow family under `staging/scene-flow/` (WI-004):
+  `com.lingkyn.scene-flow.core` (scene set and scene identity, an immutable
+  scene graph with one active scene per set, typed transition durations, the
+  fade-out, loading, holding, fade-in machine advanced only by elapsed-time,
+  load-completed, and load-failed intents, recovery to a declared fallback set,
+  deterministic replay with a fingerprint; 32 authored tests) and
+  `com.lingkyn.scene-flow.unity` (a scene binding asset, binding validation with
+  stable codes and field paths, an injectable loader surface so EditMode loads no
+  scene, and a runtime that reports every by-name resolution as a diagnostic; 21
+  authored tests). `docs/standards/scene-flow/coverage-map.json` maps the
+  contract to those tests: 18 of 19 clauses covered, CU-01 partial because the
+  real loader surface needs a build-list scene. Nothing here has compiled or run.
 - Staged the Locomotion and comfort family under `staging/locomotion/` (WI-002):
   `com.lingkyn.locomotion.core` (mode identity closed to teleport, snap turn,
   smooth turn, and continuous move; an anchor registry; a closed typed comfort

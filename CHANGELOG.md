@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Drafted the Audio family standard under `docs/standards/audio/`: README with
+  capability and evidence boundaries and lessons dispositions, source manifest
+  (eight sources, URLs marked for human confirmation because the authoring
+  environment cannot fetch them), verification contract with stable failure
+  codes for the Core and Unity AudioMixer adapter gates, and an admission draft
+  valid against the admission schema. No package id is reserved and no code
+  exists yet.
 - Queued the family after Localization: `NEXT-AUDIO-EVENTS` in
   `docs/foundry/queue/next-batch.json` (audio event identity, mix and snapshot
   state, spatial attachment intents, thin Unity AudioMixer adapter) with its

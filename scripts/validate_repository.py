@@ -6400,38 +6400,7 @@ PYTHON_TEST_REFERENCE = re.compile(r"^(?P<file>[\w./-]+\.py)::(?:(?P<class>\w+):
 # Each entry is the exact (coverage map path, error text) pair the rule still
 # produces on the main-tracked map. It suppresses only that pair; a pair that the
 # rule no longer produces is itself reported so the allowlist cannot outlive the fix.
-COVERAGE_MAP_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset(
-    {
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/inventory/coverage-map.json",
-            "gate presentation test_assembly must name exactly one asmdef under packages/ or staging/: "
-            "'Lingkyn.Inventory.Presentation.Editor.Tests plus the UGUI and UI Toolkit test assemblies' matches 0",
-        ),
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/inventory/coverage-map.json",
-            "gate package_and_consumer test_assembly must name exactly one asmdef under packages/ or staging/: "
-            "'repository validation, CI, and exact-consumer receipts rather than package tests' matches 0",
-        ),
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/inventory/coverage-map.json",
-            "gate xr test_assembly must name exactly one asmdef under packages/ or staging/: "
-            "'Lingkyn.Inventory.XR.UGUI.*.Tests and Lingkyn.Inventory.XR.UIToolkit.*.Tests' matches 0",
-        ),
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/inventory/coverage-map.json",
-            "summary.covered does not match the recounted clauses: declared 14, recounted 13",
-        ),
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/inventory/coverage-map.json",
-            "summary.partial does not match the recounted clauses: declared 9, recounted 10",
-        ),
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/inventory/coverage-map.json",
-            "summary.open_gap_tests + open_evidence_gaps must equal the recounted partial + unmapped clauses: "
-            "declared 0 + 9, recounted 10",
-        ),
-    }
-)
+COVERAGE_MAP_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset()
 
 
 def csharp_test_methods(folder: Path, root: Path) -> dict[str, list[tuple[str, str]]]:

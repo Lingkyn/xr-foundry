@@ -5,6 +5,24 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Live deliberation records are now machine-checked: `validate_live_deliberation_records`
+  in `scripts/validate_repository.py` (registered right after
+  `validate_operating_mandates`) proves, for every
+  `docs/governance/deliberations/*.json`, that the record matches
+  `docs/contributing/deliberation-record.schema.json` and
+  `validate_governance_deliberation_metadata`, that its `id` equals the uppercased
+  filename stem and is unique, that it names a `decision_class` whose minimum
+  review window is derived from `docs/governance/governance-model.v1.json` (a
+  record without a class is a finding, never a guess), that `review_opened_at`,
+  `review_not_before`, and `decided_at` are RFC 3339 UTC and ordered with the
+  window at least the class minimum, that a `process:<mandate_id>` decision names a
+  mandate under `docs/governance/mandates/` that was in force, unexpired, and
+  unrevoked at `decided_at` and that the record carries no `risk` or
+  `counterexample` delta, and that every
+  `https://github.com/Lingkyn/xr-foundry/blob/main/<path>` evidence link exists in
+  the tree. An open record past its window is a pending process step and is not
+  reported. Each error shape has a fix hint; DLB-0001, DLB-0002, and DLB-0003 pass
+  with no allowlist. `tests/test_deliberation_records.py` covers the rule.
 - Coverage maps are now machine-checked: `validate_coverage_map_claims` in
   `scripts/validate_repository.py` (full validation pass) proves, for every
   `docs/standards/*/coverage-map*.json`, that each gate's `test_assembly` is
@@ -19,6 +37,21 @@ live in each package's `CHANGELOG.md`.
   labelled temporary allowlist `COVERAGE_MAP_UNVERIFIED_CLAIMS`, which itself
   fails the validator once an entry is no longer produced.
   `tests/test_coverage_claims.py` covers the rule.
+- `docs/standards/inventory/coverage-map.json` now passes `validate_coverage_map_claims`
+  with nothing suppressed: the prose `presentation` and `xr` gates are split into
+  one gate per real test assembly (`presentation`, `presentation_ugui_editor`,
+  `presentation_ugui_playmode`, `presentation_uitoolkit_editor`,
+  `presentation_uitoolkit_playmode`, `xr_ugui_editor`, `xr_ugui_playmode`,
+  `xr_uitoolkit_editor`, `xr_uitoolkit_playmode`) with exact `test_assembly` and
+  owning `package_id` values, the receipt-only `package_and_consumer` and new
+  `xr_device_lab` gates declare `test_assembly: null`, every clause keeps its id,
+  text, coverage state, and `missing` list (a clause whose tests span assemblies
+  stays in the gate holding most of them and names the rest in a `note`), the two
+  UI Toolkit skin tests added after the audited commit are listed, and `summary`
+  is recounted to 13 covered / 10 partial / 10 evidence gaps.
+  `COVERAGE_MAP_UNVERIFIED_CLAIMS` is now empty and
+  `test_real_repository_maps_pass_or_are_exactly_allowlisted` asserts the
+  Inventory map produces no raw-rule message.
 - Added the open-work board: `scripts/open_work.py` derives open items
   (`test_gap`, `evidence_gap`, `lesson_gap`, `family_proposal`,
   `staging_promotion`, `deliberation_open`, `roadmap_step`) from the coverage

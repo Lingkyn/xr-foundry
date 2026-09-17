@@ -6,7 +6,7 @@
   "core_gate_map": "docs/standards/inventory/coverage-map.core.json",
   "audited_at_commit": "c3b354368224b9008f938064ac1c01ff4ff7bec0",
   "policy": {
-    "mapping_basis": "test method names and bodies read at the audited commit, matched against contract clause text; the Core behavior gate lives in coverage-map.core.json",
+    "mapping_basis": "test method names and bodies read at the audited commit, matched against contract clause text; the Core behavior gate lives in coverage-map.core.json; one gate per test assembly, so a clause whose evidence spans assemblies keeps its id in the gate that holds most of its tests and names the rest in a note, while those tests are listed once under their own assembly's gate",
     "unmapped_clause_is_open_gap": true,
     "partial_coverage_cannot_satisfy_gate": true,
     "map_is_not_execution_evidence": true,
@@ -56,7 +56,7 @@
       "id": "presentation",
       "section": "5. Presentation gate",
       "package_id": "com.lingkyn.inventory.presentation",
-      "test_assembly": "Lingkyn.Inventory.Presentation.Editor.Tests plus the UGUI and UI Toolkit test assemblies",
+      "test_assembly": "Lingkyn.Inventory.Presentation.Editor.Tests",
       "clauses": [
         {
           "id": "IP-01",
@@ -72,19 +72,21 @@
           "coverage": "covered",
           "tests": ["PresenterOwnsMutationAndViewsReceiveReadOnlyModels", "ViewModelSnapshotsInputAndIntentPreservesStableAddress"],
           "missing": []
-        },
+        }
+      ],
+      "additional_tests_outside_clauses": ["DisabledPresenterStaysDisabledAcrossRefreshAndAggregateEvents", "InitialRenderFailureDoesNotLeakAggregateSubscriptions", "DisposeIsIdempotentAndDetachesChangedAndRestoredSubscriptions"]
+    },
+    {
+      "id": "presentation_ugui_editor",
+      "section": "5. Presentation gate",
+      "package_id": "com.lingkyn.inventory.ugui",
+      "test_assembly": "Lingkyn.Inventory.UGUI.Editor.Tests",
+      "clauses": [
         {
           "id": "IP-03",
           "clause": "UGUI prefab tests verify independent panel, grid, slot, item, details, and action roles",
           "coverage": "covered",
           "tests": ["ShippedPrefabsHaveNoMissingScriptsAndAllFunctionalReferencesAreWired", "NestedPrefabRolesAndVariantRetainIndependentSourceLinksAndBindings"],
-          "missing": []
-        },
-        {
-          "id": "IP-04",
-          "clause": "UI Toolkit tests verify equivalent semantic roles in the UXML/USS visual tree",
-          "coverage": "covered",
-          "tests": ["ShippedDocumentBindsVisibleStatesAndStableSemanticIntents", "ReplacementDocumentFailsWhenNamedContractIsIncomplete"],
           "missing": []
         },
         {
@@ -98,24 +100,64 @@
           "id": "IP-06",
           "clause": "empty, partial, full, rejected, selected, disabled, and loading/error states are demonstrated by both renderer samples",
           "coverage": "covered",
-          "tests": ["StateGalleryReplaysSemanticallyDistinctVisibleStates", "ShippedDocumentBindsVisibleStatesAndStableSemanticIntents"],
-          "missing": []
-        },
+          "tests": ["StateGalleryReplaysSemanticallyDistinctVisibleStates"],
+          "missing": [],
+          "note": "The UI Toolkit half of this clause is ShippedDocumentBindsVisibleStatesAndStableSemanticIntents in gate presentation_uitoolkit_editor (listed there under IP-04); one gate per test assembly means it cannot be repeated here."
+        }
+      ],
+      "additional_tests_outside_clauses": ["DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges", "ShippedShellPreservesStableAddressesAndDoesNotDuplicateIntentSubscriptions", "ScrollGridHandlesZeroSmallBoundaryAndLargeCapacitiesWithoutGhostState", "DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot"],
+      "note": "DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot supports IP-07, which lives in gate presentation_ugui_playmode because three of its five tests are PlayMode tests."
+    },
+    {
+      "id": "presentation_ugui_playmode",
+      "section": "5. Presentation gate",
+      "package_id": "com.lingkyn.inventory.ugui",
+      "test_assembly": "Lingkyn.Inventory.UGUI.PlayMode.Tests",
+      "clauses": [
         {
           "id": "IP-07",
           "clause": "keyboard/pointer presentation tests do not require XR packages, and each renderer emits the same semantic slot intents without mutating Core",
           "coverage": "covered",
-          "tests": ["ShippedPrefabRaycastsAndActivatesDistinctLeftCenterRightSlots", "KeyboardSubmitUsesSameShippedSlotIntentAndDisabledSuppressesBothPaths", "PresenterRendersAggregateIntoShippedShellAndInputOnlyEmitsIntent", "DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot", "InteractionGateSuppressesIntentsWithoutHidingRenderedState"],
-          "missing": []
+          "tests": ["ShippedPrefabRaycastsAndActivatesDistinctLeftCenterRightSlots", "KeyboardSubmitUsesSameShippedSlotIntentAndDisabledSuppressesBothPaths", "PresenterRendersAggregateIntoShippedShellAndInputOnlyEmitsIntent"],
+          "missing": [],
+          "note": "Two further tests support this clause from other assemblies and are listed under their own gates: DisabledAndNonPrimaryPointerInputsCannotActivateShippedSlot (gate presentation_ugui_editor) and InteractionGateSuppressesIntentsWithoutHidingRenderedState (gate presentation_uitoolkit_playmode, the UI Toolkit renderer's half of the clause)."
         }
       ],
-      "additional_tests_outside_clauses": ["DisabledPresenterStaysDisabledAcrossRefreshAndAggregateEvents", "InitialRenderFailureDoesNotLeakAggregateSubscriptions", "DisposeIsIdempotentAndDetachesChangedAndRestoredSubscriptions", "DisabledPresenterRemainsDisabledAcrossRefreshAndExternalAggregateChanges", "ShippedShellPreservesStableAddressesAndDoesNotDuplicateIntentSubscriptions", "ScrollGridHandlesZeroSmallBoundaryAndLargeCapacitiesWithoutGhostState"]
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "presentation_uitoolkit_editor",
+      "section": "5. Presentation gate",
+      "package_id": "com.lingkyn.inventory.uitoolkit",
+      "test_assembly": "Lingkyn.Inventory.UIToolkit.Editor.Tests",
+      "clauses": [
+        {
+          "id": "IP-04",
+          "clause": "UI Toolkit tests verify equivalent semantic roles in the UXML/USS visual tree",
+          "coverage": "covered",
+          "tests": ["ShippedDocumentBindsVisibleStatesAndStableSemanticIntents", "ReplacementDocumentFailsWhenNamedContractIsIncomplete"],
+          "missing": [],
+          "note": "ShippedDocumentBindsVisibleStatesAndStableSemanticIntents also demonstrates the UI Toolkit visible states required by IP-06 (gate presentation_ugui_editor)."
+        }
+      ],
+      "additional_tests_outside_clauses": ["InjectedSkinRestylesEnabledAndDisabledSlotsAndReachesLaterCreatedSlots", "WithoutSkinStylesheetDrivesSlotsAndDefaultSkinCarriesCanonicalTokens"],
+      "note": "The two skin tests were added after the audited commit by the LESSON-007 injectable skin seam (commit 7a47411) and answer no clause of section 5; they are listed so that no attributed test method is left unmapped."
+    },
+    {
+      "id": "presentation_uitoolkit_playmode",
+      "section": "5. Presentation gate",
+      "package_id": "com.lingkyn.inventory.uitoolkit",
+      "test_assembly": "Lingkyn.Inventory.UIToolkit.PlayMode.Tests",
+      "clauses": [],
+      "additional_tests_outside_clauses": ["InteractionGateSuppressesIntentsWithoutHidingRenderedState"],
+      "note": "This assembly's only test is the UI Toolkit renderer's evidence for IP-07, which lives in gate presentation_ugui_playmode."
     },
     {
       "id": "package_and_consumer",
       "section": "6. Package and consumer gate",
-      "package_id": "all Inventory packages",
-      "test_assembly": "repository validation, CI, and exact-consumer receipts rather than package tests",
+      "package_id": "com.lingkyn.inventory.core",
+      "test_assembly": null,
+      "note": "This gate spans every Inventory package (core, unity, presentation, ugui, uitoolkit, xr.ugui, xr.uitoolkit); it is closed by repository validation, CI, and exact-consumer receipts rather than by package tests, so it names no test assembly and carries the root package id only as its anchor.",
       "clauses": [
         {
           "id": "PK-01",
@@ -156,32 +198,72 @@
       "additional_tests_outside_clauses": []
     },
     {
-      "id": "xr",
+      "id": "xr_ugui_editor",
       "section": "7. XR gate",
-      "package_id": "com.lingkyn.inventory.xr.ugui and com.lingkyn.inventory.xr.uitoolkit",
-      "test_assembly": "Lingkyn.Inventory.XR.UGUI.*.Tests and Lingkyn.Inventory.XR.UIToolkit.*.Tests",
+      "package_id": "com.lingkyn.inventory.xr.ugui",
+      "test_assembly": "Lingkyn.Inventory.XR.UGUI.Editor.Tests",
       "clauses": [
         {
           "id": "IX-01",
           "clause": "XR UGUI uses a world-space Canvas and the supported tracked-device UI path; automated tests verify its raycaster/input-module configuration",
           "coverage": "covered",
-          "tests": ["ShippedPrefabIsWorldSpaceNestedProviderNeutralAndClosedByDefault", "ValidatorRejectsMissingDuplicateDisabledAndDesktopInputModules", "ValidatorRejectsConventionalGraphicRaycasterWithoutMutatingGlobalInput", "RealXriRayInteractorRoutesToDistinctShippedSlots", "RealXriPokeInteractorRoutesThroughShippedSlotOnRelease"],
-          "missing": []
-        },
-        {
-          "id": "IX-02",
-          "clause": "XR UI Toolkit uses the supported world-space panel and XRI UI Toolkit path; automated tests verify its panel/input configuration without Canvas assumptions",
-          "coverage": "covered",
-          "tests": ["ShippedAssetsUseWorldSpaceKeepExistingColliderAndValidatedPhysicalScale", "SurfaceStartsClosedAndOpensOnlyAfterSceneContractPasses", "SurfaceRejectsCrossObjectBindingsAndColliderDrift", "ProfileRejectsPanelSettingsThatCanRewriteOrSolidifyCollider", "ProfileAppliesFixedDocumentSizeAndMatchingExplicitCollider", "RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera"],
-          "missing": []
+          "tests": ["ShippedPrefabIsWorldSpaceNestedProviderNeutralAndClosedByDefault", "ValidatorRejectsMissingDuplicateDisabledAndDesktopInputModules", "ValidatorRejectsConventionalGraphicRaycasterWithoutMutatingGlobalInput"],
+          "missing": [],
+          "note": "The tracked-device input path is exercised by RealXriRayInteractorRoutesToDistinctShippedSlots and RealXriPokeInteractorRoutesThroughShippedSlotOnRelease, listed under gate xr_ugui_playmode."
         },
         {
           "id": "IX-03",
           "clause": "each sample can be placed independently of the camera rig and is not head-locked by default; one renderer's evidence cannot promote the other",
           "coverage": "covered",
-          "tests": ["ApplyingProfilePreservesWorldPoseAndDefaultPlacementDetachesFromCamera", "SurfaceFailsClosedRecoversAndDoesNotFollowCamera", "RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera"],
-          "missing": []
-        },
+          "tests": ["ApplyingProfilePreservesWorldPoseAndDefaultPlacementDetachesFromCamera"],
+          "missing": [],
+          "note": "The clause spans three assemblies with one test each; it stays with the EditMode placement test. The XR UGUI PlayMode half is SurfaceFailsClosedRecoversAndDoesNotFollowCamera (gate xr_ugui_playmode) and the XR UI Toolkit half is RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera (gate xr_uitoolkit_playmode); neither renderer's test promotes the other."
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "xr_ugui_playmode",
+      "section": "7. XR gate",
+      "package_id": "com.lingkyn.inventory.xr.ugui",
+      "test_assembly": "Lingkyn.Inventory.XR.UGUI.PlayMode.Tests",
+      "clauses": [],
+      "additional_tests_outside_clauses": ["RealXriRayInteractorRoutesToDistinctShippedSlots", "RealXriPokeInteractorRoutesThroughShippedSlotOnRelease", "SurfaceFailsClosedRecoversAndDoesNotFollowCamera"],
+      "note": "The two Real XRI interactor tests are the tracked-device evidence for IX-01 and SurfaceFailsClosedRecoversAndDoesNotFollowCamera is the XR UGUI PlayMode evidence for IX-03; both clauses live in gate xr_ugui_editor."
+    },
+    {
+      "id": "xr_uitoolkit_editor",
+      "section": "7. XR gate",
+      "package_id": "com.lingkyn.inventory.xr.uitoolkit",
+      "test_assembly": "Lingkyn.Inventory.XR.UIToolkit.Editor.Tests",
+      "clauses": [
+        {
+          "id": "IX-02",
+          "clause": "XR UI Toolkit uses the supported world-space panel and XRI UI Toolkit path; automated tests verify its panel/input configuration without Canvas assumptions",
+          "coverage": "covered",
+          "tests": ["ShippedAssetsUseWorldSpaceKeepExistingColliderAndValidatedPhysicalScale", "SurfaceStartsClosedAndOpensOnlyAfterSceneContractPasses", "SurfaceRejectsCrossObjectBindingsAndColliderDrift", "ProfileRejectsPanelSettingsThatCanRewriteOrSolidifyCollider", "ProfileAppliesFixedDocumentSizeAndMatchingExplicitCollider"],
+          "missing": [],
+          "note": "The XRI UI Toolkit input path is exercised by RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera, listed under gate xr_uitoolkit_playmode."
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "xr_uitoolkit_playmode",
+      "section": "7. XR gate",
+      "package_id": "com.lingkyn.inventory.xr.uitoolkit",
+      "test_assembly": "Lingkyn.Inventory.XR.UIToolkit.PlayMode.Tests",
+      "clauses": [],
+      "additional_tests_outside_clauses": ["RealEnabledXrRayInteractorOpensGateAndSurfaceDoesNotFollowPlacementCamera"],
+      "note": "This assembly's only test is the XRI input evidence for IX-02 (gate xr_uitoolkit_editor) and the XR UI Toolkit placement evidence for IX-03 (gate xr_ugui_editor)."
+    },
+    {
+      "id": "xr_device_lab",
+      "section": "7. XR gate",
+      "package_id": "com.lingkyn.inventory.xr.ugui",
+      "test_assembly": null,
+      "note": "These clauses are closed only by Device Lab receipts, one per renderer route (com.lingkyn.inventory.xr.ugui and com.lingkyn.inventory.xr.uitoolkit); the gate names no test assembly and carries the XR UGUI package id only as its anchor. Evidence for one renderer never promotes the other.",
+      "clauses": [
         {
           "id": "IX-04",
           "clause": "a real headset test records readability, scale, angle, reach, occlusion, stable targeting with each controller, target isolation, disabled-target immutability, interaction states, posture, measured duration, and comfort",
@@ -216,11 +298,11 @@
   ],
   "summary": {
     "clauses": 23,
-    "covered": 14,
-    "partial": 9,
+    "covered": 13,
+    "partial": 10,
     "unmapped": 0,
     "open_gap_tests": 0,
-    "open_evidence_gaps": 9,
-    "note": "Every remaining partial clause is an evidence gate (exact consumer, player build, upgrade/rollback, API review, and named-device receipts) that no package test can close. Entries prefixed validator: are repository validation rules, not Unity tests; the Unity tests named here have not executed in an Editor since the audited commit."
+    "open_evidence_gaps": 10,
+    "note": "Every remaining partial clause is an evidence gate (exact consumer, player build, upgrade/rollback, API review, and named-device receipts) that no package test can close. Entries prefixed validator: are repository validation rules, not Unity tests; the Unity tests named here have not executed in an Editor since the audited commit. Each of the ten Inventory test assemblies outside Core (whose assembly is mapped in coverage-map.core.json) has exactly one gate here, and every attributed test method of those assemblies is listed in exactly one gate."
   }
 }

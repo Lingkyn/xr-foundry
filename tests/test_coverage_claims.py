@@ -332,6 +332,11 @@ class CoverageMapClaimsTests(unittest.TestCase):
             MODULE.COVERAGE_MAP_UNVERIFIED_CLAIMS = original
         expected = sorted(f"coverage map {map_path}: {message}" for map_path, message in original)
         self.assertEqual(expected, sorted(raw))
+        # The Inventory map was split into one gate per real test assembly and its
+        # summary recounted, so it must pass the raw rule with nothing suppressed.
+        inventory_map = "docs/standards/inventory/coverage-map.json"
+        self.assertEqual([], [error for error in raw if inventory_map in error])
+        self.assertEqual([], [pair for pair in original if pair[0] == inventory_map])
 
 
 if __name__ == "__main__":

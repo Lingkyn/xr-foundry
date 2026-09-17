@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import atexit
 import copy
 import contextlib
 import hashlib
@@ -7,10 +8,12 @@ import io
 import importlib.util
 import json
 import os
+import shutil
 import struct
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
@@ -106,15 +109,69 @@ def public_fixture_commit() -> str:
     raise AssertionError("No public origin revision contains the current canonical package tree")
 
 
+DEVICE_EVIDENCE_TEST_PREFIX = "device-receipt-test-"
+STALE_DEVICE_EVIDENCE_AGE_SECONDS = 60 * 60
+
+# Fallback holders for callers that run outside a TestCase. Test methods register
+# per-test cleanup through ``self.addCleanup`` instead, so this list is normally empty.
 _DEVICE_EVIDENCE_DIRECTORIES: list[tempfile.TemporaryDirectory] = []
 
 
-def device_evidence_test_root() -> Path:
+def _release_unregistered_device_evidence_directories() -> None:
+    while _DEVICE_EVIDENCE_DIRECTORIES:
+        holder = _DEVICE_EVIDENCE_DIRECTORIES.pop()
+        with contextlib.suppress(Exception):
+            holder.cleanup()
+
+
+atexit.register(_release_unregistered_device_evidence_directories)
+
+
+def remove_stale_device_evidence_directories(
+    max_age_seconds: float = STALE_DEVICE_EVIDENCE_AGE_SECONDS,
+) -> list[Path]:
+    """Remove ``device-receipt-test-*`` leftovers older than ``max_age_seconds``.
+
+    A crashed or interrupted earlier run can leave fixture directories under the
+    repository evidence tree. Younger directories are never touched because a
+    concurrent validator run may still be writing into them.
+    """
+    removed: list[Path] = []
+    cutoff = time.time() - max_age_seconds
+    for candidate in sorted(
+        compatibility_evidence_test_root().glob(f"{DEVICE_EVIDENCE_TEST_PREFIX}*")
+    ):
+        try:
+            if not candidate.is_dir() or candidate.stat().st_mtime > cutoff:
+                continue
+        except FileNotFoundError:
+            continue
+        shutil.rmtree(candidate, ignore_errors=True)
+        removed.append(candidate)
+    return removed
+
+
+def setUpModule() -> None:
+    remove_stale_device_evidence_directories()
+
+
+def device_evidence_test_root(test_case: unittest.TestCase | None = None) -> Path:
+    """Create a repository-relative device-evidence fixture directory.
+
+    The directory must live under ``docs/validation/evidence`` because the
+    validator resolves receipt evidence, manifest, lock, and artifact refs as
+    repository-relative paths. When ``test_case`` is given the directory is
+    removed as soon as that test finishes, whether it passes or fails; otherwise
+    it is held until interpreter exit.
+    """
     holder = tempfile.TemporaryDirectory(
-        prefix="device-receipt-test-",
+        prefix=DEVICE_EVIDENCE_TEST_PREFIX,
         dir=compatibility_evidence_test_root(),
     )
-    _DEVICE_EVIDENCE_DIRECTORIES.append(holder)
+    if test_case is not None:
+        test_case.addCleanup(holder.cleanup)
+    else:
+        _DEVICE_EVIDENCE_DIRECTORIES.append(holder)
     return Path(holder.name)
 
 
@@ -416,7 +473,7 @@ def attach_compatibility_receipt(
     return profile, receipt, receipt_path
 
 
-def completed_device_lab_receipt() -> dict:
+def completed_device_lab_receipt(test_case: unittest.TestCase | None = None) -> dict:
     payload = json.loads(
         (ROOT / "docs" / "device-lab" / "device-receipt.template.json").read_text(
             encoding="utf-8"
@@ -494,7 +551,7 @@ def completed_device_lab_receipt() -> dict:
             "dependencies": {},
         }
 
-    evidence_directory = device_evidence_test_root()
+    evidence_directory = device_evidence_test_root(test_case)
     artifact_path = evidence_directory / "inventory-world-ui.apk"
     write_minimal_unity_apk(artifact_path, "com.example.inventoryworldui")
     payload["artifact"] = {
@@ -626,8 +683,9 @@ def activate_checkpoint_fixture(checkpoint: dict) -> None:
 def attach_device_runtime_receipt(
     payload: dict,
     directory: str | Path,
+    test_case: unittest.TestCase | None = None,
 ) -> tuple[dict, dict, Path, Path]:
-    device_receipt = completed_device_lab_receipt()
+    device_receipt = completed_device_lab_receipt(test_case)
     profile_id = device_receipt["compatibility_profile_id"]
     base = next(
         item
@@ -919,6 +977,163 @@ class RepositoryContractTests(unittest.TestCase):
                     )
                 )
 
+
+    def test_inventory_isolation_rules_pass_and_fail_closed(self) -> None:
+        self.assertEqual([], MODULE.validate_inventory_isolation_rules(ROOT))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            asmdef = root / MODULE.INVENTORY_PRESENTATION_ASMDEF
+            asmdef.parent.mkdir(parents=True)
+            asmdef.write_text(
+                json.dumps({"name": "Lingkyn.Inventory.Presentation", "references": ["Lingkyn.Inventory.Core", "Unity.ugui"], "noEngineReferences": False}),
+                encoding="utf-8",
+            )
+            runtime = root / MODULE.INVENTORY_AUTHORING_RUNTIME
+            runtime.mkdir(parents=True)
+            (runtime / "Lookup.cs").write_text(
+                "namespace Lingkyn.Inventory.Unity { static class L { static void F() { var x = UnityEngine.Resources.Load(\"a\"); } } }\n",
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_inventory_isolation_rules(root)
+        self.assertTrue(any("reference only Lingkyn.Inventory.Core" in error for error in errors), errors)
+        self.assertTrue(any("noEngineReferences" in error for error in errors), errors)
+        self.assertTrue(any("Resources.Load" in error for error in errors), errors)
+
+    def test_foundation_assembly_references_pass_and_fail_closed(self) -> None:
+        self.assertEqual([], MODULE.validate_foundation_assembly_references(ROOT))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            asmdef = root / MODULE.FOUNDATIONS_PACKAGES_ROOT / "com.example.foundation" / "Editor" / "Example.Editor.asmdef"
+            asmdef.parent.mkdir(parents=True)
+            asmdef.write_text(
+                json.dumps({"name": "Lingkyn.Example.Editor", "references": ["Lingkyn.Example.Runtime", "Unity.InputSystem", "ConsumerProduct.Runtime", "GUID:0123456789abcdef0123456789abcdef"]}),
+                encoding="utf-8",
+            )
+            errors = MODULE.validate_foundation_assembly_references(root)
+        self.assertEqual(2, len(errors), errors)
+        self.assertTrue(any("'ConsumerProduct.Runtime'" in error for error in errors), errors)
+        self.assertTrue(any("GUID:" in error for error in errors), errors)
+
+    def test_every_error_gets_a_fix_hint(self) -> None:
+        explained = MODULE.explain_errors(
+            [
+                "packages/unity/x/Runtime/A.cs: missing .meta",
+                "com.lingkyn.demo: component/package.json version mismatch",
+                "Contract test suite failed; no commit or push may proceed",
+                "something nobody anticipated",
+            ]
+        )
+        self.assertEqual(4, len(explained))
+        self.assertIn(".meta", explained[0]["hint"])
+        self.assertIn("LESSON-008", explained[1]["hint"])
+        self.assertIn("unittest", explained[2]["hint"])
+        self.assertIn("start-here.md", explained[3]["hint"])
+        for pattern, hint in MODULE.FIX_HINTS:
+            self.assertTrue(hint.strip(), pattern.pattern)
+
+    def test_operating_mandates_validate_and_fail_closed(self) -> None:
+        self.assertEqual([], MODULE.validate_operating_mandates(ROOT))
+        mandate_path = ROOT / "docs" / "governance" / "mandates" / "weekly-steward.mandate.json"
+        original_loader = MODULE.load_json
+
+        def mutate(change):
+            payload = json.loads(mandate_path.read_text(encoding="utf-8"))
+            change(payload)
+
+            def loader(path: Path):
+                return payload if Path(path) == mandate_path else original_loader(Path(path))
+
+            with mock.patch.object(MODULE, "load_json", side_effect=loader):
+                return MODULE.validate_operating_mandates(ROOT)
+
+        def expire_before_start(payload: dict) -> None:
+            payload["expires_at"] = payload["not_before"]
+
+        self.assertTrue(any("expires_at must follow" in error for error in mutate(expire_before_start)))
+
+        def allow_merge(payload: dict) -> None:
+            payload["forbidden_actions"] = ["nothing is forbidden"]
+
+        self.assertTrue(any("must cover 'merge'" in error for error in mutate(allow_merge)))
+
+        def drop_decision(payload: dict) -> None:
+            payload.pop("decision")
+
+        self.assertTrue(any("JSON Schema violation" in error for error in mutate(drop_decision)))
+
+    def test_consumer_lessons_register_positive_contract_passes(self) -> None:
+        self.assertEqual([], MODULE.validate_consumer_lessons_register(ROOT))
+        register = MODULE.load_json(ROOT / MODULE.LESSONS_REGISTER_PATH)
+        families = MODULE.live_package_families(ROOT)
+        self.assertEqual(
+            {"foundations", "inventory", "persistence", "settings", "interaction"},
+            families,
+        )
+        for lesson in register["lessons"]:
+            self.assertEqual(
+                families,
+                {item["family"] for item in lesson["dispositions"]},
+                lesson["id"],
+            )
+
+    def _lessons_register_with(self, mutate) -> list[str]:
+        register_path = ROOT / MODULE.LESSONS_REGISTER_PATH
+        original_loader = MODULE.load_json
+        mutated = json.loads(register_path.read_text(encoding="utf-8"))
+        mutate(mutated)
+
+        def load_with_mutation(path: Path) -> dict:
+            return mutated if Path(path) == register_path else original_loader(Path(path))
+
+        with mock.patch.object(MODULE, "load_json", side_effect=load_with_mutation):
+            return MODULE.validate_consumer_lessons_register(ROOT)
+
+    def test_consumer_lessons_register_rejects_a_family_that_did_not_respond(self) -> None:
+        def drop_settings(register: dict) -> None:
+            register["lessons"][0]["dispositions"] = [
+                item
+                for item in register["lessons"][0]["dispositions"]
+                if item["family"] != "settings"
+            ]
+
+        errors = self._lessons_register_with(drop_settings)
+        self.assertTrue(
+            any("must respond for every live family; missing settings" in error for error in errors),
+            errors,
+        )
+
+    def test_consumer_lessons_register_rejects_gap_without_follow_up(self) -> None:
+        def strip_follow_up(register: dict) -> None:
+            for item in register["lessons"][0]["dispositions"]:
+                if item["status"] == "gap":
+                    item.pop("follow_up", None)
+                    break
+
+        errors = self._lessons_register_with(strip_follow_up)
+        self.assertTrue(any("must name a follow_up" in error for error in errors), errors)
+
+    def test_consumer_lessons_register_rejects_unknown_family_and_missing_evidence(self) -> None:
+        def corrupt(register: dict) -> None:
+            lesson = register["lessons"][0]
+            lesson["dispositions"][0]["family"] = "localization"
+            lesson["evidence"].append("docs/standards/lessons/does-not-exist.md")
+
+        errors = self._lessons_register_with(corrupt)
+        self.assertTrue(any("unknown family: localization" in error for error in errors), errors)
+        self.assertTrue(any("evidence path does not exist" in error for error in errors), errors)
+
+    def test_consumer_lessons_register_rejects_schema_and_policy_drift(self) -> None:
+        def drift(register: dict) -> None:
+            register["policy"]["gap_requires_follow_up"] = False
+
+        errors = self._lessons_register_with(drift)
+        self.assertTrue(any("JSON Schema violation" in error for error in errors), errors)
+
+        def duplicate(register: dict) -> None:
+            register["lessons"].append(copy.deepcopy(register["lessons"][0]))
+
+        errors = self._lessons_register_with(duplicate)
+        self.assertTrue(any("duplicate lesson id" in error for error in errors), errors)
 
     def test_foundry_v1_positive_contract_and_fast_structure_pass(self) -> None:
         self.assertEqual([], MODULE.validate_foundry_contract(ROOT))
@@ -2241,7 +2456,7 @@ class RepositoryContractTests(unittest.TestCase):
     def test_device_runtime_compatibility_requires_exact_device_lab_pass(self) -> None:
         payload = current_compatibility_profiles()
         with tempfile.TemporaryDirectory(dir=compatibility_evidence_test_root()) as directory:
-            _, _, _, device_path = attach_device_runtime_receipt(payload, directory)
+            _, _, _, device_path = attach_device_runtime_receipt(payload, directory, self)
             try:
                 self.assertEqual(
                     [],
@@ -2258,7 +2473,7 @@ class RepositoryContractTests(unittest.TestCase):
         payload = current_compatibility_profiles()
         with tempfile.TemporaryDirectory(dir=compatibility_evidence_test_root()) as directory:
             profile, receipt, receipt_path, device_path = attach_device_runtime_receipt(
-                payload, directory
+                payload, directory, self
             )
             try:
                 host_target = next(
@@ -2281,7 +2496,7 @@ class RepositoryContractTests(unittest.TestCase):
         payload = current_compatibility_profiles()
         with tempfile.TemporaryDirectory(dir=compatibility_evidence_test_root()) as directory:
             profile, receipt, receipt_path, device_path = attach_device_runtime_receipt(
-                payload, directory
+                payload, directory, self
             )
             try:
                 device_receipt = json.loads(device_path.read_text(encoding="utf-8"))
@@ -2310,7 +2525,7 @@ class RepositoryContractTests(unittest.TestCase):
         payload = current_compatibility_profiles()
         with tempfile.TemporaryDirectory(dir=compatibility_evidence_test_root()) as directory:
             profile, receipt, receipt_path, device_path = attach_device_runtime_receipt(
-                payload, directory
+                payload, directory, self
             )
             copied_path = Path(directory) / "copied-device-receipt.json"
             copied_path.write_bytes(device_path.read_bytes())
@@ -5350,7 +5565,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("interaction matrix is incomplete" in error for error in errors))
 
     def test_device_receipt_rejects_missing_or_forged_lock_and_evidence(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["dependency_resolution"]["lock"]["ref"] = (
             "docs/validation/evidence/missing-lock.json"
         )
@@ -5366,7 +5581,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("evidence SHA-256 does not match file" in error for error in errors))
 
     def test_device_receipt_rejects_dependency_input_build_and_execution_tuple_drift(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["dependency_resolution"]["resolved_packages"] = [
             package
             for package in payload["dependency_resolution"]["resolved_packages"]
@@ -5389,7 +5604,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("posture is not admitted" in error for error in errors))
 
     def test_device_receipt_rejects_placeholder_runtime_and_os_versions(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["software"]["runtime_version"] = "recorded-runtime-version"
         payload["device"]["os_version"] = "current"
 
@@ -5420,7 +5635,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(
             [],
             MODULE.validate_device_lab_execution_receipt(
-                completed_device_lab_receipt(),
+                completed_device_lab_receipt(self),
                 current_device_profiles(),
                 current_device_plans(),
                 "revision-bound pass",
@@ -5428,7 +5643,7 @@ class RepositoryContractTests(unittest.TestCase):
         )
 
     def test_device_receipt_rejects_local_only_revision_with_public_tree(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         public_commit = payload["revision"]["commit_sha"]
         tree = subprocess.check_output(
             ["git", "rev-parse", f"{public_commit}^{{tree}}"], cwd=ROOT, text=True
@@ -5455,7 +5670,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("fetched public origin ref" in error for error in errors))
 
     def test_device_receipt_rejects_unbound_revision_and_artifact(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["revision"]["commit_sha"] = None
         payload["artifact"] = {
             "kind": "android-apk",
@@ -5475,7 +5690,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("artifact.application_id" in error for error in errors))
 
     def test_device_receipt_rejects_fake_or_lfs_pointer_artifact(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         artifact_path = ROOT / payload["artifact"]["repository_path"]
         artifact_path.write_text(
             "version https://git-lfs.github.com/spec/v1\n"
@@ -5493,7 +5708,7 @@ class RepositoryContractTests(unittest.TestCase):
     def test_device_receipt_rejects_fake_pk_bytes_and_missing_manifest(self) -> None:
         for mutation in ("fake-pk", "missing-manifest", "prefixed-zip"):
             with self.subTest(mutation=mutation):
-                payload = completed_device_lab_receipt()
+                payload = completed_device_lab_receipt(self)
                 artifact_path = ROOT / payload["artifact"]["repository_path"]
                 if mutation == "fake-pk":
                     artifact_path.write_bytes(b"PK\x03\x04not-a-zip")
@@ -5533,7 +5748,7 @@ class RepositoryContractTests(unittest.TestCase):
                 self.assertTrue(any(marker in error for error in errors), errors)
 
     def test_device_receipt_application_id_must_match_binary_manifest(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["artifact"]["application_id"] = "com.example.different"
 
         errors = MODULE.validate_device_lab_execution_receipt(
@@ -5543,7 +5758,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("must equal the APK manifest package ID" in error for error in errors))
 
     def test_device_receipt_rejects_renderer_xr_adapter_mismatch(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["package_tuple"]["xr_adapter"]["id"] = "com.lingkyn.inventory.xr.uitoolkit"
 
         errors = MODULE.validate_device_lab_execution_receipt(
@@ -5553,7 +5768,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("xr_adapter does not match" in error for error in errors))
 
     def test_device_receipt_rejects_runtime_device_and_input_mismatch(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["software"]["runtime_id"] = "openxr-meta-quest"
         payload["device"]["family_id"] = "quest-standalone-family"
         payload["input"]["routes"] = ["gaze-and-pinch"]
@@ -5567,7 +5782,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("input routes do not match" in error for error in errors))
 
     def test_device_receipt_rejects_untested_required_check(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         target = next(
             check
             for check in payload["checks"]
@@ -5582,7 +5797,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("required check cannot remain not_tested" in error for error in errors))
 
     def test_device_receipt_rejects_unsupported_optional_claim(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         claim = next(item for item in payload["optional_claims"] if item["id"] == "direct-poke")
         claim["supported"] = True
 
@@ -5594,7 +5809,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("not admitted by profile" in error for error in errors))
 
     def test_device_receipt_rejects_profile_with_claim_disabled(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["device_profile_id"] = "quest-openxr-controller"
         payload["software"]["runtime_id"] = "openxr-meta-quest"
         payload["device"].update(
@@ -5612,7 +5827,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("claim_allowed=false" in error for error in errors))
 
     def test_device_receipt_rejects_free_text_or_cross_composition_claims(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["claims_supported"] = ["works-on-every-xr-headset"]
         payload["claims_not_supported"].remove("inventory-ui-toolkit-xr-required-suite")
 
@@ -5625,7 +5840,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("claims_not_supported must enumerate" in error for error in errors))
 
     def test_device_receipt_result_is_derived_from_required_checks(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["overall_result"] = "fail"
         payload["claims_supported"] = []
         payload["claims_not_supported"] = [
@@ -5643,7 +5858,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertTrue(any("required-check result=pass" in error for error in errors))
 
     def test_device_receipt_rejects_unbound_version_evidence_and_time(self) -> None:
-        payload = completed_device_lab_receipt()
+        payload = completed_device_lab_receipt(self)
         payload["package_tuple"]["domain"]["version"] = "latest"
         target = next(check for check in payload["checks"] if check["id"] == "artifact-install")
         target["evidence_refs"] = [

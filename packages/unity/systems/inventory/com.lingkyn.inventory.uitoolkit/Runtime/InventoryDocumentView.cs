@@ -40,7 +40,11 @@ namespace Lingkyn.Inventory.UIToolkit
     [RequireComponent(typeof(UIDocument))]
     public sealed class InventoryDocumentView : MonoBehaviour, IInventoryView
     {
+        private const string SelectedClass = "inventory-slot--selected";
+
         [SerializeField] private UIDocument document;
+        [Tooltip("Optional design-language skin. Leave empty to keep the stylesheet-driven look; assign or call ApplySkin to restyle without forking the document.")]
+        [SerializeField] private InventoryUiToolkitSkin skin;
 
         private readonly List<SlotBinding> _slots = new List<SlotBinding>();
         private VisualElement _root;
@@ -56,6 +60,10 @@ namespace Lingkyn.Inventory.UIToolkit
         public event Action<InventorySlotIntent> SelectionRequested;
 
         public UIDocument Document => document;
+
+        /// <summary>The injected skin, or null when the stylesheet alone drives the look.</summary>
+        public InventoryUiToolkitSkin Skin => skin;
+
         public InventoryViewModel LastModel { get; private set; }
         public VisualElement BoundRoot => _root;
         public IReadOnlyList<Button> SlotButtons => _slots.Select(slot => slot.Button).ToArray();
@@ -101,8 +109,26 @@ namespace Lingkyn.Inventory.UIToolkit
             _details = root.Q<Label>(InventoryDocumentContract.Details);
             _primaryAction = root.Q<Button>(InventoryDocumentContract.PrimaryAction);
             _primaryAction.clicked += OnPrimaryActionClicked;
+            ApplyShellSkin();
             if (LastModel != null) Render(LastModel);
             else RefreshInteractionGate();
+        }
+
+        /// <summary>
+        /// Injects a design-language skin. Token values are written as inline styles on the
+        /// bound root, grid, message, primary action, and every current or later slot, so the
+        /// shipped USS selectors keep working underneath. Passing null clears every inline
+        /// value the seam wrote and returns the document to its stylesheet-driven look.
+        /// </summary>
+        public void ApplySkin(InventoryUiToolkitSkin value)
+        {
+            skin = value;
+            if (_root == null) return;
+            ApplyShellSkin();
+            foreach (var slot in _slots)
+            {
+                ApplySlotSkin(slot);
+            }
         }
 
         public void Render(InventoryViewModel model)
@@ -180,7 +206,7 @@ namespace Lingkyn.Inventory.UIToolkit
             button.AddToClassList("inventory-slot");
             button.EnableInClassList("inventory-slot--occupied", model.DefinitionId.HasValue);
             button.EnableInClassList("inventory-slot--empty", !model.DefinitionId.HasValue);
-            button.EnableInClassList("inventory-slot--selected", model.Selected);
+            button.EnableInClassList(SelectedClass, model.Selected);
 
             SlotBinding binding = null;
             Action clicked = () =>
@@ -194,11 +220,24 @@ namespace Lingkyn.Inventory.UIToolkit
             {
                 if (_interactionEnabled && binding.Model.Enabled) Select(binding);
             };
-            binding = new SlotBinding(button, model, intent, clicked, focused);
+            EventCallback<PointerEnterEvent> pointerEntered = _ =>
+            {
+                binding.Hovered = true;
+                ApplySlotSkin(binding);
+            };
+            EventCallback<PointerLeaveEvent> pointerLeft = _ =>
+            {
+                binding.Hovered = false;
+                ApplySlotSkin(binding);
+            };
+            binding = new SlotBinding(button, model, intent, clicked, focused, pointerEntered, pointerLeft);
             button.clicked += clicked;
             button.RegisterCallback(focused);
+            button.RegisterCallback(pointerEntered);
+            button.RegisterCallback(pointerLeft);
             _slots.Add(binding);
             _grid.Add(button);
+            ApplySlotSkin(binding);
         }
 
         private void Select(SlotBinding selected)
@@ -206,7 +245,7 @@ namespace Lingkyn.Inventory.UIToolkit
             _selectedIntent = selected.Intent;
             foreach (var slot in _slots)
             {
-                slot.Button.EnableInClassList("inventory-slot--selected", ReferenceEquals(slot, selected));
+                slot.Button.EnableInClassList(SelectedClass, ReferenceEquals(slot, selected));
             }
             UpdateDetails(selected.Model);
             RefreshInteractionGate();
@@ -236,6 +275,7 @@ namespace Lingkyn.Inventory.UIToolkit
                 slot.Button.EnableInClassList(
                     "inventory-slot--disabled",
                     !_interactionEnabled || !slot.Model.Enabled);
+                ApplySlotSkin(slot);
             }
 
             if (_primaryAction != null)
@@ -261,10 +301,83 @@ namespace Lingkyn.Inventory.UIToolkit
             {
                 slot.Button.clicked -= slot.Clicked;
                 slot.Button.UnregisterCallback(slot.Focused);
+                slot.Button.UnregisterCallback(slot.PointerEntered);
+                slot.Button.UnregisterCallback(slot.PointerLeft);
                 slot.Button.RemoveFromHierarchy();
             }
             _slots.Clear();
             _grid?.Clear();
+        }
+
+        /// <summary>
+        /// Writes the shell tokens (surface, section, text, accent) as inline styles, or
+        /// clears them when no skin is injected so the stylesheet values apply unchanged.
+        /// </summary>
+        private void ApplyShellSkin()
+        {
+            if (_root == null) return;
+            if (skin == null)
+            {
+                _root.style.backgroundColor = StyleKeyword.Null;
+                _root.style.color = StyleKeyword.Null;
+                _grid.style.backgroundColor = StyleKeyword.Null;
+                _message.style.color = StyleKeyword.Null;
+                _primaryAction.style.backgroundColor = StyleKeyword.Null;
+                _primaryAction.style.color = StyleKeyword.Null;
+                return;
+            }
+
+            _root.style.backgroundColor = skin.Surface;
+            _root.style.color = skin.TextPrimary;
+            _grid.style.backgroundColor = skin.Section;
+            _message.style.color = skin.TextMuted;
+            _primaryAction.style.backgroundColor = skin.Accent;
+            _primaryAction.style.color = skin.TextPrimary;
+        }
+
+        /// <summary>
+        /// Resolves one slot's state (disabled, selected, hover, normal) against the skin and
+        /// writes it inline. Inline values outrank the USS :hover and modifier selectors, so the
+        /// state model is applied here whenever a skin is present; without a skin every inline
+        /// value is cleared and the stylesheet keeps driving the slot.
+        /// </summary>
+        private void ApplySlotSkin(SlotBinding slot)
+        {
+            var style = slot.Button.style;
+            if (skin == null)
+            {
+                style.backgroundColor = StyleKeyword.Null;
+                style.color = StyleKeyword.Null;
+                style.opacity = StyleKeyword.Null;
+                return;
+            }
+
+            var enabled = _interactionEnabled && slot.Model.Enabled;
+            if (!enabled) slot.Hovered = false;
+
+            Color background;
+            if (!enabled)
+            {
+                var disabled = skin.SlotDisabled;
+                background = new Color(disabled.r, disabled.g, disabled.b, 1f);
+            }
+            else if (slot.Button.ClassListContains(SelectedClass))
+            {
+                background = skin.SlotSelected;
+            }
+            else if (slot.Hovered)
+            {
+                background = skin.SlotHover;
+            }
+            else
+            {
+                background = skin.SlotNormal;
+            }
+
+            style.backgroundColor = background;
+            style.color = slot.Model.DefinitionId.HasValue ? skin.TextPrimary : skin.TextMuted;
+            if (enabled) style.opacity = StyleKeyword.Null;
+            else style.opacity = skin.SlotDisabled.a;
         }
 
         private void Unbind()
@@ -301,13 +414,17 @@ namespace Lingkyn.Inventory.UIToolkit
                 InventorySlotViewModel model,
                 InventorySlotIntent intent,
                 Action clicked,
-                EventCallback<FocusInEvent> focused)
+                EventCallback<FocusInEvent> focused,
+                EventCallback<PointerEnterEvent> pointerEntered,
+                EventCallback<PointerLeaveEvent> pointerLeft)
             {
                 Button = button;
                 Model = model;
                 Intent = intent;
                 Clicked = clicked;
                 Focused = focused;
+                PointerEntered = pointerEntered;
+                PointerLeft = pointerLeft;
             }
 
             public Button Button { get; }
@@ -315,6 +432,9 @@ namespace Lingkyn.Inventory.UIToolkit
             public InventorySlotIntent Intent { get; }
             public Action Clicked { get; }
             public EventCallback<FocusInEvent> Focused { get; }
+            public EventCallback<PointerEnterEvent> PointerEntered { get; }
+            public EventCallback<PointerLeaveEvent> PointerLeft { get; }
+            public bool Hovered { get; set; }
         }
     }
 }

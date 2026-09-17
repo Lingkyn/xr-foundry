@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using Lingkyn.Unity.XrBaseline.Constants;
+using Lingkyn.Unity.XrBaseline.Editor;
 
 namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
 {
@@ -9,31 +10,42 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
     /// </summary>
     public static class VrBaselineScaleReferenceSetup
     {
-        public static void EnsureScaleReferencePrefab()
+        public static void EnsureScaleReferencePrefab() => EnsureScaleReferencePrefab(VrBaselineProjectLayout.Default);
+
+        /// <summary>Same as <see cref="EnsureScaleReferencePrefab()"/> under an injected project layout.</summary>
+        internal static void EnsureScaleReferencePrefab(VrBaselineProjectLayout layout)
         {
-            var path = VrBaselineVisualPaths.ScaleReferencePrefab;
+            var path = layout.ScaleReferencePrefab;
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (existing != null) return;
 
             var root = new GameObject("ScaleReference1m");
 
             CreatePart(root.transform, "Pole1m", new Vector3(0.04f, 1f, 0.04f), new Vector3(0f, 0.5f, 0f),
-                VrBaselineVisualPaths.InteractableHighlight);
+                layout.InteractableHighlightMaterial);
             CreatePart(root.transform, "CrossX", new Vector3(1f, 0.02f, 0.04f), new Vector3(0f, 0.01f, 0f),
-                VrBaselineVisualPaths.Environment);
+                layout.EnvironmentMaterial);
             CreatePart(root.transform, "CrossZ", new Vector3(0.04f, 0.02f, 1f), new Vector3(0f, 0.01f, 0f),
-                VrBaselineVisualPaths.Environment);
+                layout.EnvironmentMaterial);
 
             SavePrefab(root, path);
         }
 
-        public static void EnsureScaleReference(Transform environmentParent)
+        public static void EnsureScaleReference(Transform environmentParent) =>
+            EnsureScaleReference(environmentParent, VrBaselineProjectLayout.Default);
+
+        /// <summary>Same as <see cref="EnsureScaleReference(Transform)"/> under an injected project layout.</summary>
+        internal static void EnsureScaleReference(Transform environmentParent, VrBaselineProjectLayout layout)
         {
             if (environmentParent == null) return;
 
-            EnsureScaleReferencePrefab();
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineVisualPaths.ScaleReferencePrefab);
-            if (prefab == null) return;
+            EnsureScaleReferencePrefab(layout);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(layout.ScaleReferencePrefab);
+            if (prefab == null)
+            {
+                XrBaselineDiagnostics.Unresolved("sandbox.scale-reference-prefab", $"the scale reference prefab could not be created or loaded at {layout.ScaleReferencePrefab}; no scale reference was placed.");
+                return;
+            }
 
             var existing = environmentParent.Find(VrBaselineVisualPaths.SandboxScaleReferenceName);
             if (existing != null)

@@ -570,6 +570,42 @@ class UnityTestResultVerifierTests(unittest.TestCase):
                 self.assertEqual(2, completed.returncode)
                 self.assertIn("error:", completed.stderr)
 
+    def test_dangling_symlink_preserves_missing_file_diagnostic_in_api_and_cli(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dangling.xml"
+            try:
+                path.symlink_to("missing.xml")
+            except (OSError, NotImplementedError) as error:
+                self.skipTest(f"symlink creation is unavailable: {error}")
+
+            payload = MODULE.verify_unity_test_result(path, "EditMode", 2, 0.0)
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--mode",
+                    "EditMode",
+                    "--expected-total",
+                    "2",
+                    "--not-before-epoch",
+                    "0",
+                    str(path),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual("fail", payload["status"])
+        self.assertEqual(["result file is missing"], payload["errors"])
+        self.assertEqual(1, completed.returncode, completed.stderr)
+        cli_payload = json.loads(completed.stdout)
+        self.assertEqual("fail", cli_payload["status"])
+        self.assertEqual(["result file is missing"], cli_payload["errors"])
+
     def test_symlink_loop_fails_as_json_in_api_and_cli(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "loop.xml"

@@ -110,6 +110,29 @@ namespace Lingkyn.Inventory.Unity.Tests
             Assert.That(report.Diagnostics.Any(item => item.Code == "inventory.container.duplicateId"), Is.True);
         }
 
+        [Test]
+        public void NonPositiveStackLimitAndUniqueStackMismatchReportStableCodes()
+        {
+            var zero = CreateItem("Zero.asset", "zero", 0, ItemInstanceMode.Fungible);
+            var negative = CreateItem("Negative.asset", "negative", -3, ItemInstanceMode.Fungible);
+            var uniqueStack = CreateItem("UniqueStack.asset", "unique-stack", 2, ItemInstanceMode.Unique);
+
+            var zeroReport = InventoryAuthoringValidation.Validate(zero);
+            Assert.That(zeroReport.IsValid, Is.False);
+            Assert.That(zeroReport.Diagnostics.Any(item =>
+                item.Code == "item.maximumStack.invalid" && item.FieldPath == "maximumStack" && item.Source == zero), Is.True);
+
+            var negativeReport = InventoryAuthoringValidation.Validate(negative);
+            Assert.That(negativeReport.Diagnostics.Any(item => item.Code == "item.maximumStack.invalid"), Is.True);
+
+            var uniqueReport = InventoryAuthoringValidation.Validate(uniqueStack);
+            Assert.That(uniqueReport.Diagnostics.Any(item => item.Code == "item.unique.stack" && item.FieldPath == "maximumStack"), Is.True);
+            Assert.That(uniqueReport.Diagnostics.Any(item => item.Code == "item.maximumStack.invalid"), Is.False);
+
+            Assert.Throws<InventoryAuthoringException>(() => zero.ToDomain());
+            Assert.Throws<InventoryAuthoringException>(() => uniqueStack.ToDomain());
+        }
+
         private static ItemDefinitionAsset CreateItem(
             string fileName,
             string id,

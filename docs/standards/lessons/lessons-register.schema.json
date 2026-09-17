@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/lessons/lessons-register.schema.json",
+  "title": "XR Foundry consumer lessons register",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "policy", "disposition_states", "lessons"],
+  "properties": {
+    "schema": { "const": "xr-foundry.consumer_lessons_register.v1" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "every_live_family_must_respond",
+        "consumer_material_is_not_derivation_input",
+        "gap_requires_follow_up",
+        "disposition_binds_current_revision_only"
+      ],
+      "properties": {
+        "every_live_family_must_respond": { "const": true },
+        "consumer_material_is_not_derivation_input": { "const": true },
+        "gap_requires_follow_up": { "const": true },
+        "disposition_binds_current_revision_only": { "const": true }
+      }
+    },
+    "disposition_states": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "enum": ["adopted", "gap", "deferred", "not_applicable"] }
+    },
+    "lessons": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/lesson" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "origin_family", "observed", "rule", "evidence", "dispositions"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^LESSON-\\d{3}$" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "origin_family": { "$ref": "#/$defs/nonEmptyString" },
+        "observed": { "$ref": "#/$defs/nonEmptyString" },
+        "rule": { "$ref": "#/$defs/nonEmptyString" },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "dispositions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/disposition" }
+        }
+      }
+    },
+    "disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "status", "rationale"],
+      "properties": {
+        "family": { "$ref": "#/$defs/nonEmptyString" },
+        "status": { "enum": ["adopted", "gap", "deferred", "not_applicable"] },
+        "rationale": { "$ref": "#/$defs/nonEmptyString" },
+        "follow_up": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    }
+  }
+}

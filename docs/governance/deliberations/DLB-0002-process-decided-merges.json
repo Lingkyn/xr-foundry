@@ -1,0 +1,87 @@
+{
+  "schema": "xr-foundry.deliberation.v1",
+  "version": "0.1.0",
+  "id": "DLB-0002-PROCESS-DECIDED-MERGES",
+  "title": "Process-decided merges, lazy consensus, and the steward mandate extension",
+  "status": "open",
+  "decision_class": "constitutional_change",
+  "governance_stage": "G0",
+  "review_opened_at": "2026-09-15T12:00:00Z",
+  "review_not_before": "2026-09-29T12:00:00Z",
+  "objective": "Keep the prototype-stage rule that routine changes on mandated branches merge by GitHub auto-merge on a ready merge-readiness verdict, that governance deliberations resolve by lazy consensus when their window closes without objection, and that the weekly steward may open pull requests and enable auto-merge, unless an objection shows it must be undone.",
+  "current_question": "Does moving the merge decision for routine changes from a maintainer to the merge-readiness verdict, with a recorded undo path, stay inside an acceptable authority boundary for G0 x A0?",
+  "assumptions": [
+    {
+      "statement": "The rule took effect on 2026-09-15 by maintainer direction under the prototype principle of acting and keeping the undo; this record is the objection surface, and the introducing commit named in CHANGELOG.md is the undo.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/GOVERNANCE.md",
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0007-process-decided-merge-readiness.md"
+      ]
+    },
+    {
+      "statement": "No workflow holds a write token; GitHub executes the merge under the repository's branch protection, and the merge-readiness job is red whenever the verdict is blocked or a mandated branch is not eligible.",
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/merge-readiness.md"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "id": "OPT-KEEP-PROCESS-MERGES",
+      "summary": "Keep the rule: routine changes on mandated branches auto-merge on a ready verdict; lazy consensus for governance records; steward may open pull requests and enable auto-merge.",
+      "trade_offs": [
+        "No person on the per-change path; objection and revert are the only human acts",
+        "Depends on the verdict's rules being complete; a gap is found by revert, not by prevention"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/merge-readiness.md"
+      ]
+    },
+    {
+      "id": "OPT-VERDICT-ADVISORY",
+      "summary": "Revert to the advisory verdict: a maintainer clicks every merge and records a decision on every governance record.",
+      "trade_offs": [
+        "Every merge has a human signature",
+        "Reintroduces the dependence on one person that the maintainer asked to remove"
+      ],
+      "evidence": [
+        "https://github.com/Lingkyn/xr-foundry/blob/main/docs/rfcs/0007-process-decided-merge-readiness.md"
+      ]
+    }
+  ],
+  "deltas": [],
+  "synthesis": {
+    "agreements": [
+      "Maturity, releases, tags, device claims, security response, settings, and permissions stay with people under both options."
+    ],
+    "disagreements": [
+      "Whether an independent review should be required for routine changes once a second Agent lineage exists is unresolved."
+    ],
+    "missing_evidence": [
+      "One routine change merged end to end by the process with the required checks enabled on main."
+    ],
+    "updated_at": "2026-09-15T12:00:00Z"
+  },
+  "decision": null,
+  "execution": {
+    "readiness": "not_ready",
+    "task": null,
+    "scope": [],
+    "non_goals": [
+      "No GitHub permission, App installation, or write-capable workflow token under either option."
+    ],
+    "exact_next_action": "Until 2026-09-29T12:00:00Z anyone may add a risk or counterexample delta; an objection keeps the record with a person and the maintainer reverts the introducing commit if the objection holds. If none exists when the window closes, the weekly steward records OPT-KEEP-PROCESS-MERGES by lazy consensus with decided_by process:mandate.weekly-steward.v1."
+  },
+  "reopen_conditions": [
+    "A process-executed merge has to be reverted for a defect the verdict should have caught.",
+    "RFC 0006 activation changes the definition of an independent reviewer."
+  ],
+  "authority": {
+    "grants_repository_permission": false,
+    "grants_execution_authority": false,
+    "grants_review_authority": false,
+    "grants_merge_authority": false,
+    "agent_or_model_ranking": false,
+    "private_chain_of_thought_required": false
+  }
+}

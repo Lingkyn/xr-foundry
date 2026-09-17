@@ -7,18 +7,24 @@ namespace Lingkyn.Unity.XrBaseline.Editor.ConfigTools
 {
     public static class VrBaselineConfigAccess
     {
-        public static VrBaselineConfig LoadOrNull() =>
-            AssetDatabase.LoadAssetAtPath<VrBaselineConfig>(VrBaselineConfig.DefaultAssetPath);
+        public static VrBaselineConfig LoadOrNull() => LoadOrNull(VrBaselineConfig.DefaultAssetPath);
 
-        public static VrBaselineConfig EnsureExists()
+        public static VrBaselineConfig EnsureExists() => EnsureExists(VrBaselineConfig.DefaultAssetPath);
+
+        /// <summary>Loads the config at <paramref name="assetPath"/>; tests pass a disposable-root path.</summary>
+        internal static VrBaselineConfig LoadOrNull(string assetPath) =>
+            AssetDatabase.LoadAssetAtPath<VrBaselineConfig>(assetPath);
+
+        /// <summary>Loads or creates the config at <paramref name="assetPath"/>; tests pass a disposable-root path.</summary>
+        internal static VrBaselineConfig EnsureExists(string assetPath)
         {
-            var existing = LoadOrNull();
+            var existing = LoadOrNull(assetPath);
             if (existing != null) return existing;
 
-            EnsureConfigFolder(VrBaselineConfig.DefaultAssetPath);
+            EnsureConfigFolder(assetPath);
 
             var asset = ScriptableObject.CreateInstance<VrBaselineConfig>();
-            AssetDatabase.CreateAsset(asset, VrBaselineConfig.DefaultAssetPath);
+            AssetDatabase.CreateAsset(asset, assetPath);
             AssetDatabase.SaveAssets();
             return asset;
         }

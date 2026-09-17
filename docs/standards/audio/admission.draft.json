@@ -1,0 +1,53 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "audio",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-17",
+  "source_manifest": "docs/standards/audio/source-manifest.json",
+  "consumer_contexts": [
+    "gameplay feedback, interface confirmation, and ambience cues in games shipped on several platforms with a designer-owned mix",
+    "training, industrial, and accessibility XR applications that attach cues to tracked anchors and must switch mix state at runtime"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/Manual/Audio.html",
+      "https://docs.unity3d.com/Manual/AudioMixer.html",
+      "https://docs.unity3d.com/Manual/AudioSpatializerSDK.html",
+      "https://tech.ebu.ch/publications/r128"
+    ],
+    "independent_professional_sources": [
+      "https://www.fmod.com/docs/2.03/studio/",
+      "https://www.audiokinetic.com/en/library/",
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/metasounds-in-unreal-engine",
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/sound-classes-in-unreal-engine"
+    ]
+  },
+  "common_kernel": [
+    "stable audio event identity separate from the clip, asset, or middleware event it binds to",
+    "a declared mix graph of buses and named snapshots as closed mix state",
+    "typed parameter contracts with declared ranges and fail-closed rejection",
+    "spatial attachment intents that reference an anchor id rather than an engine transform"
+  ],
+  "configurable_variation": [
+    "bus layout, snapshot set, parameter ranges, transition durations, and adapter-side mixer or middleware binding",
+    "consumer-owned clips, banks, mix values, spatializer selection, and loudness targets"
+  ],
+  "excluded_project_specific": [
+    "one product's sound content, event catalog, mixer asset, and emotional tone",
+    "one project's scene layout, listener setup, middleware choice, and platform audio settings"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Audio intents are a recurring cross-project need whose kernel (event identity, bus and snapshot state, typed parameters, anchor-referenced attachment) is shared by the engine mixer, two independent middleware products, and a second engine, while every product keeps its own content, mix values, spatializer, and loudness handling outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim audible output, spatialization, latency, loudness compliance, mixer transition timing, or headset comfort; this draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after confirming the sources."
+  ]
+}

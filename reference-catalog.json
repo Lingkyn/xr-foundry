@@ -373,6 +373,17 @@
       ]
     },
     {
+      "id": "consumer-lessons-register",
+      "kind": "repository_standard",
+      "engine": "multi-engine_with_Unity_implemented",
+      "path": "docs/standards/lessons",
+      "maturity": "incubating",
+      "use_modes": ["reference_only"],
+      "purpose": "Cross-family register of lessons observed through real consumer use and validation; every live package family records an explicit adopted, gap, deferred, or not-applicable disposition for each lesson, enforced by repository validation.",
+      "evidence": ["docs/standards/lessons/lessons-register.json", "docs/standards/lessons/lessons-register.schema.json", "docs/standards/lessons/README.md"],
+      "non_claims": ["A recorded lesson is not a derivation source; consumer material remains excluded from standard derivation", "An adopted disposition binds the current revision only and does not transfer to another version, renderer, or engine tuple", "The register grants no maturity, promotion, or release status"]
+    },
+    {
       "id": "agent-commons-rfc-v1",
       "kind": "governance_rfc",
       "engine": "cross-engine",

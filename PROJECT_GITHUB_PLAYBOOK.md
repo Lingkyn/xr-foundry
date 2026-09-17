@@ -15,7 +15,7 @@ support claim.
 | Discussions | Explore proposals, compare sources, and identify common boundaries |
 | Issues | Track accepted defects, package proposals, Ready tasks, and device-test requests |
 | Pull requests | Review code, contracts, tests, migration, and evidence against an immutable diff |
-| Actions | Run deterministic, least-privilege repository validation |
+| Actions | Run deterministic, least-privilege repository validation and publish the merge-readiness verdict |
 | Releases | Publish only revisions that satisfy the package maturity and compatibility gates |
 | Catalogs and receipts | Preserve machine-readable selection, maturity, compatibility, and device evidence |
 
@@ -44,9 +44,16 @@ Executable public work follows the [Task Hall](docs/contributing/task-hall.md) a
 its [public Project](https://github.com/users/Lingkyn/projects/2). RFC discussion
 starts from [Discussion #22](https://github.com/Lingkyn/xr-foundry/discussions/22).
 Hardware evidence follows the [Device Lab](docs/device-lab/README.md). A task claim
-is a time-limited coordination lease and grants no GitHub permission. External
-contributors normally use forks. Maintainers retain readiness, review, integration,
-promotion, release, repository-setting, and permission decisions.
+is a time-limited coordination lease and grants no GitHub permission. A routine
+change needs no claim, lease, anchor, or governance window; it follows
+[`docs/contributing/start-here.md`](docs/contributing/start-here.md). External
+contributors normally use forks. Whether a change may merge is answered by the
+[merge-readiness verdict](docs/contributing/merge-readiness.md): a routine change
+on a branch named by a live operating mandate merges by GitHub auto-merge once the
+verdict is `ready` and the required checks pass, and a non-routine change waits
+for a maintainer who reads the same verdict. Maintainers retain readiness, review,
+promotion, release, repository-setting, and permission decisions, and a merge
+against a blocked verdict is a recorded override.
 
 Umbrella Issues preserve outcomes and dependency graphs; independently claimable
 checkpoints and sub-issues preserve execution state. A claim covers one checkpoint,
@@ -68,16 +75,22 @@ and pin third-party Actions to reviewed full commit SHAs.
 ## Governance operating boundary
 
 XR Foundry is positioned as a DAO-ready XR Open Commons, not as an active DAO. The
-observed topology remains `G0`: one maintainer retains integration, release,
-security, repository-setting, permission, and governance decisions. Public
-participation is advisory until a decision is recorded. RFC 0004 and its maturity
-model remain proposed and inactive until a minimum 14-day public review, a resolved
-deliberation, and an explicit maintainer decision.
+observed topology remains `G0`: one maintainer retains release, security,
+repository-setting, permission, and governance decisions, while the merge decision
+follows the merge-readiness verdict under the prototype-stage rule in
+[`GOVERNANCE.md`](GOVERNANCE.md), "Process-decided merges and lazy consensus".
+Public participation is advisory until a decision is recorded. RFC 0004 and its
+maturity model remain proposed and inactive until a minimum 14-day public review,
+a resolved deliberation, and an explicit maintainer decision.
 
-Routine changes use the existing Task Hall and pull-request lifecycle. Governance
-policy changes have a 7-day minimum review; constitutional, authority, permission,
-treasury, on-chain, and stage changes have a 14-day minimum review. Evidence gates
-make a later stage eligible but never trigger automatic promotion. Security
+Routine changes follow [`docs/contributing/start-here.md`](docs/contributing/start-here.md)
+with no claim, lease, anchor, or governance window, and merge by the verdict as
+described above. Governance policy changes have a 7-day minimum review;
+constitutional, authority, permission, treasury, on-chain, and stage changes have
+a 14-day minimum review. A governance record whose window closed with no `risk`
+or `counterexample` delta resolves by lazy consensus; an objection delta keeps it
+open until a person resolves it. Evidence gates make a later stage eligible but
+never trigger automatic promotion. Security
 containment may be immediate, with a safe record within 72 hours and retrospective
 within 7 days, and cannot permanently change the constitution.
 
@@ -95,6 +108,9 @@ The live `main` ruleset requires changes through pull requests, the
 branch deletion and force pushes. While the repository has one maintainer, it keeps
 required approvals at zero and does not enforce Code Owner approval, avoiding a
 self-lock that would prevent the sole maintainer from integrating valid work.
+Process-decided merging additionally needs auto-merge allowed on the repository and
+`merge-readiness` as a required status check; until the owner records those
+settings, the verdict is computed and published but a person still clicks merge.
 
 `CODEOWNERS` still routes sensitive-path review requests. It grants no repository
 role, approval, merge, release, or promotion authority. If the maintainer topology

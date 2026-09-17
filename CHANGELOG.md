@@ -5,6 +5,14 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Foundations: closed three of the four open verification clauses with
+  non-breaking refactors and tests. Project Initializer gained root-parameterized
+  scaffold and validation entry points with a disposable-root test helper and
+  tests for scaffold idempotence and the stable `INIT_*` issue codes; XR Baseline
+  exposes the hover visual's resolution path to its test assembly and proves the
+  once-per-component warning. XB-06 (Initialize Sandbox unresolved warning) stays
+  partial because the menu hard-codes the real Sandbox scene path. Coverage map:
+  11 of 13 clauses covered; four new tests unexecuted.
 - Documentation consistency sweep: the root README, docs index, Agent guide,
   Foundry production line (new staging step between blueprint preview and
   `--write`), governance README, Agent contribution protocol, deliberation

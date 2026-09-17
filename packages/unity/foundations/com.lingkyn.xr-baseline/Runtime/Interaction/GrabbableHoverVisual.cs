@@ -61,6 +61,16 @@ namespace Lingkyn.Unity.XrBaseline.Interaction
             ApplyVisual(hovered);
         }
 
+        /// <summary>
+        /// Test seam: re-runs the by-name resolution and reports whether the grab interactable and
+        /// its <c>isHovered</c> property resolved. Repeated calls never produce a second warning.
+        /// </summary>
+        internal bool TryResolveGrabInteractable()
+        {
+            CacheGrabComponent();
+            return _grabComponent != null && _isHoveredProperty != null;
+        }
+
         void CacheGrabComponent()
         {
             _grabComponent = null;

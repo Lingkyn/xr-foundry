@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added the EditMode test `MissingGrabInteractableWarnsOncePerComponent` for the
+  `GrabbableHoverVisual` once-per-component warning clause (XB-07). The runtime
+  component gains an internal `TryResolveGrabInteractable()` seam that re-runs the
+  same by-name resolution as `Awake`, `OnEnable`, and `LateUpdate`, and the runtime
+  assembly now declares `InternalsVisibleTo("Lingkyn.XrBaseline.Editor.Tests")`
+  in `Runtime/AssemblyInfo.cs`. No public API change. The test assembly now holds
+  six tests. Not yet executed in a Unity Editor. The `Initialize Sandbox`
+  unresolved-warning clause (XB-06) stays open: the menu targets the fixed
+  `Assets/_Project` scene and asset paths, so it has no disposable-root entry yet.
 - Fixed #21: `XrRigInteractionRepair` now configures `castDistance` on the caster
   each XRI 3.x `NearFarInteractor` references (resolved by the
   `ICurveInteractionCaster` interface, not a hard-coded field), keeps a longer

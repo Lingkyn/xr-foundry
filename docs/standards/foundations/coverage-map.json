@@ -35,16 +35,18 @@
         {
           "id": "PI-03",
           "clause": "running the folder scaffold twice reuses every existing folder and creates nothing new the second time",
-          "coverage": "partial",
-          "tests": [],
-          "missing": ["a test that scaffolds into a disposable project root and asserts the second ScaffoldResult reports only reused folders; ProjectFolderScaffold currently targets the fixed Assets/_Project root, so the test needs an injectable root or a guarded real-project run"]
+          "coverage": "covered",
+          "tests": ["ScaffoldingTwiceReusesEveryFolderAndCreatesNothingNew"],
+          "missing": [],
+          "note": "The test drives ProjectFolderScaffold.EnsureDirectories(projectRoot, folders) against a disposable Assets/__FoundationsTests_<guid> root with the contract folders rebased under it, and deletes the root in a finally block. EnsureIndieDirectories() delegates to the same overload with the contract root, so the fixed-root path runs the code under test."
         },
         {
           "id": "PI-04",
           "clause": "Validate reports each missing required folder, baseline scene, and activation marker with a stable issue code and marks the folder and marker issues auto-fixable",
-          "coverage": "partial",
-          "tests": [],
-          "missing": ["a test on IndieProjectValidator.ValidateIndieBaseline in a project without the scaffold asserting INIT_FOLDER_MISSING, INIT_SCENE_MISSING, and INIT_MARKER_MISSING with AutoFixable on the folder and marker issues"]
+          "coverage": "covered",
+          "tests": ["ValidateReportsMissingFoldersScenesAndMarkerWithStableCodes"],
+          "missing": [],
+          "note": "The test calls IndieProjectValidator.ValidateIndieBaseline(projectRoot) on a disposable empty root and asserts the three codes, one issue per contract folder and scene, AutoFixable on the folder and marker issues, and no AutoFixable on scene issues. The parameterless ValidateIndieBaseline() runs the same directory-contract checks against Assets/_Project before the project-wide rules."
         },
         {
           "id": "PI-05",
@@ -104,14 +106,15 @@
           "clause": "Initialize Sandbox resets the key set first and ends with xr_baseline_initialized_with_unresolved when any key was reported",
           "coverage": "partial",
           "tests": [],
-          "missing": ["a test that runs XrBaselineMenu.InitializeSandbox in a project without the XRI Starter Assets sample and expects the xr_baseline_initialized_with_unresolved warning; it needs a disposable scene and Build Settings guard"]
+          "missing": ["a test that runs XrBaselineMenu.InitializeSandbox in a project without the XRI Starter Assets sample and expects the xr_baseline_initialized_with_unresolved warning; InitializeSandbox opens or creates the real Sandbox scene in NewSceneMode.Single, creates the config and greybox assets under Assets/_Project, and saves to the fixed VrBaselineProjectPaths.SandboxScene, so it needs a root-injectable entry through VrBaselineProjectPaths, VrBaselineConfigAccess, VrBaselineAssetsSetup, VrBaselineScenePlacer, and GenericXrRigFactory before a disposable-scene test can run without touching a real project"]
         },
         {
           "id": "XB-07",
           "clause": "GrabbableHoverVisual warns once per component when XR Interaction Toolkit, XRGrabInteractable, or isHovered cannot be resolved",
-          "coverage": "partial",
-          "tests": [],
-          "missing": ["a test adding GrabbableHoverVisual to a GameObject without XRGrabInteractable and expecting exactly one warning across several Update calls"]
+          "coverage": "covered",
+          "tests": ["MissingGrabInteractableWarnsOncePerComponent"],
+          "missing": [],
+          "note": "The test adds GrabbableHoverVisual to an inactive GameObject without XRGrabInteractable and calls the internal TryResolveGrabInteractable seam three times (the same resolution Awake, OnEnable, and LateUpdate run), expecting one xr_baseline_hover_visual_unresolved warning through LogAssert.Expect plus a logMessageReceived counter, then LogAssert.NoUnexpectedReceived. In the pinned tuple the reason is the missing component; a project without XR Interaction Toolkit takes the type-not-loaded branch of the same once-per-component guard."
         }
       ],
       "additional_tests_outside_clauses": []
@@ -135,11 +138,11 @@
   ],
   "summary": {
     "clauses": 13,
-    "covered": 8,
-    "partial": 5,
+    "covered": 11,
+    "partial": 2,
     "unmapped": 0,
-    "open_gap_tests": 4,
+    "open_gap_tests": 1,
     "open_evidence_gaps": 1,
-    "execution_note": "RequiredFoldersAreUnderProjectRootAndUnique, the three rig repair tests, and UnresolvedMemberIsReportedOncePerKeyUntilReset have not executed in a Unity Editor; the map records authored coverage, not results."
+    "execution_note": "RequiredFoldersAreUnderProjectRootAndUnique, ScaffoldingTwiceReusesEveryFolderAndCreatesNothingNew, ValidateReportsMissingFoldersScenesAndMarkerWithStableCodes, the three rig repair tests, UnresolvedMemberIsReportedOncePerKeyUntilReset, and MissingGrabInteractableWarnsOncePerComponent have not executed in a Unity Editor; the map records authored coverage, not results."
   }
 }

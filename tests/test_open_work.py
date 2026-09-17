@@ -213,6 +213,7 @@ class OpenWorkBoardTests(unittest.TestCase):
         self.assertEqual(
             summary["by_kind"],
             {
+                "work_item": 0,
                 "test_gap": 1,
                 "evidence_gap": 1,
                 "lesson_gap": 1,
@@ -224,7 +225,14 @@ class OpenWorkBoardTests(unittest.TestCase):
         )
         self.assertEqual(
             summary["by_blocked_on"],
-            {"nothing": 2, "unity_editor": 2, "headset": 1, "maintainer": 3, "review_window": 1},
+            {
+                "nothing": 2,
+                "unity_editor": 2,
+                "headset": 1,
+                "maintainer": 3,
+                "review_window": 1,
+                "outside_contributor": 0,
+            },
         )
         self.assertEqual(summary["by_lane"], {"routine": 2, "non_routine": 7})
 

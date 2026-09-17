@@ -2864,6 +2864,106 @@ WORK_ITEM_ACCEPTANCE_SCRIPTS = frozenset(
 )
 
 
+CAPABILITY_PROFILES_PATH = "docs/contributing/capability-profiles.json"
+CAPABILITY_PROFILES_SCHEMA_PATH = "docs/contributing/capability-profiles.schema.json"
+OPEN_WORK_SCRIPT_PATH = "scripts/open_work.py"
+
+
+def validate_capability_profiles(root: Path) -> list[str]:
+    """What an arriving contributor declares must route to real work.
+
+    The repository asks one question before any work is taken: what do you bring,
+    an AI budget, a Unity Editor, a headset, or repository rights? This rule keeps
+    that question answerable from the tree. Every profile in
+    ``docs/contributing/capability-profiles.json`` must match its schema, carry a
+    unique id, name a ``start_at`` page that exists and a ``first_command`` that
+    runs a real repository script, and include the ``nothing`` blocker, because
+    every profile can do work that waits on nothing. The profiles' blocker
+    vocabulary must equal the open-work board's ``BLOCKERS``, so no blocker is
+    unreachable by every profile and none is invented here; and the profiles must
+    together satisfy every ``needs`` value the work items actually use, so no work
+    item is addressed to a capability nobody can declare.
+    """
+
+    errors: list[str] = []
+    path = root / CAPABILITY_PROFILES_PATH
+    if not path.is_file():
+        return errors
+    label = "capability profiles"
+    try:
+        payload = load_json(path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return [f"{label}: invalid JSON ({exc})"]
+    schema_path = root / CAPABILITY_PROFILES_SCHEMA_PATH
+    if not schema_path.is_file():
+        return [f"{label}: schema {CAPABILITY_PROFILES_SCHEMA_PATH} is missing"]
+    errors.extend(validate_json_schema_instance(payload, schema_path, label))
+    if errors:
+        return errors
+
+    profiles = payload.get("profiles", [])
+    seen: set[str] = set()
+    declared_blockers: set[str] = set()
+    declared_needs: set[str] = set()
+    for profile in profiles:
+        profile_id = profile.get("id")
+        plabel = f"{label} {profile_id}"
+        if profile_id in seen:
+            errors.append(f"{label}: duplicate profile id {profile_id}")
+        seen.add(profile_id)
+        declared_blockers.update(profile.get("satisfies_blockers", []))
+        declared_needs.update(profile.get("satisfies_needs", []))
+        if "nothing" not in profile.get("satisfies_blockers", []):
+            errors.append(
+                f"{plabel}: satisfies_blockers must include 'nothing'; every profile can do work that waits on nothing"
+            )
+        start_at = profile.get("start_at", "")
+        if start_at.startswith("/") or ".." in start_at.split("/") or not (root / start_at).exists():
+            errors.append(f"{plabel}: start_at page does not exist: {start_at}")
+        command_match = re.match(r"^python scripts/([a-z_]+\.py)", profile.get("first_command", ""))
+        if not command_match or not (root / "scripts" / command_match.group(1)).is_file():
+            errors.append(
+                f"{plabel}: first_command must run a script that exists under scripts/: {profile.get('first_command')!r}"
+            )
+
+    board_blockers: set[str] = set()
+    board_path = root / OPEN_WORK_SCRIPT_PATH
+    if board_path.is_file():
+        match = re.search(r"^BLOCKERS = \(([^)]*)\)", board_path.read_text(encoding="utf-8"), re.MULTILINE)
+        if match:
+            board_blockers = set(re.findall(r'"([a-z_]+)"', match.group(1)))
+    if board_blockers:
+        unknown = sorted(declared_blockers - board_blockers)
+        if unknown:
+            errors.append(
+                f"{label}: satisfies_blockers names blockers the open-work board does not use: {unknown}"
+            )
+        unreachable = sorted(board_blockers - declared_blockers)
+        if unreachable:
+            errors.append(
+                f"{label}: no profile can reach these open-work blockers: {unreachable}"
+            )
+
+    items_path = root / WORK_ITEMS_PATH
+    if items_path.is_file():
+        try:
+            items_payload = load_json(items_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            items_payload = None
+        if isinstance(items_payload, dict):
+            used_needs = {
+                item.get("needs")
+                for item in items_payload.get("items", [])
+                if isinstance(item, dict) and isinstance(item.get("needs"), str)
+            }
+            uncovered = sorted(used_needs - declared_needs)
+            if uncovered:
+                errors.append(
+                    f"{label}: work items need capabilities no profile declares: {uncovered}"
+                )
+    return errors
+
+
 def validate_work_items(root: Path) -> list[str]:
     """Work items must be self-contained and re-derivable from the tree.
 
@@ -9584,6 +9684,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_operating_mandates(root))
     errors.extend(validate_live_deliberation_records(root))
     errors.extend(validate_work_items(root))
+    errors.extend(validate_capability_profiles(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_component_model(root))
@@ -9735,6 +9836,12 @@ def validate_fast_structure(root: Path) -> list[str]:
 
 
 FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"capability profiles .*satisfies_blockers must include 'nothing'"), "Every capability profile can take work that waits on nothing; add 'nothing' to satisfies_blockers."),
+    (re.compile(r"capability profiles .*start_at page does not exist"), "start_at is the page that profile reads first; point it at a page that exists in the tree."),
+    (re.compile(r"capability profiles .*first_command must run a script"), "first_command must invoke a script that exists under scripts/, for example 'python scripts/open_work.py --capability <id> --markdown'."),
+    (re.compile(r"capability profiles .*(blockers the open-work board does not use|no profile can reach these open-work blockers)"), "The profiles' blocker vocabulary must equal BLOCKERS in scripts/open_work.py: no invented blocker, and no blocker that every profile leaves unreachable."),
+    (re.compile(r"capability profiles .*work items need capabilities no profile declares"), "Either add the capability to a profile's satisfies_needs or change the work item's needs; a work item addressed to a capability nobody can declare can never be taken."),
+    (re.compile(r"capability profiles .*duplicate profile id"), "Profile ids are unique; rename one of them."),
     (re.compile(r"work items .*milestone_batch .* is not a '### Batch' heading"), "Use a batch id that exists as a '### Batch <id>:' heading in docs/milestones.md (1a to 3c), or add the batch to the milestone page first."),
     (re.compile(r"work items .*(depends_on names unknown item|depends on itself|dependency cycle)"), "depends_on may only name other existing item ids and must not form a cycle; split the item or drop the dependency."),
     (re.compile(r"work items .*read_first path does not exist"), "read_first lists what a newcomer reads before starting; every entry must be a path that exists in the tree at the commit the item is published."),

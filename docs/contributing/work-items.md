@@ -4,11 +4,11 @@ The milestones in [`../milestones.md`](../milestones.md) are reached by many
 hands: the maintainer, a steward Agent, a person with a headset, a contributor
 using a different coding assistant in an editor or a terminal, or someone who has
 never spoken to any of them. None of them shares a session, a chat history, or a
-plan that lives in one tool. So every unit of work is a **item** in
+plan that lives in one tool. So every unit of work is an **item** in
 [`work-items.json`](work-items.json): a self-contained record that says what
 to read, where it may write, what to do, and which commands and artifacts prove it
 is done. Repository validation checks the item file
-(`validate_work_items`), so a item cannot point at a missing document, an
+(`validate_work_items`), so an item cannot point at a missing document, an
 unknown batch, a circular dependency, or a private script.
 
 ## The protocol, tool by tool
@@ -16,10 +16,13 @@ unknown batch, a circular dependency, or a private script.
 1. **Read the guide your tool reads.** `AGENTS.md` at the root is the entry point
    every coding assistant loads; `CLAUDE.md` only includes it. A person starts at
    [`start-here.md`](start-here.md). Nothing else is required.
-2. **Pick a item.** Run `python scripts/open_work.py --markdown` for the whole
-   board, or read `work-items.json` and take the first item whose `needs` you
-   satisfy (`none` means a clone is enough) and whose `depends_on` items are
-   `done`. A item is not a claim: two contributors may take the same `none`
+2. **Declare what you bring, then pick an item.** Run
+   `python scripts/open_work.py --list-capabilities`, choose the declaration that
+   is true for you today ([`capabilities.md`](capabilities.md)), and run
+   `python scripts/open_work.py --capability <id> --markdown`; or read
+   `work-items.json` and take the first item whose `needs` your declaration
+   satisfies (`none` means a clone is enough) and whose `depends_on` items are
+   `done`. An item is not a claim: two contributors may take the same `none`
    item; the merge-readiness verdict decides between the results, and the second
    one rebases. Only a non-routine item needs a Task Hall claim
    ([`task-hall.md`](task-hall.md)).
@@ -39,7 +42,7 @@ unknown batch, a circular dependency, or a private script.
    ([`work-continuation.schema.json`](work-continuation.schema.json)) so the next
    hand, in any tool, starts from your exact revision and next safe action.
 
-## What a item never does
+## What an item never does
 
 - It grants no permission: not write, review, merge, release, promotion, or device
   status. Those come from the verdict, the maintainer, and the evidence gates.
@@ -51,9 +54,9 @@ unknown batch, a circular dependency, or a private script.
 
 ## How items are added
 
-A item is a routine change to `work-items.json`. It needs an `id` in the
+An item is a routine change to `work-items.json`. It needs an `id` in the
 `WI-nnn` series, a batch that exists in `milestones.md`, `read_first` paths that
-exist, and acceptance commands from the accepted script list. A item for a new
+exist, and acceptance commands from the accepted script list. An item for a new
 family follows the queue: source gate first, staged implementation second, never a
 package directory before admission. When a milestone cell moves to `done`, the
 item that did it is the proof path for that cell.

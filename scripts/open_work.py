@@ -32,6 +32,7 @@ from typing import Any, Callable
 SCHEMA = "xr-foundry.open_work.v1"
 
 KINDS = (
+    "work_item",
     "test_gap",
     "evidence_gap",
     "lesson_gap",
@@ -40,9 +41,17 @@ KINDS = (
     "deliberation_open",
     "roadmap_step",
 )
-BLOCKERS = ("nothing", "unity_editor", "headset", "maintainer", "review_window")
+BLOCKERS = ("nothing", "unity_editor", "headset", "maintainer", "review_window", "outside_contributor")
 LANES = ("routine", "non_routine")
-ROUTINE_KINDS = {"test_gap", "lesson_gap", "roadmap_step"}
+ROUTINE_KINDS = {"work_item", "test_gap", "lesson_gap", "roadmap_step"}
+# A work item states what it needs; the board says what that blocks on.
+NEEDS_TO_BLOCKER = {
+    "none": "nothing",
+    "unity_editor": "unity_editor",
+    "headset": "headset",
+    "maintainer": "maintainer",
+    "outside_contributor": "outside_contributor",
+}
 REPOSITORY_FAMILY = "repository"
 
 COVERAGE_GLOB = "coverage-map*.json"
@@ -52,6 +61,8 @@ QUEUE_FILE = Path("docs") / "foundry" / "queue" / "next-batch.json"
 STAGING_DIR = Path("staging")
 DELIBERATIONS_DIR = Path("docs") / "governance" / "deliberations"
 ROADMAP_FILE = Path("ROADMAP.md")
+CAPABILITY_PROFILES_FILE = Path("docs") / "contributing" / "capability-profiles.json"
+WORK_ITEMS_FILE = Path("docs") / "contributing" / "work-items.json"
 ROADMAP_HEADING = "Execution order after Inventory"
 STAGING_SUMMARY = "needs a Unity run and the maintainer's admission signature"
 
@@ -278,6 +289,54 @@ class Collector:
                 evidence_note="A family proposal admits no package id or directory before the source gate and admission record.",
             )
 
+    def collect_work_items(self) -> None:
+        path = self.root / WORK_ITEMS_FILE
+        if not path.is_file():
+            return
+        payload = self.load_json(path)
+        if payload is None:
+            return
+        items = payload.get("items") if isinstance(payload, dict) else None
+        if not isinstance(items, list):
+            self.warn_shape(path, "no items list")
+            return
+        for item in items:
+            if not isinstance(item, dict) or not item.get("id"):
+                self.warn_shape(path, "item without an id")
+                continue
+            if item.get("status") == "done":
+                continue
+            needs = str(item.get("needs", "none"))
+            blocked_on = NEEDS_TO_BLOCKER.get(needs)
+            if blocked_on is None:
+                self.warn_shape(path, f"{item['id']} declares an unknown needs value {needs!r}")
+                continue
+            depends_on = [str(value) for value in item.get("depends_on", []) if isinstance(value, str)]
+            unfinished = [
+                other
+                for other in depends_on
+                if any(
+                    isinstance(candidate, dict)
+                    and candidate.get("id") == other
+                    and candidate.get("status") != "done"
+                    for candidate in items
+                )
+            ]
+            steps = [str(step) for step in item.get("steps", []) if isinstance(step, str)]
+            next_action = steps[0] if steps else f"Read {self.rel(path)} for {item['id']}."
+            if unfinished:
+                next_action = f"Waits on {', '.join(unfinished)}. Then: {next_action}"
+            self.add(
+                id=f"{self.rel(path)}#{item['id']}",
+                kind="work_item",
+                family=REPOSITORY_FAMILY,
+                title=f"{item['id']}: {item.get('title', '')}".strip(),
+                source_path=self.rel(path),
+                blocked_on=blocked_on,
+                next_action=next_action,
+                evidence_note=str(item.get("evidence") or "") or None,
+            )
+
     def collect_staging(self) -> None:
         base = self.root / STAGING_DIR
         if not base.is_dir():
@@ -466,6 +525,7 @@ def build_board(root: Path, now: datetime | None = None) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     collector = Collector(root, now)
     sources: list[Callable[[], None]] = [
+        collector.collect_work_items,
         collector.collect_coverage_maps,
         collector.collect_lessons,
         collector.collect_queue,
@@ -495,6 +555,18 @@ def render_markdown(board: dict[str, Any]) -> str:
     lines = ["# Open work board", ""]
     lines.append(f"Generated {board['generated_at']} at commit `{board['commit'] or 'unknown'}`.")
     lines.append("This board is generated from the source files; it assigns and reserves nothing.")
+    capability = board.get("capability")
+    if capability:
+        lines.append("")
+        lines.append(
+            "Narrowed to capability `{id}` ({title}), which reaches work blocked on {blockers}. "
+            "{hidden} item(s) need a different declaration.".format(
+                id=capability.get("id"),
+                title=capability.get("title"),
+                blockers=", ".join(capability.get("satisfies_blockers", [])),
+                hidden=capability.get("items_hidden", 0),
+            )
+        )
     lines.append("")
     items = board["items"]
     for lane, heading in (("routine", "Routine lane"), ("non_routine", "Non-routine lane")):
@@ -543,20 +615,104 @@ def cell(text: str) -> str:
     return re.sub(r"\s+", " ", text).replace("|", "\\|").strip()
 
 
+def load_capability_profiles(root: Path) -> dict[str, dict[str, Any]]:
+    """Return the declared capability profiles, keyed by id (empty when absent)."""
+
+    path = root / CAPABILITY_PROFILES_FILE
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise UnreadableSource(f"{CAPABILITY_PROFILES_FILE}: {error}") from error
+    profiles = payload.get("profiles") if isinstance(payload, dict) else None
+    if not isinstance(profiles, list):
+        return {}
+    return {
+        str(profile["id"]): profile
+        for profile in profiles
+        if isinstance(profile, dict) and isinstance(profile.get("id"), str)
+    }
+
+
+def filter_board_by_capability(board: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
+    """Keep only the items a declared capability can actually take.
+
+    The board itself is unchanged on disk; this narrows one printed view. An item
+    whose ``blocked_on`` the profile does not satisfy is not hidden work, it is
+    work for a different declaration, and the printed header says which.
+    """
+
+    reachable = set(profile.get("satisfies_blockers", []))
+    items = [item for item in board["items"] if item["blocked_on"] in reachable]
+    narrowed = dict(board)
+    narrowed["capability"] = {
+        "id": profile.get("id"),
+        "title": profile.get("title"),
+        "satisfies_blockers": sorted(reachable),
+        "items_hidden": len(board["items"]) - len(items),
+    }
+    narrowed["items"] = items
+    narrowed["summary"] = {
+        "total": len(items),
+        "by_kind": counts([WorkItem(**item) for item in items], "kind", KINDS),
+        "by_blocked_on": counts([WorkItem(**item) for item in items], "blocked_on", BLOCKERS),
+        "by_lane": counts([WorkItem(**item) for item in items], "lane", LANES),
+    }
+    return narrowed
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", default=".", help="repository root (default: current directory)")
     parser.add_argument("--json", action="store_true", help="print the board as JSON")
     parser.add_argument("--markdown", action="store_true", help="print the board as a Markdown table")
     parser.add_argument("--output", help="write the JSON board to this path")
+    parser.add_argument(
+        "--capability",
+        help="keep only the work a declared capability profile can take "
+        "(an id from docs/contributing/capability-profiles.json)",
+    )
+    parser.add_argument(
+        "--list-capabilities",
+        action="store_true",
+        help="print the declared capability profiles and the question each one answers",
+    )
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
+    try:
+        profiles = load_capability_profiles(root)
+    except UnreadableSource as error:
+        print(f"open_work: unreadable source file: {error}", file=sys.stderr)
+        return 1
+
+    if args.list_capabilities:
+        if not profiles:
+            print("open_work: no capability profiles are declared", file=sys.stderr)
+            return 1
+        for profile_id, profile in profiles.items():
+            print(f"{profile_id}: {profile.get('title', '')}")
+            print(f"  {profile.get('question', '')}")
+            print(f"  reaches: {', '.join(sorted(profile.get('satisfies_blockers', [])))}")
+        return 0
+
+    if args.capability and args.capability not in profiles:
+        known = ", ".join(sorted(profiles)) or "none declared"
+        print(
+            f"open_work: unknown capability profile {args.capability!r}; declared profiles: {known}",
+            file=sys.stderr,
+        )
+        return 1
+
     try:
         board = build_board(root)
     except UnreadableSource as error:
         print(f"open_work: unreadable source file: {error}", file=sys.stderr)
         return 1
+
+    if args.capability:
+        board = filter_board_by_capability(board, profiles[args.capability])
 
     payload = json.dumps(board, indent=2) + "\n"
     if args.output:

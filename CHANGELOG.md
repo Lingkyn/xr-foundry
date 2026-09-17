@@ -5,6 +5,22 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- The repository now asks one question before any work is taken: what do you
+  bring? `docs/contributing/capability-profiles.json` declares four capabilities
+  (`ai_tokens_only`, `unity_editor`, `xr_headset`, `maintainer`), each with the
+  question it answers, the work it reaches, and the claims it may never make;
+  `docs/contributing/capabilities.md` is the page, and `AGENTS.md`, start-here,
+  and the work-item protocol route through it. `scripts/open_work.py` gains
+  `--list-capabilities` and `--capability <id>`, which narrows the board to the
+  work that declaration can finish and says how many items need a different one;
+  the board also surfaces the curated work items themselves (kind `work_item`,
+  with `outside_contributor` as a blocker), so a token-only contributor sees real
+  work instead of an almost empty board. `validate_capability_profiles` checks the
+  schema, unique ids, that every profile reaches the `nothing` blocker, that
+  `start_at` and `first_command` resolve, that the profiles' blocker vocabulary
+  equals the board's with none unreachable, and that every capability a work item
+  needs is declared by some profile; `tests/test_capability_profiles.py` covers
+  the rule and the filtering.
 - XR UI shell source gate (WI-005): `docs/standards/xr-ui-shell/` gains a
   source manifest (thirteen public sources, URLs not fetched and marked for a
   person to confirm), a verification contract (renderer-neutral Core gate with

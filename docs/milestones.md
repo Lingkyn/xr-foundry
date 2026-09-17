@@ -146,7 +146,7 @@ RFC with a 14-day window. This page lists no deliverables for it on purpose.
 
 ## How the work is picked up
 
-Each open cell that a contributor can act on is a item in
+Each open cell that a contributor can act on is an item in
 [`contributing/work-items.json`](contributing/work-items.json), written so
 that a person, the steward Agent, or any other coding assistant can take it with
 no session context: what to read, where to write, what to do, and the commands

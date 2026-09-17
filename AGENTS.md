@@ -66,9 +66,17 @@ that exact candidate before registering support.
 
 ## Picking up work without session context
 
+First declare what you bring, before taking anything: an AI budget, a Unity
+Editor, a headset, or rights on this repository. Run
+`python scripts/open_work.py --list-capabilities`, then
+`python scripts/open_work.py --capability <id> --markdown`;
+`docs/contributing/capabilities.md` explains the four declarations and, for each,
+the claims that declaration may never make. A capability routes work and grants no
+permission, and an undeclared capability is never assumed.
+
 Any person or coding Agent, in any tool, takes the next unit of work from
 `docs/contributing/work-items.json` following
-`docs/contributing/work-items.md`: choose a item whose `needs` you satisfy,
+`docs/contributing/work-items.md`: choose an item whose `needs` you satisfy,
 stay inside its `allowed_paths`, run its acceptance commands, and mark it `done`
 only with a proof path in the tree. The milestone plan those items serve is
 `docs/milestones.md`.

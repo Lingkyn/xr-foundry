@@ -2894,6 +2894,224 @@ def validate_operating_mandates(root: Path) -> list[str]:
     return errors
 
 
+DELIBERATION_RECORD_DIRECTORY = "docs/governance/deliberations"
+DELIBERATION_RECORD_SCHEMA_PATH = "docs/contributing/deliberation-record.schema.json"
+GOVERNANCE_MODEL_PATH = "docs/governance/governance-model.v1.json"
+DELIBERATION_REPOSITORY_BLOB_PREFIX = "https://github.com/Lingkyn/xr-foundry/blob/main/"
+DELIBERATION_OBJECTION_DELTA_KINDS = frozenset({"risk", "counterexample"})
+DELIBERATION_PROCESS_DECIDED_BY_PREFIX = "process:"
+
+
+def validate_live_deliberation_records(root: Path) -> list[str]:
+    """Every live deliberation record must be re-derivable from the repository.
+
+    For each ``docs/governance/deliberations/*.json`` the rule requires: the record
+    matches the deliberation schema and ``validate_governance_deliberation_metadata``;
+    its ``id`` equals the uppercased filename stem and is unique; it names a
+    ``decision_class`` the governance model defines, so its review window is derived
+    from ``docs/governance/governance-model.v1.json`` rather than guessed; a decision
+    is not recorded before ``review_not_before``; a ``process:<mandate_id>`` decision
+    names a recorded operating mandate that was in force, unexpired, and unrevoked at
+    ``decided_at`` and the record carries no ``risk`` or ``counterexample`` delta
+    (lazy consensus needs no objection); and every evidence URL that points into this
+    repository names a path that exists. An open record whose window has already
+    closed is a pending process step, not a defect: this validator reports errors
+    only (``main`` has no warnings channel), so nothing is emitted for it.
+    """
+
+    errors: list[str] = []
+    directory = root / DELIBERATION_RECORD_DIRECTORY
+    if not directory.is_dir():
+        return errors
+    schema_path = root / DELIBERATION_RECORD_SCHEMA_PATH
+
+    windows_by_class: dict[str, int] | None = None
+    model_path = root / GOVERNANCE_MODEL_PATH
+    if model_path.is_file():
+        try:
+            model = load_json(model_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            model = None
+        if isinstance(model, dict):
+            windows_by_class = {
+                str(item.get("id")): int(item["minimum_review_days"])
+                for item in model.get("decision_classes", [])
+                if isinstance(item, dict)
+                and isinstance(item.get("minimum_review_days"), int)
+                and not isinstance(item.get("minimum_review_days"), bool)
+            }
+
+    mandates_by_id: dict[str, dict[str, Any]] = {}
+    mandate_directory = root / OPERATING_MANDATE_DIRECTORY
+    if mandate_directory.is_dir():
+        for mandate_path in sorted(mandate_directory.glob("*.mandate.json")):
+            try:
+                mandate = load_json(mandate_path)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue  # validate_operating_mandates reports the broken file
+            if isinstance(mandate, dict) and isinstance(mandate.get("mandate_id"), str):
+                mandates_by_id.setdefault(mandate["mandate_id"], mandate)
+
+    def mandate_in_force_errors(
+        mandate: dict[str, Any], mandate_id: str, decided_at: datetime, label: str
+    ) -> list[str]:
+        found: list[str] = []
+        parsed: dict[str, datetime] = {}
+        for field in ("not_before", "expires_at"):
+            value, _ = _parse_governance_timestamp(mandate.get(field), label, field)
+            if value is not None:
+                parsed[field] = value
+            else:
+                found.append(
+                    f"{label}: decided_by names mandate {mandate_id!r} whose {field} "
+                    "is not an RFC 3339 UTC timestamp"
+                )
+        if "not_before" in parsed and decided_at < parsed["not_before"]:
+            found.append(
+                f"{label}: decided_by names mandate {mandate_id!r} that was not yet in force "
+                f"at decided_at (not_before {mandate.get('not_before')})"
+            )
+        if "expires_at" in parsed and decided_at >= parsed["expires_at"]:
+            found.append(
+                f"{label}: decided_by names mandate {mandate_id!r} that had expired "
+                f"at decided_at (expires_at {mandate.get('expires_at')})"
+            )
+        revocation = mandate.get("revocation")
+        revocation = revocation if isinstance(revocation, dict) else {}
+        if revocation.get("status") == "revoked":
+            revoked_at, _ = _parse_governance_timestamp(
+                revocation.get("revoked_at"), label, "revoked_at"
+            )
+            if revoked_at is None or revoked_at <= decided_at:
+                found.append(
+                    f"{label}: decided_by names mandate {mandate_id!r} that was revoked "
+                    f"at decided_at (revoked_at {revocation.get('revoked_at')})"
+                )
+        return found
+
+    def evidence_urls(payload: dict[str, Any]) -> list[str]:
+        urls: list[str] = []
+        for group in ("assumptions", "options", "deltas"):
+            for item in payload.get(group, []):
+                if not isinstance(item, dict):
+                    continue
+                for url in item.get("evidence", []):
+                    if isinstance(url, str):
+                        urls.append(url)
+        return urls
+
+    seen_ids: dict[str, str] = {}
+    for path in sorted(directory.glob("*.json")):
+        relative = path.relative_to(root).as_posix()
+        label = f"deliberation record {relative}"
+        try:
+            payload = load_json(path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        if not isinstance(payload, dict):
+            errors.append(f"{label}: must be a JSON object")
+            continue
+        schema_errors = validate_json_schema_instance(payload, schema_path, label)
+        errors.extend(schema_errors)
+        if schema_errors:
+            continue
+
+        record_id = str(payload.get("id"))
+        expected_id = path.stem.upper()
+        if record_id != expected_id:
+            errors.append(
+                f"{label}: id {record_id!r} must equal the uppercased filename stem {expected_id!r}"
+            )
+        if record_id in seen_ids:
+            errors.append(
+                f"{label}: duplicate deliberation id {record_id} (also recorded by {seen_ids[record_id]})"
+            )
+        else:
+            seen_ids[record_id] = relative
+
+        metadata_errors = validate_governance_deliberation_metadata(payload, label)
+        errors.extend(metadata_errors)
+
+        decision_class = payload.get("decision_class")
+        if decision_class is None:
+            errors.append(
+                f"{label}: names no decision_class, so its review window cannot be derived "
+                "from the governance model"
+            )
+        elif windows_by_class is None:
+            errors.append(
+                f"{label}: the governance model is missing or unreadable, so the "
+                f"{decision_class} review window cannot be derived"
+            )
+        elif decision_class not in windows_by_class:
+            errors.append(
+                f"{label}: decision_class {decision_class!r} is not defined by the governance "
+                "model, so its review window cannot be derived"
+            )
+        else:
+            opened, _ = _parse_governance_timestamp(
+                payload.get("review_opened_at"), label, "review_opened_at"
+            )
+            not_before, _ = _parse_governance_timestamp(
+                payload.get("review_not_before"), label, "review_not_before"
+            )
+            minimum_days = windows_by_class[decision_class]
+            already_reported = any(
+                "review_not_before must be at least" in message for message in metadata_errors
+            )
+            if (
+                opened is not None
+                and not_before is not None
+                and not_before < opened + timedelta(days=minimum_days)
+                and not already_reported
+            ):
+                errors.append(
+                    f"{label}: {decision_class} review window is shorter than the governance "
+                    f"model minimum of {minimum_days} days"
+                )
+
+        decision = payload.get("decision")
+        if isinstance(decision, dict):
+            decided_by = str(decision.get("decided_by", ""))
+            decided_at, decided_errors = _parse_governance_timestamp(
+                decision.get("decided_at"), label, "decision.decided_at"
+            )
+            if payload.get("status") != "resolved":
+                errors.extend(decided_errors)  # resolved records were parsed above
+            if decided_by.startswith(DELIBERATION_PROCESS_DECIDED_BY_PREFIX):
+                mandate_id = decided_by[len(DELIBERATION_PROCESS_DECIDED_BY_PREFIX):]
+                mandate = mandates_by_id.get(mandate_id)
+                if mandate is None:
+                    errors.append(
+                        f"{label}: decided_by names mandate {mandate_id!r} but no "
+                        f"{OPERATING_MANDATE_DIRECTORY}/*.mandate.json carries that mandate_id"
+                    )
+                elif decided_at is not None:
+                    errors.extend(mandate_in_force_errors(mandate, mandate_id, decided_at, label))
+                objections = sorted(
+                    str(delta.get("id"))
+                    for delta in payload.get("deltas", [])
+                    if isinstance(delta, dict)
+                    and delta.get("kind") in DELIBERATION_OBJECTION_DELTA_KINDS
+                )
+                if objections:
+                    errors.append(
+                        f"{label}: lazy-consensus decision by {decided_by} is invalid while "
+                        f"objection deltas exist: {objections}"
+                    )
+
+        for url in evidence_urls(payload):
+            if not url.startswith(DELIBERATION_REPOSITORY_BLOB_PREFIX):
+                continue
+            referenced = url[len(DELIBERATION_REPOSITORY_BLOB_PREFIX):].split("#", 1)[0]
+            referenced = referenced.split("?", 1)[0]
+            target = safe_repository_path(root, referenced)
+            if target is None or not target.exists():
+                errors.append(f"{label}: referenced repository path does not exist: {referenced}")
+    return errors
+
+
 def validate_agent_guide_source_boundary(root: Path) -> list[str]:
     path = root / "AGENTS.md"
     if not path.exists():
@@ -9245,6 +9463,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_governance_contract(root))
     errors.extend(validate_agent_membership_contract(root))
     errors.extend(validate_operating_mandates(root))
+    errors.extend(validate_live_deliberation_records(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_component_model(root))
@@ -9425,6 +9644,18 @@ FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"repository JSON is invalid"), "A JSON file does not parse; the message names it. Validate with 'python -m json.tool <file>'."),
     (re.compile(r"placeholder text is prohibited"), "Replace TODO/TBD/lorem placeholders with real content or remove the entry."),
     (re.compile(r"must remain Proposed|must remain inactive"), "Proposed governance stays Proposed and inactive until a resolved deliberation record and maintainer decision exist; edit the RFC text back."),
+    (re.compile(r"deliberation record .*(invalid JSON|must be a JSON object)"), "The record under docs/governance/deliberations/ does not parse as a JSON object; validate it with 'python -m json.tool <file>' and start from docs/contributing/deliberation-record.open.example.json."),
+    (re.compile(r"deliberation record .*JSON Schema violation"), "Make the record conform to docs/contributing/deliberation-record.schema.json (the message names the field); copy the shape from the open or resolved example under docs/contributing/ and read docs/contributing/deliberation-protocol.md."),
+    (re.compile(r"deliberation record .*must equal the uppercased filename stem"), "Name the file DLB-<NNNN>-<slug>.json so that its stem, uppercased, equals the record's id (for example DLB-0001-operating-mandates.json carries id DLB-0001-OPERATING-MANDATES)."),
+    (re.compile(r"deliberation record .*duplicate deliberation id"), "Two files under docs/governance/deliberations/ carry the same id; give the newer record the next unused DLB number and rename its file to match."),
+    (re.compile(r"deliberation record .*review window cannot be derived"), "A live deliberation record must carry decision_class (one of the ids in docs/governance/governance-model.v1.json decision_classes), governance_stage, review_opened_at, and review_not_before together; the validator derives the minimum window from the model and never guesses a class."),
+    (re.compile(r"deliberation record .*(must be an RFC 3339 timestamp|must include a timezone|must use UTC)"), "Write every review_opened_at, review_not_before, and decided_at as an RFC 3339 UTC timestamp with a trailing Z, for example 2026-09-22T09:00:00Z."),
+    (re.compile(r"deliberation record .*(review_not_before must be at least|review window is shorter than the governance model minimum)"), "Set review_not_before to review_opened_at plus at least the class minimum from docs/governance/governance-model.v1.json (governance_policy 7 days, constitutional_change 14 days); a window is a minimum, so a later date is always allowed."),
+    (re.compile(r"deliberation record .*resolved governance decision predates review_not_before"), "A decision may be recorded only once the review window has closed; set decision.decided_at at or after review_not_before, or keep the record open until then."),
+    (re.compile(r"deliberation record .*decided_by names mandate .*(but no .*carries that mandate_id|whose .* is not an RFC 3339)"), "process:<mandate_id> must name the mandate_id of a file under docs/governance/mandates/*.mandate.json with valid not_before and expires_at; fix the id or, if no mandate applies, let a person resolve the record with their @github identity."),
+    (re.compile(r"deliberation record .*decided_by names mandate .*(not yet in force|had expired|was revoked)"), "A lazy-consensus decision is valid only under a mandate that was in force at decided_at (not_before <= decided_at < expires_at and not revoked by then); a person must resolve the record with their @github identity, or the maintainer records a fresh mandate before the decision is made."),
+    (re.compile(r"deliberation record .*lazy-consensus decision .* is invalid while objection deltas exist"), "Lazy consensus needs a window that closed with no risk or counterexample delta (GOVERNANCE.md, Process-decided merges and lazy consensus); with an objection on record a person resolves the deliberation with their @github identity as decided_by."),
+    (re.compile(r"deliberation record .*referenced repository path does not exist"), "Every https://github.com/Lingkyn/xr-foundry/blob/main/<path> evidence link in a live record must name a path that exists in the tree; fix the path or point the evidence at the file that replaced it."),
 ]
 
 

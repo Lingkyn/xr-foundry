@@ -14,6 +14,24 @@ live in each package's `CHANGELOG.md`.
   `docs/standards/audio/coverage-map.json` maps the verification contract to those
   tests (16 of 17 clauses covered, AU-02 partial). Nothing here has compiled or
   run; the staging README states the promotion steps.
+- Live deliberation records are now machine-checked: `validate_live_deliberation_records`
+  in `scripts/validate_repository.py` (registered right after
+  `validate_operating_mandates`) proves, for every
+  `docs/governance/deliberations/*.json`, that the record matches
+  `docs/contributing/deliberation-record.schema.json` and
+  `validate_governance_deliberation_metadata`, that its `id` equals the uppercased
+  filename stem and is unique, that it names a `decision_class` whose minimum
+  review window is derived from `docs/governance/governance-model.v1.json` (a
+  record without a class is a finding, never a guess), that `review_opened_at`,
+  `review_not_before`, and `decided_at` are RFC 3339 UTC and ordered with the
+  window at least the class minimum, that a `process:<mandate_id>` decision names a
+  mandate under `docs/governance/mandates/` that was in force, unexpired, and
+  unrevoked at `decided_at` and that the record carries no `risk` or
+  `counterexample` delta, and that every
+  `https://github.com/Lingkyn/xr-foundry/blob/main/<path>` evidence link exists in
+  the tree. An open record past its window is a pending process step and is not
+  reported. Each error shape has a fix hint; DLB-0001, DLB-0002, and DLB-0003 pass
+  with no allowlist. `tests/test_deliberation_records.py` covers the rule.
 - Coverage maps are now machine-checked: `validate_coverage_map_claims` in
   `scripts/validate_repository.py` (full validation pass) proves, for every
   `docs/standards/*/coverage-map*.json`, that each gate's `test_assembly` is

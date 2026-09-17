@@ -22,14 +22,18 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
                 new Vector3(VrBaselineVisualPaths.EnclosureWallThickness, VrBaselineVisualPaths.EnclosureWallHeight, VrBaselineVisualPaths.EnclosureHalfExtent * 2f)),
         };
 
-        public static void EnsureEnclosure(Transform environmentParent)
+        public static void EnsureEnclosure(Transform environmentParent) =>
+            EnsureEnclosure(environmentParent, VrBaselineProjectLayout.Default);
+
+        /// <summary>Same as <see cref="EnsureEnclosure(Transform)"/> under an injected project layout.</summary>
+        internal static void EnsureEnclosure(Transform environmentParent, VrBaselineProjectLayout layout)
         {
             if (environmentParent == null) return;
 
-            var material = AssetDatabase.LoadAssetAtPath<Material>(VrBaselineVisualPaths.Environment);
+            var material = AssetDatabase.LoadAssetAtPath<Material>(layout.EnvironmentMaterial);
             if (material == null)
             {
-                XrBaselineDiagnostics.Unresolved("sandbox.environment-material", $"the environment material is missing at {VrBaselineVisualPaths.Environment}; the enclosure was not built.");
+                XrBaselineDiagnostics.Unresolved("sandbox.environment-material", $"the environment material is missing at {layout.EnvironmentMaterial}; the enclosure was not built.");
                 return;
             }
 

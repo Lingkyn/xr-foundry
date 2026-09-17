@@ -104,9 +104,10 @@
         {
           "id": "XB-06",
           "clause": "Initialize Sandbox resets the key set first and ends with xr_baseline_initialized_with_unresolved when any key was reported",
-          "coverage": "partial",
-          "tests": [],
-          "missing": ["a test that runs XrBaselineMenu.InitializeSandbox in a project without the XRI Starter Assets sample and expects the xr_baseline_initialized_with_unresolved warning; InitializeSandbox opens or creates the real Sandbox scene in NewSceneMode.Single, creates the config and greybox assets under Assets/_Project, and saves to the fixed VrBaselineProjectPaths.SandboxScene, so it needs a root-injectable entry through VrBaselineProjectPaths, VrBaselineConfigAccess, VrBaselineAssetsSetup, VrBaselineScenePlacer, and GenericXrRigFactory before a disposable-scene test can run without touching a real project"]
+          "coverage": "covered",
+          "tests": ["InitializeSandboxResetsStaleKeysAndWarnsOnceWhenAKeyWasReported", "InitializeSandboxLogsCleanSuccessWhenNoKeyWasReported"],
+          "missing": [],
+          "note": "Both tests drive the internal XrBaselineMenu.InitializeSandbox(SandboxInitializationOptions) overload, which the menu item calls with SandboxInitializationOptions.Default, against a disposable Assets/__XrBaselineTests_<guid> root and a NewSceneMode.Additive scene, deleted and closed in TearDown. The first test pre-seeds a stale key, injects a rig source resolver that records whether the stale key is still present and then reports its own key through XrBaselineDiagnostics.Unresolved, and asserts the stale key was gone before the resolver ran, the resolver's key remains, and a logMessageReceived counter saw exactly one xr_baseline_initialized_with_unresolved warning and no clean line. The second test injects a resolver that returns null without reporting, expects the plain no-rig warning, and asserts one xr_baseline_initialized line and no unresolved line; every key the pipeline can report is a type-loaded check, so the test is inconclusive rather than failing in a tuple that reports one. Reading the source showed that a missing XRI Starter Assets rig source alone logs a plain xr_baseline: warning without a diagnostics key, so that project state does not by itself reach the unresolved branch; the injected resolver supplies the reported key instead and the rig-source behaviour is unchanged. Authored and unexecuted; see the xr-baseline changelog."
         },
         {
           "id": "XB-07",
@@ -117,7 +118,7 @@
           "note": "The test adds GrabbableHoverVisual to an inactive GameObject without XRGrabInteractable and calls the internal TryResolveGrabInteractable seam three times (the same resolution Awake, OnEnable, and LateUpdate run), expecting one xr_baseline_hover_visual_unresolved warning through LogAssert.Expect plus a logMessageReceived counter, then LogAssert.NoUnexpectedReceived. In the pinned tuple the reason is the missing component; a project without XR Interaction Toolkit takes the type-not-loaded branch of the same once-per-component guard."
         }
       ],
-      "additional_tests_outside_clauses": []
+      "additional_tests_outside_clauses": ["DefaultOptionsMatchTheFixedProjectPathConstants"]
     },
     {
       "id": "device",
@@ -138,11 +139,11 @@
   ],
   "summary": {
     "clauses": 13,
-    "covered": 11,
-    "partial": 2,
+    "covered": 12,
+    "partial": 1,
     "unmapped": 0,
-    "open_gap_tests": 1,
+    "open_gap_tests": 0,
     "open_evidence_gaps": 1,
-    "execution_note": "RequiredFoldersAreUnderProjectRootAndUnique, ScaffoldingTwiceReusesEveryFolderAndCreatesNothingNew, ValidateReportsMissingFoldersScenesAndMarkerWithStableCodes, the three rig repair tests, UnresolvedMemberIsReportedOncePerKeyUntilReset, and MissingGrabInteractableWarnsOncePerComponent have not executed in a Unity Editor; the map records authored coverage, not results."
+    "execution_note": "RequiredFoldersAreUnderProjectRootAndUnique, ScaffoldingTwiceReusesEveryFolderAndCreatesNothingNew, ValidateReportsMissingFoldersScenesAndMarkerWithStableCodes, the three rig repair tests, UnresolvedMemberIsReportedOncePerKeyUntilReset, MissingGrabInteractableWarnsOncePerComponent, InitializeSandboxResetsStaleKeysAndWarnsOnceWhenAKeyWasReported, InitializeSandboxLogsCleanSuccessWhenNoKeyWasReported, and DefaultOptionsMatchTheFixedProjectPathConstants have not executed in a Unity Editor; the map records authored coverage, not results."
   }
 }

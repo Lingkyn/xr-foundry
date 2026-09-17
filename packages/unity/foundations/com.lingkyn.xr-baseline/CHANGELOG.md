@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+- Closed the `Initialize Sandbox` unresolved-warning clause (XB-06) with a
+  root-injectable seam. The Editor assembly gains the internal
+  `SandboxInitializationOptions` (project root, scene path, `NewSceneMode`, save
+  flag, rig source resolver) and `VrBaselineProjectLayout` (every generated path
+  derived from one root; `Default` reproduces the fixed `Assets/_Project`
+  constants), plus internal overloads on `XrBaselineMenu.InitializeSandbox`,
+  `VrBaselineConfigAccess`, `VrBaselineAssetsSetup`, `VrBaselineAssetFactory`,
+  `VrBaselineScenePlacer`, `VrBaselineEnclosureSetup`,
+  `VrBaselineScaleReferenceSetup`, `XrPrefabFactory`, and `GenericXrRigFactory`.
+  Every existing public signature delegates to the default layout, and the menu
+  item calls `InitializeSandbox(SandboxInitializationOptions.Default)`, so the
+  user-facing behaviour, paths, and log lines are unchanged. The Editor assembly
+  now declares `InternalsVisibleTo("Lingkyn.XrBaseline.Editor.Tests")` in
+  `Editor/AssemblyInfo.cs`, matching the runtime assembly. Added three EditMode
+  tests in
+  `XrBaselineSandboxInitializationTests`:
+  `InitializeSandboxResetsStaleKeysAndWarnsOnceWhenAKeyWasReported` (a stale
+  pre-seeded key is gone before the injected resolver runs, the resolver's
+  reported key survives, and exactly one `xr_baseline_initialized_with_unresolved`
+  line ends the run), `InitializeSandboxLogsCleanSuccessWhenNoKeyWasReported`
+  (one `xr_baseline_initialized` line, no unresolved line), and
+  `DefaultOptionsMatchTheFixedProjectPathConstants`. The tests run the whole
+  pipeline against a disposable `Assets/__XrBaselineTests_<guid>` root and an
+  additive scene, deleted in `TearDown`. Reading the source while wiring the
+  seam showed that a missing XRI Starter Assets rig source logs a plain
+  `xr_baseline:` warning without reporting a diagnostics key, so that state
+  alone still ends in `xr_baseline_initialized`; the tests therefore inject a
+  resolver that reports through `XrBaselineDiagnostics.Unresolved`, and the
+  rig-source behaviour is left unchanged. The test assembly now holds nine
+  tests. All C# in this change is authored and has not been compiled or executed
+  in a Unity Editor.
 - Added the EditMode test `MissingGrabInteractableWarnsOncePerComponent` for the
   `GrabbableHoverVisual` once-per-component warning clause (XB-07). The runtime
   component gains an internal `TryResolveGrabInteractable()` seam that re-runs the

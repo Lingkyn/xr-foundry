@@ -16,16 +16,20 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
         const string InteractionManagerTypeName =
             "UnityEngine.XR.Interaction.Toolkit.XRInteractionManager, Unity.XR.Interaction.Toolkit";
 
-        public static void PlaceGreybox(Scene scene, Transform sceneRoot, VrBaselineConfig config = null)
+        public static void PlaceGreybox(Scene scene, Transform sceneRoot, VrBaselineConfig config = null) =>
+            PlaceGreybox(scene, sceneRoot, config, VrBaselineProjectLayout.Default);
+
+        /// <summary>Same as <see cref="PlaceGreybox(Scene, Transform, VrBaselineConfig)"/> under an injected project layout.</summary>
+        internal static void PlaceGreybox(Scene scene, Transform sceneRoot, VrBaselineConfig config, VrBaselineProjectLayout layout)
         {
             EnsureInteractionManager(scene, sceneRoot);
             var environment = sceneRoot.Find("_World/Environment");
-            EnsureFloor(environment);
-            EnsureGrabbableCube(sceneRoot, config);
+            EnsureFloor(environment, layout);
+            EnsureGrabbableCube(sceneRoot, config, layout);
             if (environment != null)
             {
-                VrBaselineEnclosureSetup.EnsureEnclosure(environment);
-                VrBaselineScaleReferenceSetup.EnsureScaleReference(environment);
+                VrBaselineEnclosureSetup.EnsureEnclosure(environment, layout);
+                VrBaselineScaleReferenceSetup.EnsureScaleReference(environment, layout);
             }
 
             VrBaselineSandboxLightingSetup.Apply(scene, sceneRoot, config);
@@ -52,7 +56,7 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             managerGo.AddComponent(managerType);
         }
 
-        static void EnsureFloor(Transform environment)
+        static void EnsureFloor(Transform environment, VrBaselineProjectLayout layout)
         {
             if (environment == null) return;
 
@@ -62,10 +66,10 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
                 UnityEngine.Object.DestroyImmediate(legacyFloor.gameObject);
             }
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineVisualPaths.FloorPlanePrefab);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(layout.FloorPlanePrefab);
             if (prefab == null)
             {
-                XrBaselineDiagnostics.Unresolved("sandbox.floor-prefab", $"the floor prefab is missing at {VrBaselineVisualPaths.FloorPlanePrefab}; no floor was placed.");
+                XrBaselineDiagnostics.Unresolved("sandbox.floor-prefab", $"the floor prefab is missing at {layout.FloorPlanePrefab}; no floor was placed.");
                 return;
             }
 
@@ -83,7 +87,7 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
             SyncPrefabScale(instance.transform, prefab);
         }
 
-        static void EnsureGrabbableCube(Transform sceneRoot, VrBaselineConfig config)
+        static void EnsureGrabbableCube(Transform sceneRoot, VrBaselineConfig config, VrBaselineProjectLayout layout)
         {
             var interactables = sceneRoot.Find("_Gameplay/Interactables");
             if (interactables == null)
@@ -92,10 +96,10 @@ namespace Lingkyn.Unity.XrBaseline.Editor.SceneSetup
                 return;
             }
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VrBaselineVisualPaths.GrabbableCubePrefab);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(layout.GrabbableCubePrefab);
             if (prefab == null)
             {
-                XrBaselineDiagnostics.Unresolved("sandbox.grabbable-cube-prefab", $"the grabbable cube prefab is missing at {VrBaselineVisualPaths.GrabbableCubePrefab}; no cube was placed.");
+                XrBaselineDiagnostics.Unresolved("sandbox.grabbable-cube-prefab", $"the grabbable cube prefab is missing at {layout.GrabbableCubePrefab}; no cube was placed.");
                 return;
             }
 

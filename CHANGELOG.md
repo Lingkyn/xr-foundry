@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Inventory UI Toolkit: added the injectable `InventoryUiToolkitSkin` seam
+  (LESSON-007) mapping the shared design-language tokens to inline styles on the
+  document view, with a default skin carrying the canonical values, back-compat
+  when no skin is injected, propagation to later-created slots, and two EditMode
+  tests. No version, maturity, or evidence change; the LESSON-007 inventory
+  disposition stays a gap until PR #81's UGUI seam lands.
 - Foundations: closed three of the four open verification clauses with
   non-breaking refactors and tests. Project Initializer gained root-parameterized
   scaffold and validation entry points with a disposable-root test helper and

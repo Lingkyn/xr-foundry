@@ -11,9 +11,11 @@ working adapter.
 ## Ownership
 
 - Presentation owns immutable view state, semantic intents, and presenter policy.
-- This package owns UI Toolkit element creation, state classes, and event binding.
-- A consumer owns styling overrides, localization, item display data, and scene
-  composition.
+- This package owns UI Toolkit element creation, state classes, event binding,
+  and the `InventoryUiToolkitSkin` seam that maps the shared design-language
+  tokens onto the tree through `InventoryDocumentView.ApplySkin`.
+- A consumer owns skin assets, further styling overrides, localization, item
+  display data, and scene composition.
 - The optional XR UI Toolkit package owns world-space/XRI validation.
 
 Call `SetInteractionEnabled(false)` to leave content readable while suppressing

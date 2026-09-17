@@ -5,6 +5,7 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- `tests/test_repository_contract.py` now removes each `docs/validation/evidence/device-receipt-test-*` fixture directory when its test finishes (via `addCleanup`), keeps an `atexit` fallback for helpers used outside a `TestCase`, and sweeps stale fixture directories older than one hour at module setup so interrupted or concurrent runs no longer leave untracked evidence directories behind.
 - Added public API surface inventories for the Persistence (39 public types),
   Settings (52), and Interaction (65) families under
   `docs/standards/<family>/api-surface.md`, derived from the Runtime sources, as

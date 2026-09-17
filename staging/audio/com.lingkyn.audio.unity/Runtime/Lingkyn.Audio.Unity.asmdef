@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.Audio.Unity",
+  "rootNamespace": "Lingkyn.Audio.Unity",
+  "references": [
+    "Lingkyn.Audio.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

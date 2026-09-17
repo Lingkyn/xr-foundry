@@ -53,8 +53,10 @@ an operating mandate works the first unblocked item without waiting to be asked:
 
 7. **Audio events** (`NEXT-AUDIO-EVENTS` in the queue): engine-light audio event
    identity, mix and snapshot state, and spatial attachment intents with a thin
-   Unity AudioMixer adapter. It enters the admission gate after Localization
-   leaves staging.
+   Unity AudioMixer adapter. Both layers are staged under
+   [`staging/audio/`](staging/audio/README.md) with 53 authored, unexecuted tests
+   mapped in `docs/standards/audio/coverage-map.json`. It enters the admission
+   gate after Localization leaves staging.
 
 Families beyond these enter only through the queue with their own admission
 record; the roadmap does not pre-announce them.

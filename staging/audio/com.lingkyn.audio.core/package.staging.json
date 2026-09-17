@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.audio.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Audio Core",
+  "description": "Engine-light audio intent substrate: stable event, bus, snapshot, anchor, and parameter identity with a canonical form, an immutable declared mix graph, typed parameter contracts (float range, bool, enumerated set) with fail-closed rejection, spatial attachment intents that reference an anchor id, deterministic immutable audio state produced by intent sequences, and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "MixGraph",
+      "description": "Domain-only mix graph, parameter contracts, anchor attachment, snapshot transition, and a replayed intent sequence; needs no scene.",
+      "path": "Samples~/MixGraph"
+    }
+  ]
+}

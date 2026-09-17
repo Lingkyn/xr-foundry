@@ -1,6 +1,7 @@
 # Audio events package-family standard
 
-Status: proposal in the source-gate queue (`NEXT-AUDIO-EVENTS`); no code exists yet
+Status: proposal in the source-gate queue (`NEXT-AUDIO-EVENTS`); Core and Unity adapter
+implementation staged in [`staging/audio/`](../../../staging/audio/README.md)
 
 This standard defines reusable audio-intent mechanics: stable audio event identity,
 bus and snapshot state, typed parameter contracts, and spatial attachment intents,
@@ -57,14 +58,27 @@ this family does not yet define.
 | LESSON-002 migration path | deferred | No release exists yet; the first release records its compatibility policy |
 | LESSON-003 single-workstation gate | adopted | Tests run in `run_unity_gates.py` and the consumer workflow like every family |
 | LESSON-004 by-name resolution fails closed | adopted | The Core resolves nothing by name; the Unity adapter resolves exposed parameters and snapshots by name and must report a missing mixer, parameter, or snapshot explicitly |
-| LESSON-005 clause coverage | deferred | No tests exist yet; the blueprint adds a coverage map that maps every contract clause to named tests before a scaffold is generated |
+| LESSON-005 clause coverage | deferred | [`coverage-map.json`](coverage-map.json) maps every Core and Unity adapter clause to named staged tests (16 of 17 covered, AU-02 partial); the tests are authored and unexecuted, so the disposition stays deferred until the first Unity gate runs them |
 | LESSON-006 sibling pinning | deferred | Applies at the first Git-consumer validation |
 | LESSON-007 skin seam | not_applicable | The family renders nothing; mixing and authoring UI is excluded |
 | LESSON-008 version bump is a verification claim | adopted | No package version exists; the first scaffold enters at 0.1.0 and stays there until its first verified profile |
 
+## Staged implementation
+
+The first implementation of both layers lives in
+[`staging/audio/`](../../../staging/audio/README.md) as staging material, not a
+live package: `com.lingkyn.audio.core` (identity, mix graph, parameter contracts,
+intents, immutable state, results) and `com.lingkyn.audio.unity` (mixer binding
+asset, binding validation, mixer surface seam, runtime).
+[`coverage-map.json`](coverage-map.json) maps every Core and Unity adapter gate
+clause of the verification contract to named tests. All of that code and every test
+is authored and unexecuted: nothing has compiled or run until the first Unity gate
+records a receipt, and the coverage map is a mapping, not execution evidence.
+
 See also:
 
 - [`verification-contract.md`](verification-contract.md)
+- [`coverage-map.json`](coverage-map.json)
 - [`source-manifest.json`](source-manifest.json)
 - [`admission.draft.json`](admission.draft.json)
 - [`next-batch.json`](../../foundry/queue/next-batch.json) queue entry and the

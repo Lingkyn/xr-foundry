@@ -17,8 +17,11 @@ evidence commit. The code is written and tested on paper; it has not compiled.
 | --- | --- |
 | `com.lingkyn.localization.core/Runtime/LocalizationCore.cs` | Engine-light Core: `LocaleId`, `MessageId`, `MessageTemplate`, `CldrPluralRules`, `MessageTable`, `LocalizationCatalog`, `LocalizationValidator`, results and diagnostics |
 | `com.lingkyn.localization.core/Tests/Editor/LocalizationCoreContractTests.cs` | 28 EditMode tests mapped in `docs/standards/localization/coverage-map.json` |
+| `com.lingkyn.localization.core/Samples~/MessageCatalog/` | Domain-only sample: tables, catalog, plural formatting, fallback, validation; no scene |
 | `com.lingkyn.localization.unity/Runtime/LocalizationUnity.cs` | Unity adapter: `MessageTableAsset`, `LocalizationCatalogAsset`, `LocalizationAuthoringValidation` with stable codes, `SystemLocaleMap`, `LocalizationRuntime` |
+| `com.lingkyn.localization.unity/Runtime/UnityLocalizationBridge.cs` | Optional, fail-closed bridge to the Unity Localization package: presence via the `LINGKYN_UNITY_LOCALIZATION` version define, string-table data through a consumer-filled delegate seam, stable `bridge.*` codes |
 | `com.lingkyn.localization.unity/Tests/Editor/LocalizationUnityAuthoringTests.cs` | 7 EditMode tests for the adapter gate |
+| `com.lingkyn.localization.unity/Tests/Editor/UnityLocalizationBridgeTests.cs` | 4 EditMode tests for the bridge; each passes with or without the package installed |
 | `docs/standards/localization/` | Standard README, source manifest, verification contract, coverage map, admission and blueprint drafts |
 
 ## How it moves into the tree

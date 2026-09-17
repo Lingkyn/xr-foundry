@@ -46,17 +46,17 @@
         {"id": "LU-05", "clause": "the SystemLanguage map is explicit and fails closed for Unknown", "coverage": "covered", "tests": ["SystemLanguageMapIsExplicitAndFailsClosed"], "missing": []},
         {"id": "LU-06", "clause": "the runtime raises LocaleChanged once per actual change and formats in the new locale", "coverage": "covered", "tests": ["RuntimeRaisesLocaleChangedOnceAndFormatsInNewLocale"], "missing": []},
         {"id": "LU-07", "clause": "the runtime reports whether a locale has a direct table and whether a message used fallback", "coverage": "covered", "tests": ["RuntimeReportsFallbackWhenLocaleHasNoDirectTable"], "missing": []},
-        {"id": "LU-08", "clause": "a bridge to the Unity Localization package reports the package's absence instead of silently ignoring it (LESSON-004)", "coverage": "partial", "tests": [], "missing": ["the bridge itself is not implemented; when it is, a test that resolves the package by assembly name and asserts an explicit diagnostic when it is absent"]}
+        {"id": "LU-08", "clause": "a bridge to the Unity Localization package reports the package's absence instead of silently ignoring it (LESSON-004)", "coverage": "covered", "tests": ["BridgeFailsClosedWithoutPackageAndNeverInvokesReader", "BridgeReportsMissingTableWhenReaderReturnsNothing", "BridgeBuildsOneTablePerLocaleFromReaderData", "BridgeRejectsInvalidLocaleOrEntryWithStableCode"], "missing": []}
       ],
       "additional_tests_outside_clauses": []
     }
   ],
   "summary": {
     "clauses": 21,
-    "covered": 20,
-    "partial": 1,
+    "covered": 21,
+    "partial": 0,
     "unmapped": 0,
-    "open_gap_tests": 1,
-    "execution_note": "All 35 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. LU-08 is unimplemented by design until the Unity Localization bridge is scoped."
+    "open_gap_tests": 0,
+    "execution_note": "All 39 tests are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. The LU-08 bridge tests branch on UnityLocalizationBridge.IsPackagePresent, so the package-absent assertions execute only in a project without com.unity.localization and the import assertions only in one with it; a full pass needs one run of each configuration."
   }
 }

@@ -10,5 +10,11 @@
     "url": "https://github.com/Lingkyn/xr-foundry"
   },
   "dependencies": {},
-  "samples": []
+  "samples": [
+    {
+      "displayName": "MessageCatalog",
+      "description": "Domain-only tables, catalog, plural formatting, fallback, and validation example; needs no scene.",
+      "path": "Samples~/MessageCatalog"
+    }
+  ]
 }

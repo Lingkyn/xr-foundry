@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Localization staging: added the optional, fail-closed bridge to the Unity
+  Localization package (presence via a `versionDefines` guard, string-table data
+  through a consumer-filled delegate seam, stable `bridge.*` codes) with four
+  EditMode tests that assert the opposite expectation in each configuration, and
+  a domain-only `MessageCatalog` sample. The Localization coverage map is now 21
+  of 21 clauses covered across 39 authored, unexecuted tests.
 - Drafted the Audio family standard under `docs/standards/audio/`: README with
   capability and evidence boundaries and lessons dispositions, source manifest
   (eight sources, URLs marked for human confirmation because the authoring

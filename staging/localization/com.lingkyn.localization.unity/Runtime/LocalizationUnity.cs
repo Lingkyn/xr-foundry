@@ -8,8 +8,8 @@ namespace Lingkyn.Localization.Unity
     // Thin Unity adapter for the Localization Core: ScriptableObject authoring of
     // message tables and catalogs with fail-closed validation and stable codes, an
     // explicit SystemLanguage-to-locale map, and a plain runtime that owns the
-    // current locale. No dependency on the Unity Localization package; a bridge to
-    // its string tables is a separate, later seam.
+    // current locale. No link to the Unity Localization package; the optional,
+    // fail-closed bridge to its string tables lives in UnityLocalizationBridge.cs.
 
     [Serializable]
     public sealed class MessageEntry

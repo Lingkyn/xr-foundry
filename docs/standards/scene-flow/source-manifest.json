@@ -1,0 +1,327 @@
+{
+  "schema": "xr-foundry.scene_flow_source_manifest.v1",
+  "scope": "Engine-light scene set and scene identity, a declared scene graph with one active scene per set, load, unload, and switch intents applied to an immutable flow state through a transition state machine (idle, fading out, loading, holding, fading in) with typed fade and hold durations, stable failure codes, error-recovery to a declared fallback set, and deterministic replay, with a thin Unity additive scene-loading adapter planned separately",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths and version pins, before the admission record is signed.",
+  "sources": [
+    {
+      "id": "unity-scenemanager-scripting-reference",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/SceneManagement.SceneManager.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity 6000.3 is the editor version pinned by this repository's compatibility profiles and the SceneManager scripting reference ships with the editor; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary: the engine scene-management entry point that the Unity adapter binds to and that the Core must not depend on",
+      "admitted_claims": [
+        "Scenes are loaded by name or by build index in either single mode, which replaces every loaded scene, or additive mode, which keeps the loaded scenes and adds another",
+        "Exactly one loaded scene is the active scene, which receives newly instantiated objects and supplies the lighting settings; the active scene is set explicitly by script",
+        "The engine reports scene loaded, scene unloaded, and active-scene-changed through events rather than through a scene object owned by the caller",
+        "A scene that is not in the build scene list cannot be loaded by name; the engine reports this through an invalid scene handle or an error rather than an exception at the call site"
+      ],
+      "excluded_uses": [
+        "Core does not reference SceneManager, Scene, LoadSceneMode, AsyncOperation, or any other engine type",
+        "No claim that the engine's event order, activation behaviour, or single-mode unloading behaves as documented without a compatibility profile and an EditMode run on that exact tuple"
+      ]
+    },
+    {
+      "id": "unity-loadsceneasync",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/SceneManagement.SceneManager.LoadSceneAsync.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Shipped scripting-reference page for the pinned Unity 6000.3 editor; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the loading phase: a load is an asynchronous operation with observable progress and completion that the adapter reports back to the Core as an intent",
+      "admitted_claims": [
+        "An asynchronous load returns an operation object whose progress and completion are observed over subsequent frames rather than inside the call",
+        "Additive asynchronous loading is the documented way to load a scene while another remains loaded and rendered",
+        "Loading by name and loading by build index are alternative overloads that resolve against the same build scene list"
+      ],
+      "excluded_uses": [
+        "Core never waits on an operation; completion and failure arrive as explicit intents from the adapter",
+        "No claim about load duration, hitching, or frame time on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-allowsceneactivation",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/AsyncOperation-allowSceneActivation.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Shipped scripting-reference page for the pinned Unity 6000.3 editor; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the holding phase: the engine can finish loading a scene and hold it before activation so a caller can complete a fade or a minimum hold before the scene becomes visible",
+      "admitted_claims": [
+        "An asynchronous scene load can be held before activation by a flag on the operation, and the operation reports a progress value just below completion until activation is allowed",
+        "Activation is a separate, caller-controlled step from loading, which is what makes a fade-then-reveal sequence possible",
+        "Holding activation blocks subsequent scene operations queued behind it until the held operation activates"
+      ],
+      "excluded_uses": [
+        "Core models the hold as a typed duration and a state, not as an engine flag",
+        "No claim about how long activation itself takes or whether it hitches on any device"
+      ]
+    },
+    {
+      "id": "unity-unloadsceneasync",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/SceneManagement.SceneManager.UnloadSceneAsync.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Shipped scripting-reference page for the pinned Unity 6000.3 editor; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the unload intent: unloading is asynchronous, applies to a loaded scene only, and the engine refuses to unload the last loaded scene",
+      "admitted_claims": [
+        "Unloading a scene is an asynchronous operation that destroys the scene's objects and reports completion through the operation",
+        "Unloading a scene that is not loaded is an error reported by the engine rather than a silent no-op",
+        "The last loaded scene cannot be unloaded, so a switch must load the destination before unloading the origin"
+      ],
+      "excluded_uses": [
+        "Core represents the unload as an intent against its own loaded-scene record and reports `scene.not_loaded` itself, never by catching an engine error",
+        "No claim about memory release, asset unloading, or garbage collection timing"
+      ]
+    },
+    {
+      "id": "unity-setactivescene",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/SceneManagement.SceneManager.SetActiveScene.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Shipped scripting-reference page for the pinned Unity 6000.3 editor; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for the one-active-scene-per-set rule: the engine requires the active scene to be loaded and exposes a return value for a refused change",
+      "admitted_claims": [
+        "The active scene can only be set to a scene that is already loaded, and the call returns whether the change was applied",
+        "The active scene determines where new objects are instantiated and which scene's lighting and rendering settings apply"
+      ],
+      "excluded_uses": [
+        "Core validates that every set declares exactly one member scene as active (`active.missing`) at graph construction, before any engine call",
+        "No claim about lighting or rendering settings behaviour after activation"
+      ]
+    },
+    {
+      "id": "unity-multi-scene-editing",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/MultiSceneEditing.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity Manual page for the pinned Unity 6000.3 editor describing multi-scene workflows; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Evidence that a running application is a set of concurrently loaded scenes with one active scene, which is the model the Core's scene set formalises",
+      "admitted_claims": [
+        "Several scenes can be open at once in the editor and at runtime, and the same additive model applies to both",
+        "One scene is marked active at any time and settings such as lighting come from it",
+        "Cross-scene references are not serialized, so scenes in a set communicate through runtime-constructed references rather than through saved links"
+      ],
+      "excluded_uses": [
+        "No editor workflow, editor API, or scene template is depended upon by the Core or the adapter",
+        "No claim that a given set of scenes composes correctly for any product without that product's own validation"
+      ]
+    },
+    {
+      "id": "unity-build-profile-scene-list",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/build-profiles-scene-list.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity Manual page for the pinned Unity 6000.3 editor describing the build profile scene list that replaced the older build settings scene list; page path and version pin to be confirmed by a person, including whether the pinned editor exposes this list through build profiles or the shared scene list; not fetched from this environment",
+      "admitted_role": "Adapter boundary for `scene.unregistered`: a scene loadable by name must be registered in the build scene list, and registration is a project setting outside the Core",
+      "admitted_claims": [
+        "The scenes included in a build and loadable by name or index are declared in a scene list owned by the project's build configuration",
+        "The order in the scene list defines the build index, and the first scene is the one loaded at start",
+        "A scene present in the project but absent from the scene list is not loadable in a player"
+      ],
+      "excluded_uses": [
+        "Core has no knowledge of build indices, build profiles, or asset paths; the adapter resolves a scene id to a registered scene and fails closed when it cannot",
+        "No claim about which scene list API is current on any editor version other than the pinned one"
+      ]
+    },
+    {
+      "id": "unity-dontdestroyonload",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Object.DontDestroyOnLoad.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Shipped scripting-reference page for the pinned Unity 6000.3 editor; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Negative boundary: the engine's mechanism for objects that survive a single-mode load is a special scene that the adapter must not use as a discovery or ownership mechanism",
+      "admitted_claims": [
+        "Objects marked to survive scene loads are moved to a dedicated engine-managed scene and are not destroyed when another scene loads in single mode",
+        "The mechanism is a per-object flag and creates no registry, lookup, or ownership relationship"
+      ],
+      "excluded_uses": [
+        "The adapter never discovers its runtime, graph, fade surface, or loader through the persistent scene, a static instance, or a scene search",
+        "Additive loading with an explicitly loaded persistent set is the family's model; the survive-load flag is a consumer choice outside the adapter"
+      ]
+    },
+    {
+      "id": "unity-addressables-scene-loading",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/load-addressable-assets/load-scenes.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no package code copied",
+      "maintenance_evidence": "Maintained package manual for the Addressables package; the package is not in any compatibility profile of this repository, so the version, page path, and whether the pinned editor tuple resolves it are to be confirmed by a person before an optional sibling binding is planned; not fetched from this environment",
+      "admitted_role": "Optional second adapter boundary: a scene may be loaded by an addressable key instead of the build scene list, with the same additive mode, activation hold, and asynchronous completion shape",
+      "admitted_claims": [
+        "An addressable scene is loaded by key through an asynchronous handle that supports additive mode and deferred activation like the engine scene manager",
+        "Unloading an addressable scene releases the handle rather than calling the engine unload directly",
+        "A key that is not addressable fails through the handle's status rather than at the call site"
+      ],
+      "excluded_uses": [
+        "No Addressables type enters the Core or the primary Unity adapter; an addressable binding is a separately validated sibling adapter with its own compatibility profile",
+        "No claim that addressable and build-list loading behave identically on any device"
+      ]
+    },
+    {
+      "id": "unity-netcode-scene-events",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs-multiplayer.unity3d.com/netcode/current/basics/scenemanagement/scene-events/",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no package code copied",
+      "maintenance_evidence": "Maintained package documentation for the engine's networking scene manager; the package is not in any compatibility profile of this repository and is admitted for its event-lifecycle model only; page path and version to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Independent evidence from a second engine subsystem that scene flow is an explicit event lifecycle (load, unload, synchronize, load complete, unload complete) with begin and end events per transition rather than an implicit state",
+      "admitted_claims": [
+        "Scene loading and unloading are exposed as distinct named events with separate begin and complete notifications",
+        "Additive scene loading is supported through the same event lifecycle as single-mode loading",
+        "Scene event notifications carry the scene identity and the operation kind rather than an opaque completion"
+      ],
+      "excluded_uses": [
+        "No networking type, synchronisation rule, or authority model is depended upon; the Core is single-process",
+        "No claim about networked scene synchronisation or ordering across peers"
+      ]
+    },
+    {
+      "id": "meta-vrc-quest-functional",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/resources/publish-quest-req/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon Virtual Reality Check requirements that a store submission is reviewed against; page path and the exact requirement identifiers for loading and tracking behaviour to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Platform evidence that a transition must keep the person oriented with a visible, head-tracked loading state rather than a frozen frame or an unresponsive black view",
+      "admitted_claims": [
+        "An application is expected to present a loading state that remains head-tracked instead of freezing rendering or leaving an unexplained black view during a long load",
+        "Loss of tracking or unresponsiveness during a transition is reviewed as a functional defect rather than an accepted cost of loading"
+      ],
+      "excluded_uses": [
+        "No numeric time limit, review outcome, or certification status is transferred into the Core",
+        "No claim that a fade and hold sequence satisfies a platform review without that platform's own review and a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-comfort-design-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/comfort/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer design guidance that this repository already cites for interaction and locomotion references; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Platform comfort evidence that a viewpoint change between scenes should be mediated by a fade rather than an instantaneous cut, and that the fade is a comfort device with an explicit duration",
+      "admitted_claims": [
+        "Fading to a neutral colour before an abrupt viewpoint change and fading back afterwards is a recognised comfort technique",
+        "Sudden, unexplained changes of the whole environment are discouraged"
+      ],
+      "excluded_uses": [
+        "No fade duration, colour, or curve value is transferred as a default into the Core; they are typed options a consumer sets",
+        "No claim that a given fade or hold is comfortable for any person or device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "pico-design-guidelines-comfort",
+      "kind": "official_platform_design_guidance",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/design-guidelines/comfort/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO developer design guidance that this repository already cites for interaction and locomotion references; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Second-platform evidence that scene transitions should fade rather than cut, that a loading state must stay responsive to head movement, and that the person should be told a transition is happening",
+      "admitted_claims": [
+        "Environment changes are expected to be signalled and eased rather than instantaneous",
+        "A loading or waiting state should keep rendering a head-tracked view and communicate progress or waiting",
+        "Abrupt viewpoint changes and frozen frames are listed as discomfort causes"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, sample, or splash mechanism is depended upon by the Core or the adapter",
+        "No claim about PICO device behaviour without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "apple-hig-loading",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/loading",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Human Interface Guidelines Loading page; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Third-platform evidence that a loading state is a designed state with feedback, not an absence of content, and that a minimum meaningful hold is preferable to a flicker",
+      "admitted_claims": [
+        "People should be shown that content is loading, with progress when it can be known, instead of a blank or static view",
+        "Showing loading feedback for too short a time can read as a flicker; a transition should be designed rather than incidental"
+      ],
+      "excluded_uses": [
+        "Apple guidance is not a Unity implementation prescription and grants no device support claim",
+        "No numeric duration or visual style is transferred as a Core default"
+      ]
+    },
+    {
+      "id": "apple-hig-immersive-experiences",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/immersive-experiences",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current Human Interface Guidelines immersive-experiences page, already admitted by the Locomotion family source manifest; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Evidence that entering, leaving, and changing an immersive environment are gradual transitions that the person controls and that keep a stable frame of reference",
+      "admitted_claims": [
+        "People should stay in control of how immersive an experience is and be able to leave it",
+        "A stable frame of reference and gradual transitions are preferred over abrupt viewpoint changes"
+      ],
+      "excluded_uses": [
+        "No visionOS API, immersion style enumeration, or scene type is depended upon",
+        "No claim that a transition is appropriate on any Apple device without device evidence"
+      ]
+    },
+    {
+      "id": "unity-open-project-1",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Unity Technologies (open project)",
+      "url": "https://github.com/UnityTechnologies/open-project-1",
+      "license_or_terms": "Permissive open-source licence to be confirmed by a person; architecture facts only, no code copied",
+      "maintenance_evidence": "The engine vendor's public open project with a complete scene-loading system (persistent managers scene, additive location and menu scenes, loading screen, fade-in and fade-out) and tagged releases; the project is archived or in maintenance mode and its exact state, licence, and an immutable review ref are to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent implementation evidence that a shipped scene flow is a persistent set plus additively loaded content sets, a scene-loader that owns the transition sequence (fade out, unload previous, load next, hold on a loading screen, activate, fade in), and scene identities held as assets rather than strings",
+      "admitted_claims": [
+        "A persistent managers scene stays loaded while gameplay and menu scenes are loaded and unloaded additively around it",
+        "One scene loader owns the transition sequence, which fades out, shows a loading screen, unloads the previous scene, loads the next scene, and fades back in",
+        "Scenes are referenced through scene data assets rather than raw strings, and a load request names the destination and whether to show the loading screen and fade"
+      ],
+      "excluded_uses": [
+        "No scriptable-object event channel, loader script, or scene asset from the project is copied; the Core has no asset type",
+        "If the project is archived at review time it remains admitted as shipped evidence of the pattern but not as evidence of current maintenance"
+      ]
+    },
+    {
+      "id": "eflatun-scenereference",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Eflatun.SceneReference maintainers",
+      "url": "https://github.com/starikcetin/Eflatun.SceneReference",
+      "license_or_terms": "MIT; architecture facts only, no code copied",
+      "maintenance_evidence": "Open-source Unity scene-reference library with tagged releases, a package registry listing, and a documented build-settings validation feature; adoption count, release cadence, and an immutable review ref to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent Unity-side evidence that a scene reference must be validated against the build scene list at edit time and at load time, and that an unregistered or disabled scene is an explicit, typed error rather than a silent load failure",
+      "admitted_claims": [
+        "A scene reference resolves a stable scene identity to a build index and path and exposes whether the scene is in the build scene list and enabled",
+        "Resolving a reference whose scene is missing from the build list, disabled, or deleted raises an explicit typed exception with a distinct state per cause",
+        "Validation is available both in the editor inspector and at runtime so that the failure is surfaced before the load call"
+      ],
+      "excluded_uses": [
+        "No serialised reference type, inspector drawer, or exception type is depended upon; the adapter models registration as its own `scene.unregistered` diagnostic",
+        "Maintenance must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "locomotion-family-transition-boundary",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/locomotion/README.md",
+      "reason": "The Locomotion family owns teleport arrival fades and comfort policy for movement inside a scene; this family owns fades between scene sets, and the two must not duplicate a fade surface or a comfort option"
+    },
+    {
+      "id": "persistence-family-boundary",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/persistence/README.md",
+      "reason": "Which set is loaded at start and what a consumer restores after a switch belong to the consumer and the Persistence family; this family records loaded and active state only for the current process"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority",
+    "The first implementation is a scene set identity, scene graph, transition state machine, and immutable flow-state substrate, not a loading screen, a fade renderer, an asset bundle system, or a save system",
+    "Load time, hitching, frame timing, comfort during a transition, and any headset behaviour are device claims that require a Device Lab receipt, never an EditMode result or a source citation"
+  ]
+}

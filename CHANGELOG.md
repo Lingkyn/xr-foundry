@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Scene flow source gate (WI-003): `docs/standards/scene-flow/` gains a source
+  manifest (seventeen public sources, URLs not fetched and marked for a person to
+  confirm), a verification contract (Core gate with the transition state machine
+  and fallback recovery, Unity adapter gate with the `scene.unregistered`
+  diagnostic, claim ceiling), a README with a disposition for every lesson, and an
+  admission draft; `NEXT-SCENE-FLOW` joins the source-gate queue as a proposal
+  with no package ids.
 - Locomotion and comfort source gate (WI-001): `docs/standards/locomotion/`
   gains a source manifest (twelve public sources, URLs not fetched and marked for
   a person to confirm), a verification contract (Core gate, Unity adapter gate,

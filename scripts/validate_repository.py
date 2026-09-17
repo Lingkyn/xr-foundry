@@ -6382,6 +6382,403 @@ def validate_foundation_assembly_references(root: Path) -> list[str]:
     return errors
 
 
+COVERAGE_MAP_GLOB = "docs/standards/*/coverage-map*.json"
+COVERAGE_MAP_SCHEMA_ID = "xr-foundry.verification_coverage_map.v1"
+COVERAGE_MAP_ASSEMBLY_ROOTS = ("packages", "staging")
+COVERAGE_MAP_PACKAGE_MANIFESTS = ("package.json", "package.staging.json")
+COVERAGE_STATES = ("covered", "partial", "unmapped")
+COVERAGE_MAP_ADDITIONAL = "additional_tests_outside_clauses"
+CSHARP_TEST_ATTRIBUTE = re.compile(r"^\s*\[\s*(?:Test|TestCase|UnityTest)\b")
+CSHARP_ATTRIBUTE_LINE = re.compile(r"^\s*\[")
+CSHARP_TEST_METHOD = re.compile(
+    r"(?:(?:public|internal|private|protected|static|async|new|virtual|override)\s+)*"
+    r"(?:void|IEnumerator|System\.Collections\.IEnumerator|Task|Task<[^>]+>)\s+(\w+)\s*\("
+)
+CSHARP_CLASS_NAME = re.compile(r"^\s*(?:(?:public|internal|private|static|sealed|abstract|partial)\s+)*class\s+(\w+)")
+PYTHON_TEST_REFERENCE = re.compile(r"^(?P<file>[\w./-]+\.py)::(?:(?P<class>\w+)::)?(?P<function>test_\w+)$")
+# TEMPORARY ALLOWLIST: self-declared, not yet verified — remove when fixed.
+# Each entry is the exact (coverage map path, error text) pair the rule still
+# produces on the main-tracked map. It suppresses only that pair; a pair that the
+# rule no longer produces is itself reported so the allowlist cannot outlive the fix.
+COVERAGE_MAP_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset(
+    {
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/inventory/coverage-map.json",
+            "gate presentation test_assembly must name exactly one asmdef under packages/ or staging/: "
+            "'Lingkyn.Inventory.Presentation.Editor.Tests plus the UGUI and UI Toolkit test assemblies' matches 0",
+        ),
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/inventory/coverage-map.json",
+            "gate package_and_consumer test_assembly must name exactly one asmdef under packages/ or staging/: "
+            "'repository validation, CI, and exact-consumer receipts rather than package tests' matches 0",
+        ),
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/inventory/coverage-map.json",
+            "gate xr test_assembly must name exactly one asmdef under packages/ or staging/: "
+            "'Lingkyn.Inventory.XR.UGUI.*.Tests and Lingkyn.Inventory.XR.UIToolkit.*.Tests' matches 0",
+        ),
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/inventory/coverage-map.json",
+            "summary.covered does not match the recounted clauses: declared 14, recounted 13",
+        ),
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/inventory/coverage-map.json",
+            "summary.partial does not match the recounted clauses: declared 9, recounted 10",
+        ),
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/inventory/coverage-map.json",
+            "summary.open_gap_tests + open_evidence_gaps must equal the recounted partial + unmapped clauses: "
+            "declared 0 + 9, recounted 10",
+        ),
+    }
+)
+
+
+def csharp_test_methods(folder: Path, root: Path) -> dict[str, list[tuple[str, str]]]:
+    """Return {method: [(relative file, enclosing class)]} for every attributed test under folder.
+
+    A .cs file whose nearest .asmdef ancestor is a different assembly (nested Samples~ or
+    sub-assemblies) belongs to that assembly, not this one, and is skipped.
+    """
+
+    found: dict[str, list[tuple[str, str]]] = {}
+    for source in sorted(folder.rglob("*.cs")):
+        owner = source.parent
+        while owner != folder and not any(owner.glob("*.asmdef")):
+            owner = owner.parent
+        if owner != folder:
+            continue
+        text = read_decodable_text(source)
+        if text is None:
+            continue
+        relative = source.relative_to(root).as_posix()
+        enclosing = ""
+        pending = False
+        for line in text.splitlines():
+            class_match = CSHARP_CLASS_NAME.match(line)
+            if class_match is not None:
+                enclosing = class_match.group(1)
+                pending = False
+                continue
+            if CSHARP_TEST_ATTRIBUTE.match(line) is not None:
+                pending = True
+                inline = CSHARP_TEST_METHOD.search(line)  # `[Test] public void Name()` on one line
+                if inline is not None:
+                    found.setdefault(inline.group(1), []).append((relative, enclosing))
+                    pending = False
+                continue
+            if not pending:
+                continue
+            if CSHARP_ATTRIBUTE_LINE.match(line) is not None or not line.strip():
+                continue
+            method = CSHARP_TEST_METHOD.search(line)
+            if method is not None:
+                found.setdefault(method.group(1), []).append((relative, enclosing))
+            pending = False
+    return found
+
+
+def coverage_map_assembly_index(root: Path) -> dict[str, list[Path]]:
+    """Map every asmdef ``name`` under packages/ and staging/ to the asmdef files declaring it."""
+
+    index: dict[str, list[Path]] = {}
+    for base in COVERAGE_MAP_ASSEMBLY_ROOTS:
+        base_root = root / base
+        if not base_root.is_dir():
+            continue
+        for asmdef_path in sorted(base_root.rglob("*.asmdef")):
+            try:
+                payload = load_json(asmdef_path)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            if isinstance(payload, dict):
+                index.setdefault(str(payload.get("name", "")), []).append(asmdef_path)
+    return index
+
+
+def coverage_map_owning_package(asmdef_path: Path, root: Path) -> str | None:
+    """Return the package id (package.json or package.staging.json name) that owns an asmdef."""
+
+    for ancestor in asmdef_path.parents:
+        for manifest_name in COVERAGE_MAP_PACKAGE_MANIFESTS:
+            manifest_path = ancestor / manifest_name
+            if manifest_path.exists():
+                try:
+                    manifest = load_json(manifest_path)
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    return None
+                return str(manifest.get("name", "")) if isinstance(manifest, dict) else None
+        if ancestor == root:
+            break
+    return None
+
+
+def coverage_map_entry_resolves(
+    entry: str,
+    root: Path,
+    assembly_tests: dict[str, list[tuple[str, str]]] | None,
+    all_tests: dict[str, list[tuple[str, str]]],
+    validator_source: str,
+) -> str | None:
+    """Return None when a coverage-map test entry names something real, else the reason."""
+
+    if entry.startswith("validator:"):
+        function_name = entry[len("validator:") :]
+        if re.search(rf"^def {re.escape(function_name)}\(", validator_source, re.MULTILINE) is None:
+            return f"no function named {function_name} is defined in scripts/validate_repository.py"
+        return None
+    python_match = PYTHON_TEST_REFERENCE.match(entry)
+    if python_match is not None:
+        test_path = safe_repository_path(root, python_match.group("file"))
+        if test_path is None or not test_path.is_file():
+            return f"Python test file does not exist: {python_match.group('file')}"
+        text = read_decodable_text(test_path) or ""
+        class_name = python_match.group("class")
+        if class_name and re.search(rf"^class {re.escape(class_name)}\b", text, re.MULTILINE) is None:
+            return f"no class named {class_name} in {python_match.group('file')}"
+        function_name = python_match.group("function")
+        if re.search(rf"^\s*def {re.escape(function_name)}\(", text, re.MULTILINE) is None:
+            return f"no def {function_name} in {python_match.group('file')}"
+        return None
+    if ":" in entry or "/" in entry or entry.endswith(".py"):
+        return "unrecognised entry form; use <Method>, <Class>.<Method>, <File>.<Method>, validator:<function>, or tests/<file>.py::<Class>::<test>"
+    if "." in entry:
+        qualifier, _, method = entry.rpartition(".")
+        pool = assembly_tests if assembly_tests is not None else all_tests
+        records = pool.get(method, [])
+        for relative, enclosing in records:
+            if enclosing == qualifier or Path(relative).stem == qualifier or Path(relative).name == qualifier:
+                return None
+        if records:
+            return f"{method} exists but not in a class or file named {qualifier}"
+        return f"no [Test]/[TestCase]/[UnityTest] method named {method}"
+    if assembly_tests is not None:
+        if entry in assembly_tests:
+            return None
+        if entry in all_tests:
+            return "no [Test]/[TestCase]/[UnityTest] method with that name under the gate's assembly folder (it exists in " + ", ".join(sorted({record[0] for record in all_tests[entry]})) + ")"
+        return "no [Test]/[TestCase]/[UnityTest] method with that name under the gate's assembly folder"
+    if entry in all_tests:
+        return None
+    return "no [Test]/[TestCase]/[UnityTest] method with that name under packages/ or staging/"
+
+
+def validate_coverage_map_claims(root: Path) -> list[str]:
+    """Machine-check every self-declared verification coverage map against the tree.
+
+    For each docs/standards/*/coverage-map*.json the rule proves that every gate's
+    test_assembly is exactly one real asmdef owned by the declared package_id, that
+    every listed test (C# method, validator:function, or Python test) exists, that the
+    coverage state of each clause agrees with its tests/missing lists, that the
+    summary counts equal a recount, that clause ids are unique, and that no attributed
+    test method in a resolved assembly folder is missing from the map.
+    """
+
+    label_prefix = "coverage map"
+    errors: list[str] = []
+    map_paths = sorted(root.glob(COVERAGE_MAP_GLOB))
+    if not map_paths:
+        return errors
+    assembly_index = coverage_map_assembly_index(root)
+    all_tests: dict[str, list[tuple[str, str]]] = {}
+    for asmdef_paths in assembly_index.values():
+        for asmdef_path in asmdef_paths:
+            for method, records in csharp_test_methods(asmdef_path.parent, root).items():
+                all_tests.setdefault(method, []).extend(records)
+    validator_path = root / "scripts" / "validate_repository.py"
+    validator_source = read_decodable_text(validator_path) if validator_path.exists() else ""
+    validator_source = validator_source or ""
+    produced: set[tuple[str, str]] = set()
+
+    for map_path in map_paths:
+        relative_map = map_path.relative_to(root).as_posix()
+        label = f"{label_prefix} {relative_map}"
+        map_errors: list[str] = []
+
+        def report(message: str) -> None:
+            map_errors.append(message)
+
+        try:
+            payload = load_json(map_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label}: invalid JSON: {error}")
+            continue
+        if not isinstance(payload, dict):
+            errors.append(f"{label}: top level must be an object")
+            continue
+        if payload.get("schema") != COVERAGE_MAP_SCHEMA_ID:
+            report(f"schema must be {COVERAGE_MAP_SCHEMA_ID}")
+        for key in ("contract", "core_gate_map"):
+            value = payload.get(key)
+            if value is not None:
+                resolved = safe_repository_path(root, value)
+                if resolved is None or not resolved.is_file():
+                    report(f"{key} path does not exist: {value}")
+        for source in payload.get("test_sources", []) or []:
+            resolved = safe_repository_path(root, source)
+            if resolved is None or not resolved.is_file():
+                report(f"test_sources path does not exist: {source}")
+        gates = payload.get("gates")
+        if gates is None and isinstance(payload.get("clauses"), list):
+            gates = [
+                {
+                    "id": str(payload.get("package_id") or "clauses"),
+                    "package_id": payload.get("package_id"),
+                    "test_assembly": payload.get("test_assembly"),
+                    "clauses": payload["clauses"],
+                    COVERAGE_MAP_ADDITIONAL: payload.get(COVERAGE_MAP_ADDITIONAL, []),
+                }
+            ]
+        if not isinstance(gates, list):
+            report("gates must be a list (or a flat clauses list)")
+            gates = []
+
+        counts = {"clauses": 0, "covered": 0, "partial": 0, "unmapped": 0}
+        seen_clause_ids: set[str] = set()
+        for gate_index, gate in enumerate(gates):
+            if not isinstance(gate, dict):
+                report(f"gate #{gate_index} must be an object")
+                continue
+            gate_id = str(gate.get("id") or f"#{gate_index}")
+            gate_label = f"gate {gate_id}"
+            clauses = gate.get("clauses")
+            if not isinstance(clauses, list):
+                report(f"{gate_label} clauses must be a list")
+                clauses = []
+            additional = gate.get(COVERAGE_MAP_ADDITIONAL, [])
+            if not isinstance(additional, list):
+                report(f"{gate_label} {COVERAGE_MAP_ADDITIONAL} must be a list")
+                additional = []
+            listed: list[tuple[str, str]] = []
+            for clause in clauses:
+                if not isinstance(clause, dict):
+                    report(f"{gate_label} clause must be an object")
+                    continue
+                clause_id = str(clause.get("id", ""))
+                if not clause_id:
+                    report(f"{gate_label} clause is missing an id")
+                elif clause_id in seen_clause_ids:
+                    report(f"{gate_label} duplicate clause id: {clause_id}")
+                seen_clause_ids.add(clause_id)
+                tests = clause.get("tests")
+                missing = clause.get("missing")
+                if not isinstance(tests, list):
+                    report(f"{gate_label} clause {clause_id} tests must be a list")
+                    tests = []
+                if not isinstance(missing, list):
+                    report(f"{gate_label} clause {clause_id} missing must be a list")
+                    missing = []
+                for entry in tests:
+                    listed.append((clause_id, str(entry)))
+                coverage = clause.get("coverage")
+                counts["clauses"] += 1
+                if coverage not in COVERAGE_STATES:
+                    report(f"{gate_label} clause {clause_id} coverage must be one of {', '.join(COVERAGE_STATES)}: {coverage!r}")
+                    continue
+                counts[str(coverage)] += 1
+                if coverage == "covered" and not tests:
+                    report(f"{gate_label} clause {clause_id} coverage state covered requires a non-empty tests list")
+                if coverage == "covered" and missing:
+                    report(f"{gate_label} clause {clause_id} coverage state covered forbids a missing list")
+                if coverage == "partial" and not missing:
+                    report(f"{gate_label} clause {clause_id} coverage state partial requires a non-empty missing list")
+                if coverage == "unmapped" and tests:
+                    report(f"{gate_label} clause {clause_id} coverage state unmapped forbids a tests list")
+                if coverage == "unmapped" and not missing:
+                    report(f"{gate_label} clause {clause_id} coverage state unmapped requires a non-empty missing list")
+            for entry in additional:
+                listed.append((COVERAGE_MAP_ADDITIONAL, str(entry)))
+
+            csharp_entries = [
+                entry for _, entry in listed
+                if not entry.startswith("validator:") and PYTHON_TEST_REFERENCE.match(entry) is None
+            ]
+            test_assembly = gate.get("test_assembly")
+            assembly_tests: dict[str, list[tuple[str, str]]] | None = None
+            if test_assembly is None:
+                if csharp_entries:
+                    report(f"{gate_label} lists C# tests but test_assembly is null")
+            elif not isinstance(test_assembly, str):
+                report(f"{gate_label} test_assembly must be a string or null")
+            else:
+                matches = assembly_index.get(test_assembly, [])
+                if len(matches) != 1:
+                    report(
+                        f"{gate_label} test_assembly must name exactly one asmdef under packages/ or staging/: "
+                        f"{test_assembly!r} matches {len(matches)}"
+                    )
+                else:
+                    asmdef_path = matches[0]
+                    if asmdef_path.stem != test_assembly:
+                        report(
+                            f"{gate_label} test_assembly asmdef filename must equal its name: "
+                            f"{asmdef_path.relative_to(root).as_posix()}"
+                        )
+                    owner = coverage_map_owning_package(asmdef_path, root)
+                    package_id = gate.get("package_id")
+                    if owner is None or owner != package_id:
+                        report(
+                            f"{gate_label} package_id does not match the package that owns "
+                            f"{test_assembly}: declared {package_id!r}, owner {owner!r}"
+                        )
+                    assembly_tests = csharp_test_methods(asmdef_path.parent, root)
+            for clause_id, entry in listed:
+                reason = coverage_map_entry_resolves(entry, root, assembly_tests, all_tests, validator_source)
+                if reason is not None:
+                    report(f"{gate_label} clause {clause_id} test entry does not resolve: {entry!r}: {reason}")
+            if assembly_tests is not None:
+                listed_methods: set[str] = set()
+                for _, entry in listed:
+                    if entry.startswith("validator:") or PYTHON_TEST_REFERENCE.match(entry):
+                        continue
+                    listed_methods.add(entry.rpartition(".")[2] if "." in entry else entry)
+                for method in sorted(set(assembly_tests) - listed_methods):
+                    files = ", ".join(sorted({record[0] for record in assembly_tests[method]}))
+                    report(
+                        f"{gate_label} test method is not listed in any clause or "
+                        f"{COVERAGE_MAP_ADDITIONAL}: {method} ({files})"
+                    )
+
+        summary = payload.get("summary")
+        if not isinstance(summary, dict):
+            report("summary must be an object")
+        else:
+            for key in ("clauses", "covered", "partial", "unmapped"):
+                declared = summary.get(key)
+                if declared != counts[key]:
+                    report(f"summary.{key} does not match the recounted clauses: declared {declared!r}, recounted {counts[key]}")
+            if "open_gap_tests" in summary:
+                open_gap_tests = summary.get("open_gap_tests")
+                open_evidence_gaps = summary.get("open_evidence_gaps", 0)
+                open_clauses = counts["partial"] + counts["unmapped"]
+                if (
+                    not isinstance(open_gap_tests, int)
+                    or not isinstance(open_evidence_gaps, int)
+                    or open_gap_tests + open_evidence_gaps != open_clauses
+                ):
+                    report(
+                        "summary.open_gap_tests + open_evidence_gaps must equal the recounted partial + unmapped clauses: "
+                        f"declared {open_gap_tests!r} + {open_evidence_gaps!r}, recounted {open_clauses}"
+                    )
+
+        for message in map_errors:
+            pair = (relative_map, message)
+            if pair in COVERAGE_MAP_UNVERIFIED_CLAIMS:
+                produced.add(pair)
+                continue
+            errors.append(f"{label}: {message}")
+
+    scanned = {map_path.relative_to(root).as_posix() for map_path in map_paths}
+    for relative_map, message in sorted(COVERAGE_MAP_UNVERIFIED_CLAIMS - produced):
+        if relative_map not in scanned:
+            continue
+        errors.append(
+            f"{label_prefix} {relative_map}: stale coverage-map allowlist entry no longer produced; "
+            f"remove it from COVERAGE_MAP_UNVERIFIED_CLAIMS: {message}"
+        )
+    return errors
+
+
 def validate_inventory_source_manifest(path: Path) -> list[str]:
     errors: list[str] = []
     if not path.exists():
@@ -8891,6 +9288,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_inventory_isolation_rules(root))
     errors.extend(validate_foundation_assembly_references(root))
     errors.extend(validate_consumer_lessons_register(root))
+    errors.extend(validate_coverage_map_claims(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
             errors.append(f"missing root community/product file: {name}")
@@ -9044,6 +9442,15 @@ FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"reference evidence path does not exist"), "Every evidence path in reference-catalog.json must exist in the tree; point it at the committed record or remove the entry."),
     (re.compile(r"README Git install"), "Install examples pin every sibling package to the same full-SHA placeholder (LESSON-006); copy the matrix shape from an existing package README."),
     (re.compile(r"Foundation assembly must reference only|Inventory Presentation assembly must reference only|must not use Resources or scene lookups"), "The assembly reached outside its declared seam; reference only Lingkyn.* and Unity-owned assemblies, and resolve dependencies explicitly instead of Resources.Load or FindObject*."),
+    (re.compile(r"coverage map .*test_assembly must name exactly one asmdef|test_assembly asmdef filename must equal|lists C# tests but test_assembly is null|test_assembly must be a string or null"), "Set gates[].test_assembly to the exact name of one <name>.asmdef under packages/ or staging/ (one gate per test assembly); use null only for a gate that lists no C# tests."),
+    (re.compile(r"coverage map .*package_id does not match the package that owns"), "Set gates[].package_id to the name in the package.json (or package.staging.json) whose folder contains the gate's test asmdef."),
+    (re.compile(r"coverage map .*test entry does not resolve"), "Every tests[] and additional_tests_outside_clauses[] entry must be a real [Test]/[TestCase]/[UnityTest] method under the gate's assembly folder (optionally Class.Method or File.Method), a validator:<function> defined in scripts/validate_repository.py, or tests/<file>.py::<Class>::<test_name>; fix the stale name or remove the claim."),
+    (re.compile(r"coverage map .*coverage state (covered|partial|unmapped) (requires|forbids)"), "covered needs a non-empty tests list and an empty missing list; partial needs a non-empty missing list; unmapped needs an empty tests list and a non-empty missing list. Change the state or the lists so they agree."),
+    (re.compile(r"coverage map .*summary\.(clauses|covered|partial|unmapped|open_gap_tests)"), "Recount the clauses: summary.clauses/covered/partial/unmapped equal the clause states, and open_gap_tests + open_evidence_gaps equal the partial + unmapped clauses."),
+    (re.compile(r"coverage map .*duplicate clause id|clause is missing an id"), "Every clause id in a coverage map is unique across all gates; rename the duplicate or give the clause an id."),
+    (re.compile(r"coverage map .*test method is not listed in any clause"), "An attributed test exists that the map does not claim; add it to the clause it proves or to additional_tests_outside_clauses so the map stays complete."),
+    (re.compile(r"stale coverage-map allowlist entry"), "The map was fixed; delete that (map, message) pair from COVERAGE_MAP_UNVERIFIED_CLAIMS in scripts/validate_repository.py."),
+    (re.compile(r"coverage map .*(schema must be|path does not exist|must be a list|must be an object|coverage must be one of)"), "The coverage map must use schema xr-foundry.verification_coverage_map.v1 with gates[].clauses[] objects carrying id, clause, coverage (covered|partial|unmapped), tests[], missing[], and a summary object; every contract, core_gate_map, and test_sources path must exist."),
     (re.compile(r"Contract test suite failed"), "Run 'python -m unittest discover -s tests -p \"test_*.py\"' and read the first FAIL; recorded test counts live in tests/test_audit_unity_test_inventory.py and tests/test_run_unity_gates.py."),
     (re.compile(r"missing root community/product file"), "Restore the named root file; the repository contract requires it."),
     (re.compile(r"repository JSON is invalid"), "A JSON file does not parse; the message names it. Validate with 'python -m json.tool <file>'."),

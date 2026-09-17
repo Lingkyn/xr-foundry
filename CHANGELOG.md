@@ -5,6 +5,20 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Coverage maps are now machine-checked: `validate_coverage_map_claims` in
+  `scripts/validate_repository.py` (full validation pass) proves, for every
+  `docs/standards/*/coverage-map*.json`, that each gate's `test_assembly` is
+  exactly one real `.asmdef` owned by the declared `package_id`, that every
+  `tests[]` and `additional_tests_outside_clauses[]` entry names a real
+  `[Test]`/`[TestCase]`/`[UnityTest]` method under that assembly (or a real
+  `validator:` function / Python test), that coverage states agree with their
+  `tests`/`missing` lists, that `summary` counts equal a recount, that clause ids
+  are unique, and that no attributed test method is left unlisted; each error
+  shape has a fix hint. The inventory map's three prose gate assemblies and its
+  summary miscount (13 covered / 10 partial, declared 14 / 9) are carried in the
+  labelled temporary allowlist `COVERAGE_MAP_UNVERIFIED_CLAIMS`, which itself
+  fails the validator once an entry is no longer produced.
+  `tests/test_coverage_claims.py` covers the rule.
 - Added the open-work board: `scripts/open_work.py` derives open items
   (`test_gap`, `evidence_gap`, `lesson_gap`, `family_proposal`,
   `staging_promotion`, `deliberation_open`, `roadmap_step`) from the coverage

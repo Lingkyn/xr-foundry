@@ -70,6 +70,34 @@ def utc_now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def run_boundary(directory: Path) -> float:
+    """Return the run boundary read from the filesystem that will hold the results.
+
+    The gate rejects a result file whose mtime predates the boundary, which is how
+    a stale XML from an earlier run is caught. Reading the boundary from
+    ``time.time()`` compares two different clocks: Linux stamps a file from a
+    coarse clock updated once per timer tick, so a result written microseconds
+    after a fine-grained ``time.time()`` reading can carry an mtime up to one tick
+    *earlier* than the boundary, and a perfectly fresh result is reported as
+    stale. Writing a marker file and reading its own mtime puts both sides of the
+    comparison on that same coarse clock. The marker is removed immediately; if it
+    cannot be written, the wall clock is the fallback.
+    """
+
+    marker = directory / ".run-boundary"
+    try:
+        marker.write_bytes(b"")
+        boundary = marker.stat().st_mtime
+    except OSError:
+        return time.time()
+    finally:
+        try:
+            marker.unlink()
+        except OSError:
+            pass
+    return boundary
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -317,7 +345,7 @@ def run_gates(args: argparse.Namespace) -> tuple[dict[str, Any], int]:
             log_path = output / f"{item['name']}.{item['mode']}.log"
             if result_path.exists():
                 result_path.unlink()
-            boundary = time.time()
+            boundary = run_boundary(output)
             command = unity_command(unity, host, item["mode"], item["name"], result_path, log_path)
             try:
                 returncode = launch_unity(command, args.timeout_minutes * 60)

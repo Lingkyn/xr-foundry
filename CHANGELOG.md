@@ -5,6 +5,15 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- `scripts/run_unity_gates.py` now reads each run boundary from the filesystem
+  that will hold the results (a marker file's own mtime) instead of
+  `time.time()`. Linux stamps a file from a coarse clock updated once per timer
+  tick, so a result written microseconds after a fine-grained wall-clock reading
+  could carry an earlier mtime and a perfectly fresh run was reported as stale;
+  the contract suite failed that way on one CI runner while passing on the
+  others. Both sides of the staleness check now share one clock, the check itself
+  is unchanged and no test was weakened, and a repeated-pair regression test in
+  `tests/test_run_unity_gates.py` covers it.
 - The four family source manifests that carried no review note (Interaction,
   Persistence, Settings, Design language) now state that their URLs were not
   fetched from the authoring environment and that a person must confirm every URL,

@@ -6835,18 +6835,8 @@ def validate_consumer_lessons_register(root: Path) -> list[str]:
 # error text) pair validate_family_source_manifests still produces against the
 # main-tracked family standards. It suppresses only that exact pair; a pair the
 # rule no longer produces is itself reported so the allowlist cannot outlive the fix.
-FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset(
-    {
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/design-language/source-manifest.json",
-            "verification contract is missing for a family with a source manifest: design-language",
-        ),
-        (  # self-declared, not yet verified — remove when fixed
-            "docs/standards/foundations/verification-contract.md",
-            "source manifest is missing for a family with a verification contract: foundations",
-        ),
-    }
-)
+FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset()
+# self-declared, not yet verified — remove when fixed
 
 FAMILY_SOURCE_MANIFEST_SCHEMA = re.compile(r"^xr-foundry\.([a-z0-9_]+)_source_manifest\.v\d+$")
 FAMILY_SOURCE_MANIFEST_TEXT_FIELDS = (
@@ -7755,6 +7745,160 @@ def validate_inventory_api_baseline(root: Path) -> list[str]:
             errors.append(f"Inventory Core API compatibility policy is incomplete: {key}")
     if policy.get("runtime_engine_dependencies") != []:
         errors.append("Inventory Core API baseline must declare no runtime engine dependencies")
+    return errors
+
+
+API_SURFACE_INVENTORY_FAMILIES: tuple[str, ...] = ("persistence", "settings", "interaction")
+
+API_SURFACE_PUBLIC_TYPE_DECLARATION = re.compile(
+    r"\bpublic\s+(?:(?:sealed|abstract|static|readonly|partial)\s+)*"
+    r"(?:class|struct|enum|interface|record(?:\s+(?:class|struct))?)\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*(?:<[A-Za-z_][A-Za-z0-9_]*>)?)"
+)
+
+API_SURFACE_PUBLIC_DELEGATE_DECLARATION = re.compile(
+    r"\bpublic\s+delegate\s+[A-Za-z_][A-Za-z0-9_<>\[\],\s]*?\s+([A-Za-z_][A-Za-z0-9_]*)\s*\("
+)
+
+
+def api_surface_family_package_roots(root: Path, catalog: dict[str, Any]) -> dict[str, list[Path]]:
+    """Return each family's live package roots, keyed by the family named in its foundry.component.json."""
+
+    families: dict[str, list[Path]] = {}
+    for item in catalog.get("packages", []) if isinstance(catalog, dict) else []:
+        if not isinstance(item, dict):
+            continue
+        package_root = safe_repository_path(root, str(item.get("path", "")))
+        if package_root is None:
+            continue
+        manifest_path = package_root / "foundry.component.json"
+        if not manifest_path.exists():
+            continue
+        try:
+            manifest = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        family = manifest.get("family") if isinstance(manifest, dict) else None
+        if isinstance(family, str) and family.strip():
+            families.setdefault(family, []).append(package_root)
+    return families
+
+
+def api_surface_declared_types(package_root: Path) -> dict[str, Path]:
+    """Return each public type declared under a package's Runtime sources, mapped to its source file."""
+
+    declared: dict[str, Path] = {}
+    runtime_root = package_root / "Runtime"
+    if not runtime_root.exists():
+        return declared
+    for source in sorted(runtime_root.rglob("*.cs")):
+        relative_parts = source.relative_to(runtime_root).parts
+        if any(part in ("Tests", "Editor", "Samples~") for part in relative_parts):
+            continue
+        text = read_decodable_text(source)
+        if text is None:
+            continue
+        names = set(API_SURFACE_PUBLIC_TYPE_DECLARATION.findall(text))
+        names.update(API_SURFACE_PUBLIC_DELEGATE_DECLARATION.findall(text))
+        for name in names:
+            declared.setdefault(name, source)
+    return declared
+
+
+def api_surface_inventory_sections(text: str) -> dict[str, tuple[set[str], int | None]]:
+    """Parse each package section of a docs/standards/<family>/api-surface.md file.
+
+    Each section is introduced by a '## `<package.id>` (namespace `...`)' heading and holds an
+    optional 'N public types.' statement plus one Markdown table whose first column lists the
+    type names (backtick-quoted, comma-separated for a shared-shape row).
+    """
+
+    sections: dict[str, tuple[set[str], int | None]] = {}
+    heading_pattern = re.compile(r"^##\s+`([^`]+)`", re.MULTILINE)
+    headings = list(heading_pattern.finditer(text))
+    for index, heading in enumerate(headings):
+        package_id = heading.group(1)
+        start = heading.end()
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        body = text[start:end]
+        count_match = re.search(r"(\d+)\s+public types", body)
+        stated_count = int(count_match.group(1)) if count_match else None
+        names: set[str] = set()
+        in_table = False
+        for line in body.splitlines():
+            stripped = line.strip()
+            if not in_table:
+                if stripped.startswith("| Type "):
+                    in_table = True
+                continue
+            if not stripped.startswith("|"):
+                break
+            if "---" in stripped:
+                continue
+            cell = stripped.split("|")[1]
+            names.update(re.findall(r"`([^`]+)`", cell))
+        sections[package_id] = (names, stated_count)
+    return sections
+
+
+def validate_api_surface_inventories(root: Path) -> list[str]:
+    """Every docs/standards/<family>/api-surface.md type list must be derived from Runtime sources."""
+
+    errors: list[str] = []
+    catalog_path = root / "package-catalog.json"
+    if not catalog_path.exists():
+        return errors
+    try:
+        catalog = load_json(catalog_path)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return errors
+    family_package_roots = api_surface_family_package_roots(root, catalog)
+
+    for family in API_SURFACE_INVENTORY_FAMILIES:
+        inventory_path = root / "docs" / "standards" / family / "api-surface.md"
+        if not inventory_path.exists():
+            continue
+        package_roots = family_package_roots.get(family, [])
+        if not package_roots:
+            continue
+        inventory_text = read_decodable_text(inventory_path)
+        if inventory_text is None:
+            continue
+        sections = api_surface_inventory_sections(inventory_text)
+        for package_root in sorted(package_roots):
+            manifest_path = package_root / "package.json"
+            if not manifest_path.exists():
+                continue
+            try:
+                manifest = load_json(manifest_path)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            package_id = manifest.get("name") if isinstance(manifest, dict) else None
+            if not isinstance(package_id, str) or package_id not in sections:
+                continue
+            listed, stated_count = sections[package_id]
+            declared = api_surface_declared_types(package_root)
+            missing = sorted(set(declared) - listed)
+            extra = sorted(listed - set(declared))
+            for name in missing:
+                source_path = declared[name].relative_to(root).as_posix()
+                errors.append(
+                    f"API surface inventory for {family} omits a declared type: "
+                    f"{package_id} declares `{name}` in {source_path} but "
+                    f"docs/standards/{family}/api-surface.md does not list it"
+                )
+            for name in extra:
+                errors.append(
+                    f"API surface inventory for {family} lists a type no source declares: "
+                    f"docs/standards/{family}/api-surface.md lists `{name}` for {package_id} "
+                    f"but no Runtime/**/*.cs under {package_root.relative_to(root).as_posix()} declares it"
+                )
+            if stated_count is not None and stated_count != len(declared):
+                errors.append(
+                    f"API surface inventory for {family} states {stated_count} public types for "
+                    f"{package_id} in docs/standards/{family}/api-surface.md but Runtime/ declares "
+                    f"{len(declared)}"
+                )
     return errors
 
 
@@ -9951,6 +10095,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_inventory_standard(root))
     errors.extend(validate_inventory_projection_coherence(root))
     errors.extend(validate_inventory_api_baseline(root))
+    errors.extend(validate_api_surface_inventories(root))
     errors.extend(validate_inventory_isolation_rules(root))
     errors.extend(validate_foundation_assembly_references(root))
     errors.extend(validate_consumer_lessons_register(root))
@@ -10162,6 +10307,9 @@ FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"family source manifest .*(verification contract is missing for a family with a source manifest|source manifest is missing for a family with a verification contract)"), "A family's docs/standards/<family>/source-manifest.json and verification-contract.md are published together; add whichever one is missing."),
     (re.compile(r"family source manifest .*must record that source URLs were not fetched"), "Add a non-empty top-level review_note (or a per-source review_note) stating the URLs were not fetched from this environment and must be confirmed by a person, so an unfetched URL is never presented as confirmed."),
     (re.compile(r"stale family-source-manifest allowlist entry"), "The manifest was fixed; delete that (file, message) pair from FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS in scripts/validate_repository.py."),
+    (re.compile(r"API surface inventory for \w+ omits a declared type"), "Add a row for the named type to the package's table in docs/standards/<family>/api-surface.md (Kind, public members, consumer-facing), and update the 'N public types.' count."),
+    (re.compile(r"API surface inventory for \w+ lists a type no source declares"), "The Runtime source no longer declares that type (renamed, removed, or moved under Tests/Editor/Samples~); delete its row from docs/standards/<family>/api-surface.md and update the 'N public types.' count."),
+    (re.compile(r"API surface inventory for \w+ states \d+ public types"), "Recount the package's public types under Runtime/ (excluding Tests, Editor, Samples~) and fix the 'N public types.' statement in docs/standards/<family>/api-surface.md to match."),
 ]
 
 

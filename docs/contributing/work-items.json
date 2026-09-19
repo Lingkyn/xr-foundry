@@ -216,7 +216,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -244,7 +244,7 @@
         ]
       },
       "evidence": "The register row names the new function and the tests; the repository contract passes on every existing manifest or the exact findings are allowlisted with the removal comment.",
-      "done_proof": null
+      "done_proof": "tests/test_source_manifests.py"
     },
     {
       "id": "WI-007",
@@ -333,7 +333,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "small",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -364,7 +364,7 @@
         ]
       },
       "evidence": "The template validates against the schema and the start-here page links both.",
-      "done_proof": null
+      "done_proof": "docs/contributing/cold-start-receipt.schema.json"
     },
     {
       "id": "WI-010",
@@ -625,6 +625,49 @@
         ]
       },
       "evidence": "Five Issues carrying the good first issue label that each meet the certified subset.",
+      "done_proof": null
+    },
+    {
+      "id": "WI-017",
+      "title": "Pair every standard with both a source manifest and a verification contract",
+      "milestone_batch": "1a",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "open",
+      "depends_on": [],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/design-language/source-manifest.json",
+        "docs/standards/foundations/verification-contract.md",
+        "docs/standards/locomotion/source-manifest.json",
+        "docs/standards/locomotion/verification-contract.md",
+        "scripts/validate_repository.py"
+      ],
+      "allowed_paths": [
+        "docs/standards/design-language/",
+        "docs/standards/foundations/",
+        "scripts/validate_repository.py",
+        "tests/test_source_manifests.py",
+        "docs/validation/checked-claims.md",
+        "CHANGELOG.md"
+      ],
+      "steps": [
+        "Write docs/standards/design-language/verification-contract.md with the clauses a token set can actually be checked against (every token named in the standard exists in the JSON, the reference hierarchy is explicit, and a claim ceiling routing legibility and contrast to a Device Lab receipt), modelled on docs/standards/locomotion/verification-contract.md.",
+        "Write docs/standards/foundations/source-manifest.json in the field set the other family manifests use, naming only admitted public sources for the project-initializer and xr-baseline capabilities, with a review_note stating the URLs were not fetched.",
+        "Empty FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS in scripts/validate_repository.py and update the pinning test so the real repository produces no suppressed message."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_source_manifests"
+        ],
+        "artifacts": [
+          "docs/standards/design-language/verification-contract.md",
+          "docs/standards/foundations/source-manifest.json"
+        ]
+      },
+      "evidence": "validate_family_source_manifests passes with an empty allowlist.",
       "done_proof": null
     }
   ]

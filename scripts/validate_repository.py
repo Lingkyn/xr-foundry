@@ -2867,6 +2867,11 @@ WORK_ITEM_ACCEPTANCE_SCRIPTS = frozenset(
 CAPABILITY_PROFILES_PATH = "docs/contributing/capability-profiles.json"
 CAPABILITY_PROFILES_SCHEMA_PATH = "docs/contributing/capability-profiles.schema.json"
 OPEN_WORK_SCRIPT_PATH = "scripts/open_work.py"
+COLD_START_RECEIPT_SCHEMA_PATH = "docs/contributing/cold-start-receipt.schema.json"
+COLD_START_RECEIPT_DIR = "docs/validation/cold-start"
+COLD_START_PULL_REQUEST_PATTERN = re.compile(
+    r"^https://github\.com/Lingkyn/xr-foundry/pull/[1-9][0-9]*$"
+)
 
 
 def validate_capability_profiles(root: Path) -> list[str]:
@@ -2961,6 +2966,91 @@ def validate_capability_profiles(root: Path) -> list[str]:
                 errors.append(
                     f"{label}: work items need capabilities no profile declares: {uncovered}"
                 )
+    return errors
+
+
+def validate_cold_start_receipts(root: Path) -> list[str]:
+    """A cold-start receipt proves the route works for a stranger, not just its author.
+
+    Every ``docs/validation/cold-start/*.json`` file must match
+    ``cold-start-receipt.schema.json``; carry a filename stem equal to its own
+    ``id``; declare a ``contributor`` other than the repository owner; declare a
+    ``capability`` that ``capability-profiles.json`` actually declares; name a
+    ``started_from_commit`` reachable from a fetched public origin ref, the same
+    revision test compatibility and device evidence must meet; carry a
+    ``pull_request`` URL under this repository's pull requests; use each step
+    ``name`` at most once; and never contain the string ``not_tested``, because a
+    cold start is a real routine change landing, not an unexecuted claim. When the
+    directory does not exist yet, there is nothing to check.
+    """
+
+    errors: list[str] = []
+    directory = root / COLD_START_RECEIPT_DIR
+    if not directory.is_dir():
+        return errors
+    label_root = "cold start receipt"
+    schema_path = root / COLD_START_RECEIPT_SCHEMA_PATH
+    if not schema_path.is_file():
+        return [f"{label_root}: schema {COLD_START_RECEIPT_SCHEMA_PATH} is missing"]
+
+    declared_capabilities: set[str] = set()
+    profiles_path = root / CAPABILITY_PROFILES_PATH
+    if profiles_path.is_file():
+        try:
+            profiles_payload = load_json(profiles_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            profiles_payload = None
+        if isinstance(profiles_payload, dict):
+            declared_capabilities = {
+                profile.get("id")
+                for profile in profiles_payload.get("profiles", [])
+                if isinstance(profile, dict) and isinstance(profile.get("id"), str)
+            }
+
+    for path in sorted(directory.glob("*.json")):
+        label = f"{label_root} {path.stem}"
+        try:
+            text = path.read_text(encoding="utf-8")
+            payload = json.loads(text)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            errors.append(f"{label}: invalid JSON ({exc})")
+            continue
+        schema_errors = validate_json_schema_instance(payload, schema_path, label)
+        errors.extend(schema_errors)
+        if schema_errors or not isinstance(payload, dict):
+            continue
+
+        if payload.get("id") != path.stem:
+            errors.append(
+                f"{label}: id {payload.get('id')!r} must equal the file name {path.stem}"
+            )
+        contributor = payload.get("contributor")
+        if isinstance(contributor, str) and contributor.strip().lower() == "lingkyn":
+            errors.append(f"{label}: contributor must not be the repository owner")
+        capability = payload.get("capability")
+        if declared_capabilities and capability not in declared_capabilities:
+            errors.append(
+                f"{label}: capability {capability!r} is not a declared capability profile"
+            )
+        commit_sha = payload.get("started_from_commit")
+        if isinstance(commit_sha, str) and not commit_is_public_origin_reachable(root, commit_sha):
+            errors.append(
+                f"{label}: started_from_commit must be reachable from a fetched public origin ref"
+            )
+        pull_request = payload.get("pull_request")
+        if not isinstance(pull_request, str) or not COLD_START_PULL_REQUEST_PATTERN.match(pull_request):
+            errors.append(
+                f"{label}: pull_request must be an https URL under https://github.com/Lingkyn/xr-foundry/pull/"
+            )
+        steps = payload.get("steps", [])
+        if isinstance(steps, list):
+            names = [step.get("name") for step in steps if isinstance(step, dict)]
+            duplicates = sorted({name for name in names if names.count(name) > 1})
+            if duplicates:
+                errors.append(f"{label}: duplicate step name(s): {duplicates}")
+        if "not_tested" in text:
+            errors.append(f"{label}: must not contain the string 'not_tested'")
+
     return errors
 
 
@@ -6740,6 +6830,172 @@ def validate_consumer_lessons_register(root: Path) -> list[str]:
     return errors
 
 
+# TEMPORARY ALLOWLIST: self-declared, not yet verified — remove when fixed.
+# Each entry is the exact (source-manifest or verification-contract relative path,
+# error text) pair validate_family_source_manifests still produces against the
+# main-tracked family standards. It suppresses only that exact pair; a pair the
+# rule no longer produces is itself reported so the allowlist cannot outlive the fix.
+FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS: frozenset[tuple[str, str]] = frozenset(
+    {
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/design-language/source-manifest.json",
+            "verification contract is missing for a family with a source manifest: design-language",
+        ),
+        (  # self-declared, not yet verified — remove when fixed
+            "docs/standards/foundations/verification-contract.md",
+            "source manifest is missing for a family with a verification contract: foundations",
+        ),
+    }
+)
+
+FAMILY_SOURCE_MANIFEST_SCHEMA = re.compile(r"^xr-foundry\.([a-z0-9_]+)_source_manifest\.v\d+$")
+FAMILY_SOURCE_MANIFEST_TEXT_FIELDS = (
+    "authority",
+    "admitted_role",
+    "license_or_terms",
+    "maintenance_evidence",
+)
+FAMILY_SOURCE_MANIFEST_LIST_FIELDS = ("admitted_claims", "excluded_uses")
+
+
+def validate_family_source_manifests(root: Path) -> list[str]:
+    """Generalise the Inventory source-manifest admission rule to every other family.
+
+    validate_inventory_source_manifest keeps its own stricter, older-shaped rule
+    unchanged; this rule covers every other docs/standards/<family>/source-manifest.json
+    using the shared field set the newer family manifests already use, and checks
+    that a family's verification-contract.md and source-manifest.json exist together.
+    """
+
+    label = "family source manifest"
+    standards_root = root / "docs" / "standards"
+    if not standards_root.is_dir():
+        return []
+
+    markers = forbidden_public_markers()
+    raw_errors: list[tuple[str, str]] = []
+    produced: set[tuple[str, str]] = set()
+
+    for family_dir in sorted(path for path in standards_root.iterdir() if path.is_dir()):
+        family = family_dir.name
+        manifest_path = family_dir / "source-manifest.json"
+        contract_path = family_dir / "verification-contract.md"
+        manifest_exists = manifest_path.exists()
+        contract_exists = contract_path.exists()
+
+        if contract_exists and not manifest_exists:
+            raw_errors.append(
+                (
+                    contract_path.relative_to(root).as_posix(),
+                    f"source manifest is missing for a family with a verification contract: {family}",
+                )
+            )
+        if manifest_exists and not contract_exists:
+            raw_errors.append(
+                (
+                    manifest_path.relative_to(root).as_posix(),
+                    f"verification contract is missing for a family with a source manifest: {family}",
+                )
+            )
+
+        if family == "inventory" or not manifest_exists:
+            continue
+
+        relative = manifest_path.relative_to(root).as_posix()
+        payload = load_json(manifest_path)
+
+        schema = payload.get("schema") if isinstance(payload, dict) else None
+        match = FAMILY_SOURCE_MANIFEST_SCHEMA.fullmatch(schema) if isinstance(schema, str) else None
+        expected_family = family.replace("-", "_")
+        if match is None:
+            raw_errors.append((relative, f"schema must match xr-foundry.<family>_source_manifest.v<N>: {schema!r}"))
+        elif match.group(1) != expected_family:
+            raw_errors.append(
+                (relative, f"schema family segment {match.group(1)!r} does not match directory {family!r}")
+            )
+
+        if not isinstance(payload, dict):
+            continue
+
+        top_review_note = payload.get("review_note")
+        has_review_note = isinstance(top_review_note, str) and bool(top_review_note.strip())
+
+        sources = payload.get("sources")
+        if not isinstance(sources, list) or not sources:
+            raw_errors.append((relative, "must contain admitted sources"))
+            sources = []
+
+        ids: set[str] = set()
+        for source in sources:
+            if not isinstance(source, dict):
+                raw_errors.append((relative, "source entries must be objects"))
+                continue
+            source_id = str(source.get("id", "")).strip()
+            source_label = source_id or "<missing id>"
+            if not source_id or source_id in ids:
+                raw_errors.append((relative, f"source id is missing or duplicated: {source_label}"))
+            ids.add(source_id)
+
+            url = source.get("url")
+            if not isinstance(url, str) or not url.startswith("https://"):
+                raw_errors.append((relative, f"source must use a public HTTPS URL: {source_label}"))
+
+            for field in FAMILY_SOURCE_MANIFEST_TEXT_FIELDS:
+                value = source.get(field)
+                if not isinstance(value, str) or not value.strip():
+                    raw_errors.append((relative, f"source must state non-empty {field}: {source_label}"))
+            for field in FAMILY_SOURCE_MANIFEST_LIST_FIELDS:
+                value = source.get(field)
+                if not isinstance(value, list) or not value or not all(
+                    isinstance(item, str) and item.strip() for item in value
+                ):
+                    raw_errors.append((relative, f"source must state non-empty {field}: {source_label}"))
+
+            source_review_note = source.get("review_note")
+            if isinstance(source_review_note, str) and source_review_note.strip():
+                has_review_note = True
+
+            text_fields: list[str] = []
+            for field in ("id", "kind", "authority", "url", "license_or_terms", "maintenance_evidence", "admitted_role"):
+                value = source.get(field)
+                if isinstance(value, str):
+                    text_fields.append(value)
+            for field in FAMILY_SOURCE_MANIFEST_LIST_FIELDS:
+                value = source.get(field)
+                if isinstance(value, list):
+                    text_fields.extend(item for item in value if isinstance(item, str))
+            combined = " ".join(text_fields).casefold()
+            if any(marker in combined for marker in markers):
+                raw_errors.append((relative, f"source names a non-public marker: {source_label}"))
+
+        if not has_review_note:
+            raw_errors.append(
+                (
+                    relative,
+                    "must record that source URLs were not fetched: add a non-empty review_note or a per-source note",
+                )
+            )
+
+    errors: list[str] = []
+    for pair in raw_errors:
+        if pair in FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS:
+            produced.add(pair)
+            continue
+        errors.append(f"{label} {pair[0]}: {pair[1]}")
+
+    scanned_files = {
+        path.relative_to(root).as_posix() for path in standards_root.glob("*/source-manifest.json")
+    } | {path.relative_to(root).as_posix() for path in standards_root.glob("*/verification-contract.md")}
+    for file_path, message in sorted(FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS - produced):
+        if file_path not in scanned_files:
+            continue
+        errors.append(
+            f"{label} {file_path}: stale family-source-manifest allowlist entry no longer produced; "
+            f"remove it from FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS: {message}"
+        )
+    return errors
+
+
 INVENTORY_PRESENTATION_ASMDEF = (
     "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/Runtime/"
     "Lingkyn.Inventory.Presentation.asmdef"
@@ -9685,6 +9941,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_live_deliberation_records(root))
     errors.extend(validate_work_items(root))
     errors.extend(validate_capability_profiles(root))
+    errors.extend(validate_cold_start_receipts(root))
     errors.extend(validate_task_hall_contract(root))
     errors.extend(validate_foundry_contract(root))
     errors.extend(validate_component_model(root))
@@ -9697,6 +9954,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_inventory_isolation_rules(root))
     errors.extend(validate_foundation_assembly_references(root))
     errors.extend(validate_consumer_lessons_register(root))
+    errors.extend(validate_family_source_manifests(root))
     errors.extend(validate_coverage_map_claims(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
@@ -9841,6 +10099,14 @@ FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"capability profiles .*first_command must run a script"), "first_command must invoke a script that exists under scripts/, for example 'python scripts/open_work.py --capability <id> --markdown'."),
     (re.compile(r"capability profiles .*(blockers the open-work board does not use|no profile can reach these open-work blockers)"), "The profiles' blocker vocabulary must equal BLOCKERS in scripts/open_work.py: no invented blocker, and no blocker that every profile leaves unreachable."),
     (re.compile(r"capability profiles .*work items need capabilities no profile declares"), "Either add the capability to a profile's satisfies_needs or change the work item's needs; a work item addressed to a capability nobody can declare can never be taken."),
+    (re.compile(r"cold start receipt .*JSON Schema violation"), "Make the receipt conform to docs/contributing/cold-start-receipt.schema.json; start from docs/contributing/cold-start-receipt.template.json and replace every placeholder with a real value."),
+    (re.compile(r"cold start receipt .*id .* must equal the file name"), "Name the file docs/validation/cold-start/<id>.json with the same id the receipt declares."),
+    (re.compile(r"cold start receipt .*contributor must not be the repository owner"), "A cold-start receipt proves the route works for a stranger; contributor must be a GitHub login other than Lingkyn."),
+    (re.compile(r"cold start receipt .*is not a declared capability profile"), "capability must be one of the ids in docs/contributing/capability-profiles.json; a cold start is normally ai_tokens_only."),
+    (re.compile(r"cold start receipt .*started_from_commit must be reachable"), "started_from_commit must be a full 40-hex commit reachable from a fetched public origin ref, the same bar compatibility and device evidence meet."),
+    (re.compile(r"cold start receipt .*pull_request must be an https URL"), "pull_request must be an https URL under https://github.com/Lingkyn/xr-foundry/pull/<number>."),
+    (re.compile(r"cold start receipt .*duplicate step name"), "Each steps[].name may appear at most once; merge or rename the duplicate step."),
+    (re.compile(r"cold start receipt .*must not contain the string 'not_tested'"), "not_tested is never evidence; replace it with what actually happened at that step or in confusing."),
     (re.compile(r"capability profiles .*duplicate profile id"), "Profile ids are unique; rename one of them."),
     (re.compile(r"work items .*milestone_batch .* is not a '### Batch' heading"), "Use a batch id that exists as a '### Batch <id>:' heading in docs/milestones.md (1a to 3c), or add the batch to the milestone page first."),
     (re.compile(r"work items .*(depends_on names unknown item|depends on itself|dependency cycle)"), "depends_on may only name other existing item ids and must not form a cycle; split the item or drop the dependency."),
@@ -9888,6 +10154,14 @@ FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"deliberation record .*decided_by names mandate .*(not yet in force|had expired|was revoked)"), "A lazy-consensus decision is valid only under a mandate that was in force at decided_at (not_before <= decided_at < expires_at and not revoked by then); a person must resolve the record with their @github identity, or the maintainer records a fresh mandate before the decision is made."),
     (re.compile(r"deliberation record .*lazy-consensus decision .* is invalid while objection deltas exist"), "Lazy consensus needs a window that closed with no risk or counterexample delta (GOVERNANCE.md, Process-decided merges and lazy consensus); with an objection on record a person resolves the deliberation with their @github identity as decided_by."),
     (re.compile(r"deliberation record .*referenced repository path does not exist"), "Every https://github.com/Lingkyn/xr-foundry/blob/main/<path> evidence link in a live record must name a path that exists in the tree; fix the path or point the evidence at the file that replaced it."),
+    (re.compile(r"family source manifest .*schema must match xr-foundry\.|family source manifest .*schema family segment"), "A family source manifest's schema must read xr-foundry.<family>_source_manifest.v<N> where <family> is the directory name with hyphens written as underscores (Inventory keeps its own older schema string)."),
+    (re.compile(r"family source manifest .*must contain admitted sources|family source manifest .*source entries must be objects|family source manifest .*source id is missing or duplicated"), "Every docs/standards/<family>/source-manifest.json needs a non-empty sources list of objects, each with a unique, non-empty id."),
+    (re.compile(r"family source manifest .*source must use a public HTTPS URL"), "Every source needs a url that starts with https://; a non-public or missing URL is never admitted as an external source."),
+    (re.compile(r"family source manifest .*source must state non-empty"), "Every source needs non-empty authority, admitted_role, license_or_terms, maintenance_evidence, admitted_claims, and excluded_uses; fill in the missing field named in the error."),
+    (re.compile(r"family source manifest .*source names a non-public marker"), "The source names a private tool, product, or workspace marker; replace it with a neutral term (the marker list is in forbidden_public_markers)."),
+    (re.compile(r"family source manifest .*(verification contract is missing for a family with a source manifest|source manifest is missing for a family with a verification contract)"), "A family's docs/standards/<family>/source-manifest.json and verification-contract.md are published together; add whichever one is missing."),
+    (re.compile(r"family source manifest .*must record that source URLs were not fetched"), "Add a non-empty top-level review_note (or a per-source review_note) stating the URLs were not fetched from this environment and must be confirmed by a person, so an unfetched URL is never presented as confirmed."),
+    (re.compile(r"stale family-source-manifest allowlist entry"), "The manifest was fixed; delete that (file, message) pair from FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS in scripts/validate_repository.py."),
 ]
 
 

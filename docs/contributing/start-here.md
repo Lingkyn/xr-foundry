@@ -63,3 +63,7 @@ are green; any other change waits for a maintainer, who reads the same verdict.
 - You want to propose a new reusable system: read
   [`../foundry/README.md`](../foundry/README.md); the current staged example is
   [`../../staging/localization/README.md`](../../staging/localization/README.md).
+- You just landed your first routine change from a fork: fill
+  [`cold-start-receipt.template.json`](cold-start-receipt.template.json) and
+  commit it under `docs/validation/cold-start/<id>.json` in the same pull
+  request; it is milestone batch 1f's proof that this page works for a stranger.

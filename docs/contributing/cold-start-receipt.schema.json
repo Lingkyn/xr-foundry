@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/contributing/cold-start-receipt.schema.json",
+  "title": "XR Foundry cold-start receipt",
+  "description": "Filled by an outside contributor (a person, or any coding Agent in any tool) after following docs/contributing/start-here.md from a fork and landing one routine change. It is the proof for milestone batch 1f in docs/milestones.md, not a claim of anything beyond that one routine change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "contributor",
+    "capability",
+    "tool",
+    "started_from_commit",
+    "pull_request",
+    "verdict",
+    "merged",
+    "steps",
+    "confusing",
+    "recorded_at",
+    "non_claims"
+  ],
+  "properties": {
+    "schema": { "const": "xr-foundry.cold_start_receipt.v1" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "contributor": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$",
+      "description": "A GitHub login, not the repository owner Lingkyn."
+    },
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "An id from docs/contributing/capability-profiles.json; a cold start is normally ai_tokens_only."
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Free text naming the assistant used, or the literal 'none'."
+    },
+    "started_from_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "pull_request": {
+      "type": "string",
+      "format": "uri"
+    },
+    "verdict": { "enum": ["ready", "blocked"] },
+    "merged": { "type": "boolean" },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "confusing": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "non_claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "minutes", "note"],
+      "properties": {
+        "name": {
+          "enum": ["clone", "install", "change", "verdict", "push", "pull_request"]
+        },
+        "minutes": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

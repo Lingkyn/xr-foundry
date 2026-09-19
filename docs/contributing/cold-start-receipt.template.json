@@ -1,0 +1,24 @@
+{
+  "schema": "xr-foundry.cold_start_receipt.v1",
+  "id": "template-not-evidence",
+  "contributor": "REPLACE-WITH-YOUR-GITHUB-LOGIN",
+  "capability": "ai_tokens_only",
+  "tool": "REPLACE_WITH_TOOL_NAME_OR_none",
+  "started_from_commit": "REPLACE_WITH_THE_40_HEX_COMMIT_YOU_STARTED_FROM",
+  "pull_request": "REPLACE_WITH_YOUR_PULL_REQUEST_URL",
+  "verdict": "ready",
+  "merged": false,
+  "steps": [
+    { "name": "clone", "minutes": 0, "note": "REPLACE_WITH_WHAT_HAPPENED" },
+    { "name": "install", "minutes": 0, "note": "REPLACE_WITH_WHAT_HAPPENED" },
+    { "name": "change", "minutes": 0, "note": "REPLACE_WITH_WHAT_HAPPENED" },
+    { "name": "verdict", "minutes": 0, "note": "REPLACE_WITH_WHAT_HAPPENED" },
+    { "name": "push", "minutes": 0, "note": "REPLACE_WITH_WHAT_HAPPENED" },
+    { "name": "pull_request", "minutes": 0, "note": "REPLACE_WITH_WHAT_HAPPENED" }
+  ],
+  "confusing": [],
+  "recorded_at": "REPLACE_WITH_AN_RFC3339_UTC_TIMESTAMP",
+  "non_claims": [
+    "REPLACE_WITH_AT_LEAST_ONE_THING_THIS_RECEIPT_DOES_NOT_PROVE"
+  ]
+}

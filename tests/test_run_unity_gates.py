@@ -106,6 +106,28 @@ class RunUnityGatesTests(unittest.TestCase):
         self.assertEqual(29, run["verification"]["actual_test_cases"])
         self.assertIsNotNone(run["result_sha256"])
 
+    def test_run_boundary_never_postdates_a_result_written_right_after_it(self) -> None:
+        """A fresh result must never look stale to the gate.
+
+        The boundary and the result mtime have to come from one clock: a
+        filesystem that truncates timestamps used to place a result written
+        microseconds after time.time() *before* the boundary, failing a run that
+        was in fact fresh. Repeating the pair many times catches that race.
+        """
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            for attempt in range(200):
+                boundary = MODULE.run_boundary(output)
+                result = output / f"result-{attempt}.xml"
+                result.write_text("<x/>", encoding="utf-8")
+                self.assertGreaterEqual(
+                    result.stat().st_mtime,
+                    boundary,
+                    f"attempt {attempt}: a result written after the boundary must not predate it",
+                )
+            self.assertEqual([], sorted(p.name for p in output.glob(".run-boundary")))
+
     def test_wrong_case_count_fails_closed(self) -> None:
         def fake_launch(command: list[str], timeout_seconds: int) -> int:
             mode = command[command.index("-testPlatform") + 1]

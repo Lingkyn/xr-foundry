@@ -5,6 +5,23 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- `scripts/merge_readiness.py` now discovers the deliberation record that
+  authorises a governance change from the candidate's own changed files (WI-008):
+  when `--deliberation-record` is not passed, `discover_deliberation_records`
+  looks for any file added or modified under `docs/governance/deliberations/`,
+  and `check_governance_boundary` evaluates the governance boundary against it —
+  one candidate exactly as the explicit option would, several by requiring at
+  least one that authorises the change (stated in the check's own detail text).
+  An explicit `--deliberation-record` still wins, a change that adds only a new
+  `Status: **Proposed**` RFC is still a proposal, and `--no-lazy-consensus` is
+  unchanged. No CI workflow change was needed: the `merge-readiness` job already
+  passes no `--deliberation-record`, so discovery now closes the first known gap
+  in `docs/validation/checked-claims.md` without a new flag. Six new cases in
+  `tests/test_merge_readiness.py` cover a governance change with no candidate
+  record, a discovered open record inside its window, a discovered resolved
+  record whose window closed, an explicit record winning over a losing
+  discovered candidate, several candidates where only one authorises the
+  change, and a non-governance change staying unaffected.
 - `scripts/run_unity_gates.py` now reads each run boundary from the filesystem
   that will hold the results (a marker file's own mtime) instead of
   `time.time()`. Linux stamps a file from a coarse clock updated once per timer

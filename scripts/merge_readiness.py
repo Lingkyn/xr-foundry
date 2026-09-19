@@ -15,6 +15,14 @@ verdict, is a person's visible, accountable act (GOVERNANCE.md, "Process-decided
 merges and lazy consensus"). Lazy consensus for governance deliberations is on by
 default; `--no-lazy-consensus` evaluates under the pre-2026-09-15 rule.
 
+A governance change is bound to the deliberation record that authorises it without
+a separate flag: when `--deliberation-record` is not passed, the tool discovers
+candidate records from the candidate's own changed files (any file added or
+modified under `docs/governance/deliberations/`) and evaluates the governance
+boundary against them — one candidate exactly as the explicit option would, several
+candidates by requiring at least one that authorises the change. `--deliberation-
+record` still wins when passed.
+
 Usage:
     python scripts/merge_readiness.py --base origin/main --head HEAD --json
     python scripts/merge_readiness.py --head my-branch --pr-metadata pr.json --markdown
@@ -56,6 +64,8 @@ GOVERNANCE_PATHS = (
 )
 GOVERNANCE_PREFIXES = ("docs/rfcs/",)
 MANDATE_PREFIX = "docs/governance/mandates/"
+DELIBERATION_PREFIX = "docs/governance/deliberations/"
+DELIBERATION_CANDIDATE_STATUSES = {"A", "M"}
 PACKAGE_SOURCE_SUFFIXES = (".cs", ".asmdef", ".uxml", ".uss", ".prefab", ".unity", ".asset")
 CHANGELOG_EXEMPT_PREFIXES = ("docs/",)
 CHANGELOG_EXEMPT_ROOT_FILES = {"README.md", "ROADMAP.md", "CONTRIBUTING.md", "SECURITY.md", "PROJECT_GITHUB_PLAYBOOK.md", "AGENTS.md", "CLAUDE.md"}
@@ -409,6 +419,77 @@ def is_proposed_rfc(repo: Path, head: str, path: str, status: str) -> bool:
     return "Status: **Proposed**" in text[:600]
 
 
+def discover_deliberation_records(changes: dict[str, str]) -> list[str]:
+    """Candidate deliberation records touched by this candidate: any file added or
+    modified (not deleted) under docs/governance/deliberations/."""
+
+    return sorted(
+        path
+        for path, status in changes.items()
+        if path.startswith(DELIBERATION_PREFIX)
+        and path.endswith(".json")
+        and status in DELIBERATION_CANDIDATE_STATUSES
+    )
+
+
+def evaluate_deliberation_record(record: dict[str, Any], now: datetime, lazy_consensus: bool) -> tuple[bool, str, list[str], dict[str, Any]]:
+    """Evaluate one deliberation record against the review-window rule.
+
+    Returns (authorises_the_change, detail, problems, extra_evidence). This is the
+    single-record rule that an explicit --deliberation-record and a lone discovered
+    candidate both use unchanged.
+    """
+
+    problems: list[str] = []
+    extra: dict[str, Any] = {}
+    if record.get("decision_class") not in GOVERNANCE_DECISION_CLASSES:
+        problems.append("decision_class must be governance_policy or constitutional_change")
+    not_before = record.get("review_not_before")
+    if not_before:
+        extra["review_not_before"] = not_before
+    try:
+        not_before_dt = datetime.fromisoformat(str(not_before).replace("Z", "+00:00")) if not_before else None
+    except ValueError:
+        not_before_dt = None
+    if not_before_dt is None:
+        problems.append("review_not_before is required")
+    elif not_before_dt > now:
+        problems.append(f"the review window has not closed yet (review_not_before {not_before})")
+    status = record.get("status")
+    decision = record.get("decision")
+    detail = ""
+    if status == "resolved":
+        decided_at = decision.get("decided_at") if isinstance(decision, dict) else None
+        try:
+            decided_dt = datetime.fromisoformat(str(decided_at).replace("Z", "+00:00")) if decided_at else None
+        except ValueError:
+            decided_dt = None
+        if not isinstance(decision, dict) or decided_dt is None:
+            problems.append("a resolved record must carry a decision with decided_at")
+        elif not_before_dt is not None and decided_dt < not_before_dt:
+            problems.append("the decision predates review_not_before")
+        detail = "Governance changes are backed by a resolved deliberation record whose review window closed."
+    elif status == "open" and not lazy_consensus:
+        problems.append("an open record cannot satisfy the rule when lazy consensus is disabled")
+    elif status == "open":
+        # Lazy consensus: an open record whose window closed with no objection delta
+        # resolves by process; the steward records decided_by process:<mandate>.
+        objections = [
+            item.get("id")
+            for item in (record.get("deltas", []) if isinstance(record.get("deltas"), list) else [])
+            if isinstance(item, dict) and item.get("kind") in OBJECTION_DELTA_KINDS
+        ]
+        if objections:
+            problems.append(f"the open record carries unresolved objection deltas {objections}; a person must resolve them")
+        elif decision is not None:
+            problems.append("an open record cannot carry a decision")
+        extra["lazy_consensus"] = not problems
+        detail = "The review window closed with no objection delta: lazy consensus applies and the steward records the resolution."
+    else:
+        problems.append("record status must be open or resolved")
+    return (not problems, detail, problems, extra)
+
+
 def check_governance_boundary(
     repo: Path,
     head: str,
@@ -438,68 +519,79 @@ def check_governance_boundary(
             detail += " Mandate records changed; they need a recorded maintainer decision note, no review window."
         return Check("governance_review_window", "pass", detail, evidence)
     evidence["governance_changes"] = governance_changes
-    if deliberation_record is None:
+
+    # An explicit --deliberation-record always wins over discovery.
+    if deliberation_record is not None:
+        try:
+            record = json.loads(deliberation_record.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            evidence["record_error"] = str(error)
+            return Check("governance_review_window", "fail", "The deliberation record cannot be read.", evidence)
+        evidence["deliberation_record"] = str(deliberation_record)
+        authorises, detail, problems, extra = evaluate_deliberation_record(record, now, lazy_consensus)
+        evidence.update(extra)
+        if not authorises:
+            evidence["problems"] = problems
+            return Check("governance_review_window", "fail", "The deliberation record does not satisfy the review-window rule.", evidence)
+        return Check("governance_review_window", "pass", detail, evidence)
+
+    # No explicit record: discover candidates from the candidate's own changed files
+    # (a record added or modified under docs/governance/deliberations/).
+    candidates = discover_deliberation_records(changes)
+    if not candidates:
         return Check(
             "governance_review_window",
             "fail",
-            "Governance rules changed without a resolved deliberation record; policy needs 7 days and constitutional changes 14 days of public review before a maintainer decision.",
+            "Governance rules changed without a resolved deliberation record; no candidate record was added or "
+            f"modified under {DELIBERATION_PREFIX} in this change, and policy needs 7 days and constitutional "
+            "changes 14 days of public review before a maintainer decision.",
             evidence,
         )
-    try:
-        record = json.loads(deliberation_record.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
-        evidence["record_error"] = str(error)
-        return Check("governance_review_window", "fail", "The deliberation record cannot be read.", evidence)
-    problems: list[str] = []
-    evidence["deliberation_record"] = str(deliberation_record)
-    if record.get("decision_class") not in GOVERNANCE_DECISION_CLASSES:
-        problems.append("decision_class must be governance_policy or constitutional_change")
-    not_before = record.get("review_not_before")
-    try:
-        not_before_dt = datetime.fromisoformat(str(not_before).replace("Z", "+00:00")) if not_before else None
-    except ValueError:
-        not_before_dt = None
-    if not_before_dt is None:
-        problems.append("review_not_before is required")
-    elif not_before_dt > now:
-        problems.append("the review window has not closed yet")
-    status = record.get("status")
-    decision = record.get("decision")
-    if status == "resolved":
-        decided_at = decision.get("decided_at") if isinstance(decision, dict) else None
-        try:
-            decided_dt = datetime.fromisoformat(str(decided_at).replace("Z", "+00:00")) if decided_at else None
-        except ValueError:
-            decided_dt = None
-        if not isinstance(decision, dict) or decided_dt is None:
-            problems.append("a resolved record must carry a decision with decided_at")
-        elif not_before_dt is not None and decided_dt < not_before_dt:
-            problems.append("the decision predates review_not_before")
-        detail = "Governance changes are backed by a resolved deliberation record whose review window closed."
-    elif status == "open" and not lazy_consensus:
-        problems.append("an open record cannot satisfy the rule when lazy consensus is disabled")
-        detail = ""
-    elif status == "open":
-        # Lazy consensus: an open record whose window closed with no objection delta
-        # resolves by process; the steward records decided_by process:<mandate>.
-        objections = [
-            item.get("id")
-            for item in (record.get("deltas", []) if isinstance(record.get("deltas"), list) else [])
-            if isinstance(item, dict) and item.get("kind") in OBJECTION_DELTA_KINDS
-        ]
-        if objections:
-            problems.append(f"the open record carries unresolved objection deltas {objections}; a person must resolve them")
-        elif decision is not None:
-            problems.append("an open record cannot carry a decision")
-        evidence["lazy_consensus"] = not problems
-        detail = "The review window closed with no objection delta: lazy consensus applies and the steward records the resolution."
-    else:
-        problems.append("record status must be open or resolved")
-        detail = ""
-    if problems:
-        evidence["problems"] = problems
-        return Check("governance_review_window", "fail", "The deliberation record does not satisfy the review-window rule.", evidence)
-    return Check("governance_review_window", "pass", detail, evidence)
+    evidence["candidate_deliberation_records"] = candidates
+
+    if len(candidates) == 1:
+        path = candidates[0]
+        record = read_json_blob(repo, head, path)
+        if not isinstance(record, dict):
+            evidence["record_error"] = f"{path} is not a readable JSON object at {head}"
+            return Check("governance_review_window", "fail", "The discovered deliberation record cannot be read.", evidence)
+        evidence["deliberation_record"] = path
+        authorises, detail, problems, extra = evaluate_deliberation_record(record, now, lazy_consensus)
+        evidence.update(extra)
+        if not authorises:
+            evidence["problems"] = problems
+            return Check("governance_review_window", "fail", "The discovered deliberation record does not satisfy the review-window rule.", evidence)
+        return Check("governance_review_window", "pass", detail, evidence)
+
+    # Several candidates: evaluate every one and require at least one that authorises
+    # the change (the same single-record rule above, applied per candidate).
+    rule = (
+        "Several deliberation records were added or modified in this change; the rule requires at least one of "
+        "them to authorise it under the same review-window rule a single record would need to satisfy."
+    )
+    per_record: dict[str, Any] = {}
+    authorising: list[str] = []
+    winning_detail = ""
+    for path in candidates:
+        record = read_json_blob(repo, head, path)
+        if not isinstance(record, dict):
+            per_record[path] = {"problems": [f"{path} is not a readable JSON object at {head}"]}
+            continue
+        authorises, detail, problems, extra = evaluate_deliberation_record(record, now, lazy_consensus)
+        per_record[path] = {"authorises": authorises, "problems": problems, **extra}
+        if authorises:
+            authorising.append(path)
+            winning_detail = detail
+    evidence["candidate_results"] = per_record
+    if authorising:
+        evidence["authorising_records"] = authorising
+        return Check("governance_review_window", "pass", f"{rule} {winning_detail}", evidence)
+    return Check(
+        "governance_review_window",
+        "fail",
+        f"{rule} None of the candidate records authorises this change.",
+        evidence,
+    )
 
 
 def check_mandated_branch(repo: Path, head: str, head_branch: str | None, now: datetime) -> Check:
@@ -712,7 +804,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pr-draft", default="false", help="true/false draft flag for --github-reviews")
     parser.add_argument("--head-branch", help="head branch name, matched against operating-mandate branch patterns")
     parser.add_argument("--no-lazy-consensus", dest="lazy_consensus", action="store_false", help="reject an open deliberation record even when its window closed without objection (pre-2026-09-15 rule)")
-    parser.add_argument("--deliberation-record", type=Path, help="resolved deliberation record for governance changes")
+    parser.add_argument("--deliberation-record", type=Path, help="explicit deliberation record for governance changes; overrides discovery from the candidate's changed files under docs/governance/deliberations/")
     parser.add_argument("--skip-contract", action="store_true", help="do not run the repository contract on the merged tree")
     parser.add_argument("--contract-command", help="override the contract command (shell words, JSON list)")
     parser.add_argument("--reviews-informational", action="store_true", help="report missing review as info instead of blocking")

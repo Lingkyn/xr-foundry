@@ -293,7 +293,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "small",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -324,7 +324,7 @@
         ]
       },
       "evidence": "validate_workflow_security still passes and the new tests are green.",
-      "done_proof": null
+      "done_proof": "tests/test_merge_readiness.py"
     },
     {
       "id": "WI-009",

@@ -76,6 +76,12 @@ jobs:
             "https://api.github.com/repos/$REPOSITORY/pulls/$PR_NUMBER/reviews?per_page=100" \
             -o pr-reviews.json
       - name: Compute the merge-readiness verdict
+        # No --deliberation-record is passed: a governance change is bound to
+        # whichever record it added or modified under
+        # docs/governance/deliberations/, discovered from the candidate's own
+        # changed files (see check_governance_boundary in
+        # scripts/merge_readiness.py). An explicit --deliberation-record would
+        # still win if one were ever passed here.
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}

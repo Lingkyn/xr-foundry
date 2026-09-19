@@ -77,7 +77,7 @@ information because GitHub's own required-review protection is the binding check
 | `changelogs_updated` | Every package whose files changed also changed its `CHANGELOG.md`; repository-level changes outside `docs/` and packages changed the root `CHANGELOG.md` | `fail` naming the missing changelog |
 | `maturity_unchanged` | No `maturity` field changed in a component manifest or the package catalog | `fail`: a promotion is a separate evidence decision |
 | `unity_evidence` | No Unity package source changed, or a `docs/validation/*.json` receipt in the change names a commit after which no package source changed | `info`: merge is allowed only without maturity, release, or device claims |
-| `governance_review_window` | No governance rule changed; or a new `Status: **Proposed**` RFC was only added; or a deliberation record with `governance_policy` or `constitutional_change` class whose window closed is supplied and is either resolved with a decision dated after `review_not_before`, or still open with no `risk` or `counterexample` delta (lazy consensus; `--no-lazy-consensus` disables it) | `fail`: the rule change owes its 7-day or 14-day public review, or a person must resolve an objection |
+| `governance_review_window` | No governance rule changed; or a new `Status: **Proposed**` RFC was only added; or the deliberation record that authorises the change is either an explicit `--deliberation-record` or discovered from the candidate's own changed files, and has `governance_policy` or `constitutional_change` class, a closed window, and is either resolved with a decision dated after `review_not_before`, or still open with no `risk` or `counterexample` delta (lazy consensus; `--no-lazy-consensus` disables it) | `fail`: the rule change owes its 7-day or 14-day public review, no candidate record was found, or a person must resolve an objection |
 | `not_draft` | The pull request is not a draft | `fail` |
 | `independent_review` | A GitHub identity other than the author (bots excluded) approved and nobody still requests changes | `fail`, or `info` with `--reviews-informational`; `unknown` without metadata |
 | `mandated_branch` | `--head-branch` matches a branch pattern of an unrevoked, unexpired operating mandate at the head commit | `fail` (never blocks the verdict; it only removes process-merge eligibility); `info` without a branch |
@@ -92,6 +92,20 @@ Governance paths are `GOVERNANCE.md`, the governance and Agent-membership models
 `docs/rfcs/`, the Task Hall documents, the deliberation protocol, and `CODEOWNERS`.
 Operating-mandate records are reported but not blocked: the governance text says a
 mandate is granted or revoked by a recorded maintainer decision without a window.
+
+**The record is discovered from the change, not passed by hand.** When
+`--deliberation-record` is not given, `check_governance_boundary` looks at the
+candidate's own changed files for any record added or modified under
+`docs/governance/deliberations/`. None found and the change touches a governance
+path: `governance_review_window` stays `fail` and names the missing record, exactly
+as before. Exactly one found: it is evaluated against the governance boundary
+exactly as an explicit `--deliberation-record` would be. Several found: every one
+is evaluated the same way and the rule requires at least one that authorises the
+change; the verdict's evidence lists every candidate, each one's problems, and
+which (if any) authorised it. An explicit `--deliberation-record` always wins over
+discovery. CI passes no `--deliberation-record`, so the `merge-readiness` job now
+binds a governance change in a pull request to the record that authorises it
+without a separate flag or workflow change.
 
 ## What the verdict is not
 

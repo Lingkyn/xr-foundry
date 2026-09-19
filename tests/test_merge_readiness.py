@@ -315,6 +315,153 @@ class MergeReadinessTests(unittest.TestCase):
             record.write_text(json.dumps(evidence_only), encoding="utf-8")
             self.assertEqual("pass", statuses(evaluate(repo, deliberation_record=record, lazy_consensus=True))["governance_review_window"])
 
+    def test_governance_change_without_any_candidate_record_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "gov")
+            write(repo, "GOVERNANCE.md", "# Governance\n\nNew rule.\n")
+            commit_all(repo, "gov")
+            report = evaluate(repo)
+            self.assertIn("governance_review_window", report["blocking"])
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertIn("docs/governance/deliberations/", check["detail"])
+            self.assertNotIn("candidate_deliberation_records", check["evidence"])
+
+    def test_governance_change_with_discovered_open_record_inside_window_is_blocked_and_names_window(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "gov")
+            write(repo, "GOVERNANCE.md", "# Governance\n\nNew rule.\n")
+            write_json(
+                repo,
+                "docs/governance/deliberations/DLB-0100-example.json",
+                {
+                    "status": "open",
+                    "decision_class": "governance_policy",
+                    "review_not_before": "2026-10-10T09:00:00Z",
+                    "decision": None,
+                    "deltas": [],
+                },
+            )
+            commit_all(repo, "gov")
+            report = evaluate(repo)  # NOW is 2026-09-30, before review_not_before
+            self.assertIn("governance_review_window", report["blocking"])
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertEqual(
+                ["docs/governance/deliberations/DLB-0100-example.json"],
+                check["evidence"]["candidate_deliberation_records"],
+            )
+            self.assertEqual("2026-10-10T09:00:00Z", check["evidence"]["review_not_before"])
+            self.assertIn("2026-10-10T09:00:00Z", " ".join(check["evidence"]["problems"]))
+
+    def test_governance_change_with_discovered_resolved_record_after_window_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "gov")
+            write(repo, "GOVERNANCE.md", "# Governance\n\nNew rule.\n")
+            write_json(
+                repo,
+                "docs/governance/deliberations/DLB-0101-example.json",
+                {
+                    "status": "resolved",
+                    "decision_class": "governance_policy",
+                    "review_not_before": "2026-09-22T09:00:00Z",
+                    "decision": {"option_id": "OPT-KEEP", "decided_by": "@maintainer", "decided_at": "2026-09-23T09:00:00Z"},
+                    "deltas": [],
+                },
+            )
+            commit_all(repo, "gov")
+            report = evaluate(repo)  # NOW is 2026-09-30, after review_not_before
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertEqual("pass", check["status"], check)
+            self.assertEqual("docs/governance/deliberations/DLB-0101-example.json", check["evidence"]["deliberation_record"])
+            self.assertEqual("non_routine", report["decision_class"])
+
+    def test_explicit_deliberation_record_still_wins_over_discovery(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "gov")
+            write(repo, "GOVERNANCE.md", "# Governance\n\nNew rule.\n")
+            # A discovered candidate that would NOT authorise the change on its own.
+            write_json(
+                repo,
+                "docs/governance/deliberations/DLB-0102-example.json",
+                {"status": "open", "decision_class": "governance_policy", "review_not_before": "2026-10-10T09:00:00Z", "decision": None, "deltas": []},
+            )
+            commit_all(repo, "gov")
+            explicit = Path(directory) / "explicit-record.json"
+            explicit.write_text(
+                json.dumps(
+                    {
+                        "status": "resolved",
+                        "decision_class": "governance_policy",
+                        "review_not_before": "2026-09-22T09:00:00Z",
+                        "decision": {"option_id": "OPT-KEEP", "decided_by": "@maintainer", "decided_at": "2026-09-23T09:00:00Z"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            report = evaluate(repo, deliberation_record=explicit)
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertEqual("pass", check["status"], check)
+            self.assertEqual(str(explicit), check["evidence"]["deliberation_record"])
+            self.assertNotIn("candidate_deliberation_records", check["evidence"])
+
+    def test_several_discovered_records_pass_when_at_least_one_authorises(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "gov")
+            write(repo, "GOVERNANCE.md", "# Governance\n\nNew rule.\n")
+            write_json(
+                repo,
+                "docs/governance/deliberations/DLB-0103-open.json",
+                {"status": "open", "decision_class": "governance_policy", "review_not_before": "2026-10-10T09:00:00Z", "decision": None, "deltas": []},
+            )
+            write_json(
+                repo,
+                "docs/governance/deliberations/DLB-0104-resolved.json",
+                {
+                    "status": "resolved",
+                    "decision_class": "governance_policy",
+                    "review_not_before": "2026-09-22T09:00:00Z",
+                    "decision": {"option_id": "OPT-KEEP", "decided_by": "@maintainer", "decided_at": "2026-09-23T09:00:00Z"},
+                },
+            )
+            commit_all(repo, "gov")
+            report = evaluate(repo)
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertEqual("pass", check["status"], check)
+            self.assertEqual(
+                ["docs/governance/deliberations/DLB-0104-resolved.json"],
+                check["evidence"]["authorising_records"],
+            )
+            self.assertEqual(2, len(check["evidence"]["candidate_deliberation_records"]))
+
+            # If neither candidate authorises the change, the verdict is blocked and
+            # names the rule it applied.
+            write_json(
+                repo,
+                "docs/governance/deliberations/DLB-0104-resolved.json",
+                {"status": "open", "decision_class": "governance_policy", "review_not_before": "2026-10-11T09:00:00Z", "decision": None, "deltas": []},
+            )
+            commit_all(repo, "gov: neither candidate authorises yet")
+            blocked = evaluate(repo)
+            self.assertIn("governance_review_window", blocked["blocking"])
+            blocked_check = next(item for item in blocked["checks"] if item["id"] == "governance_review_window")
+            self.assertIn("at least one", blocked_check["detail"])
+
+    def test_non_governance_change_is_unaffected_by_discovery(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = make_repo(directory)
+            branch(repo, "docs")
+            write(repo, "docs/readme.md", "changed\n")
+            commit_all(repo, "docs")
+            report = evaluate(repo)
+            check = next(item for item in report["checks"] if item["id"] == "governance_review_window")
+            self.assertEqual("pass", check["status"])
+            self.assertNotIn("candidate_deliberation_records", check.get("evidence", {}))
+            self.assertEqual("routine_change", report["decision_class"])
+
     def test_mandated_branch_and_process_merge_eligibility(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = make_repo(directory)

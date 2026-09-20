@@ -192,23 +192,12 @@ class FamilySourceManifestTests(unittest.TestCase):
             self.assertNotEqual(fallback, item["hint"], item["error"])
             self.assertTrue(item["hint"].strip(), item["error"])
 
-    def test_real_repository_returns_no_errors_or_exactly_the_allowlisted_ones(self) -> None:
+    def test_real_repository_returns_no_errors_and_the_allowlist_is_empty(self) -> None:
+        # Every docs/standards/<family>/ now holds a source manifest and a
+        # verification contract together, so no suppressed message remains and the
+        # allowlist itself must be empty rather than merely unproduced.
+        self.assertEqual(frozenset(), MODULE.FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS)
         self.assertEqual([], MODULE.validate_family_source_manifests(ROOT))
-        for file_path, message in MODULE.FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS:
-            self.assertTrue((ROOT / file_path).is_file(), file_path)
-            self.assertTrue(message.strip(), file_path)
-
-        # Every allowlisted pair is still produced by the raw rule, otherwise the
-        # stale-entry check inside the rule would report it; assert the raw rule
-        # reports exactly the allowlisted pairs and nothing else.
-        original = MODULE.FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS
-        MODULE.FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS = frozenset()
-        try:
-            raw = MODULE.validate_family_source_manifests(ROOT)
-        finally:
-            MODULE.FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS = original
-        expected = sorted(f"family source manifest {file_path}: {message}" for file_path, message in original)
-        self.assertEqual(expected, sorted(raw))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,106 @@
+{
+  "schema": "xr-foundry.foundations_source_manifest.v1",
+  "scope": "Consumer-neutral Unity project setup and package folder layout for com.lingkyn.project-initializer, and a comfort-conservative default XR rig built on the XR Interaction Toolkit and the OpenXR provider for com.lingkyn.xr-baseline",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths and version pins, before the admission record is signed.",
+  "sources": [
+    {
+      "id": "unity-special-folder-names",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/SpecialFolders.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity code copied",
+      "maintenance_evidence": "Current Unity 6000.3 manual page on special folder names, the same major/minor line this repository's compatibility profiles pin the Editor to; exact page path and section anchors to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for Project Initializer's folder contract: which folder names Unity itself treats specially, so the package's own generated layout can be judged against what Unity reserves rather than against a private convention",
+      "admitted_claims": [
+        "Unity reserves a fixed set of top-level and nested folder names (for example Resources, Editor, Gizmos, Plugins, StreamingAssets, and Standard Assets) for special import, compilation, or build behavior, and content placed under one of them is treated differently than content in an ordinary folder",
+        "A folder name outside that reserved set is ordinary to Unity and carries no special import or compilation behavior on its own"
+      ],
+      "excluded_uses": [
+        "No claim that this repository's Assets/_Project root, its four baseline scenes, its empty extension prefabs, or any other project-initializer folder name is itself a Unity-defined convention; that layout is XR Foundry's own choice and is validated by this repository's own tests, not by this source",
+        "No Unity Editor internal type, API, or asset is copied into the package"
+      ]
+    },
+    {
+      "id": "unity-custom-package-layout",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Manual/CustomPackages.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity code copied",
+      "maintenance_evidence": "Current Unity manual page on creating custom packages; exact page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for both foundation packages' own folder shape: the package.json, Runtime/, Editor/, Tests/, Samples~/, and Documentation~/ layout Unity's Package Manager recognizes",
+      "admitted_claims": [
+        "A local or embedded package is identified by a package.json at its root and Unity's Package Manager resolves it by that manifest rather than by folder name alone",
+        "Editor/ and Runtime/ are conventional subfolders whose assembly definitions Unity compiles for the Editor or for all platforms respectively, Tests/ holds test assemblies the Test Framework discovers, and a Samples~/ or Documentation~/ folder with a trailing tilde is excluded from the compiled package content and surfaced by the Package Manager UI instead"
+      ],
+      "excluded_uses": [
+        "No claim that this repository's exact subfolder names inside Editor/ or Runtime/ (for example SceneSetup, ConfigTools, Interaction) are a Unity convention; only the top-level package shape is admitted",
+        "No Unity Package Manager source code is depended upon by either package"
+      ]
+    },
+    {
+      "id": "xri-near-far-interactor",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/near-far-interactor.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5 is the minor line this repository's xr-baseline compatibility profile resolves (3.5.1); page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for XR Baseline's rig repair: the near/far interactor and its caster references that a rig's interaction setup depends on",
+      "admitted_claims": [
+        "A NearFarInteractor selects between a near-distance and a far-distance interaction mode and delegates the far-distance cast to a separate caster component it references rather than casting itself",
+        "The far caster component exposes a configurable maximum cast distance as a serialized setting"
+      ],
+      "excluded_uses": [
+        "Core and Editor rig-repair logic reference the interactor and caster only through the toolkit's own public members with an explicit diagnostic when a reference is missing; no private or internal toolkit member is depended upon",
+        "No claim about grab reliability, cast accuracy, or comfort on a headset without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-openxr-provider-setup",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.openxr@1.16/manual/index.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no OpenXR plug-in code copied",
+      "maintenance_evidence": "OpenXR plug-in 1.16 is the version this repository's xr-baseline compatibility profile resolves; page path and version pin to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Adapter boundary for XR Baseline's provider setup: the OpenXR plug-in is enabled as an XR provider through XR Plug-in Management rather than configured directly on a rig component",
+      "admitted_claims": [
+        "The OpenXR plug-in is enabled per build target through the XR Plug-in Management project settings, and interaction feature groups such as controller profiles are enabled separately under the OpenXR provider's own settings",
+        "An XR-tracked rig requires an active XR provider such as OpenXR alongside the XR Origin and its input bindings for tracked pose data to reach the scene"
+      ],
+      "excluded_uses": [
+        "No claim that OpenXR is enabled, configured, or reachable in any consumer project; xr-baseline documents the dependency and reports an explicit diagnostic when a provider or feature is not resolvable, and claims nothing silently",
+        "No claim about a named runtime's or headset's OpenXR conformance without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "pico-comfortable-default-posture-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/design-guidelines/locomotion/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO developer design guidance this repository already cites for locomotion comfort evidence; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Platform evidence for XR Baseline's comfort-conservative default: a generated Sandbox rig should assume both seated and standing use and default to the less motion-heavy option until a project opts in to more",
+      "admitted_claims": [
+        "Seated and standing play are distinct configurations that change how motion and turning should be offered, so a default rig should not assume standing-only or seated-only use",
+        "Sudden, uncontrolled, or acceleration-heavy camera motion is discouraged, favoring a comfort-conservative default over an aggressive one"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, prefab, or asset is depended upon by xr-baseline; only the comfort-conservative default rationale is admitted",
+        "No claim that continuous move disabled by default, or any other xr-baseline default, satisfies PICO's or any platform's own comfort review without a Device Lab receipt"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "foundations-locomotion-comfort-boundary",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/locomotion/verification-contract.md",
+      "reason": "The Locomotion family already owns the comfort policy (turn style, movement speed, vignette) as an engine-light intent and state substrate; xr-baseline's default of continuous move disabled is a rig-generation default only and must not duplicate or shadow the Locomotion comfort policy"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform comfort rating, or device authority",
+    "com.lingkyn.project-initializer and com.lingkyn.xr-baseline are Editor tooling with a thin runtime surface, not a rig controller, an input reader, or a rendering effect",
+    "Headset tracking, grab, teleport, or comfort behavior of a generated Sandbox rig is a device claim that requires a Device Lab receipt, never an EditMode result or a source citation"
+  ]
+}

@@ -5,6 +5,23 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added `validate_api_surface_inventories` (WI-007), registered next to
+  `validate_inventory_api_baseline` in `scripts/validate_repository.py`, so the
+  Interaction, Persistence, and Settings `docs/standards/<family>/api-surface.md`
+  inventories are derived from `Runtime/**/*.cs` instead of hand-typed: for each
+  live package it re-derives the public `class`/`struct`/`enum`/`interface`/
+  `record`/`delegate` declarations (excluding `Tests`, `Editor`, `Samples~`) with
+  the same regex approach as the Inventory rule, reports any type the inventory
+  omits or invents (naming family, file, and type), and checks the section's
+  stated `N public types.` count against the derived count. Re-deriving all six
+  packages found the three inventories already correct — Persistence Core 29,
+  Persistence Unity 10, Settings Core 35, Settings Unity 17, Interaction Core 46,
+  and Interaction Unity 19 public types all match their `Runtime/` sources with
+  no missing, extra, or miscounted types — so no inventory text changed. New
+  tests in `tests/test_api_surfaces.py` cover a matching inventory, a missing
+  type, an extra type, a disagreeing stated count, a family with no inventory
+  file, fix hints for each new error shape, and the real repository returning no
+  errors.
 - `scripts/merge_readiness.py` now discovers the deliberation record that
   authorises a governance change from the candidate's own changed files (WI-008):
   when `--deliberation-record` is not passed, `discover_deliberation_records`
@@ -39,6 +56,33 @@ live in each package's `CHANGELOG.md`.
   WI-017: the design-language standard has a source manifest and no
   verification contract, and the foundations standard has a contract and no source
   manifest.
+- Closed both allowlisted `FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS` findings
+  (WI-017): `docs/standards/design-language/verification-contract.md` now names a
+  Source gate, a Reference hierarchy gate (exactly one primary visual and one
+  primary interaction reference, cross-checked against `source-manifest.json`), a
+  Token inventory gate (a bijection between the tokens `README.md` names and the
+  keys under `design_tokens` in `ui-design-language-standard.json`), a Renderer
+  adapter seam gate (one injectable skin/theme seam per adapter with a default
+  carrying the canonical values, and no component, prefab, or scene defined by
+  this standard), and a claim ceiling routing legibility, contrast, comfort, and
+  any other perceived-quality claim to a Device Lab receipt, stating plainly that
+  the family ships no package or test assembly so these clauses are checked by
+  repository validation and human review, never a Unity test.
+  `docs/standards/foundations/source-manifest.json` now names five admitted public
+  sources in the same field set as `locomotion/source-manifest.json` (schema
+  `xr-foundry.foundations_source_manifest.v1`): Unity's special-folder-name and
+  custom-package-layout manual pages for `com.lingkyn.project-initializer`, the
+  XR Interaction Toolkit `NearFarInteractor`/caster manual page and the OpenXR
+  plug-in provider-setup manual page (both at the versions the `xr-baseline`
+  compatibility profile resolves) for `com.lingkyn.xr-baseline`'s rig repair and
+  provider dependency, and PICO's locomotion design guidance as platform evidence
+  for a comfort-conservative default rig; every source is marked not fetched from
+  the authoring environment with the same review-note wording the other family
+  manifests use. `FAMILY_SOURCE_MANIFEST_UNVERIFIED_CLAIMS` in
+  `scripts/validate_repository.py` is now an empty `frozenset()`, and
+  `tests/test_source_manifests.py`'s real-repository test now asserts the
+  allowlist is empty and the rule reports zero errors, rather than asserting the
+  two suppressed messages are still produced.
 - Generalised the Inventory-only source-manifest rule to every family (WI-006):
   `scripts/validate_repository.py` gains `validate_family_source_manifests`,
   registered next to `validate_consumer_lessons_register`, which checks every

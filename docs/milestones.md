@@ -28,6 +28,7 @@ what is and is not proven, and land a routine change without talking to anyone.
 | `AGENTS.md` and [`for-agents.md`](for-agents.md): the same route for a coding Agent as for a person | done |
 | [`start-here.md`](contributing/start-here.md): one install command, one verdict command, five-line pull request | done |
 | [`checked-claims.md`](validation/checked-claims.md): every claim kind marked machine-checked or self-declared | done |
+| [`capabilities.md`](contributing/capabilities.md): an arriving person or Agent declares what it brings before taking work, and the board narrows to what that declaration can finish | done |
 
 ### Batch 1b: green main
 
@@ -68,7 +69,7 @@ what is and is not proven, and land a routine change without talking to anyone.
 
 | Deliverable | Status |
 | --- | --- |
-| A cold-start receipt: someone outside the maintainer account follows `start-here.md` from a fork and lands a routine change through the verdict, with the time it took recorded | open |
+| A cold-start receipt: someone outside the maintainer account follows `start-here.md` from a fork and lands a routine change through the verdict, with the time it took recorded | partial: the schema, template, and `validate_cold_start_receipts` exist (WI-009); no receipt has been filled, and only a contributor who is not the maintainer can fill one (WI-010) |
 | Open-work board generated from the tree (`scripts/open_work.py`) | done |
 | At least five `good first issue` items that meet the certified subset in `CONTRIBUTING.md` | open: needs Issues, which the mandate forbids an Agent to create |
 
@@ -100,7 +101,7 @@ responds. Every number is read from the public record, not asserted.
 
 | Deliverable | Status |
 | --- | --- |
-| Locomotion and comfort, scene flow, XR UI shell: source manifest, verification contract, admission draft, staged Core with a coverage map, in that order (ranks 8 to 10 in [`../ROADMAP.md`](../ROADMAP.md)) | open |
+| Locomotion and comfort, scene flow, XR UI shell: source manifest, verification contract, admission draft, staged Core with a coverage map, in that order (ranks 8 to 10 in [`../ROADMAP.md`](../ROADMAP.md)) | partial: all three passed the source gate (WI-001, WI-003, WI-005); Locomotion and Scene flow are staged with coverage maps at 18 of 19 clauses each (WI-002, WI-004); the XR UI shell has no implementation yet |
 | At least one of the three authored, reviewed, or device-tested by someone other than the maintainer or the steward Agent | open |
 
 ### Batch 2d: public deliberation by outsiders

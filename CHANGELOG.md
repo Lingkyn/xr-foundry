@@ -5,6 +5,12 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Refreshed the `docs/milestones.md` status cells against what merged this week:
+  batch 1a records the capability declaration, batch 1f's cold-start receipt moves
+  from open to partial (the schema, template, and rule exist; no receipt is filled
+  and only a contributor who is not the maintainer can fill one), and batch 2c
+  records that all three queued families passed the source gate while Locomotion
+  and Scene flow are staged with coverage maps at 18 of 19 clauses each.
 - Added `validate_api_surface_inventories` (WI-007), registered next to
   `validate_inventory_api_baseline` in `scripts/validate_repository.py`, so the
   Interaction, Persistence, and Settings `docs/standards/<family>/api-surface.md`

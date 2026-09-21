@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the Live tuning family to the source-gate queue (`NEXT-LIVE-TUNING`) with
+  its source manifest, verification contract, README, and admission draft under
+  `docs/standards/live-tuning/`: in-headset tuning of design-language tokens and
+  skin values (colour, size, corner radius, spacing) with export back to the
+  assets that own them. `ROADMAP.md` ranks it 11, after the XR UI shell it
+  composes on, and shifts the later ranks by one. Work items WI-018 (source gate,
+  done) and WI-019 (staged Core and Unity adapter, open, needs no Editor) carry it.
 - Refreshed the `docs/milestones.md` status cells against what merged this week:
   batch 1a records the capability declaration, batch 1f's cold-start receipt moves
   from open to partial (the schema, template, and rule exist; no receipt is filled

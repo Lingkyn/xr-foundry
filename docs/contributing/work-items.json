@@ -669,6 +669,91 @@
       },
       "evidence": "validate_family_source_manifests passes with an empty allowlist.",
       "done_proof": "docs/standards/design-language/verification-contract.md"
+    },
+    {
+      "id": "WI-018",
+      "title": "Live tuning source gate",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "done",
+      "depends_on": [
+        "WI-005"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/foundry/system-admission.md",
+        "docs/standards/design-language/README.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/settings/verification-contract.md",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "docs/standards/live-tuning/",
+        "docs/foundry/queue/next-batch.json",
+        "ROADMAP.md"
+      ],
+      "steps": [
+        "Write the source manifest, verification contract (Core gate: a closed tunable kind set, an immutable registry by explicit registration, set, reset, snapshot, apply, and export intents on an immutable state with deterministic replay, and a bridge to and from the design-language token JSON; Unity gate: explicit bindings to skin assets, live apply through the existing skin seams with diagnostics, an injectable export sink so Play-mode changes survive, and a panel that is one client of the XR UI shell), README with lesson dispositions, and admission draft for the Live tuning family.",
+        "State the claim ceiling: the family proves plumbing (a change reaches the bound value and exports to the asset that owns it); whether a value looks right on a headset is a Device Lab receipt, never a package claim.",
+        "Add a NEXT-LIVE-TUNING candidate to the queue with state proposal and no package_ids, and a rank row in ROADMAP.md after the XR UI shell."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "docs/standards/live-tuning/README.md",
+          "docs/standards/live-tuning/source-manifest.json",
+          "docs/standards/live-tuning/verification-contract.md",
+          "docs/standards/live-tuning/admission.draft.json"
+        ]
+      },
+      "evidence": "The four artifacts in the tree and a passing repository contract.",
+      "done_proof": "docs/standards/live-tuning/verification-contract.md"
+    },
+    {
+      "id": "WI-019",
+      "title": "Live tuning staged Core and Unity adapter",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-018"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "staging/scene-flow/README.md",
+        "docs/standards/scene-flow/coverage-map.json",
+        "docs/standards/design-language/ui-design-language-standard.json"
+      ],
+      "allowed_paths": [
+        "staging/live-tuning/",
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/live-tuning/README.md"
+      ],
+      "steps": [
+        "Author staging/live-tuning/com.lingkyn.live-tuning.core (TunableId, the closed TunableKind set, TunableRegistry, TuningState, the set, reset, reset-all, snapshot, apply, and export intents with the result codes the contract names, deterministic replay, and the design-language token bridge) and com.lingkyn.live-tuning.unity (binding records to skin assets, live apply through the existing skin seams, an injectable export sink with a device JSON writer and an Editor asset writer, and a tuning panel that is a client of the XR UI shell with a UGUI fallback), with package.staging.json, asmdefs, NUnit EditMode tests, and a domain-only sample, modelled on staging/scene-flow.",
+        "Write docs/standards/live-tuning/coverage-map.json mapping every contract clause to named tests; every listed test must exist and every test must be listed.",
+        "Write staging/live-tuning/README.md with the status line, the what-is-here table, the promotion steps, and the statement that the code is authored and unexecuted."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/live-tuning/README.md",
+          "docs/standards/live-tuning/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
+      "done_proof": null
     }
   ]
 }

@@ -86,16 +86,19 @@ with its own admission record.
 | 8 | Locomotion and comfort | Every VR project | Candidate | Teleport, snap and smooth turn, continuous move, comfort vignette policy; today only Editor setup tools exist in xr-baseline. Sources: XR Interaction Toolkit locomotion, platform comfort guidelines |
 | 9 | Scene flow | Nearly every project | Candidate | Loading, transitions, fade and hold, additive scene sets, error recovery; every project writes one and most write it badly |
 | 10 | XR UI shell | Most XR projects | Candidate | World-space panels, wrist and hand menus, pointer and gaze routing, built on the shared design language; the Inventory presentation adapters become one client of it |
-| 11 | Haptics | Most XR projects | Candidate | Named haptic events and per-controller profiles behind an engine-light intent seam; natural extension of Interaction |
-| 12 | Tutorial and onboarding | Most XR projects | Candidate | First-run guidance, gated steps, replay; XR projects need it because controls are not discoverable |
-| 13 | Objectives and quests | Most games | Candidate | Goal graphs, progress state, persistence integration |
-| 14 | Analytics events | Many projects | Candidate | Consent-gated, typed event intents with no vendor dependency in Core |
-| 15 | Dialogue and narrative | Some games | Candidate | Branching lines, localization integration; lower frequency across XR tools |
-| 16 | Networking and multiplayer | Some projects | Deferred | High frequency where present, but no engine-light Core is credible without a transport; enters after a source comparison of the maintained public stacks |
+| 11 | Live tuning | Most XR projects during development | Candidate | In-headset tuning of design-language tokens and skin values (colour, size, corner radius, spacing) with export back to the assets that own them; a developer scaffold that composes on the XR UI shell, the skin seams, Settings, and the design language, so "does it look right on the device" is answered in the headset instead of by a rebuild |
+| 12 | Haptics | Most XR projects | Candidate | Named haptic events and per-controller profiles behind an engine-light intent seam; natural extension of Interaction |
+| 13 | Tutorial and onboarding | Most XR projects | Candidate | First-run guidance, gated steps, replay; XR projects need it because controls are not discoverable |
+| 14 | Objectives and quests | Most games | Candidate | Goal graphs, progress state, persistence integration |
+| 15 | Analytics events | Many projects | Candidate | Consent-gated, typed event intents with no vendor dependency in Core |
+| 16 | Dialogue and narrative | Some games | Candidate | Branching lines, localization integration; lower frequency across XR tools |
+| 17 | Networking and multiplayer | Some projects | Deferred | High frequency where present, but no engine-light Core is credible without a transport; enters after a source comparison of the maintained public stacks |
 
-Ranks 8 to 10 are the next three source gates after Audio, in that order. A
-candidate enters the queue only with a source manifest, a verification contract,
-and an admission draft, exactly as Localization and Audio did.
+Ranks 8 to 10 were the next three source gates after Audio, in that order, and
+all three have passed it; rank 11 is the fourth and depends on rank 10's shell
+and skin contract. A candidate enters the queue only with a source manifest, a
+verification contract, and an admission draft, exactly as Localization and Audio
+did.
 
 ## Composition
 

@@ -1,0 +1,62 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "live-tuning",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "standard_system",
+  "reviewed_on": "2026-09-21",
+  "source_manifest": "docs/standards/live-tuning/source-manifest.json",
+  "consumer_contexts": [
+    "games and social experiences on several headset platforms whose designers tune the shared design-language tokens and each renderer adapter's skin values while wearing the headset, then export the reviewed overrides back into the token document or the skin asset instead of losing them when Play mode ends",
+    "training, industrial, and accessibility XR applications that expose a bounded set of typed parameters (sizes, spacing, opacity, colours, enumerated modes) to an in-headset developer panel during on-site evaluation, record each session as an override document bound to a commit, and replay it deterministically for review"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/UIE-HowTo-CreateRuntimeUI.html",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/UIE-World-Space-UI.html",
+      "https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UICanvas.html",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/GameView.html",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html",
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/JsonUtility.html",
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Application-persistentDataPath.html",
+      "https://developers.meta.com/horizon/documentation/unity/ts-ovrmetricstool/",
+      "https://developer.apple.com/design/human-interface-guidelines/materials",
+      "https://developers.meta.com/horizon/design/styles_inputs_hit_targets/"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/ocornut/imgui",
+      "https://github.com/yasirkula/UnityRuntimeInspector"
+    ]
+  },
+  "common_kernel": [
+    "tunable and snapshot identity as validated identities separate from the asset, field, token path, or control that implements them",
+    "a closed set of tunable kinds (float with range and step, integer with range, bool, enumerated with a value set, colour as four unit floats, vector2 and vector3 with per-axis ranges) and an immutable registry built by explicit registration that rejects duplicates and out-of-range defaults",
+    "tuning intents (set, reset one, reset all, snapshot, apply snapshot, export) applied to an immutable state whose overrides are the only diff from defaults, with stable failure codes and deterministic replay to an equal fingerprint",
+    "a closed editor-kind set with exactly one editor per tunable kind, resolved by kind and never by location, with a panel host of one slot per bound tunable and binding records as the only way a target attaches",
+    "a token bridge that derives a registry deterministically from the shared design-language token document and turns a state's overrides back into a token-override document",
+    "an injectable export sink so a Play-mode or in-headset tuning session survives exit, with a device-side override file and an Editor-side writer into the token document or asset"
+  ],
+  "configurable_variation": [
+    "which tunables a product registers, their ranges, steps, value sets, groups, labels, and scope metadata, and which skin assets or other ScriptableObjects its binding records target",
+    "adapter-side binders per asset type, the export sink a composition injects, the override file path, the range policy the token bridge is given, and the shell panel the host is declared as",
+    "consumer-owned token values, skins, tuning sessions, and the panel's placement through the XR UI shell"
+  ],
+  "excluded_project_specific": [
+    "one product's token values, skin assets, tuning session records, and panel layout",
+    "one project's choice of which parameters to expose, its override file location, and any judgement that a tuned value looks right on its device"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "In-headset live tuning is a recurring cross-project need whose kernel (validated tunable identity, a closed typed kind set with an explicitly built registry, intents over an immutable override-only state with deterministic replay, one editor per kind attached through binding records, and a deterministic bridge to and from the shared token document with an explicit export sink) is supported by the engine's own runtime and world-space UI, its documented Play-mode reset, ScriptableObject, JSON, and persistent-path facts, by first-party evidence of in-headset developer overlays and of design guidance that colour, opacity, and size must be judged on the device, and by two independent open-source tweak-panel and runtime-inspector implementations, while every product keeps its own token values, skins, exposed parameters, and sessions outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim that any tuned value looks right, is legible, has sufficient contrast, is comfortable, or is reachable in a headset, nor any latency or named-device behaviour; the family guarantees the plumbing only and every such judgement is a human observation in a Device Lab receipt.",
+    "Admission does not make the family a player settings menu, a profiler, or an inspector of arbitrary objects, and it transfers no design-language, Inventory, XR UI shell, Settings, or renderer evidence to this family; no evidence for one renderer adapter's skin seam transfers to the other.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, versions, licenses, and the maintenance state of each open-source implementation."
+  ]
+}

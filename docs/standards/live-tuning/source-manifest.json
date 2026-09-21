@@ -1,0 +1,254 @@
+{
+  "schema": "xr-foundry.live_tuning_source_manifest.v1",
+  "scope": "Engine-light live tuning: tunable identity, a closed set of tunable kinds (float, integer, bool, enumerated, colour, vector2, vector3), an immutable registry built by explicit registration, tuning intents (set, reset one, reset all, snapshot, apply snapshot, export) applied to an immutable tuning state whose overrides are the only diff from defaults, deterministic replay, and a token bridge that turns the shared design-language token document into a registry and a state's overrides back into a token-override document, with a thin Unity adapter planned separately that binds tunables to skin assets and other ScriptableObjects through explicit binding records, applies accepted overrides live through each renderer adapter's existing skin seam, exports through an injectable sink (a device-side JSON override file and an Editor-side asset writer), and hosts a tuning panel as a client of the XR UI shell",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths, version pins, licenses, and open-source maintenance state, before the admission record is signed.",
+  "sources": [
+    {
+      "id": "unity-ui-toolkit-runtime-ui",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/UIE-HowTo-CreateRuntimeUI.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity code copied",
+      "maintenance_evidence": "Unity 6000.3 is the editor pinned by this repository's compatibility profiles and documents runtime UI Toolkit panels and controls; page path to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Unity adapter boundary for the UI Toolkit route of the tuning panel: runtime UI Toolkit panels are built from a document, panel settings, and typed controls that raise change events, which the panel translates into Core intents",
+      "admitted_claims": [
+        "A runtime UI Toolkit panel is a UIDocument with PanelSettings and a visual tree, and its controls (slider, integer slider, toggle, dropdown, and colour-capable fields) raise typed change events at runtime",
+        "Runtime UI Toolkit panels are driven by scripts that register callbacks on named controls rather than by editor-only inspector code",
+        "A runtime panel is a separate visual tree from the application's own UI and can be shown and hidden independently"
+      ],
+      "excluded_uses": [
+        "Core does not reference UIDocument, PanelSettings, VisualElement, or any UI Toolkit type",
+        "The tuning panel's UI Toolkit route is reached through the XR UI shell's UI Toolkit adapter when that family goes live; no claim that a runtime panel is legible or reachable in a headset without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-ui-toolkit-world-space",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/UIE-World-Space-UI.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity code copied",
+      "maintenance_evidence": "Unity 6000.3 is the editor pinned by this repository's compatibility profiles and documents world-space UI Toolkit panels; page path to be confirmed by a person; not fetched from this environment; the same page is admitted by the XR UI shell source manifest",
+      "admitted_role": "Unity adapter boundary for placing the tuning panel in the headset: a world-space UIDocument with world-space PanelSettings is a surface the XR UI shell binds, and the tuning panel is one client of that surface",
+      "admitted_claims": [
+        "A UIDocument can render in world space when its PanelSettings render mode is world space, and the document's transform places the panel in the scene",
+        "A world-space panel exposes a collider for physics-based input so that raycasts from interactors can hit it",
+        "Screen-space and world-space documents are distinct configurations rather than one document that switches at runtime"
+      ],
+      "excluded_uses": [
+        "The tuning family owns no panel placement, anchor, routing, or collider logic; those are the XR UI shell's",
+        "No claim that a world-space document is legible, reachable, or comfortable without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "ugui-canvas-render-modes",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UICanvas.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Unity UI code copied",
+      "maintenance_evidence": "Unity UI (UGUI) 2.0 is the version pinned by this repository's compatibility profiles and its Canvas manual is maintained with the package; page path and version pin to be confirmed by a person; not fetched from this environment; the same page is admitted by the XR UI shell source manifest",
+      "admitted_role": "Unity adapter boundary for the interim UGUI world-space fallback of the tuning panel, used only until the XR UI shell's UGUI adapter exists",
+      "admitted_claims": [
+        "A Canvas has a render mode, and World Space places the Canvas as a rectangle in the scene whose position, rotation, and scale come from its transform rather than from the screen",
+        "A world-space Canvas needs an event camera reference for UI raycasting, and a missing event camera is a configuration fault rather than a rendering choice",
+        "Every UI element must be a child of a Canvas, so the fallback panel is one Canvas subtree constructed with explicit references"
+      ],
+      "excluded_uses": [
+        "Core does not reference Canvas, RectTransform, Graphic, EventSystem, or any other engine or UI type",
+        "The fallback is interim and carries no placement, anchor, or routing semantics of its own; no UGUI evidence transfers to the UI Toolkit route or the reverse"
+      ]
+    },
+    {
+      "id": "unity-play-mode-changes-discarded",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/GameView.html",
+      "license_or_terms": "Unity documentation terms; facts only, no Unity code copied",
+      "maintenance_evidence": "Unity 6000.3 manual page for the Game view and Play mode; the statement that Play-mode changes are temporary is to be confirmed on this page or the page the manual moves it to by a person; not fetched from this environment",
+      "admitted_role": "The motivating engine fact: changes made to scene objects while in Play mode are discarded when Play mode ends, so a value adjusted in the headset during Play mode is lost unless something exports it",
+      "admitted_claims": [
+        "Changes made to scene objects and their component values while the Editor is in Play mode are temporary and are reset when Play mode is exited",
+        "The Editor tints the interface while in Play mode to warn that edits made in that state will not persist",
+        "Persisting a Play-mode change is an explicit act the developer performs, not an engine default"
+      ],
+      "excluded_uses": [
+        "No claim that any particular workaround for Play-mode reset is endorsed by the engine; the family's export sink is its own design",
+        "No claim about the behaviour of a player build, which has no Play mode; device-side persistence is admitted through the persistent data path source"
+      ]
+    },
+    {
+      "id": "unity-scriptableobject",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6000.3 manual page for ScriptableObject; page path to be confirmed by a person; not fetched from this environment; the same page is admitted by the Settings family source manifest",
+      "admitted_role": "Unity adapter boundary for the skin assets and other ScriptableObjects that tunables bind to, and for the Editor-side export target: an asset whose serialized values the Editor can write back to disk",
+      "admitted_claims": [
+        "A ScriptableObject is a data container saved as a project asset, independent of GameObject instances, and the renderer adapters' skin seams are such assets",
+        "In the Editor, data can be saved to a ScriptableObject asset while editing and at run time; in a deployed build a ScriptableObject cannot be used to save data, only to read data authored during development",
+        "Changing a ScriptableObject asset's values at run time in the Editor changes the asset, not a per-instance copy, so an Editor-side writer must be explicit about which asset it writes and when"
+      ],
+      "excluded_uses": [
+        "The family never discovers ScriptableObject fields by reflection; every bound member comes from an explicit binding record",
+        "No claim that an asset write is atomic, versioned, or safe against concurrent editing; the Editor writer reports what it wrote and nothing more"
+      ]
+    },
+    {
+      "id": "unity-json-utility",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/JsonUtility.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6000.3 script reference page for JsonUtility; page path to be confirmed by a person; not fetched from this environment; the same page is admitted by the Persistence family source manifest",
+      "admitted_role": "Unity adapter codec boundary for the device-side JSON override file: a replaceable serializer for a plain DTO, not the export architecture",
+      "admitted_claims": [
+        "JsonUtility converts plain serializable DTOs to and from JSON using Unity serialization rules",
+        "Top-level primitive and collection payloads require wrapper DTOs, so the override document is a wrapper with an ordered list of id and value entries rather than a bare map",
+        "The codec is a replaceable adapter; the Core's token-override document is defined by the Core, not by the codec"
+      ],
+      "excluded_uses": [
+        "JsonUtility defines no schema migration, integrity, atomic commit, or storage recovery; the export sink claims none of those",
+        "Live UnityEngine.Object graphs are never serialized as overrides; only Core values are"
+      ]
+    },
+    {
+      "id": "unity-persistent-data-path",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Application-persistentDataPath.html",
+      "license_or_terms": "Unity documentation terms; facts only, no copied implementation",
+      "maintenance_evidence": "Unity 6000.3 script reference page for Application.persistentDataPath; page path to be confirmed by a person; not fetched from this environment; the same page is admitted by the Persistence family source manifest",
+      "admitted_role": "Unity adapter boundary for the device-side export sink: the per-application location where a headset build can write the override file so a tuning session survives the application closing",
+      "admitted_claims": [
+        "persistentDataPath is the engine-provided per-application location for data retained between runs",
+        "The location and its support vary by platform, so the device sink reports the resolved path and the platform it ran on in every export result",
+        "A file written there is application-private data, which is the right home for a developer override file that must never ship as product content"
+      ],
+      "excluded_uses": [
+        "No durability, backup, cloud, or security guarantee is inferred for the override file",
+        "No platform is declared supported for the device sink without a compatibility profile and a Device Lab receipt for that exact tuple"
+      ]
+    },
+    {
+      "id": "meta-horizon-in-headset-developer-overlay",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/documentation/unity/ts-ovrmetricstool/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no tool, code, or asset copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer documentation for Unity; the page documents a first-party performance overlay that renders inside the headset while an application runs; page path, current tool name, and current scope to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "First-party platform evidence that an in-headset developer surface overlaid on a running application is an established practice on the target headset class, so a developer tuning panel worn in the headset is not a novel or discouraged pattern",
+      "admitted_claims": [
+        "The platform vendor publishes a developer tool that overlays live developer information inside the headset while the application runs, separate from the application's own UI",
+        "The overlay is a development-time aid enabled by the developer and is not part of the shipped application experience",
+        "Values shown in the overlay are read in the headset, in the running application, rather than on a desktop monitor"
+      ],
+      "excluded_uses": [
+        "The cited tool is a metrics overlay; this family is not a profiler and admits no performance, frame-timing, or metrics claim from it",
+        "No platform SDK, overlay component, or rendering path is depended upon; the source proves practice, not support"
+      ]
+    },
+    {
+      "id": "apple-visionos-hig-materials",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/materials",
+      "license_or_terms": "Apple Developer documentation terms; design facts only, no copied assets or implementation",
+      "maintenance_evidence": "Current Human Interface Guidelines Materials page with visionOS guidance; already admitted by the design-language source manifest; page path to be confirmed by a person; not re-fetched from this environment",
+      "admitted_role": "Design evidence for why colour, opacity, and layering tokens must be judged in the headset: a translucent spatial surface's appearance depends on the environment behind it and on depth, which a flat monitor cannot reproduce",
+      "admitted_claims": [
+        "Spatial UI surfaces use a translucent glass material so the surrounding environment stays partially visible behind the panel, so the perceived colour of a surface depends on what is behind it",
+        "Layering thicker or lighter glass forward and thinner or darker glass back, with shadows and highlights, communicates depth and elevation, so opacity and colour tokens interact with depth",
+        "Surfaces provide the canvas that content and controls sit on top of, so a change to a surface token changes the legibility of everything drawn on it"
+      ],
+      "excluded_uses": [
+        "No Apple material shader, asset, blur radius, or private API is copied; the source motivates in-headset judgement of token values and admits no token value",
+        "Whether a tuned value looks right is a human judgement recorded in a Device Lab receipt; this source grants no legibility or comfort claim"
+      ]
+    },
+    {
+      "id": "meta-horizon-hit-targets",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/styles_inputs_hit_targets/",
+      "license_or_terms": "Meta Horizon OS Developers documentation terms; sizing facts only",
+      "maintenance_evidence": "Meta Horizon OS inputs and hit targets guidance; already admitted by the design-language source manifest; page path to be confirmed by a person; not re-fetched from this environment",
+      "admitted_role": "Design evidence for why size, spacing, and corner-radius tokens must be judged on real hardware: the platform's own guidance requires hit-target sizing to be verified on the device for the least precise input",
+      "admitted_claims": [
+        "Hit-target sizing must be designed for the least precise supported input method and verified on real hardware",
+        "Comfortable interactive hit targets have a minimum size and primary controls a larger minimum, expressed as design intent to be reconciled at composition time",
+        "When a control's visible size is smaller than the minimum, invisible hit-slop extends the interactive area, so visual size and interactive size are separate tunables"
+      ],
+      "excluded_uses": [
+        "Density-independent minimums are recorded as the design language's tokens, not as a rendered-size guarantee; this family changes token values and proves nothing about their rendered size",
+        "No sizing figure is a device usability or accessibility certification"
+      ]
+    },
+    {
+      "id": "dear-imgui",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Dear ImGui project (Omar Cornut and contributors)",
+      "url": "https://github.com/ocornut/imgui",
+      "license_or_terms": "MIT; architecture facts only, no code copied; license to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Widely adopted open-source immediate-mode debug and tooling UI library used across engines for in-application tweak panels, with tagged releases; adoption count, release cadence, and an immutable review ref to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent professional evidence that an in-application developer tuning panel is a closed set of typed controls (float slider with range, integer slider with range, checkbox, combo over a value set, colour editor with a hue-saturation-value picker and per-channel unit floats) bound to typed values, and that the panel's own layout settings persist through a plain text file written explicitly",
+      "admitted_claims": [
+        "A developer tweak panel is composed from typed widgets, each declared with its value kind and, for numeric widgets, an explicit range and step",
+        "A colour widget edits four unit-float channels and offers a hue-saturation-value picker as a mode of the same widget rather than a separate value kind",
+        "The library persists its own state through an explicitly written text file and treats persistence of application values as the application's responsibility"
+      ],
+      "excluded_uses": [
+        "No immediate-mode rendering, backend, or widget code is copied and the Core has no dependency on the library",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    },
+    {
+      "id": "unity-runtime-inspector",
+      "kind": "maintained_open_source_implementation",
+      "authority": "yasirkula (independent open-source maintainer)",
+      "url": "https://github.com/yasirkula/UnityRuntimeInspector",
+      "license_or_terms": "MIT; architecture facts only, no code copied; license to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Open-source runtime inspector and hierarchy for Unity with tagged releases and a Unity Package Manager install path; adoption count, release cadence, and an immutable review ref to be recorded by a person; not fetched from this environment",
+      "admitted_role": "Independent Unity-side evidence that a runtime inspector is a separate UGUI surface that renders one typed field drawer per value kind and applies edits to the bound object immediately, and a contrast source for what this family rejects: reflection-based discovery of arbitrary fields",
+      "admitted_claims": [
+        "A runtime inspector renders a typed drawer per value kind (number, bool, enum, colour, vector) and applies an edit to the bound object as soon as the control changes",
+        "The inspector is a separate UGUI panel with its own skin asset, so the tool's look is injectable rather than hard-coded",
+        "The inspector discovers editable members of arbitrary objects by reflection, which is the general-inspector approach this family deliberately does not take"
+      ],
+      "excluded_uses": [
+        "No reflection-based member discovery, hierarchy browsing, or arbitrary-object inspection is adopted; this family binds only explicitly registered tunables",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "design-language-standard",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/design-language/ui-design-language-standard.json",
+      "reason": "The shared design-language token document is the primary input the token bridge reads and the primary output the Editor writer writes back to; it is the thing being tuned, not a derivation input for the tuning model"
+    },
+    {
+      "id": "renderer-skin-seams",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Runtime/InventoryUiToolkitSkin.cs",
+      "reason": "The Inventory renderer adapters' skin seams (InventoryUiToolkitSkin and InventorySkin) are the first ScriptableObjects that binding records target and the entry points through which accepted overrides are applied live; their code, samples, and evidence are neither derivation inputs nor transferable evidence for this family"
+    },
+    {
+      "id": "xr-ui-shell-standard",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/xr-ui-shell/README.md",
+      "reason": "The tuning panel is a client of the XR UI shell for placement, anchoring, routing, and the shell skin; the shell's layout and routing model is not re-derived here, and the interim UGUI fallback exists only until the shell's UGUI adapter is live"
+    },
+    {
+      "id": "settings-family-standard",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/settings/README.md",
+      "reason": "The Settings family owns player-facing typed settings, profiles, transactions, applicators, and persistence; live tuning is a developer-facing tool with no profiles, scopes, or transactions and must never ship to players. A Settings definition may be exposed as a tunable only through an explicit bridge that forwards accepted set intents as Settings intents, which is a later proposal, not part of this gate"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority",
+    "The first implementation is a tunable-identity, registry, intent, immutable-state, and token-bridge substrate with a thin binding, export, and panel adapter; it is not a runtime settings menu for players, not a profiler, and not an inspector of arbitrary objects",
+    "The family guarantees the plumbing only: that an accepted override reached the bound skin seam and that an export wrote the override document it reports; whether a value looks right in the headset is a human judgement recorded in a Device Lab receipt",
+    "Legibility, contrast, comfort, latency, and any headset, controller, or input behaviour are device claims that require a Device Lab receipt, never an EditMode result or a source citation",
+    "Automated or device evidence recorded for one renderer adapter's skin seam never transfers to the other renderer adapter or its composition"
+  ]
+}

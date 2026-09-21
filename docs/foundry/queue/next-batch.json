@@ -74,6 +74,20 @@
       ],
       "package_ids": [],
       "exact_next_action": "A person confirms the URLs, page paths, and version pins in docs/standards/xr-ui-shell/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether the shell model, routing, and skin contract are stable enough to admit a Core blueprint and two sibling adapter blueprints."
+    },
+    {
+      "id": "NEXT-LIVE-TUNING",
+      "title": "Live tuning: in-headset tuning of design tokens and skin values with export back to the assets that own them",
+      "state": "proposal",
+      "objective": "Define an engine-light tuning model (a closed tunable kind set of float, int, bool, enum, colour, vector2, and vector3; an immutable registry populated by explicit registration; set, reset, reset-all, snapshot, apply, and export intents on an immutable state with deterministic replay; and a bridge to and from the design-language token JSON) and a Unity adapter (explicit binding records to skin assets, live apply through the existing skin seams with diagnostics, an injectable export sink whose device JSON and Editor asset writers let a Play-mode or on-device change survive, and a tuning panel that is one client of the XR UI shell with a UGUI fallback), so a developer wearing the headset changes a colour, size, corner radius, or spacing and sees the effect immediately, and the change lands in the asset that owns it instead of in a rebuild loop; the family proves the plumbing, and whether a value looks right on a device stays a Device Lab receipt.",
+      "source_requirements": [
+        "Official engine documentation for runtime-editable serialized values, ScriptableObject assets, Play-mode change loss, and the Editor asset-writing APIs at the version pinned by the compatibility profiles",
+        "Maintained public runtime tuning implementations (an immediate-mode tweak panel and a runtime inspector with one typed drawer per kind) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "The repository's own design-language token standard, skin seams, Settings contract, and XR UI shell contract as the seams the family composes on, with the rule that it introduces no second token vocabulary",
+        "Evidence boundaries that route every legibility, colour, size, and comfort judgement to a Device Lab receipt, so no package claim says a tuned value is correct on a headset"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, and version pins in docs/standards/live-tuning/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether the tuning model, the binding and export seams, and the panel-as-shell-client rule are stable enough to admit a Core blueprint and one Unity adapter blueprint."
     }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.live-tuning.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Live Tuning Core",
+  "description": "Engine-light live tuning substrate: immutable TunableId and SnapshotId identity with a canonical dotted-segment form, a closed TunableKind set (float, integer, bool, enumerated, colour, vector2, vector3) with fail-closed kind-declaration validation, an immutable TunableRegistry built by explicit registration, tuning intents (set, reset, reset_all, snapshot, apply_snapshot) applied to an immutable override-only TuningState with deterministic replay and a fingerprint, a closed EditorKind set with a total ResolveEditorKind function, engine-free BindingRecord validation, a two-way token bridge to and from a design-language token JSON document, and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "TuningWalkthrough",
+      "description": "Domain-only walkthrough: a registry built from explicit registration and from the token bridge, a full set/reset/snapshot/apply_snapshot/export intent sequence, and a replayed sequence proving deterministic state; needs no asset, scene, or UnityEngine API.",
+      "path": "Samples~/TuningWalkthrough"
+    }
+  ]
+}

@@ -86,7 +86,7 @@ responds. Every number is read from the public record, not asserted.
 | --- | --- |
 | Process-decided merge in effect: routine change on a mandated branch merges by auto-merge on a `ready` verdict (DLB-0002) | partial: rule written, objection window closes 2026-09-29; needs the 1b settings |
 | First routine change by a non-maintainer merged through the verdict alone | open |
-| First lazy-consensus resolution of a deliberation record recorded with `decided_by: process:<mandate>` | open: DLB-0001 window closes 2026-09-22 |
+| First lazy-consensus resolution of a deliberation record recorded with `decided_by: process:<mandate>` | done: [DLB-0001](governance/deliberations/DLB-0001-operating-mandates.json) resolved 2026-09-22 with `decided_by: process:mandate.weekly-steward.v1` after its window closed with no objection delta |
 
 ### Batch 2b: contribution types beyond code
 
@@ -102,6 +102,7 @@ responds. Every number is read from the public record, not asserted.
 | Deliverable | Status |
 | --- | --- |
 | Locomotion and comfort, scene flow, XR UI shell: source manifest, verification contract, admission draft, staged Core with a coverage map, in that order (ranks 8 to 10 in [`../ROADMAP.md`](../ROADMAP.md)) | partial: all three passed the source gate (WI-001, WI-003, WI-005); Locomotion and Scene flow are staged with coverage maps at 18 of 19 clauses each (WI-002, WI-004); the XR UI shell has no implementation yet |
+| Live tuning (rank 11): source gate and a staged Core and Unity adapter behind a kind-resolved panel host, so the in-headset developer scaffold can be tested the day the shell exists | partial: source gate passed (WI-018) and `staging/live-tuning` is authored with a coverage map at 21 of 23 clauses covered, 2 partial (WI-019); authored, unexecuted |
 | At least one of the three authored, reviewed, or device-tested by someone other than the maintainer or the steward Agent | open |
 
 ### Batch 2d: public deliberation by outsiders

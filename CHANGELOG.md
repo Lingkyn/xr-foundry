@@ -5,6 +5,21 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Resolved DLB-0001 (prototype-stage operating mandates) by lazy consensus:
+  the governance_policy window closed on 2026-09-22T09:00Z with no risk or
+  counterexample delta, so the record carries OPT-KEEP-MANDATES with
+  `decided_by: process:mandate.weekly-steward.v1`, the first process-decided
+  deliberation; milestone batch 2a marks that row done.
+- Staged the Live tuning family (`staging/live-tuning`, WI-019):
+  `com.lingkyn.live-tuning.core` (tunable identity, the closed kind set, an
+  explicit registry, binding records, editor-kind resolution, an immutable
+  tuning state with set, reset, snapshot, apply, and export intents, deterministic
+  replay, and the design-language token bridge) and
+  `com.lingkyn.live-tuning.unity` (skin binders, live apply with diagnostics, an
+  injectable export sink with device JSON and Editor asset writers, and a panel
+  host with one slot per binding behind an `ITuningPanelSurface` seam with a UGUI
+  fallback), 74 NUnit tests and a coverage map at 21 of 23 clauses covered, 2
+  partial. Authored, unexecuted: no Unity compiler has run over the code.
 - Added the Live tuning family to the source-gate queue (`NEXT-LIVE-TUNING`) with
   its source manifest, verification contract, README, and admission draft under
   `docs/standards/live-tuning/`: in-headset tuning of design-language tokens and

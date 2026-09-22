@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "id": "DLB-0001-OPERATING-MANDATES",
   "title": "Prototype-stage operating mandates for Agents under G0 x A0",
-  "status": "open",
+  "status": "resolved",
   "decision_class": "governance_policy",
   "governance_stage": "G0",
   "review_opened_at": "2026-09-15T09:00:00Z",
@@ -71,21 +71,36 @@
     "missing_evidence": [
       "One completed weekly steward run reviewed by someone other than the mandate's principal."
     ],
-    "updated_at": "2026-09-15T09:00:00Z"
+    "updated_at": "2026-09-22T20:10:00Z"
   },
-  "decision": null,
+  "decision": {
+    "option_id": "OPT-KEEP-MANDATES",
+    "summary": "Keep the prototype-stage operating mandate mechanism as written: maintainer-granted, expiring, path- and action-bounded, no review window for grant or revocation, no GitHub permission.",
+    "rationale": [
+      "The governance_policy review window ran from 2026-09-15T09:00:00Z to 2026-09-22T09:00:00Z and closed with no risk or counterexample delta on the record.",
+      "Recorded under exact_next_action: with no objection delta at window close, the weekly steward records OPT-KEEP-MANDATES by lazy consensus under mandate.weekly-steward.v1, which was in force at decided_at.",
+      "The disagreement on public notice before a grant takes effect stays open as a reopen condition rather than blocking the record; the missing evidence (one steward run reviewed by someone other than the principal) is a G1 community deliverable, not a precondition of this record."
+    ],
+    "decided_by": "process:mandate.weekly-steward.v1",
+    "decided_at": "2026-09-22T20:10:00Z"
+  },
   "execution": {
-    "readiness": "not_ready",
-    "task": null,
-    "scope": [],
+    "readiness": "ready",
+    "task": "https://github.com/Lingkyn/xr-foundry/issues/64",
+    "scope": [
+      "GOVERNANCE.md: the Prototype-stage operating mandates section stays as written; no edit is owed by this decision.",
+      "docs/governance/mandates/: existing mandates remain in force until their expires_at or a recorded revocation; new mandates are granted by recorded maintainer decision under the same section.",
+      "The execution checkpoint is tracked under the public-collaboration umbrella Issue #64 because the mandate forbids the steward from creating an Issue; a maintainer may re-point task to a dedicated Issue without reopening this record."
+    ],
     "non_goals": [
       "No GitHub permission, branch-protection, or App installation change under any option."
     ],
-    "exact_next_action": "Until 2026-09-22T09:00:00Z anyone may add a risk or counterexample delta. If none exists when the window closes, the weekly steward records OPT-KEEP-MANDATES by lazy consensus with decided_by process:mandate.weekly-steward.v1; if one exists, a person resolves the record."
+    "exact_next_action": "Resolved by lazy consensus with OPT-KEEP-MANDATES. Nothing to edit: the section and the mandate directory already exist as written. The remaining follow-up (one completed steward run reviewed by someone other than the mandate's principal) is milestone batch 2b work under Issue #64; a person who wants a public-notice requirement before a grant opens a successor record."
   },
   "reopen_conditions": [
     "RFC 0006 activation replaces mandates with Agent membership records.",
-    "A mandate run causes an effect outside its declared scope."
+    "A mandate run causes an effect outside its declared scope.",
+    "A person records a risk or counterexample delta against the mandate mechanism after this resolution; a successor record is opened rather than mutating this one."
   ],
   "authority": {
     "grants_repository_permission": false,

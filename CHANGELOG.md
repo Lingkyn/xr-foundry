@@ -5,6 +5,11 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Resolved DLB-0001 (prototype-stage operating mandates) by lazy consensus:
+  the governance_policy window closed on 2026-09-22T09:00Z with no risk or
+  counterexample delta, so the record carries OPT-KEEP-MANDATES with
+  `decided_by: process:mandate.weekly-steward.v1`, the first process-decided
+  deliberation; milestone batch 2a marks that row done.
 - Staged the Live tuning family (`staging/live-tuning`, WI-019):
   `com.lingkyn.live-tuning.core` (tunable identity, the closed kind set, an
   explicit registry, binding records, editor-kind resolution, an immutable

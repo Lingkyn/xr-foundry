@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.LiveTuning.Unity",
+  "rootNamespace": "Lingkyn.LiveTuning.Unity",
+  "references": [
+    "Lingkyn.LiveTuning.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

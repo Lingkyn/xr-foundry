@@ -5,6 +5,16 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged the Live tuning family (`staging/live-tuning`, WI-019):
+  `com.lingkyn.live-tuning.core` (tunable identity, the closed kind set, an
+  explicit registry, binding records, editor-kind resolution, an immutable
+  tuning state with set, reset, snapshot, apply, and export intents, deterministic
+  replay, and the design-language token bridge) and
+  `com.lingkyn.live-tuning.unity` (skin binders, live apply with diagnostics, an
+  injectable export sink with device JSON and Editor asset writers, and a panel
+  host with one slot per binding behind an `ITuningPanelSurface` seam with a UGUI
+  fallback), 74 NUnit tests and a coverage map at 21 of 23 clauses covered, 2
+  partial. Authored, unexecuted: no Unity compiler has run over the code.
 - Added the Live tuning family to the source-gate queue (`NEXT-LIVE-TUNING`) with
   its source manifest, verification contract, README, and admission draft under
   `docs/standards/live-tuning/`: in-headset tuning of design-language tokens and

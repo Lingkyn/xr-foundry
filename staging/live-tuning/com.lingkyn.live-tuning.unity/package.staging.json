@@ -1,0 +1,16 @@
+{
+  "name": "com.lingkyn.live-tuning.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Live Tuning Unity",
+  "description": "Thin Unity adapter for the Lingkyn Live Tuning Core: explicit target resolution from Core binding records through hand-written, per-asset-type binders with fail-closed diagnostics; a plain runtime constructed with explicit references that applies every accepted tuning intent to the bound skin instance and re-invokes the renderer adapter's own skin entry point; an injectable ITuningExportSink with a device-side JSON writer under the persistent data path and an Editor-only writer into a bound override asset; explicit import of a device override file; exactly one editor implementation per EditorKind; and a tuning panel host that is a client of an ITuningPanelSurface seam, with a minimal UGUI fallback surface until the XR UI shell's own panel surface exists.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.live-tuning.core": "0.1.0"
+  },
+  "samples": []
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.LiveTuning.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.LiveTuning.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.LiveTuning.Core",
+    "Lingkyn.LiveTuning.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

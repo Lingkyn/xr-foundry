@@ -1,8 +1,10 @@
 # Live tuning package-family standard
 
 Status: proposal in the source-gate queue (`NEXT-LIVE-TUNING`), depending on
-`NEXT-XR-UI-SHELL` for the panel host; no Core or Unity adapter implementation is
-staged, and no package directory or package id exists
+`NEXT-XR-UI-SHELL` for the panel host; the Core and Unity adapter implementation is
+staged under [`staging/live-tuning/`](../../../staging/live-tuning/README.md),
+authored and unexecuted (no Unity run has produced a receipt yet), and no package
+directory or package id exists
 
 This standard defines an in-headset developer tool for tuning typed parameters,
 above all the shared [design-language](../design-language/README.md) tokens
@@ -162,10 +164,14 @@ states in its claim ceiling.
    `docs/foundry/admissions/` as the durable record through the
    [system admission gate](../../foundry/system-admission.md), after the XR UI
    shell candidate this family's panel host depends on has been decided.
-3. The staged implementation item authors the Core and the Unity adapter under
-   `staging/live-tuning/` against [`verification-contract.md`](verification-contract.md),
-   with the Inventory skin seams as the first bound targets, and writes the
-   coverage map; nothing enters `packages/` before admission and a green gate.
+3. Done: the staged implementation authors the Core and the Unity adapter under
+   [`staging/live-tuning/`](../../../staging/live-tuning/README.md) against
+   [`verification-contract.md`](verification-contract.md) and writes
+   [`coverage-map.json`](coverage-map.json); the code is authored and unexecuted
+   (no Unity run has produced a compatibility profile), binds to a self-contained
+   reference skin asset rather than the Inventory skin seams (which stay the first
+   bound target once a Unity run is available to prove it), and nothing enters
+   `packages/` before admission and a green gate.
 4. The first Device Lab plan for this family records a tuning session as a human
    judgement of token values, bound to the override document digest, and never as
    a legibility, contrast, comfort, or latency claim.

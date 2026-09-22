@@ -754,6 +754,49 @@
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
       "done_proof": "docs/standards/live-tuning/coverage-map.json"
+    },
+    {
+      "id": "WI-020",
+      "title": "XR UI shell staged Core and sibling UGUI and UI Toolkit adapters",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-005"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/xr-ui-shell/README.md",
+        "staging/live-tuning/README.md",
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/design-language/ui-design-language-standard.json"
+      ],
+      "allowed_paths": [
+        "staging/xr-ui-shell/",
+        "docs/standards/xr-ui-shell/coverage-map.json",
+        "docs/standards/xr-ui-shell/README.md"
+      ],
+      "steps": [
+        "Author staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core (panel, wrist-menu, and hand-menu identity; world, head-locked, wrist, and hand anchor kinds; open, close, focus, dock, and follow intents on an immutable shell state with deterministic replay; typed pointer and gaze routing from named input sources that resolves to exactly one panel; the skin contract mapping the shared design-language tokens to a closed slot set) with package.staging.json, asmdefs, NUnit EditMode tests, and a domain-only sample, modelled on staging/live-tuning and staging/scene-flow.",
+        "Author com.lingkyn.xr-ui-shell.ugui and com.lingkyn.xr-ui-shell.ui-toolkit as sibling adapters that each expose one injectable skin seam with a default skin carrying the canonical token values, share nothing but Core, and transfer no evidence between them; the UGUI adapter also satisfies the live-tuning ITuningPanelSurface seam as one client of the shell.",
+        "Write docs/standards/xr-ui-shell/coverage-map.json mapping every contract clause of the Core, UGUI, and UI Toolkit gates to named tests; every listed test must exist and every test must be listed; a clause that needs a scene, a rendered panel, or a device is a gap with its missing entry named.",
+        "Write staging/xr-ui-shell/README.md with the status line, the what-is-here table, the promotion steps, the sibling rule, and the statement that the code is authored and unexecuted."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/xr-ui-shell/README.md",
+          "docs/standards/xr-ui-shell/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
+      "done_proof": null
     }
   ]
 }

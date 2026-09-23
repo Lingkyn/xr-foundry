@@ -101,7 +101,7 @@ responds. Every number is read from the public record, not asserted.
 
 | Deliverable | Status |
 | --- | --- |
-| Locomotion and comfort, scene flow, XR UI shell: source manifest, verification contract, admission draft, staged Core with a coverage map, in that order (ranks 8 to 10 in [`../ROADMAP.md`](../ROADMAP.md)) | partial: all three passed the source gate (WI-001, WI-003, WI-005); Locomotion and Scene flow are staged with coverage maps at 18 of 19 clauses each (WI-002, WI-004); the XR UI shell has no implementation yet |
+| Locomotion and comfort, scene flow, XR UI shell: source manifest, verification contract, admission draft, staged Core with a coverage map, in that order (ranks 8 to 10 in [`../ROADMAP.md`](../ROADMAP.md)) | partial: all three passed the source gate (WI-001, WI-003, WI-005) and all three are staged: Locomotion and Scene flow with coverage maps at 18 of 19 clauses each (WI-002, WI-004), the XR UI shell with a Core and sibling UGUI and UI Toolkit adapters at 21 of 21 clauses (WI-020); every one authored, unexecuted, so the batch waits on a Unity run |
 | Live tuning (rank 11): source gate and a staged Core and Unity adapter behind a kind-resolved panel host, so the in-headset developer scaffold can be tested the day the shell exists | partial: source gate passed (WI-018) and `staging/live-tuning` is authored with a coverage map at 21 of 23 clauses covered, 2 partial (WI-019); authored, unexecuted |
 | At least one of the three authored, reviewed, or device-tested by someone other than the maintainer or the steward Agent | open |
 

@@ -1,0 +1,26 @@
+{
+  "name": "Lingkyn.XrUiShell.Ugui.Editor.Tests",
+  "rootNamespace": "Lingkyn.XrUiShell.Ugui.Editor.Tests",
+  "references": [
+    "Lingkyn.XrUiShell.Core",
+    "Lingkyn.XrUiShell.Ugui",
+    "Lingkyn.LiveTuning.Core",
+    "Lingkyn.LiveTuning.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

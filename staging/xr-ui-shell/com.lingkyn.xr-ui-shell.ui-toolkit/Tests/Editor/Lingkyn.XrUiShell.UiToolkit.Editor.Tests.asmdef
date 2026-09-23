@@ -1,0 +1,24 @@
+{
+  "name": "Lingkyn.XrUiShell.UiToolkit.Editor.Tests",
+  "rootNamespace": "Lingkyn.XrUiShell.UiToolkit.Editor.Tests",
+  "references": [
+    "Lingkyn.XrUiShell.Core",
+    "Lingkyn.XrUiShell.UiToolkit"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

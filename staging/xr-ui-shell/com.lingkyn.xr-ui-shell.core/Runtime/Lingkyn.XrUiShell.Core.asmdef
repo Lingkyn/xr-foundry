@@ -1,0 +1,14 @@
+{
+  "name": "Lingkyn.XrUiShell.Core",
+  "rootNamespace": "Lingkyn.XrUiShell.Core",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

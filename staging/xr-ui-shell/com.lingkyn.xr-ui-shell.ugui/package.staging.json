@@ -1,0 +1,18 @@
+{
+  "name": "com.lingkyn.xr-ui-shell.ugui",
+  "version": "0.1.0",
+  "displayName": "Lingkyn XR UI Shell UGUI",
+  "description": "Thin UGUI sibling adapter for the Lingkyn XR UI Shell Core: fail-closed binding of each declared panel to exactly one world-space Canvas subtree with an event camera, a raycaster, and (for a wrist- or hand-admitting panel) an anchor transform, each an explicit reference with a stable diagnostic when missing; one injectable ScriptableObject skin seam mapping the shared design-language tokens to the closed shell-slot set with a default skin carrying the canonical values; translation of accepted routing results to the bound Canvas only; a plain runtime constructed with explicit references that applies accepted placement intents to the bound Canvas subtrees; and, as one client of the shell, a small ITuningPanelSurface-compatible adapter for the Live Tuning panel host.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.xr-ui-shell.core": "0.1.0",
+    "com.lingkyn.live-tuning.core": "0.1.0",
+    "com.lingkyn.live-tuning.unity": "0.1.0"
+  },
+  "samples": []
+}

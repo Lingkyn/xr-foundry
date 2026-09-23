@@ -1,0 +1,16 @@
+{
+  "name": "com.lingkyn.xr-ui-shell.ui-toolkit",
+  "version": "0.1.0",
+  "displayName": "Lingkyn XR UI Shell UI Toolkit",
+  "description": "Thin UI Toolkit sibling adapter for the Lingkyn XR UI Shell Core: fail-closed binding of each declared panel to exactly one world-space UIDocument with a collider in an admitted update mode and (for a wrist- or hand-admitting panel) an anchor transform, each an explicit reference with a stable diagnostic when missing; one injectable ScriptableObject skin seam mapping the shared design-language tokens to the closed shell-slot set as USS-facing values, with a default skin carrying the canonical values; translation of accepted routing results to the bound document only; and a plain runtime constructed with explicit references that applies accepted placement intents to the bound document subtrees. Shares nothing with the UGUI sibling adapter except the Core.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.xr-ui-shell.core": "0.1.0"
+  },
+  "samples": []
+}

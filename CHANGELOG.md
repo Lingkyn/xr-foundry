@@ -5,6 +5,13 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added `docs/benchmarks/shipped-game-gap-matrix.md`: the systems three shipped
+  product shapes (rhythm action, object interaction, spatial creation) need,
+  marked against what the library supplies today (5 verified, 6 staged, 9
+  candidate, 3 missing, 1 deferred). `ROADMAP.md` ranks 12 to 21 are reordered
+  from it: Haptics first, then four new candidates (Platform services, Quality
+  tiers, Content packs, Spatial placement), then Tutorial, Objectives, Analytics,
+  Dialogue, and Networking.
 - Added the tunable surface protocol (WI-022): `docs/standards/live-tuning/tunable-surface.md`
   and `tunable-surface.schema.json` (`xr-foundry.tunable_surface.v1`) let a package with
   an explicit injectable seam — a skin/theme asset or any other design-time

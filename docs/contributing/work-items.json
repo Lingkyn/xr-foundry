@@ -945,6 +945,54 @@
       },
       "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the source rule test proves the shell references no client family.",
       "done_proof": null
+    },
+    {
+      "id": "WI-024",
+      "title": "One intent channel for people and agents: actor, expected revision, and no second path",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-021",
+        "WI-023"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/scene-flow/verification-contract.md",
+        "docs/architecture/version-adaptive-reference-model.md"
+      ],
+      "allowed_paths": [
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/live-tuning/",
+        "staging/live-tuning/",
+        "docs/standards/xr-ui-shell/",
+        "staging/xr-ui-shell/",
+        "CHANGELOG.md"
+      ],
+      "steps": [
+        "Record LESSON-011 in the lessons register: a family's typed intent seam is the one channel through which a person's UI, an agent adapter, a replay, and an import all change state; every intent carries an actor source (player, agent, replay, import) used for attribution and replay and never for a different validation rule; every intent may carry an expected revision and a stale one is rejected with a stable code rather than overwriting another actor's change; the structured result is the channel and a refusal always names its reason; and no adapter writes state by any other path. Cite public norms (optimistic concurrency control, command pattern, single source of truth). Give every family the register requires an explicit disposition.",
+        "Apply it to the Live tuning contract and staged code: actor and expected revision on set, reset, reset_all, apply_snapshot, and export; state.stale rejection; a source-rule test that the Unity adapter and the panel host issue only Core intents and write no state directly; tests that a player set and an agent set take the same path and the same validation.",
+        "Apply it to the XR UI shell contract and staged code: actor and expected revision on every shell and verb intent; a dock verb pressed by a person and the same verb issued by an agent adapter resolve through the same focus subject and the same affordance; extend both coverage maps.",
+        "Update both staging READMEs and the root CHANGELOG."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "docs/standards/lessons/lessons-register.json",
+          "docs/standards/live-tuning/coverage-map.json",
+          "docs/standards/xr-ui-shell/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the lessons rule passes with a disposition for every family.",
+      "done_proof": null
     }
   ]
 }

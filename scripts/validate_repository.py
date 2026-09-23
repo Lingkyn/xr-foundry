@@ -6986,6 +6986,260 @@ def validate_family_source_manifests(root: Path) -> list[str]:
     return errors
 
 
+TUNABLE_SURFACE_SCHEMA_PATH = Path("docs/standards/live-tuning/tunable-surface.schema.json")
+TUNABLE_SURFACE_CAPABILITY = ("xr-foundry.tuning.surface", "1.0.0")
+TUNABLE_SURFACE_NUMERIC_KINDS = ("float", "int")
+
+
+def resolve_design_token_path(design_tokens: Any, dotted_path: Any) -> bool:
+    """Walk a dotted path (for example 'slot_states.hover') under design_tokens."""
+
+    if not isinstance(dotted_path, str) or not dotted_path.strip():
+        return False
+    cursor: Any = design_tokens
+    for segment in dotted_path.split("."):
+        if not isinstance(cursor, dict) or segment not in cursor:
+            return False
+        cursor = cursor[segment]
+    return True
+
+
+def load_design_language_tokens(root: Path) -> dict[str, Any] | None:
+    path = root / "docs" / "standards" / "design-language" / "ui-design-language-standard.json"
+    if not path.exists():
+        return None
+    try:
+        document = load_json(path)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    if not isinstance(document, dict):
+        return None
+    tokens = document.get("design_tokens")
+    return tokens if isinstance(tokens, dict) else None
+
+
+def validate_tunable_surfaces(root: Path) -> list[str]:
+    """Check every foundry.tunables.json against the tunable surface protocol.
+
+    A package with a qualifying seam (skin or config) declares, as data, what a
+    developer scaffold may tune on it: docs/standards/live-tuning/tunable-surface.md
+    is the prose, tunable-surface.schema.json (xr-foundry.tunable_surface.v1) is the
+    shape. This rule checks schema validity, canonical id uniqueness across the whole
+    tree, default-in-range/value-set, target member membership in the naming seam's
+    closed member_set, token references resolving inside the design-language standard,
+    package_id/family agreement with the sibling foundry.component.json, and the
+    two-way bind between shipping the file and providing xr-foundry.tuning.surface.
+    """
+
+    label = "tunable surface"
+    errors: list[str] = []
+    schema_path = root / TUNABLE_SURFACE_SCHEMA_PATH
+    design_tokens = load_design_language_tokens(root)
+
+    manifest_paths = sorted(root.glob("packages/unity/**/foundry.tunables.json"))
+    seen_tunable_ids: dict[str, str] = {}
+    packages_with_manifest: set[str] = set()
+
+    for manifest_path in manifest_paths:
+        relative = manifest_path.relative_to(root).as_posix()
+        try:
+            payload = load_json(manifest_path)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            errors.append(f"{label} {relative}: invalid JSON: {error}")
+            continue
+
+        errors.extend(validate_json_schema_instance(payload, schema_path, f"{label} {relative}"))
+        if not isinstance(payload, dict):
+            continue
+
+        package_root = manifest_path.parent
+        component_path = package_root / "foundry.component.json"
+        component: dict[str, Any] | None = None
+        if component_path.exists():
+            try:
+                loaded_component = load_json(component_path)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                loaded_component = None
+            component = loaded_component if isinstance(loaded_component, dict) else None
+        if component is None:
+            errors.append(f"{label} {relative}: no colocated foundry.component.json to bind package_id and family against")
+        else:
+            component_id = component.get("id")
+            if payload.get("package_id") != component_id:
+                errors.append(
+                    f"{label} {relative}: package_id {payload.get('package_id')!r} does not match "
+                    f"the sibling foundry.component.json id {component_id!r}"
+                )
+            if payload.get("family") != component.get("family"):
+                errors.append(
+                    f"{label} {relative}: family {payload.get('family')!r} does not match "
+                    f"the sibling foundry.component.json family {component.get('family')!r}"
+                )
+            provides = component.get("provides", [])
+            provides_capability = isinstance(provides, list) and any(
+                capability_key(reference) == TUNABLE_SURFACE_CAPABILITY for reference in provides
+            )
+            if not provides_capability:
+                errors.append(
+                    f"{label} {relative}: package ships foundry.tunables.json but its foundry.component.json "
+                    f"does not provide {TUNABLE_SURFACE_CAPABILITY[0]}@{TUNABLE_SURFACE_CAPABILITY[1]}"
+                )
+            if isinstance(component_id, str):
+                packages_with_manifest.add(component_id)
+
+        seam_by_id: dict[str, dict[str, Any]] = {}
+        seams = payload.get("seams")
+        if isinstance(seams, list):
+            for seam in seams:
+                if not isinstance(seam, dict):
+                    continue
+                seam_id = seam.get("id")
+                if not isinstance(seam_id, str):
+                    continue
+                if seam_id in seam_by_id:
+                    errors.append(f"{label} {relative}: duplicate seam id: {seam_id}")
+                    continue
+                seam_by_id[seam_id] = seam
+
+        tunables = payload.get("tunables")
+        if not isinstance(tunables, list):
+            continue
+
+        for tunable in tunables:
+            if not isinstance(tunable, dict):
+                continue
+            tunable_id = tunable.get("id")
+            id_label = tunable_id if isinstance(tunable_id, str) and tunable_id else "<missing id>"
+            if isinstance(tunable_id, str) and tunable_id:
+                previous = seen_tunable_ids.get(tunable_id)
+                if previous is not None and previous != relative:
+                    errors.append(
+                        f"{label}: duplicate canonical tunable id {tunable_id!r} in {relative} and {previous}"
+                    )
+                else:
+                    seen_tunable_ids[tunable_id] = relative
+
+            kind = tunable.get("kind")
+            default = tunable.get("default")
+
+            if kind in TUNABLE_SURFACE_NUMERIC_KINDS:
+                range_payload = tunable.get("range")
+                minimum = range_payload.get("min") if isinstance(range_payload, dict) else None
+                maximum = range_payload.get("max") if isinstance(range_payload, dict) else None
+                step = range_payload.get("step") if isinstance(range_payload, dict) else None
+                numeric_bounds = (
+                    isinstance(minimum, (int, float)) and not isinstance(minimum, bool)
+                    and isinstance(maximum, (int, float)) and not isinstance(maximum, bool)
+                )
+                if not numeric_bounds:
+                    errors.append(f"{label} {relative}: {id_label} range min/max must be numbers")
+                elif minimum > maximum:
+                    errors.append(f"{label} {relative}: {id_label} range min must not exceed max")
+                if not isinstance(step, (int, float)) or isinstance(step, bool) or step <= 0:
+                    errors.append(f"{label} {relative}: {id_label} range step must be a positive number")
+                default_is_number = isinstance(default, (int, float)) and not isinstance(default, bool)
+                if kind == "int" and (not isinstance(default, int) or isinstance(default, bool)):
+                    errors.append(f"{label} {relative}: {id_label} default must be an integer for kind int")
+                elif kind == "float" and not default_is_number:
+                    errors.append(f"{label} {relative}: {id_label} default must be a number for kind float")
+                if default_is_number and numeric_bounds and not (minimum <= default <= maximum):
+                    errors.append(
+                        f"{label} {relative}: {id_label} default {default!r} is outside its declared range "
+                        f"[{minimum}, {maximum}]"
+                    )
+            elif kind == "bool":
+                if not isinstance(default, bool):
+                    errors.append(f"{label} {relative}: {id_label} default must be a boolean for kind bool")
+            elif kind == "enum":
+                values = tunable.get("values")
+                if not isinstance(values, list) or not values:
+                    errors.append(f"{label} {relative}: {id_label} must declare a non-empty values list for kind enum")
+                elif default not in values:
+                    errors.append(f"{label} {relative}: {id_label} default {default!r} is not one of its declared values")
+            elif kind == "colour":
+                if not (
+                    isinstance(default, list) and len(default) == 4
+                    and all(isinstance(c, (int, float)) and not isinstance(c, bool) and 0 <= c <= 1 for c in default)
+                ):
+                    errors.append(
+                        f"{label} {relative}: {id_label} default must be a 4-element [r, g, b, a] array with "
+                        "each channel in [0, 1] for kind colour"
+                    )
+            elif kind in ("vector2", "vector3"):
+                expected_length = 2 if kind == "vector2" else 3
+                if not (
+                    isinstance(default, list) and len(default) == expected_length
+                    and all(isinstance(c, (int, float)) and not isinstance(c, bool) for c in default)
+                ):
+                    errors.append(
+                        f"{label} {relative}: {id_label} default must be a {expected_length}-element number "
+                        f"array for kind {kind}"
+                    )
+
+            target = tunable.get("target")
+            if isinstance(target, dict):
+                seam_ref = target.get("seam")
+                member = target.get("member")
+                seam = seam_by_id.get(seam_ref) if isinstance(seam_ref, str) else None
+                if seam is None:
+                    errors.append(f"{label} {relative}: {id_label} target.seam {seam_ref!r} does not name a declared seam")
+                else:
+                    member_set = seam.get("member_set")
+                    if not isinstance(member_set, list) or member not in member_set:
+                        errors.append(
+                            f"{label} {relative}: {id_label} target.member {member!r} is not in seam "
+                            f"{seam_ref!r}'s member_set"
+                        )
+
+            token = tunable.get("token")
+            if isinstance(token, str) and token:
+                if design_tokens is None:
+                    errors.append(
+                        f"{label} {relative}: {id_label} names token {token!r} but the design-language token "
+                        "document could not be read"
+                    )
+                elif not resolve_design_token_path(design_tokens, token):
+                    errors.append(
+                        f"{label} {relative}: {id_label} token {token!r} does not resolve inside "
+                        "ui-design-language-standard.json design_tokens"
+                    )
+
+    catalog_path = root / "package-catalog.json"
+    if catalog_path.exists():
+        try:
+            catalog = load_json(catalog_path)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            catalog = None
+        if isinstance(catalog, dict):
+            for item in catalog.get("packages", []):
+                if not isinstance(item, dict):
+                    continue
+                package_root = safe_repository_path(root, str(item.get("path", "")))
+                if package_root is None:
+                    continue
+                component_path = package_root / "foundry.component.json"
+                if not component_path.exists():
+                    continue
+                try:
+                    component = load_json(component_path)
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    continue
+                if not isinstance(component, dict):
+                    continue
+                package_id = component.get("id")
+                provides = component.get("provides", [])
+                provides_capability = isinstance(provides, list) and any(
+                    capability_key(reference) == TUNABLE_SURFACE_CAPABILITY for reference in provides
+                )
+                if provides_capability and package_id not in packages_with_manifest:
+                    errors.append(
+                        f"{label}: {package_id} provides {TUNABLE_SURFACE_CAPABILITY[0]}@"
+                        f"{TUNABLE_SURFACE_CAPABILITY[1]} but ships no foundry.tunables.json at "
+                        f"{package_root.relative_to(root).as_posix()}"
+                    )
+    return errors
+
+
 INVENTORY_PRESENTATION_ASMDEF = (
     "packages/unity/systems/inventory/com.lingkyn.inventory.presentation/Runtime/"
     "Lingkyn.Inventory.Presentation.asmdef"
@@ -10100,6 +10354,7 @@ def validate_repository(root: Path) -> list[str]:
     errors.extend(validate_foundation_assembly_references(root))
     errors.extend(validate_consumer_lessons_register(root))
     errors.extend(validate_family_source_manifests(root))
+    errors.extend(validate_tunable_surfaces(root))
     errors.extend(validate_coverage_map_claims(root))
     for name in sorted(REQUIRED_ROOT_FILES):
         if not (root / name).exists():
@@ -10310,6 +10565,25 @@ FIX_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"API surface inventory for \w+ omits a declared type"), "Add a row for the named type to the package's table in docs/standards/<family>/api-surface.md (Kind, public members, consumer-facing), and update the 'N public types.' count."),
     (re.compile(r"API surface inventory for \w+ lists a type no source declares"), "The Runtime source no longer declares that type (renamed, removed, or moved under Tests/Editor/Samples~); delete its row from docs/standards/<family>/api-surface.md and update the 'N public types.' count."),
     (re.compile(r"API surface inventory for \w+ states \d+ public types"), "Recount the package's public types under Runtime/ (excluding Tests, Editor, Samples~) and fix the 'N public types.' statement in docs/standards/<family>/api-surface.md to match."),
+    (re.compile(r"tunable surface .*JSON Schema violation"), "Make foundry.tunables.json conform to docs/standards/live-tuning/tunable-surface.schema.json (xr-foundry.tunable_surface.v1); read docs/standards/live-tuning/tunable-surface.md for every field."),
+    (re.compile(r"tunable surface .*no colocated foundry\.component\.json"), "foundry.tunables.json ships beside foundry.component.json in the same package root; add the missing manifest or move the file."),
+    (re.compile(r"tunable surface .*package_id .* does not match"), "Set the manifest's package_id to the exact id in the sibling foundry.component.json."),
+    (re.compile(r"tunable surface .*family .* does not match"), "Set the manifest's family to the exact family in the sibling foundry.component.json."),
+    (re.compile(r"tunable surface .*does not provide xr-foundry\.tuning\.surface"), "A package that ships foundry.tunables.json also lists {\"id\": \"xr-foundry.tuning.surface\", \"version\": \"1.0.0\"} in its foundry.component.json provides."),
+    (re.compile(r"tunable surface.*ships no foundry\.tunables\.json"), "A package that provides xr-foundry.tuning.surface also ships a foundry.tunables.json beside its foundry.component.json, or the provides entry must be removed."),
+    (re.compile(r"tunable surface .*duplicate seam id"), "Every seams[].id in one foundry.tunables.json manifest is unique; rename the duplicate."),
+    (re.compile(r"tunable surface.*duplicate canonical tunable id"), "A tunable id is the flat registry key across every foundry.tunables.json in the tree; rename one of the two colliding ids."),
+    (re.compile(r"tunable surface .*range (min/max must be numbers|min must not exceed max|step must be a positive number)"), "float and int tunables need range.min <= range.max, both numbers, and a positive range.step."),
+    (re.compile(r"tunable surface .*default must be (an integer|a number|a boolean)"), "The default's JSON type must match its kind: an integer for int, a number for float, true/false for bool."),
+    (re.compile(r"tunable surface .*default .* is outside its declared range"), "Set default inside [range.min, range.max], or widen the declared range in a reviewed change."),
+    (re.compile(r"tunable surface .*must declare a non-empty values list for kind enum"), "An enum tunable needs a non-empty values array of strings."),
+    (re.compile(r"tunable surface .*default .* is not one of its declared values"), "Set default to one of the tunable's own values, or add the value to values in a reviewed change."),
+    (re.compile(r"tunable surface .*default must be a 4-element \[r, g, b, a\] array"), "A colour tunable's default is a 4-element [r, g, b, a] array with every channel in [0, 1]."),
+    (re.compile(r"tunable surface .*default must be a [23]-element number array"), "A vector2/vector3 tunable's default is a 2- or 3-element number array matching its kind."),
+    (re.compile(r"tunable surface .*target\.seam .* does not name a declared seam"), "target.seam must equal one of this manifest's seams[].id."),
+    (re.compile(r"tunable surface .*target\.member .* is not in seam"), "target.member must be one of the naming seam's declared member_set; widen member_set in a reviewed change or fix the member name."),
+    (re.compile(r"tunable surface .*token .* does not resolve inside"), "token must be a dotted path that exists under design_tokens in docs/standards/design-language/ui-design-language-standard.json, or be removed if the value is not in fact a design-language token."),
+    (re.compile(r"tunable surface .*token document could not be read"), "docs/standards/design-language/ui-design-language-standard.json must exist and parse as JSON with a design_tokens object before a tunable can cite a token path."),
 ]
 
 

@@ -1,0 +1,120 @@
+{
+  "schema": "xr-foundry.tunable_surface.v1",
+  "package_id": "com.lingkyn.inventory.ugui",
+  "family": "inventory",
+  "seams": [
+    {
+      "id": "skin",
+      "kind": "skin",
+      "type": "Lingkyn.Inventory.UGUI.InventorySkin",
+      "entry_point": "ApplySkin",
+      "member_set": [
+        "panelColor",
+        "sectionColor",
+        "accentColor",
+        "textColor",
+        "mutedTextColor",
+        "slotNormalColor",
+        "slotHoverColor",
+        "slotSelectedColor",
+        "slotDisabledColor"
+      ]
+    }
+  ],
+  "export": {
+    "destination_kind": "asset",
+    "path": "Assets/XR Foundry/Inventory/InventorySkin.asset"
+  },
+  "tunables": [
+    {
+      "id": "inventory.ugui.skin.surface_panel",
+      "kind": "colour",
+      "default": [0.031, 0.094, 0.122, 0.96],
+      "target": { "seam": "skin", "member": "panelColor" },
+      "label": "Panel background",
+      "group": "Surfaces",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "surface.panel"
+    },
+    {
+      "id": "inventory.ugui.skin.surface_section",
+      "kind": "colour",
+      "default": [0.055, 0.129, 0.153, 0.96],
+      "target": { "seam": "skin", "member": "sectionColor" },
+      "label": "Section background",
+      "group": "Surfaces",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "surface.section"
+    },
+    {
+      "id": "inventory.ugui.skin.surface_accent",
+      "kind": "colour",
+      "default": [0.122, 0.592, 0.624, 1.0],
+      "target": { "seam": "skin", "member": "accentColor" },
+      "label": "Accent",
+      "group": "Surfaces",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "surface.accent"
+    },
+    {
+      "id": "inventory.ugui.skin.text_primary",
+      "kind": "colour",
+      "default": [0.886, 0.988, 1.0, 1.0],
+      "target": { "seam": "skin", "member": "textColor" },
+      "label": "Primary text",
+      "group": "Text",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "text.primary"
+    },
+    {
+      "id": "inventory.ugui.skin.text_muted",
+      "kind": "colour",
+      "default": [0.439, 0.616, 0.639, 1.0],
+      "target": { "seam": "skin", "member": "mutedTextColor" },
+      "label": "Muted text",
+      "group": "Text",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "text.muted"
+    },
+    {
+      "id": "inventory.ugui.skin.slot_normal",
+      "kind": "colour",
+      "default": [0.071, 0.212, 0.255, 1.0],
+      "target": { "seam": "skin", "member": "slotNormalColor" },
+      "label": "Slot: normal",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "slot_states.normal"
+    },
+    {
+      "id": "inventory.ugui.skin.slot_hover",
+      "kind": "colour",
+      "default": [0.090, 0.345, 0.388, 1.0],
+      "target": { "seam": "skin", "member": "slotHoverColor" },
+      "label": "Slot: hover",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "slot_states.hover"
+    },
+    {
+      "id": "inventory.ugui.skin.slot_selected",
+      "kind": "colour",
+      "default": [0.094, 0.494, 0.525, 1.0],
+      "target": { "seam": "skin", "member": "slotSelectedColor" },
+      "label": "Slot: selected",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "slot_states.selected"
+    },
+    {
+      "id": "inventory.ugui.skin.slot_disabled",
+      "kind": "colour",
+      "default": [0.071, 0.212, 0.255, 0.46],
+      "target": { "seam": "skin", "member": "slotDisabledColor" },
+      "label": "Slot: disabled",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.ugui", "skin": "InventorySkin" },
+      "token": "slot_states.disabled"
+    }
+  ]
+}

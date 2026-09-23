@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/live-tuning/tunable-surface.schema.json",
+  "title": "XR Foundry tunable surface manifest",
+  "description": "Declares, as data, what an explicit injectable seam on a package (a skin/theme asset or a plain design-time configuration asset) may be tuned by a developer scaffold. See tunable-surface.md for the protocol this schema encodes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "package_id", "family", "seams", "export", "tunables"],
+  "properties": {
+    "schema": { "const": "xr-foundry.tunable_surface.v1" },
+    "package_id": { "type": "string", "pattern": "^com\\.lingkyn\\.[a-z0-9.-]+$" },
+    "family": {
+      "enum": ["foundations", "interaction", "inventory", "persistence", "settings"]
+    },
+    "seams": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/seam" }
+    },
+    "export": { "$ref": "#/$defs/export" },
+    "tunables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/tunable" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "seamId": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "tunableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    },
+    "seam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "type", "entry_point", "member_set"],
+      "properties": {
+        "id": { "$ref": "#/$defs/seamId" },
+        "kind": {
+          "enum": ["skin", "config"],
+          "description": "skin: an injectable visual/theme asset applied through a renderer adapter's own skin entry point. config: any other explicit injectable design-time configuration asset (a comfort/locomotion profile, an audio mix profile, an interaction profile, a layout or timing config) applied through its own entry point."
+        },
+        "type": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "The fully-qualified C# type of the seam asset (a ScriptableObject), e.g. Lingkyn.Inventory.UGUI.InventorySkin."
+        },
+        "entry_point": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "The method a runtime host calls to re-apply the seam asset after a tunable changes, e.g. ApplySkin."
+        },
+        "member_set": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" },
+          "description": "The closed set of member names on the seam's type that a tunable may target. Adding a member here is a reviewed change to the binder's closed set, not a scaffold decision."
+        }
+      }
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination_kind", "path"],
+      "properties": {
+        "destination_kind": {
+          "enum": ["token_document", "asset"],
+          "description": "token_document: overrides export as an xr-foundry.token_overrides.v1 document. asset: overrides export back into the bound seam asset (a ScriptableObject) in place."
+        },
+        "path": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "The conventional export location in a consumer project (a persistent-data-path-relative file, or the seam asset's own project path); not a path inside this repository."
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "step"],
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "skin"],
+      "properties": {
+        "package": { "$ref": "#/$defs/nonEmptyString" },
+        "skin": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "The scope label naming which seam instance/group this tunable belongs to (the Core binding-record scope vocabulary keeps this field name for a config seam too)."
+        },
+        "screen": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seam", "member"],
+      "properties": {
+        "seam": { "$ref": "#/$defs/seamId" },
+        "member": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "tunable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "default", "target", "label", "group", "scope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/tunableId" },
+        "kind": {
+          "enum": ["float", "int", "bool", "enum", "colour", "vector2", "vector3"]
+        },
+        "default": {},
+        "range": { "$ref": "#/$defs/range" },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "target": { "$ref": "#/$defs/target" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "group": { "$ref": "#/$defs/nonEmptyString" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "token": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "A dotted path under design_tokens in ui-design-language-standard.json this tunable's default is drawn from; optional, and only meaningful when the value is in fact a design-language token."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "float" } } },
+          "then": { "required": ["range"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "int" } } },
+          "then": { "required": ["range"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "enum" } } },
+          "then": { "required": ["values"] }
+        }
+      ]
+    }
+  }
+}

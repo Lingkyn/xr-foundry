@@ -13,7 +13,8 @@
   "lifecycle_policy": "consumer_owned_configure_start_stop_v1",
   "provides": [
     {"id": "xr-foundry.inventory.renderer", "version": "1.0.0"},
-    {"id": "xr-foundry.inventory.renderer.ugui", "version": "1.0.0"}
+    {"id": "xr-foundry.inventory.renderer.ugui", "version": "1.0.0"},
+    {"id": "xr-foundry.tuning.surface", "version": "1.0.0"}
   ],
   "requires": [
     {"id": "xr-foundry.inventory.domain", "version": "1.0.0"},

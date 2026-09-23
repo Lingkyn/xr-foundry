@@ -1,0 +1,18 @@
+{
+  "name": "Lingkyn.XrUiShell.Ugui",
+  "rootNamespace": "Lingkyn.XrUiShell.Ugui",
+  "references": [
+    "Lingkyn.XrUiShell.Core",
+    "Lingkyn.LiveTuning.Core",
+    "Lingkyn.LiveTuning.Unity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

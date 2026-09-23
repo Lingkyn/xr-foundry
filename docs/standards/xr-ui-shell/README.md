@@ -1,8 +1,9 @@
 # XR UI shell package-family standard
 
-Status: proposal in the source-gate queue (`NEXT-XR-UI-SHELL`); no Core or renderer
-adapter implementation is staged yet, and no package directory or package id
-exists
+Status: proposal in the source-gate queue (`NEXT-XR-UI-SHELL`); the Core and both
+renderer adapters are staged, authored and unexecuted, under `staging/xr-ui-shell/`
+against the verification contract below, with a coverage map; no package directory
+or package id exists yet, and nothing here has compiled or run in a Unity Editor
 
 This standard defines a reusable world-space UI shell: panel, wrist-menu, and
 hand-menu identity, a shell layout model (anchor kinds and placement intents)
@@ -140,10 +141,15 @@ states in its claim ceiling.
 2. The maintainer copies [`admission.draft.json`](admission.draft.json) into
    `docs/foundry/admissions/` as the durable record through the
    [system admission gate](../../foundry/system-admission.md).
-3. The staged implementation item authors the Core and both adapters under
-   `staging/xr-ui-shell/` against [`verification-contract.md`](verification-contract.md)
-   and writes the coverage map; nothing enters `packages/` before admission and a
-   green gate, and each adapter is gated on its own tuple.
+3. The staged implementation exists: the Core and both renderer adapters are
+   authored under `staging/xr-ui-shell/` against
+   [`verification-contract.md`](verification-contract.md), with
+   [`coverage-map.json`](coverage-map.json) mapping every Core, UGUI, and UI
+   Toolkit clause to named tests. The code is authored and unexecuted — it has not
+   compiled in a Unity Editor — so nothing enters `packages/` before admission and
+   a green gate, and each adapter will be gated on its own tuple; see
+   [`staging/xr-ui-shell/README.md`](../../../staging/xr-ui-shell/README.md) for
+   what is staged and the promotion steps.
 
 See also:
 

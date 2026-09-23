@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.xr-ui-shell.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn XR UI Shell Core",
+  "description": "Engine-light world-space UI shell substrate: PanelId, WristMenuId, HandMenuId, and InputSourceId identity with one canonical dotted-segment form, a shell layout model (the closed AnchorKind set, panel/wrist-menu/hand-menu declarations with an admitted anchor-kind set, and the closed placement-intent set open/close/focus/dock/follow), intent application to an immutable ShellState with deterministic replay and a fingerprint, typed pointer and gaze routing from registered input sources that resolves to exactly one open panel or a named no-target result, a skin contract mapping the shared design-language tokens to a closed shell-slot set, and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "ShellWalkthrough",
+      "description": "Domain-only walkthrough: declaring a panel, a wrist menu, and a hand menu, opening and focusing them, docking a secondary panel to a primary one, routing a ray hover and a gaze select through a registered commit source, and mapping the canonical skin; no asset, scene, or UnityEngine API.",
+      "path": "Samples~/ShellWalkthrough"
+    }
+  ]
+}

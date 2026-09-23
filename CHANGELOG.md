@@ -5,6 +5,17 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged the XR UI shell family (`staging/xr-ui-shell`, WI-020):
+  `com.lingkyn.xr-ui-shell.core` (panel, wrist-menu, and hand-menu identity; world,
+  head-locked, wrist, and hand anchors; open, close, focus, dock, and follow
+  intents on an immutable shell state with deterministic replay; typed pointer
+  and gaze routing that resolves to exactly one panel; the skin contract mapping
+  the shared design-language tokens to a closed slot set) and the sibling
+  `com.lingkyn.xr-ui-shell.ugui` and `com.lingkyn.xr-ui-shell.ui-toolkit`
+  adapters, each with one injectable skin seam and a default skin, sharing
+  nothing but Core; the UGUI adapter is the first client of the live-tuning
+  `ITuningPanelSurface` seam. 80 NUnit tests and a coverage map at 21 of 21
+  clauses. Authored, unexecuted: no Unity compiler has run over the code.
 - Resolved DLB-0001 (prototype-stage operating mandates) by lazy consensus:
   the governance_policy window closed on 2026-09-22T09:00Z with no risk or
   counterexample delta, so the record carries OPT-KEEP-MANDATES with

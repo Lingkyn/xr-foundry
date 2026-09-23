@@ -24,6 +24,11 @@ namespace Lingkyn.XrUiShell.Core
         public const string TokenUnknown = "token.unknown";
         public const string SlotUnknown = "slot.unknown";
         public const string SlotUnmapped = "slot.unmapped";
+        public const string OrnamentNeverFolds = "ornament.fold.unsupported";
+        public const string VerbUnknown = "verb.unknown";
+        public const string VerbDuplicate = "verb.duplicate";
+        public const string VerbUnwired = "verb.unwired";
+        public const string VerbNoTarget = "verb.no_target";
     }
 
     /// <summary>Structured outcome: a value on success, a stable code and a human message, plus

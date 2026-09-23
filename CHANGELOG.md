@@ -5,6 +5,35 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Extended the staged XR UI shell Core (WI-023) with six new clauses (XUC-10..
+  XUC-15): the ornament (one shell-owned fixed surface, never folded); a closed
+  verb registry partitioning registered ids into wired and unwired, with one
+  constant id and display word per verb; a single-valued `FocusSubject` claimed
+  only by an explicit `Claim`, never a per-frame mirror; verb resolution that
+  reads only that one value with no precedence chain; a queryable pre-press
+  affordance that is never available for a target a press would refuse; and fold
+  retaining a panel's full open/docked/following state, since fold and unfold
+  change only visibility. Inverted the shell/live-tuning dependency this same
+  item found: deleted `Runtime/LiveTuning/` from
+  `com.lingkyn.xr-ui-shell.ugui` and its asmdef references, added the one generic
+  `IShellPanelContent<TSlot>` panel-content seam to Core, and moved the join
+  point into `staging/live-tuning/com.lingkyn.live-tuning.unity/Runtime/Shell/ShellTuningClient.cs`,
+  where Live Tuning registers its own `tune` verb and reads the shell's
+  `FocusSubject` like any peer client. Added a source-rule test proving no asmdef
+  under `staging/xr-ui-shell` references any assembly outside `Lingkyn.XrUiShell.*`
+  and no shell `Runtime` source mentions another family's namespace, and recorded
+  LESSON-010 (a developer or tooling system is a peer client, never a dependency,
+  of the systems it operates on). Coverage maps: xr-ui-shell 27 of 27 clauses (100
+  tests), live-tuning unchanged at 24 of 26 clauses plus 5 new peer-client tests
+  outside the numbered clauses (92 tests total). Authored, unexecuted: no Unity
+  compiler has run over the code.
+- Added `docs/benchmarks/shipped-game-gap-matrix.md`: the systems three shipped
+  product shapes (rhythm action, object interaction, spatial creation) need,
+  marked against what the library supplies today (5 verified, 6 staged, 9
+  candidate, 3 missing, 1 deferred). `ROADMAP.md` ranks 12 to 21 are reordered
+  from it: Haptics first, then four new candidates (Platform services, Quality
+  tiers, Content packs, Spatial placement), then Tutorial, Objectives, Analytics,
+  Dialogue, and Networking.
 - Added the tunable surface protocol (WI-022): `docs/standards/live-tuning/tunable-surface.md`
   and `tunable-surface.schema.json` (`xr-foundry.tunable_surface.v1`) let a package with
   an explicit injectable seam — a skin/theme asset or any other design-time

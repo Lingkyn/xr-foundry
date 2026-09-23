@@ -21,7 +21,9 @@ it has not compiled.
 | `com.lingkyn.live-tuning.core/Tests/Editor/LiveTuningCoreContractTests.cs` | 49 EditMode tests mapped in `docs/standards/live-tuning/coverage-map.json` |
 | `com.lingkyn.live-tuning.core/Samples~/TuningWalkthrough/` | Domain-only sample: a registry built by explicit registration and by the token bridge, a full set/snapshot/reset/apply_snapshot/export intent sequence, and a replayed sequence; no asset, scene, or UnityEngine API |
 | `com.lingkyn.live-tuning.unity/Runtime/*.cs` | Unity adapter: `ISkinBinder` and the opaque `asset_key#member` target-path convention (`SkinTargetPath`), `SkinBindingValidation`/`SkinBindingSet`/`SkinBindingException` with stable codes and field paths, a self-contained reference skin asset and binder pair for testing (`DemoSkin.cs`), `TuningRuntime` (live application through the skin seam), the injectable `ITuningExportSink` (with `DescribeDestination()`, a read-only peek at where an export would land) with a device JSON writer (`DeviceTokenExportSink`) and an Editor-only asset writer (`EditorAssetExportSink`, guarded by `#if UNITY_EDITOR`), explicit device-override import (`TuningImport`), the closed set of editor controls and `TuningEditorFactory` (one per `EditorKind`), `TuningPanelHost` with the `ITuningPanelSurface` seam and its `UguiFallbackPanelSurface`, pick-to-tune selection (`TuningSelection.cs`: `TuningScope`, `SelectionDiagnostic`, and the host's `Select`/`ClearSelection`), and the two view presets (`TuningView.cs`: `TuningViewPreset`, `TuningSlotView`, `TuningHostView`, `TuningView.Describe`) |
+| `com.lingkyn.live-tuning.unity/Runtime/Shell/ShellTuningClient.cs` | This family as a peer client of the XR UI shell (LESSON-010), never a shell dependency: `TuningVerb` registers the constant `tune` verb id and display word into a shell `VerbRegistryBuilder` exactly the entry point any other family would use; `ShellTuningClient` adapts the shell's generic `IShellPanelContent<TuningSlot>` seam to this package's own `ITuningPanelSurface`, keyed only by the panel's `SurfaceId`; and `ShellTuningClient.ApplyFocus` maps the shell's `FocusSubject` to a `TuningPanelHost` scope through `TuningPanelHost.Select`, and so through the Core `BindingIndex` |
 | `com.lingkyn.live-tuning.unity/Tests/Editor/LiveTuningUnityContractTests.cs` | 38 EditMode tests for the adapter gate, driven through fakes for every seam (`ISkinApplyTarget`, `ITuningFileSystem`, `ITuningFileReader`, `ITuningPanelSurface`) |
+| `com.lingkyn.live-tuning.unity/Tests/Editor/ShellTuningClientTests.cs` | 5 EditMode tests (listed under the coverage map's `additional_tests_outside_clauses`) proving the verb registers like any peer, a real `TuningPanelHost` attaches through `ShellTuningClient`, and `ApplyFocus` maps a panel target through the `BindingIndex`, restores the previous scope on no target, and reports `selection.unbound` rather than a silent empty panel. Moved here from the shell's own (now deleted) UGUI-adapter integration test |
 | `docs/standards/live-tuning/` | Standard README, source manifest, verification contract, coverage map, admission draft |
 
 ## The five scaffold rules this package follows
@@ -73,16 +75,28 @@ what lets a target be selected, not another special case bolted onto the scaffol
   no reference to a camera, ray, or input device; a source rule in the test
   assembly reads the Unity Runtime folder's own source files and asmdef as text
   and asserts none of them mention a physics, input, or camera type.
-- Reference decision: `Lingkyn.LiveTuning.Unity`'s asmdef now references
-  `Lingkyn.XrUiShell.Core` directly, so `Select` can accept a real `SurfaceId`.
-  This adds no cycle: the shell's UGUI adapter (`Lingkyn.XrUiShell.Ugui`) already
-  references `Lingkyn.LiveTuning.Unity`, and `Lingkyn.XrUiShell.Core` itself
-  references nothing, so the graph stays a DAG (`Ugui` → `{Core, LiveTuning.Core,
-  LiveTuning.Unity}`, `LiveTuning.Unity` → `{LiveTuning.Core, XrUiShell.Core}`).
-  Had that reference closed a cycle, the fallback named in this family's own
-  work item would have applied instead: accept the selection as an explicit
-  opaque target-path string plus a tiny `ISelectionSource` interface, with no
-  `SurfaceId` overload at all.
+- Reference decision: `Lingkyn.LiveTuning.Unity`'s asmdef references
+  `Lingkyn.XrUiShell.Core` directly, so `Select` can accept a real `SurfaceId`
+  and `ShellTuningClient.ApplyFocus` can read a real `FocusSubject`. This is the
+  only direction the dependency ever runs: `Lingkyn.XrUiShell.Core` itself
+  references nothing, and no `Lingkyn.XrUiShell.*` assembly references
+  `Lingkyn.LiveTuning.*` (a source rule in the shell's own Core test assembly
+  proves it), so the graph is a DAG with the shell strictly upstream
+  (`LiveTuning.Unity` → `{LiveTuning.Core, XrUiShell.Core}`; nothing points the
+  other way). This family previously depended on a shell UGUI-adapter type that
+  itself referenced `Lingkyn.LiveTuning.*` — a real cycle in spirit, since the
+  shell (meant to be referenced only) referenced a client back — which
+  LESSON-010 records and `ShellTuningClient` (`Runtime/Shell/ShellTuningClient.cs`)
+  now fixes by moving the join point into this package as a peer client.
+
+## The dock and its peer clients (LESSON-010)
+
+In plain words: the XR UI shell is the dock, and every system's panel — Inventory,
+Settings, or this family's developer scaffold — is a peer client of the dock. The
+dock never references a client. This family registers its own `tune` verb into
+the shell's verb registry and adapts the shell's generic panel-content seam
+(`Runtime/Shell/ShellTuningClient.cs`), exactly like any other peer would; it does
+not, and could not, make the shell aware that Live Tuning exists.
 
 ## One host, two presets
 

@@ -87,16 +87,21 @@ with its own admission record.
 | 9 | Scene flow | Nearly every project | Candidate | Loading, transitions, fade and hold, additive scene sets, error recovery; every project writes one and most write it badly |
 | 10 | XR UI shell | Most XR projects | Candidate | World-space panels, wrist and hand menus, pointer and gaze routing, built on the shared design language; the Inventory presentation adapters become one client of it |
 | 11 | Live tuning | Most XR projects during development | Candidate | In-headset tuning of design-language tokens and skin values (colour, size, corner radius, spacing) with export back to the assets that own them; a developer scaffold that composes on the XR UI shell, the skin seams, Settings, and the design language, so "does it look right on the device" is answered in the headset instead of by a rebuild |
-| 12 | Haptics | Most XR projects | Candidate | Named haptic events and per-controller profiles behind an engine-light intent seam; natural extension of Interaction |
-| 13 | Tutorial and onboarding | Most XR projects | Candidate | First-run guidance, gated steps, replay; XR projects need it because controls are not discoverable |
-| 14 | Objectives and quests | Most games | Candidate | Goal graphs, progress state, persistence integration |
-| 15 | Analytics events | Many projects | Candidate | Consent-gated, typed event intents with no vendor dependency in Core |
-| 16 | Dialogue and narrative | Some games | Candidate | Branching lines, localization integration; lower frequency across XR tools |
-| 17 | Networking and multiplayer | Some projects | Deferred | High frequency where present, but no engine-light Core is credible without a transport; enters after a source comparison of the maintained public stacks |
+| 12 | Haptics | Every XR project | Candidate | Named haptic events and per-controller profiles behind an engine-light intent seam; every shape in the shipped-game gap matrix needs it in the first minute of play |
+| 13 | Platform services | Every shipped project | Candidate | Entitlement, achievements, leaderboards, cloud save, and store sign-in as thin adapters over the vendor SDKs behind one contract; no shipped product avoids it and nothing in the library covered it before the gap matrix |
+| 14 | Quality tiers | Every shipped project | Candidate | Refresh rate, render scale, foveation, and per-device presets; store certification requires a stable frame rate on every headset |
+| 15 | Content packs | Most projects | Candidate | Data-driven loading of levels, packs, and user content behind one contract (Addressables or equivalent); custom levels and user scenes are how XR products grow after release |
+| 16 | Spatial placement | Creation tools, many games | Candidate | Ray placement with ghost preview, sticky aim hand, stick-as-distance, snapping, commit and cancel, and locomotion suppression while aiming; from the creation-tool shape of the gap matrix |
+| 17 | Tutorial and onboarding | Most XR projects | Candidate | First-run guidance, gated steps, replay; XR projects need it because controls are not discoverable |
+| 18 | Objectives and quests | Most games | Candidate | Goal graphs, progress state, persistence integration |
+| 19 | Analytics events | Many projects | Candidate | Consent-gated, typed event intents with no vendor dependency in Core |
+| 20 | Dialogue and narrative | Some games | Candidate | Branching lines, localization integration; lower frequency across XR tools |
+| 21 | Networking and multiplayer | Some projects | Deferred | High frequency where present, but no engine-light Core is credible without a transport; enters after a source comparison of the maintained public stacks |
 
-Ranks 8 to 10 were the next three source gates after Audio, in that order, and
-all three have passed it; rank 11 is the fourth and depends on rank 10's shell
-and skin contract. A candidate enters the queue only with a source manifest, a
+Ranks 8 to 11 have passed the source gate and are staged. Ranks 12 to 16 are
+ordered by the [shipped-game gap matrix](docs/benchmarks/shipped-game-gap-matrix.md):
+systems every shipped product needs and the library lacks come before systems the
+library already has on paper. A candidate enters the queue only with a source manifest, a
 verification contract, and an admission draft, exactly as Localization and Audio
 did.
 

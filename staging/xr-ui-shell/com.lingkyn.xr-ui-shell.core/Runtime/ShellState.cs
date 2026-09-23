@@ -12,16 +12,20 @@ namespace Lingkyn.XrUiShell.Core
 
     /// <summary>One declared surface's current placement: its current anchor kind (its home
     /// anchor until a dock or follow intent changes it), whether it is open, the surface it is
-    /// docked to (if any), and whether it is following a target anchor kind.</summary>
+    /// docked to (if any), whether it is following a target anchor kind, and whether it is
+    /// folded. Folding never touches any other field: a folded surface keeps its open flag,
+    /// docked target, and follow flag exactly as they were, because fold and unfold are intents
+    /// that change visibility only.</summary>
     public sealed class SurfaceRuntimeState
     {
-        internal SurfaceRuntimeState(SurfaceId id, AnchorKind currentAnchorKind, bool isOpen, SurfaceId? dockedTarget, bool isFollowing)
+        internal SurfaceRuntimeState(SurfaceId id, AnchorKind currentAnchorKind, bool isOpen, SurfaceId? dockedTarget, bool isFollowing, bool isFolded)
         {
             Id = id;
             CurrentAnchorKind = currentAnchorKind;
             IsOpen = isOpen;
             DockedTarget = dockedTarget;
             IsFollowing = isFollowing;
+            IsFolded = isFolded;
         }
 
         public SurfaceId Id { get; }
@@ -29,9 +33,10 @@ namespace Lingkyn.XrUiShell.Core
         public bool IsOpen { get; }
         public SurfaceId? DockedTarget { get; }
         public bool IsFollowing { get; }
+        public bool IsFolded { get; }
 
         internal string Fingerprint() =>
-            $"{Id}:anchor={CurrentAnchorKind}:open={IsOpen}:dock={(DockedTarget.HasValue ? DockedTarget.Value.ToString() : "-")}:follow={IsFollowing}";
+            $"{Id}:anchor={CurrentAnchorKind}:open={IsOpen}:dock={(DockedTarget.HasValue ? DockedTarget.Value.ToString() : "-")}:follow={IsFollowing}:folded={IsFolded}";
     }
 
     public sealed class ShellState : IEquatable<ShellState>
@@ -65,7 +70,7 @@ namespace Lingkyn.XrUiShell.Core
             var surfaces = new SortedDictionary<SurfaceId, SurfaceRuntimeState>();
             foreach (var declaration in layout.Surfaces)
             {
-                surfaces[declaration.Id] = new SurfaceRuntimeState(declaration.Id, declaration.Home, false, null, false);
+                surfaces[declaration.Id] = new SurfaceRuntimeState(declaration.Id, declaration.Home, false, null, false, false);
             }
             return new ShellState(layout, surfaces, null);
         }
@@ -107,7 +112,7 @@ namespace Lingkyn.XrUiShell.Core
             {
                 return ShellResult<ShellState>.Fail(ShellFailure.PanelUnknown, $"Surface '{surface}' is not declared.", surface.ToString());
             }
-            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, current.CurrentAnchorKind, true, current.DockedTarget, current.IsFollowing), FocusedSurface));
+            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, current.CurrentAnchorKind, true, current.DockedTarget, current.IsFollowing, current.IsFolded), FocusedSurface));
         }
 
         internal ShellResult<ShellState> ApplyClose(SurfaceId surface)
@@ -117,7 +122,41 @@ namespace Lingkyn.XrUiShell.Core
                 return ShellResult<ShellState>.Fail(ShellFailure.PanelUnknown, $"Surface '{surface}' is not declared.", surface.ToString());
             }
             var focus = FocusedSurface.HasValue && FocusedSurface.Value.Equals(surface) ? (SurfaceId?)null : FocusedSurface;
-            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, current.CurrentAnchorKind, false, current.DockedTarget, current.IsFollowing), focus));
+            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, current.CurrentAnchorKind, false, current.DockedTarget, current.IsFollowing, current.IsFolded), focus));
+        }
+
+        /// <summary>Folds a declared surface: sets <see cref="SurfaceRuntimeState.IsFolded"/> and
+        /// changes nothing else, so the surface keeps its full open/docked/following state. The
+        /// ornament (<see cref="ShellOrnament"/>) is never a valid target: it is rejected with
+        /// <see cref="ShellFailure.OrnamentNeverFolds"/> before any declared-surface lookup,
+        /// because it is the one shell-owned fixed surface and is never folded.</summary>
+        internal ShellResult<ShellState> ApplyFold(SurfaceId surface)
+        {
+            if (surface.Equals(SurfaceId.TheOrnament))
+            {
+                return ShellResult<ShellState>.Fail(ShellFailure.OrnamentNeverFolds, "The shell ornament is the one shell-owned fixed surface and is never folded.", surface.ToString());
+            }
+            if (!TryGetSurfaceState(surface, out var current))
+            {
+                return ShellResult<ShellState>.Fail(ShellFailure.PanelUnknown, $"Surface '{surface}' is not declared.", surface.ToString());
+            }
+            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, current.CurrentAnchorKind, current.IsOpen, current.DockedTarget, current.IsFollowing, true), FocusedSurface));
+        }
+
+        /// <summary>Unfolds a declared surface: clears <see cref="SurfaceRuntimeState.IsFolded"/>
+        /// and changes nothing else. Rejects the ornament exactly as <see cref="ApplyFold"/>
+        /// does.</summary>
+        internal ShellResult<ShellState> ApplyUnfold(SurfaceId surface)
+        {
+            if (surface.Equals(SurfaceId.TheOrnament))
+            {
+                return ShellResult<ShellState>.Fail(ShellFailure.OrnamentNeverFolds, "The shell ornament is the one shell-owned fixed surface and is never folded.", surface.ToString());
+            }
+            if (!TryGetSurfaceState(surface, out var current))
+            {
+                return ShellResult<ShellState>.Fail(ShellFailure.PanelUnknown, $"Surface '{surface}' is not declared.", surface.ToString());
+            }
+            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, current.CurrentAnchorKind, current.IsOpen, current.DockedTarget, current.IsFollowing, false), FocusedSurface));
         }
 
         internal ShellResult<ShellState> ApplyFocus(SurfaceId surface)
@@ -148,7 +187,7 @@ namespace Lingkyn.XrUiShell.Core
             {
                 return ShellResult<ShellState>.Fail(ShellFailure.AnchorKindUnsupported, $"Surface '{surface}' does not admit anchor kind '{targetDeclaration.Home}' (the dock target's home anchor).", surface.ToString());
             }
-            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, targetDeclaration.Home, current.IsOpen, target, current.IsFollowing), FocusedSurface));
+            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, targetDeclaration.Home, current.IsOpen, target, current.IsFollowing, current.IsFolded), FocusedSurface));
         }
 
         internal ShellResult<ShellState> ApplyFollow(SurfaceId surface, AnchorKind targetAnchorKind)
@@ -161,7 +200,7 @@ namespace Lingkyn.XrUiShell.Core
             {
                 return ShellResult<ShellState>.Fail(ShellFailure.AnchorKindUnsupported, $"Surface '{surface}' does not admit anchor kind '{targetAnchorKind}'.", surface.ToString());
             }
-            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, targetAnchorKind, current.IsOpen, current.DockedTarget, true), FocusedSurface));
+            return ShellResult<ShellState>.Ok(WithSurface(new SurfaceRuntimeState(surface, targetAnchorKind, current.IsOpen, current.DockedTarget, true, current.IsFolded), FocusedSurface));
         }
 
         private ShellState WithSurface(SurfaceRuntimeState updated, SurfaceId? focusedSurface)

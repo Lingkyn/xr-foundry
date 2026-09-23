@@ -383,6 +383,48 @@
           "rationale": "PersistenceUnityConfig is read once during ValidateAuthoring/initialization and has no live-apply entry point a runtime host re-invokes; the family exposes no injectable seam this protocol attaches to."
         }
       ]
+    },
+    {
+      "id": "LESSON-010",
+      "title": "A developer or tooling system is a peer client, never a dependency, of the systems it operates on",
+      "origin_family": "inventory",
+      "observed": "The staged XR UI shell's UGUI adapter (staging/xr-ui-shell/com.lingkyn.xr-ui-shell.ugui) carried a Runtime/LiveTuning/ folder and asmdef references onto Lingkyn.LiveTuning.Core and Lingkyn.LiveTuning.Unity, so the shell package meant to be the neutral dock every system's panel adapts to instead depended on one specific developer-tooling client. The direction only inverted once the adapter moved into Live Tuning's own package as a peer client (ShellTuningClient) that registers a 'tune' verb through the shell's VerbRegistry and adapts the shell's generic IShellPanelContent seam, and a source rule was added to the shell's own Core test assembly to keep the inversion from recurring.",
+      "rule": "A developer or tooling system that inspects, tunes, or otherwise acts on other systems' state is a peer client of the shell and the capability graph: it registers its own verbs, panels, and capabilities through the host's public entry points exactly like any product family, and it is never a dependency of the systems it operates on. A shell, dock, or host assembly references no client family's assembly or type; the client depends on the host's generic public seam, never the reverse, and a source rule in the host's own test assembly proves no such reference exists.",
+      "evidence": [
+        "staging/live-tuning/com.lingkyn.live-tuning.unity/Runtime/Shell/ShellTuningClient.cs",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Runtime/ShellPanelContent.cs",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Runtime/VerbRegistry.cs",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellSourceRuleTests.cs",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/live-tuning/verification-contract.md"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "adopted",
+          "rationale": "Both Inventory renderer adapters hold zero reference to Live Tuning or any other developer-tooling assembly; the family exposes its tunable surface only as declarative data (foundry.tunables.json, LESSON-009), so the tool discovers what to tune without Inventory ever depending on it, and the reverse dependency this lesson names never existed here."
+        },
+        {
+          "family": "settings",
+          "status": "not_applicable",
+          "rationale": "No UI-bearing Settings package exists yet (LESSON-007), so there is no adapter or host assembly that could hold a wrongful dependency on a developer-tooling system."
+        },
+        {
+          "family": "interaction",
+          "status": "not_applicable",
+          "rationale": "Interaction routes semantic intents to handlers and owns no rendering, panel, or dock a developer-tooling client would attach to."
+        },
+        {
+          "family": "persistence",
+          "status": "not_applicable",
+          "rationale": "Persistence owns save orchestration and storage adapters, not a shell, dock, or UI panel a developer tool would operate on."
+        },
+        {
+          "family": "foundations",
+          "status": "not_applicable",
+          "rationale": "xr-baseline's own tooling is a one-shot Editor command (Tools > Apply Config), not a live-apply seam a runtime host holds a reference to (LESSON-009), so no dock/tool dependency-direction question arises here yet."
+        }
+      ]
     }
   ]
 }

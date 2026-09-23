@@ -547,6 +547,292 @@ namespace Lingkyn.XrUiShell.Core.Editor.Tests
             Assert.That(referenced.Any(name => name.IndexOf("UnityEngine", StringComparison.OrdinalIgnoreCase) >= 0), Is.False, string.Join(",", referenced));
         }
 
+        // ----- ornament: one shell-owned fixed surface, never folded (XUC-10) -----
+
+        [Test]
+        public void OrnamentIsAFixedIdentityNeverPartOfADeclaredLayoutsSurfaceCount()
+        {
+            var layout = SampleLayout();
+            Assert.That(layout.TryGetSurface(SurfaceId.TheOrnament, out _), Is.False, "The ornament is shell-owned and never enters a declared layout.");
+            Assert.That(layout.SurfaceCount, Is.EqualTo(4));
+
+            // The ornament identity is fixed and reachable from any state, declared or not.
+            Assert.That(SurfaceId.TheOrnament, Is.EqualTo(SurfaceId.TheOrnament));
+            Assert.That(SurfaceId.TheOrnament.ToString(), Does.Contain(ShellOrnament.CanonicalId));
+        }
+
+        [Test]
+        public void FoldAndUnfoldAlwaysRejectTheOrnamentWithOrnamentNeverFolds()
+        {
+            var state = ShellState.Initial(SampleLayout());
+            var foldResult = state.Apply(new FoldIntent(SurfaceId.TheOrnament));
+            var unfoldResult = state.Apply(new UnfoldIntent(SurfaceId.TheOrnament));
+
+            Assert.That(foldResult.Succeeded, Is.False);
+            Assert.That(foldResult.Code, Is.EqualTo(ShellFailure.OrnamentNeverFolds));
+            Assert.That(unfoldResult.Succeeded, Is.False);
+            Assert.That(unfoldResult.Code, Is.EqualTo(ShellFailure.OrnamentNeverFolds));
+        }
+
+        // ----- fold retains state: fold and unfold change visibility only (XUC-15, kept next to
+        // the ornament clause it shares ShellState.ApplyFold/ApplyUnfold with) -----
+
+        [Test]
+        public void FoldChangesOnlyVisibilityAndRetainsOpenDockedAndFollowState()
+        {
+            var state = ShellState.Initial(SampleLayout())
+                .Apply(new OpenIntent(SecondaryPanel)).Value
+                .Apply(new DockIntent(SecondaryPanel, PrimaryPanel)).Value
+                .Apply(new FollowIntent(SecondaryPanel, AnchorKind.HeadLocked)).Value;
+            state.TryGetSurfaceState(SecondaryPanel, out var beforeFold);
+            Assert.That(beforeFold.IsFolded, Is.False);
+
+            var folded = state.Apply(new FoldIntent(SecondaryPanel));
+            Assert.That(folded.Succeeded, Is.True, folded.Message);
+            folded.Value.TryGetSurfaceState(SecondaryPanel, out var afterFold);
+
+            Assert.That(afterFold.IsFolded, Is.True);
+            Assert.That(afterFold.IsOpen, Is.EqualTo(beforeFold.IsOpen));
+            Assert.That(afterFold.DockedTarget, Is.EqualTo(beforeFold.DockedTarget));
+            Assert.That(afterFold.IsFollowing, Is.EqualTo(beforeFold.IsFollowing));
+            Assert.That(afterFold.CurrentAnchorKind, Is.EqualTo(beforeFold.CurrentAnchorKind));
+        }
+
+        [Test]
+        public void UnfoldReversesFoldWithoutTouchingOtherState()
+        {
+            var state = ShellState.Initial(SampleLayout())
+                .Apply(new OpenIntent(PrimaryPanel)).Value
+                .Apply(new FoldIntent(PrimaryPanel)).Value;
+            state.TryGetSurfaceState(PrimaryPanel, out var folded);
+            Assert.That(folded.IsFolded, Is.True);
+
+            var unfolded = state.Apply(new UnfoldIntent(PrimaryPanel));
+            Assert.That(unfolded.Succeeded, Is.True, unfolded.Message);
+            unfolded.Value.TryGetSurfaceState(PrimaryPanel, out var afterUnfold);
+
+            Assert.That(afterUnfold.IsFolded, Is.False);
+            Assert.That(afterUnfold.IsOpen, Is.EqualTo(folded.IsOpen));
+        }
+
+        [Test]
+        public void FoldAndUnfoldOfAnUndeclaredSurfaceAreRejectedWithPanelUnknown()
+        {
+            var state = ShellState.Initial(SampleLayout());
+            var ghost = SurfaceId.OfPanel(PanelId.Parse("ghost"));
+            Assert.That(state.Apply(new FoldIntent(ghost)).Code, Is.EqualTo(ShellFailure.PanelUnknown));
+            Assert.That(state.Apply(new UnfoldIntent(ghost)).Code, Is.EqualTo(ShellFailure.PanelUnknown));
+        }
+
+        // ----- verb registry: closed registered id set, wired/unwired partition, one constant id
+        // and display word per verb (XUC-11) -----
+
+        [Test]
+        public void VerbRegistryPartitionsRegisteredIdsIntoWiredAndUnwired()
+        {
+            var builder = new VerbRegistryBuilder();
+            AssertOk(builder.Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired));
+            AssertOk(builder.Register(VerbId.Parse("delete"), "Delete", VerbWireState.Unwired));
+            var registry = builder.Build();
+
+            registry.TryGet(VerbId.Parse("tune"), out var tune);
+            registry.TryGet(VerbId.Parse("delete"), out var delete);
+            Assert.That(tune.WireState, Is.EqualTo(VerbWireState.Wired));
+            Assert.That(delete.WireState, Is.EqualTo(VerbWireState.Unwired));
+            Assert.That(registry.Verbs.Select(v => v.WireState), Is.EquivalentTo(new[] { VerbWireState.Wired, VerbWireState.Unwired }));
+        }
+
+        [Test]
+        public void RegisteringTheSameVerbIdTwiceIsRejectedWithVerbDuplicateLeavingTheBuilderUnchanged()
+        {
+            var builder = new VerbRegistryBuilder();
+            AssertOk(builder.Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired));
+            var countAfterFirst = builder.Count;
+
+            var duplicate = builder.Register(VerbId.Parse("tune"), "Retune", VerbWireState.Unwired);
+            Assert.That(duplicate.Succeeded, Is.False);
+            Assert.That(duplicate.Code, Is.EqualTo(ShellFailure.VerbDuplicate));
+            Assert.That(builder.Count, Is.EqualTo(countAfterFirst));
+
+            builder.Build().TryGet(VerbId.Parse("tune"), out var registration);
+            Assert.That(registration.DisplayWord, Is.EqualTo("Tune"), "The first registration's word is never replaced by a later attempt.");
+        }
+
+        [Test]
+        public void AnUnregisteredVerbIsRejectedWithVerbUnknownAndNeverSilentlyAbsorbed()
+        {
+            var registry = new VerbRegistryBuilder().Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value.Build();
+            var result = VerbLookup.Resolve(registry, VerbId.Parse("ghost_verb"));
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Code, Is.EqualTo(ShellFailure.VerbUnknown));
+            Assert.That(result.FieldPath, Is.EqualTo("ghost_verb"));
+        }
+
+        [Test]
+        public void AVerbsIdAndDisplayWordAreFixedAtRegistrationRegardlessOfTheTargetItLaterResolves()
+        {
+            var registry = new VerbRegistryBuilder().Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value.Build();
+            registry.TryGet(VerbId.Parse("tune"), out var registration);
+
+            var subjectA = FocusSubject.None.Claim(FocusTarget.OfPanel(PrimaryPanel));
+            var subjectB = FocusSubject.None.Claim(FocusTarget.OfExternal("some/other/thing"));
+            var resolvedA = VerbResolver.Resolve(registry, registration.Id, subjectA);
+            var resolvedB = VerbResolver.Resolve(registry, registration.Id, subjectB);
+
+            Assert.That(resolvedA.Succeeded, Is.True);
+            Assert.That(resolvedB.Succeeded, Is.True);
+            Assert.That(registration.Id, Is.EqualTo(VerbId.Parse("tune")));
+            Assert.That(registration.DisplayWord, Is.EqualTo("Tune"), "The word never varies; only the resolved target above did.");
+        }
+
+        // ----- FocusSubject: single-valued, claimed only by an explicit focus intent (XUC-12) -----
+
+        [Test]
+        public void FocusSubjectStartsWithNoCurrentTargetAndIsOnlySetByAnExplicitClaim()
+        {
+            Assert.That(FocusSubject.None.HasTarget, Is.False);
+            Assert.That(FocusSubject.None.Current, Is.Null);
+        }
+
+        [Test]
+        public void ReadingCurrentRepeatedlyLikeAPerFrameMirrorNeverClaimsAnything()
+        {
+            var subject = FocusSubject.None;
+            for (var frame = 0; frame < 5; frame++)
+            {
+                // A per-frame mirror or sync only ever reads Current; FocusSubject exposes no
+                // method that a read could call to claim on its own.
+                var observed = subject.Current;
+                Assert.That(observed, Is.Null);
+            }
+            Assert.That(subject.HasTarget, Is.False);
+        }
+
+        [Test]
+        public void ClaimReplacesTheWholeSubjectRatherThanMerging()
+        {
+            var subject = FocusSubject.None
+                .Claim(FocusTarget.OfPanel(PrimaryPanel))
+                .Claim(FocusTarget.OfExternal("interaction/haptics/left"));
+
+            Assert.That(subject.Current.Kind, Is.EqualTo(FocusTargetKind.External));
+            Assert.That(subject.Current.ExternalPath, Is.EqualTo("interaction/haptics/left"));
+            Assert.That(subject.Current.Panel, Is.Null, "The prior panel target left no trace in the replaced value.");
+        }
+
+        [Test]
+        public void ExactlyOneOfPanelPanelItemOrExternalNamesTheCurrentTargetOrNone()
+        {
+            var panelTarget = FocusTarget.OfPanel(PrimaryPanel);
+            var itemTarget = FocusTarget.OfPanelItem(PrimaryPanel, "slot_3");
+            var externalTarget = FocusTarget.OfExternal("interaction/haptics/left");
+
+            Assert.That(panelTarget.Kind, Is.EqualTo(FocusTargetKind.Panel));
+            Assert.That(itemTarget.Kind, Is.EqualTo(FocusTargetKind.PanelItem));
+            Assert.That(itemTarget.ToString(), Is.EqualTo($"{PrimaryPanel}#slot_3"));
+            Assert.That(externalTarget.Kind, Is.EqualTo(FocusTargetKind.External));
+            Assert.That(FocusSubject.None.Claim(panelTarget).ClaimNone().HasTarget, Is.False);
+        }
+
+        // ----- verb resolution: reads only FocusSubject, one target or a named no-target result
+        // (XUC-13) -----
+
+        [Test]
+        public void VerbResolutionYieldsExactlyOneTargetWhenWiredAndFocused()
+        {
+            var registry = new VerbRegistryBuilder().Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value.Build();
+            var subject = FocusSubject.None.Claim(FocusTarget.OfPanel(PrimaryPanel));
+
+            var result = VerbResolver.Resolve(registry, VerbId.Parse("tune"), subject);
+
+            Assert.That(result.Succeeded, Is.True, result.Message);
+            Assert.That(result.Value, Is.SameAs(subject.Current));
+        }
+
+        [Test]
+        public void VerbResolutionYieldsTheNamedNoTargetResultWhenNothingIsFocused()
+        {
+            var registry = new VerbRegistryBuilder().Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value.Build();
+            var result = VerbResolver.Resolve(registry, VerbId.Parse("tune"), FocusSubject.None);
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Code, Is.EqualTo(ShellFailure.VerbNoTarget));
+        }
+
+        [Test]
+        public void VerbResolutionRejectsAnUnregisteredVerbWithVerbUnknownAndAnUnwiredVerbWithVerbUnwired()
+        {
+            var registry = new VerbRegistryBuilder().Register(VerbId.Parse("delete"), "Delete", VerbWireState.Unwired).Value.Build();
+            var subject = FocusSubject.None.Claim(FocusTarget.OfPanel(PrimaryPanel));
+
+            var unknown = VerbResolver.Resolve(registry, VerbId.Parse("ghost_verb"), subject);
+            var unwired = VerbResolver.Resolve(registry, VerbId.Parse("delete"), subject);
+
+            Assert.That(unknown.Code, Is.EqualTo(ShellFailure.VerbUnknown));
+            Assert.That(unwired.Code, Is.EqualTo(ShellFailure.VerbUnwired));
+        }
+
+        [Test]
+        public void ResolvingTwoDifferentVerbsAgainstTheSameSubjectAlwaysAgreeOnTheTarget()
+        {
+            var registry = new VerbRegistryBuilder()
+                .Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value
+                .Register(VerbId.Parse("grab"), "Grab", VerbWireState.Wired).Value
+                .Build();
+            var subject = FocusSubject.None.Claim(FocusTarget.OfPanel(PrimaryPanel));
+
+            var tuneResult = VerbResolver.Resolve(registry, VerbId.Parse("tune"), subject);
+            var grabResult = VerbResolver.Resolve(registry, VerbId.Parse("grab"), subject);
+
+            Assert.That(tuneResult.Succeeded, Is.True);
+            Assert.That(grabResult.Succeeded, Is.True);
+            Assert.That(tuneResult.Value, Is.EqualTo(grabResult.Value), "There is one FocusSubject value to read, so no verb reads a different target through a precedence chain.");
+        }
+
+        // ----- pre-press affordance: never available for a target the verb would refuse
+        // (XUC-14) -----
+
+        [Test]
+        public void AffordanceIsAvailableWithTheResolvedTargetNameWhenResolutionWouldSucceed()
+        {
+            var registry = new VerbRegistryBuilder().Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value.Build();
+            var subject = FocusSubject.None.Claim(FocusTarget.OfPanel(PrimaryPanel));
+
+            var affordance = VerbAffordanceQuery.Query(registry, VerbId.Parse("tune"), subject);
+            var resolution = VerbResolver.Resolve(registry, VerbId.Parse("tune"), subject);
+
+            Assert.That(affordance.IsAvailable, Is.True);
+            Assert.That(affordance.ReasonCode, Is.Empty);
+            Assert.That(affordance.TargetName, Is.EqualTo(subject.Current.ToString()));
+            Assert.That(resolution.Succeeded, Is.True, "Available must mean a press would in fact succeed.");
+        }
+
+        [Test]
+        public void AVerbIsNeverShownAvailableForATargetItWouldRefuse()
+        {
+            var registry = new VerbRegistryBuilder()
+                .Register(VerbId.Parse("tune"), "Tune", VerbWireState.Wired).Value
+                .Register(VerbId.Parse("delete"), "Delete", VerbWireState.Unwired).Value
+                .Build();
+            var focused = FocusSubject.None.Claim(FocusTarget.OfPanel(PrimaryPanel));
+
+            // Unregistered.
+            AssertAffordanceAgreesWithResolution(registry, VerbId.Parse("ghost_verb"), focused);
+            // Registered but unwired.
+            AssertAffordanceAgreesWithResolution(registry, VerbId.Parse("delete"), focused);
+            // Registered and wired, but nothing is focused.
+            AssertAffordanceAgreesWithResolution(registry, VerbId.Parse("tune"), FocusSubject.None);
+        }
+
+        private static void AssertAffordanceAgreesWithResolution(VerbRegistry registry, VerbId verbId, FocusSubject subject)
+        {
+            var affordance = VerbAffordanceQuery.Query(registry, verbId, subject);
+            var resolution = VerbResolver.Resolve(registry, verbId, subject);
+
+            Assert.That(affordance.IsAvailable, Is.False, verbId.ToString());
+            Assert.That(resolution.Succeeded, Is.False, verbId.ToString());
+            Assert.That(affordance.ReasonCode, Is.EqualTo(resolution.Code), verbId.ToString());
+        }
+
         // ----- helpers -----
 
         private static readonly SurfaceId PrimaryPanel = SurfaceId.OfPanel(PanelId.Parse("hud.primary"));
@@ -570,7 +856,7 @@ namespace Lingkyn.XrUiShell.Core.Editor.Tests
             return builder.Build();
         }
 
-        private static void AssertOk(ShellResult<ShellLayoutBuilder> result) => Assert.That(result.Succeeded, Is.True, result.Message);
+        private static void AssertOk<T>(ShellResult<T> result) => Assert.That(result.Succeeded, Is.True, result.Message);
 
         private static ShellResult<SkinMapping> BuildMappingMissingFirstSlot()
         {

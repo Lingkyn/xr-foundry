@@ -2,9 +2,7 @@
   "name": "Lingkyn.XrUiShell.Ugui",
   "rootNamespace": "Lingkyn.XrUiShell.Ugui",
   "references": [
-    "Lingkyn.XrUiShell.Core",
-    "Lingkyn.LiveTuning.Core",
-    "Lingkyn.LiveTuning.Unity"
+    "Lingkyn.XrUiShell.Core"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

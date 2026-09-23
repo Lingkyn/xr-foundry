@@ -3,9 +3,7 @@
   "rootNamespace": "Lingkyn.XrUiShell.Ugui.Editor.Tests",
   "references": [
     "Lingkyn.XrUiShell.Core",
-    "Lingkyn.XrUiShell.Ugui",
-    "Lingkyn.LiveTuning.Core",
-    "Lingkyn.LiveTuning.Unity"
+    "Lingkyn.XrUiShell.Ugui"
   ],
   "includePlatforms": [
     "Editor"

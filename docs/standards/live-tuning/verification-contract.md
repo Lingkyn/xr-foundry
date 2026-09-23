@@ -206,6 +206,12 @@ EditMode tests must cover:
 - two independent runtimes constructed side by side over two skin instances and
   two sinks that share no state, so a `set` in one changes no value, override, or
   export of the other.
+- the panel host is a peer client of the XR UI shell, never a shell dependency
+  (LESSON-010): it registers its own verb (`tune`) into the shell's verb registry
+  exactly the entry point any other family would use, and it adapts the shell's
+  one generic panel-content surface seam to its own `ITuningPanelSurface`; the
+  shell's own assemblies never reference this family, proven by a source rule in
+  the shell's Core test assembly.
 - pick-to-tune through the shell's routing, never the family's own raycast: the
   host accepts a selection from the XR UI shell's typed routing (a `SurfaceId` or
   an explicit target path the consumer passes), maps it through the Core

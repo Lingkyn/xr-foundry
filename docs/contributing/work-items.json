@@ -914,19 +914,20 @@
         "staging/xr-ui-shell/README.md",
         "docs/standards/live-tuning/verification-contract.md",
         "staging/live-tuning/README.md",
-        "docs/standards/lessons/lessons-register.json"
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/xr-ui-shell/source-manifest.json"
       ],
       "allowed_paths": [
-        "docs/standards/xr-ui-shell/",
-        "staging/xr-ui-shell/",
-        "docs/standards/live-tuning/verification-contract.md",
-        "docs/standards/live-tuning/coverage-map.json",
-        "staging/live-tuning/",
+        "CHANGELOG.md",
         "docs/standards/lessons/lessons-register.json",
-        "CHANGELOG.md"
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/xr-ui-shell/",
+        "staging/live-tuning/",
+        "staging/xr-ui-shell/"
       ],
       "steps": [
-        "Extend the XR UI shell contract (Core gate) with an ornament: one shell-owned fixed surface that is never folded; a verb registry with a closed, registered id set where an unregistered verb is rejected with a stable code and never silently absorbed, and registered ids partition into wired and unwired; a focus context that names exactly one current target (a panel, a panel item, or an external target path the consumer routes in) or none; a verb intent resolves through the focus context to exactly one target or a named no-target result; and fold retains state (a folded panel keeps its full state and a fold or unfold is an intent that changes visibility only). Implement in the staged Core with NUnit tests and extend the coverage map.",
+        "Extend the XR UI shell contract (Core gate) with: an ornament, one shell-owned fixed surface that is never folded; a verb registry with a closed, registered id set where an unregistered verb is rejected with a stable code and never silently absorbed, registered ids partition into wired and unwired, and a verb has one constant id and display word (what varies is its target, never its word); a single-valued FocusSubject claimed only by an explicit focus intent (a per-frame mirror or sync never claims it; assignment replaces, so no surface is special) that names exactly one current target (a panel, a panel item, or an external target path the consumer routes in) or none; verb resolution that reads that one value and nothing else (no precedence chain, no branch order) and yields exactly one target or a named no-target result; a queryable pre-press affordance for every registered verb (resolved target name, available or unavailable, and a stable reason code) so a verb is never shown available for a target it would refuse; and fold retains state (a folded panel keeps its full state; fold and unfold are intents that change visibility only). Cite public norms in the source manifest (single active element and first responder, ARIA selected versus active descendant, mode-error literature). Implement in the staged Core with NUnit tests and extend the coverage map.",
         "Invert the dependency: no XR UI shell assembly references any client family; the shell exposes one generic panel-content surface seam that any family adapts to; move the live-tuning surface adapter into the live-tuning Unity package, where the developer scaffold registers a Tune verb like any peer and receives the focus target through the shell's focus context, mapping it through BindingIndex; add a source rule test that the shell assemblies reference no family outside xr-ui-shell and design-language.",
         "Record LESSON-010 in the lessons register: a tooling or developer system is a peer client of the shell and the capability graph, registers its verbs and panels like any family, and is never a dependency of the systems it operates on; with an explicit disposition for every family the register requires.",
         "Update both staging READMEs and the root CHANGELOG."

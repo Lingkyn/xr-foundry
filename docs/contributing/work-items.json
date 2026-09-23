@@ -840,6 +840,60 @@
       },
       "evidence": "validate_coverage_map_claims passes on the extended map with no allowlist entry and the three new clause ids covered.",
       "done_proof": null
+    },
+    {
+      "id": "WI-022",
+      "title": "Tunable surface protocol: every UI-bearing package declares what the developer scaffold may tune",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-019"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/design-language/ui-design-language-standard.json",
+        "docs/standards/lessons/lessons-register.json",
+        "capability-registry.json",
+        "component-catalog.json",
+        "docs/validation/checked-claims.md",
+        "scripts/validate_repository.py"
+      ],
+      "allowed_paths": [
+        "docs/standards/live-tuning/tunable-surface.md",
+        "docs/standards/live-tuning/tunable-surface.schema.json",
+        "packages/",
+        "capability-registry.json",
+        "component-catalog.json",
+        "docs/standards/lessons/lessons-register.json",
+        "scripts/validate_repository.py",
+        "tests/test_tunable_surfaces.py",
+        "docs/validation/checked-claims.md",
+        "CHANGELOG.md"
+      ],
+      "steps": [
+        "Write docs/standards/live-tuning/tunable-surface.md and tunable-surface.schema.json (schema id xr-foundry.tunable_surface.v1): a package with a skin or theme seam ships foundry.tunables.json beside foundry.component.json, declaring its skin seam entry point, its binder asset type, its export destination, and every tunable as data (canonical id, closed kind, default, range and step or value set, target asset and member, label, group, scope labels, optional design-language token reference); the scaffold consumes only these files and no per-family code.",
+        "Add validate_tunable_surfaces to scripts/validate_repository.py with fix hints and tests/test_tunable_surfaces.py: schema, canonical ids unique across the tree, kind in the closed set, default inside the declared range or value set, token references that exist in ui-design-language-standard.json, target members drawn from the seam's declared member set, and a package that provides the tuning-surface capability must ship the file and vice versa.",
+        "Register capability xr-foundry.tuning.surface in capability-registry.json; every package that ships foundry.tunables.json provides it; update component-catalog.json accordingly.",
+        "Ship the first manifests for the packages that already expose a skin seam (the Inventory UGUI and UI Toolkit renderer adapters), mapping their skin members to design-language tokens, with an Unreleased changelog line in each package.",
+        "Record LESSON-009 in the lessons register (a UI-bearing family declares its tunable surface as data so a developer scaffold attaches without per-family code) with an explicit disposition for every family the register requires, and add the checked-claims row for the new rule."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_tunable_surfaces"
+        ],
+        "artifacts": [
+          "docs/standards/live-tuning/tunable-surface.md",
+          "docs/standards/live-tuning/tunable-surface.schema.json",
+          "tests/test_tunable_surfaces.py"
+        ]
+      },
+      "evidence": "The rule passes on every shipped manifest, the register row is machine-checked, and the capability graph composes with the new capability.",
+      "done_proof": null
     }
   ]
 }

@@ -2,7 +2,8 @@
   "name": "Lingkyn.LiveTuning.Unity",
   "rootNamespace": "Lingkyn.LiveTuning.Unity",
   "references": [
-    "Lingkyn.LiveTuning.Core"
+    "Lingkyn.LiveTuning.Core",
+    "Lingkyn.XrUiShell.Core"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

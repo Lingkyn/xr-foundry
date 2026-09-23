@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Lingkyn.LiveTuning.Core;
 using NUnit.Framework;
 using UnityEngine;
+using ShellSurfaceId = Lingkyn.XrUiShell.Core.SurfaceId;
+using ShellPanelId = Lingkyn.XrUiShell.Core.PanelId;
 
 namespace Lingkyn.LiveTuning.Unity.Editor.Tests
 {
@@ -528,7 +531,222 @@ namespace Lingkyn.LiveTuning.Unity.Editor.Tests
             Assert.That(ReferenceEquals(firstRuntime.State, secondRuntime.State), Is.False);
         }
 
+        // ----- pick-to-tune through the shell's routing (CU-11) -----
+
+        [Test]
+        public void UnityRuntimeSourceReferencesNoPhysicsInputOrCameraType()
+        {
+            var runtimeDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(TestSourceDirectory(), "..", "..", "Runtime"));
+            Assert.That(System.IO.Directory.Exists(runtimeDirectory), Is.True, runtimeDirectory);
+
+            var asmdefPath = System.IO.Path.Combine(runtimeDirectory, "Lingkyn.LiveTuning.Unity.asmdef");
+            Assert.That(System.IO.File.Exists(asmdefPath), Is.True, asmdefPath);
+
+            var forbidden = new[] { "UnityEngine.Physics", "Raycast", "Camera", "UnityEngine.InputSystem", "UnityEngine.Input" };
+            foreach (var token in forbidden)
+            {
+                Assert.That(System.IO.File.ReadAllText(asmdefPath), Does.Not.Contain(token), $"The asmdef must not reference '{token}'.");
+            }
+
+            var sourceFiles = System.IO.Directory.GetFiles(runtimeDirectory, "*.cs", System.IO.SearchOption.TopDirectoryOnly);
+            Assert.That(sourceFiles, Is.Not.Empty, runtimeDirectory);
+            foreach (var sourceFile in sourceFiles)
+            {
+                var text = System.IO.File.ReadAllText(sourceFile);
+                foreach (var token in forbidden)
+                {
+                    Assert.That(text, Does.Not.Contain(token), $"{System.IO.Path.GetFileName(sourceFile)} must not reference '{token}'.");
+                }
+            }
+        }
+
+        [Test]
+        public void SelectResolvesASurfaceIdThroughTheBindingIndexToAScopeNamedSelection()
+        {
+            var (host, _) = SelectionHost();
+
+            var scope = host.Select(ShellSurfaceId.OfPanel(ShellPanelId.Parse("hud")));
+
+            Assert.That(scope.Name, Is.EqualTo(TuningScope.SelectionScopeName));
+            Assert.That(scope.Slots.Select(slot => slot.Id), Is.EqualTo(new[] { SurfaceId, TextId }), "Exactly the bindings the BindingIndex resolved for 'Panel:hud'.");
+            Assert.That(host.ActiveSelectionDiagnostic, Is.Null);
+        }
+
+        [Test]
+        public void SelectWithATargetPathNoBindingTargetsReportsSelectionUnboundWithThePath()
+        {
+            var (host, _) = SelectionHost();
+
+            var scope = host.Select("Panel:nowhere");
+
+            Assert.That(scope.Name, Is.EqualTo(TuningScope.SelectionScopeName));
+            Assert.That(scope.Slots, Is.Empty, "A selection nothing targets still switches to the (empty) selection scope, never an unchanged panel.");
+            Assert.That(host.ActiveSelectionDiagnostic, Is.Not.Null);
+            Assert.That(host.ActiveSelectionDiagnostic.Code, Is.EqualTo(LiveTuningUnityFailure.SelectionUnbound));
+            Assert.That(host.ActiveSelectionDiagnostic.TargetPath, Is.EqualTo("Panel:nowhere"));
+        }
+
+        [Test]
+        public void ClearSelectionRestoresThePreviousScope()
+        {
+            var (host, _) = SelectionHost();
+            var baseline = host.ActiveScope;
+            Assert.That(baseline.Name, Is.EqualTo(TuningScope.AllScopeName));
+
+            var hudScope = host.Select(ShellSurfaceId.OfPanel(ShellPanelId.Parse("hud")));
+            var otherScope = host.Select(ShellSurfaceId.OfPanel(ShellPanelId.Parse("other")));
+            Assert.That(otherScope.Slots.Select(slot => slot.Id), Is.EqualTo(new[] { CornerRadiusId }));
+
+            var restoredOnce = host.ClearSelection();
+            Assert.That(restoredOnce.Name, Is.EqualTo(TuningScope.SelectionScopeName));
+            Assert.That(restoredOnce.Slots.Select(slot => slot.Id), Is.EqualTo(hudScope.Slots.Select(slot => slot.Id)),
+                "Clearing the second selection restores the first selection's scope, not the baseline.");
+            Assert.That(host.ActiveSelectionDiagnostic, Is.Null);
+
+            var restoredAgain = host.ClearSelection();
+            Assert.That(restoredAgain.Name, Is.EqualTo(TuningScope.AllScopeName), "Clearing again with nothing else selected restores the host's baseline scope.");
+            Assert.That(restoredAgain.Slots.Select(slot => slot.Id), Is.EqualTo(baseline.Slots.Select(slot => slot.Id)));
+        }
+
+        [Test]
+        public void SameEditorInstanceKindForAColourSlotBeforeDuringAndAfterASelection()
+        {
+            var (host, _) = SelectionHost();
+            var attachedSurfaceSlot = host.Slots.Single(slot => slot.Id == SurfaceId);
+
+            Assert.That(attachedSurfaceSlot.Editor.Kind, Is.EqualTo(EditorKind.ColourEditor));
+
+            var duringScope = host.Select(ShellSurfaceId.OfPanel(ShellPanelId.Parse("hud")));
+            var duringSlot = duringScope.Slots.Single(slot => slot.Id == SurfaceId);
+            Assert.That(duringSlot.Editor.Kind, Is.EqualTo(EditorKind.ColourEditor));
+            Assert.That(duringSlot.Editor, Is.SameAs(attachedSurfaceSlot.Editor), "Selection shows the host's own attached slot, never a copy with a different editor.");
+
+            host.ClearSelection();
+            var afterSlot = host.Slots.Single(slot => slot.Id == SurfaceId);
+            Assert.That(afterSlot.Editor.Kind, Is.EqualTo(EditorKind.ColourEditor));
+        }
+
+        // ----- two view presets over one host (CU-12) -----
+
+        [Test]
+        public void DesignerPresetShowsLabelEditorAndPerSlotResetOnly()
+        {
+            var primary = CreateDemoSkin();
+            var host = Host(primary, null, out _);
+            host.AttachAll();
+
+            var view = TuningView.Describe(host, TuningViewPreset.Designer);
+
+            Assert.That(view.Preset, Is.EqualTo(TuningViewPreset.Designer));
+            Assert.That(view.Slots.Select(slot => slot.Id), Is.EqualTo(host.Slots.Select(slot => slot.Id)));
+            foreach (var slotView in view.Slots)
+            {
+                var slot = host.Slots.Single(s => s.Id == slotView.Id);
+                Assert.That(slotView.Label, Is.EqualTo(slot.Label));
+                Assert.That(slotView.EditorKind, Is.EqualTo(slot.Editor.Kind));
+                Assert.That(slotView.CanReset, Is.True);
+                Assert.That(slotView.RangeSummary, Is.Empty, "Designer never shows the registered range.");
+                Assert.That(slotView.TargetPath, Is.Empty, "Designer never shows the binding's target path.");
+                Assert.That(slotView.ExportDestination, Is.Empty, "Designer never shows the export destination.");
+            }
+            Assert.That(view.Diagnostics, Is.Empty, "Designer never shows the host's diagnostics.");
+        }
+
+        [Test]
+        public void EngineerPresetAddsRangeStepTargetPathExportDestinationAndHostDiagnostics()
+        {
+            var primary = CreateDemoSkin();
+            var host = Host(primary, null, out var runtime);
+            host.AttachAll();
+
+            var view = TuningView.Describe(host, TuningViewPreset.Engineer);
+
+            var cornerSlotView = view.Slots.Single(slot => slot.Id == CornerRadiusId);
+            Assert.That(cornerSlotView.RangeSummary, Does.Contain("32"), "The registered float range (0..32) is visible.");
+            var expectedTargetPath = host.Slots.Single(slot => slot.Id == CornerRadiusId).Binding.Record.TargetPath;
+            Assert.That(cornerSlotView.TargetPath, Is.EqualTo(expectedTargetPath));
+            Assert.That(cornerSlotView.ExportDestination, Is.EqualTo(runtime.ExportSink.DescribeDestination()));
+            Assert.That(view.Diagnostics, Is.EqualTo(host.Diagnostics));
+        }
+
+        [Test]
+        public void SwitchingPresetsShowsTheSameSlotListAndEditorKindsAndRaisesNoIntentNorAddsASlot()
+        {
+            var primary = CreateDemoSkin();
+            var host = Host(primary, null, out var runtime);
+            host.AttachAll();
+            var outcomesBefore = runtime.Outcomes.Count;
+            var slotCountBefore = host.Slots.Count;
+
+            var designer = TuningView.Describe(host, TuningViewPreset.Designer);
+            var engineer = TuningView.Describe(host, TuningViewPreset.Engineer);
+
+            Assert.That(designer.Slots.Select(slot => slot.Id), Is.EqualTo(engineer.Slots.Select(slot => slot.Id)));
+            Assert.That(designer.Slots.Select(slot => slot.EditorKind), Is.EqualTo(engineer.Slots.Select(slot => slot.EditorKind)));
+            Assert.That(host.Slots.Count, Is.EqualTo(slotCountBefore), "Describing a preset adds no slot.");
+            Assert.That(runtime.Outcomes.Count, Is.EqualTo(outcomesBefore), "Describing a preset raises no intent.");
+        }
+
+        [Test]
+        public void NeitherPresetExposesAnyWayToMutateARegisteredRangeStepOrValueSet()
+        {
+            var primary = CreateDemoSkin();
+            var host = Host(primary, null, out var runtime);
+            host.AttachAll();
+            runtime.Registry.TryGet(CornerRadiusId, out var before);
+            var beforeDeclaration = (FloatDeclaration)before.Declaration;
+
+            TuningView.Describe(host, TuningViewPreset.Designer);
+            TuningView.Describe(host, TuningViewPreset.Engineer);
+
+            runtime.Registry.TryGet(CornerRadiusId, out var after);
+            var afterDeclaration = (FloatDeclaration)after.Declaration;
+            Assert.That(afterDeclaration.Min, Is.EqualTo(beforeDeclaration.Min));
+            Assert.That(afterDeclaration.Max, Is.EqualTo(beforeDeclaration.Max));
+            Assert.That(afterDeclaration.Step, Is.EqualTo(beforeDeclaration.Step));
+
+            const BindingFlags properties = BindingFlags.Public | BindingFlags.Instance;
+            foreach (var type in new[] { typeof(TuningSlotView), typeof(TuningHostView) })
+            {
+                foreach (var property in type.GetProperties(properties))
+                {
+                    Assert.That(property.CanWrite, Is.False, $"{type.Name}.{property.Name} must expose no setter.");
+                }
+            }
+            foreach (var property in typeof(FloatDeclaration).GetProperties(properties))
+            {
+                Assert.That(property.CanWrite, Is.False, $"FloatDeclaration.{property.Name} must expose no setter.");
+            }
+        }
+
         // ----- helpers -----
+
+        private static string TestSourceDirectory([CallerFilePath] string sourceFilePath = "") => System.IO.Path.GetDirectoryName(sourceFilePath);
+
+        /// <summary>A host bound to two selectable groups under the one demo skin asset: the
+        /// tunables "under" target path "Panel:hud" (surface, text) and the one tunable "under"
+        /// "Panel:other" (corner radius), through the composite "&lt;selector&gt;/&lt;asset_key&gt;#&lt;member&gt;"
+        /// target paths this package's own tests use for pick-to-tune scenarios. The leading
+        /// selector segment is exactly what a shell SurfaceId's own text form supplies to
+        /// <c>TuningPanelHost.Select</c>.</summary>
+        private (TuningPanelHost Host, LiveTuningDemoSkinAsset Skin) SelectionHost()
+        {
+            var primary = CreateDemoSkin();
+            var registry = SampleRegistry();
+            const string hudAssetKey = "Panel:hud/primary";
+            const string otherAssetKey = "Panel:other/primary";
+            var assets = new Dictionary<string, UnityEngine.Object> { [hudAssetKey] = primary, [otherAssetKey] = primary };
+            var records = new[]
+            {
+                new BindingRecord(SurfaceId, TunableKind.Colour, SkinTargetPath.Format(hudAssetKey, LiveTuningDemoSkinBinder.SurfaceMember)),
+                new BindingRecord(TextId, TunableKind.Colour, SkinTargetPath.Format(hudAssetKey, LiveTuningDemoSkinBinder.TextMember)),
+                new BindingRecord(CornerRadiusId, TunableKind.Float, SkinTargetPath.Format(otherAssetKey, LiveTuningDemoSkinBinder.CornerRadiusMember)),
+            };
+            var bindings = SkinBindingSet.Create(records, registry, assets, Binders());
+            var host = new TuningPanelHost(new TuningRuntime(registry, TuningState.Initial(registry), bindings, new FakeSkinApplyTarget(), NoOpSink()), new UguiFallbackPanelSurface());
+            host.AttachAll();
+            return (host, primary);
+        }
 
         private static IReadOnlyDictionary<string, string> Scope(string key, string value) => new Dictionary<string, string> { [key] = value };
 

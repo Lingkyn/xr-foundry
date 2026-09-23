@@ -17,5 +17,9 @@ namespace Lingkyn.LiveTuning.Unity
         /// <summary>An export sink could not write its document: an unwritable device path, or an
         /// Editor asset that is not saved on disk.</summary>
         public const string ExportWriteFailed = "export.write.failed";
+        /// <summary>A selection (a shell <c>SurfaceId</c> or an explicit target path) names a
+        /// thing no binding record targets, through <see cref="Lingkyn.LiveTuning.Core.BindingIndex"/>.
+        /// The selection scope still shows (zero slots); this diagnostic is never silence.</summary>
+        public const string SelectionUnbound = "selection.unbound";
     }
 }

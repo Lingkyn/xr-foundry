@@ -111,7 +111,27 @@ Deterministic tests must cover:
   record targets; the index is immutable, is built without reflection or any
   engine type, and is the only lookup the adapter uses to go from a selected
   thing back to its tunables, so selecting a thing changes which slots are shown
-  and never which editor a slot holds.
+  and never which editor a slot holds;
+- one intent channel for people and agents (LESSON-011): every `TuningIntent`
+  (`set`, `reset`, `reset_all`, `snapshot`, `apply_snapshot`) carries an
+  `IntentActor` from the closed set `player`, `agent`, `replay`, `import`,
+  defaulting to `player` when a caller does not name one, and an optional
+  expected revision; `TuningState` carries a monotonically increasing `Revision`
+  (0 for `Initial`, one higher on every accepted intent, excluded from
+  `Fingerprint` so two states reached by different-length sequences of the same
+  overrides still fingerprint equal); `TuningState.Apply` checks a non-null
+  expected revision before the intent's own rule ever runs, and a mismatch is
+  rejected with `state.stale` and changes nothing, for every intent type and
+  regardless of actor;
+- the actor never changes validation: a player-issued and an agent-issued copy
+  of the same intent, accepted or rejected, take the same path through
+  `TuningState.Apply` and produce an equal result and an equal resulting state;
+  `Export(actor, expectedRevision)` is gated by the same stale check as a
+  mutating intent, so a stale export writes nothing; and
+- the replay log: `TuningIntentOutcome` (from `ApplyAll` and from
+  `TuningRuntime.Apply`) carries the issuing intent's actor and the state's
+  revision immediately after the outcome settled, accepted or rejected, so a
+  recorded sequence names who did what and at which revision, in order.
 
 The Core references no engine type, holds no `UnityEngine.Color`, reads no asset,
 writes no file, and renders nothing; the token document enters and leaves it as
@@ -212,6 +232,17 @@ EditMode tests must cover:
   one generic panel-content surface seam to its own `ITuningPanelSurface`; the
   shell's own assemblies never reference this family, proven by a source rule in
   the shell's Core test assembly.
+- one intent channel, no second write path (LESSON-011): the panel host, the
+  shell client (`ShellTuningClient`), the import path (`TuningImport`), and any
+  future agent-facing entry write state only by constructing a `TuningIntent`
+  and passing it to `TuningState.Apply` or `TuningRuntime.Apply`, never by
+  calling a Core mutator directly or assigning a Core state field, tested by a
+  source rule over every Runtime `.cs` file (including `Runtime/Shell/`);
+  `TuningImport` tags every applied override's `SetIntent` with
+  `IntentActor.Import`; and a player's edit through the panel host and an
+  agent's identical `SetIntent` through `TuningRuntime.Apply` take this same
+  path and produce an equal resulting state and equal outcomes (same accepted
+  flag, same code);
 - pick-to-tune through the shell's routing, never the family's own raycast: the
   host accepts a selection from the XR UI shell's typed routing (a `SurfaceId` or
   an explicit target path the consumer passes), maps it through the Core

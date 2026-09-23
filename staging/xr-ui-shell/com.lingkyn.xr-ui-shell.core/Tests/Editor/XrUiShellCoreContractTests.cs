@@ -833,6 +833,167 @@ namespace Lingkyn.XrUiShell.Core.Editor.Tests
             Assert.That(affordance.ReasonCode, Is.EqualTo(resolution.Code), verbId.ToString());
         }
 
+        // ----- one intent channel for people and agents: actor and expected revision (XUC-16) -----
+
+        [Test]
+        public void EveryPlacementIntentDefaultsToPlayerActorWithNoExpectedRevision()
+        {
+            ShellIntent[] intents =
+            {
+                new OpenIntent(PrimaryPanel),
+                new CloseIntent(PrimaryPanel),
+                new FocusIntent(PrimaryPanel),
+                new DockIntent(SecondaryPanel, PrimaryPanel),
+                new FollowIntent(SecondaryPanel, AnchorKind.HeadLocked),
+                new FoldIntent(PrimaryPanel),
+                new UnfoldIntent(PrimaryPanel),
+            };
+            foreach (var intent in intents)
+            {
+                Assert.That(intent.Actor, Is.EqualTo(IntentActor.Player), intent.Describe());
+                Assert.That(intent.ExpectedRevision, Is.Null, intent.Describe());
+            }
+        }
+
+        [Test]
+        public void StateRevisionStartsAtZeroAndIncreasesByExactlyOneOnEveryAcceptedIntentButNeverOnARejected()
+        {
+            var state = ShellState.Initial(SampleLayout());
+            Assert.That(state.Revision, Is.EqualTo(0));
+
+            var afterAccepted = state.Apply(new OpenIntent(PrimaryPanel));
+            Assert.That(afterAccepted.Succeeded, Is.True, afterAccepted.Message);
+            Assert.That(afterAccepted.Value.Revision, Is.EqualTo(1));
+
+            var rejected = afterAccepted.Value.Apply(new OpenIntent(SurfaceId.OfPanel(PanelId.Parse("ghost"))));
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(afterAccepted.Value.Revision, Is.EqualTo(1), "A rejected intent never bumps the revision of the state it found.");
+
+            var secondAccepted = afterAccepted.Value.Apply(new CloseIntent(PrimaryPanel));
+            Assert.That(secondAccepted.Succeeded, Is.True, secondAccepted.Message);
+            Assert.That(secondAccepted.Value.Revision, Is.EqualTo(2));
+        }
+
+        // ----- a stale expected revision is rejected with state.stale (XUC-17) -----
+
+        [Test]
+        public void AStaleExpectedRevisionIsRejectedWithStateStaleAndChangesNothing()
+        {
+            var state = ShellState.Initial(SampleLayout());
+            var moved = state.Apply(new OpenIntent(PrimaryPanel)).Value;
+            Assert.That(moved.Revision, Is.EqualTo(1));
+
+            var stale = moved.Apply(new OpenIntent(SecondaryPanel, IntentActor.Player, 0));
+            Assert.That(stale.Succeeded, Is.False);
+            Assert.That(stale.Code, Is.EqualTo(ShellFailure.StateStale));
+            Assert.That(moved.TryGetSurfaceState(SecondaryPanel, out var secondary), Is.True);
+            Assert.That(secondary.IsOpen, Is.False, "A rejected stale intent must leave the state it found untouched.");
+            Assert.That(moved.Revision, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void EveryPlacementIntentTypeRejectsAStaleExpectedRevisionWithStateStaleRegardlessOfActor()
+        {
+            var state = ShellState.Initial(SampleLayout());
+            ShellIntent[] staleIntents =
+            {
+                new OpenIntent(PrimaryPanel, IntentActor.Player, 5),
+                new CloseIntent(PrimaryPanel, IntentActor.Agent, 5),
+                new FocusIntent(PrimaryPanel, IntentActor.Agent, 5),
+                new DockIntent(SecondaryPanel, PrimaryPanel, IntentActor.Replay, 5),
+                new FollowIntent(SecondaryPanel, AnchorKind.HeadLocked, IntentActor.Import, 5),
+                new FoldIntent(PrimaryPanel, IntentActor.Agent, 5),
+                new UnfoldIntent(PrimaryPanel, IntentActor.Agent, 5),
+            };
+            foreach (var intent in staleIntents)
+            {
+                var result = state.Apply(intent);
+                Assert.That(result.Succeeded, Is.False, intent.Describe());
+                Assert.That(result.Code, Is.EqualTo(ShellFailure.StateStale), intent.Describe());
+            }
+            Assert.That(state.Revision, Is.EqualTo(0), "None of the stale attempts, from any actor, moved the state on.");
+        }
+
+        // ----- the actor never changes validation (XUC-18) -----
+
+        [Test]
+        public void PlayerAndAgentIssuingTheSameAcceptedOpenTakeTheSamePathAndProduceEqualResultingState()
+        {
+            var initial = ShellState.Initial(SampleLayout());
+            var byPlayer = initial.Apply(new OpenIntent(PrimaryPanel, IntentActor.Player));
+            var byAgent = initial.Apply(new OpenIntent(PrimaryPanel, IntentActor.Agent));
+
+            Assert.That(byPlayer.Succeeded, Is.True, byPlayer.Message);
+            Assert.That(byAgent.Succeeded, Is.True, byAgent.Message);
+            Assert.That(byPlayer.Value.Fingerprint(), Is.EqualTo(byAgent.Value.Fingerprint()));
+            Assert.That(byPlayer.Value.Revision, Is.EqualTo(byAgent.Value.Revision));
+        }
+
+        [Test]
+        public void PlayerAndAgentIssuingTheSameRejectedDockGetTheSameFailureCode()
+        {
+            var initial = ShellState.Initial(SampleLayout());
+            var byPlayer = initial.Apply(new DockIntent(PrimaryPanel, SurfaceId.OfPanel(PanelId.Parse("ghost")), IntentActor.Player));
+            var byAgent = initial.Apply(new DockIntent(PrimaryPanel, SurfaceId.OfPanel(PanelId.Parse("ghost")), IntentActor.Agent));
+
+            Assert.That(byPlayer.Succeeded, Is.False);
+            Assert.That(byAgent.Succeeded, Is.False);
+            Assert.That(byPlayer.Code, Is.EqualTo(byAgent.Code));
+            Assert.That(byPlayer.Code, Is.EqualTo(ShellFailure.PanelUnknown));
+        }
+
+        // ----- a dock verb pressed by a person and issued by an agent resolve the same way, and
+        // the replay log records actor and revision (XUC-19) -----
+
+        [Test]
+        public void ADockVerbPressedByAPersonAndTheSameVerbIssuedByAnAgentAdapterResolveThroughTheSameFocusSubjectAndAffordanceAndProduceEqualOutcomes()
+        {
+            var verbRegistry = new VerbRegistryBuilder().Register(VerbId.Parse("dock"), "Dock", VerbWireState.Wired).Value.Build();
+            var subject = FocusSubject.None.Claim(FocusTarget.OfPanel(SecondaryPanel));
+
+            // Neither VerbAffordanceQuery.Query nor VerbResolver.Resolve takes an actor: a
+            // person's press and an agent's press read the same registry and the same subject
+            // through the same two steps, so there is no second path either could take.
+            var personAffordance = VerbAffordanceQuery.Query(verbRegistry, VerbId.Parse("dock"), subject);
+            var agentAffordance = VerbAffordanceQuery.Query(verbRegistry, VerbId.Parse("dock"), subject);
+            var personResolution = VerbResolver.Resolve(verbRegistry, VerbId.Parse("dock"), subject);
+            var agentResolution = VerbResolver.Resolve(verbRegistry, VerbId.Parse("dock"), subject);
+            Assert.That(personAffordance.IsAvailable, Is.EqualTo(agentAffordance.IsAvailable));
+            Assert.That(personResolution.Succeeded, Is.EqualTo(agentResolution.Succeeded));
+            Assert.That(personResolution.Value, Is.EqualTo(agentResolution.Value));
+
+            // Applying the resolved dock as a DockIntent from each actor onto an equal initial
+            // state takes the same path through ShellState.Apply and settles on an equal state.
+            var byPlayer = ShellState.Initial(SampleLayout()).Apply(new DockIntent(SecondaryPanel, PrimaryPanel, IntentActor.Player));
+            var byAgent = ShellState.Initial(SampleLayout()).Apply(new DockIntent(SecondaryPanel, PrimaryPanel, IntentActor.Agent));
+
+            Assert.That(byPlayer.Succeeded, Is.True, byPlayer.Message);
+            Assert.That(byAgent.Succeeded, Is.True, byAgent.Message);
+            Assert.That(byPlayer.Value.Fingerprint(), Is.EqualTo(byAgent.Value.Fingerprint()));
+        }
+
+        [Test]
+        public void ReplayLogRecordsTheIssuingActorAndTheRevisionAfterEveryOutcomeAcceptedOrRejected()
+        {
+            var layout = SampleLayout();
+            var intents = new List<ShellIntent>
+            {
+                new OpenIntent(PrimaryPanel, IntentActor.Player),
+                new OpenIntent(SurfaceId.OfPanel(PanelId.Parse("ghost")), IntentActor.Agent), // rejected: undeclared
+                new CloseIntent(PrimaryPanel, IntentActor.Replay),
+            };
+            var result = ShellState.Initial(layout).ApplyAll(intents);
+
+            Assert.That(result.Outcomes.Select(outcome => outcome.Actor), Is.EqualTo(new[] { IntentActor.Player, IntentActor.Agent, IntentActor.Replay }));
+            Assert.That(result.Outcomes[0].Accepted, Is.True);
+            Assert.That(result.Outcomes[0].RevisionAfter, Is.EqualTo(1));
+            Assert.That(result.Outcomes[1].Accepted, Is.False);
+            Assert.That(result.Outcomes[1].RevisionAfter, Is.EqualTo(1), "A rejected outcome's revision is the state it found, unchanged.");
+            Assert.That(result.Outcomes[2].Accepted, Is.True);
+            Assert.That(result.Outcomes[2].RevisionAfter, Is.EqualTo(2));
+            Assert.That(result.State.Revision, Is.EqualTo(2));
+        }
+
         // ----- helpers -----
 
         private static readonly SurfaceId PrimaryPanel = SurfaceId.OfPanel(PanelId.Parse("hud.primary"));

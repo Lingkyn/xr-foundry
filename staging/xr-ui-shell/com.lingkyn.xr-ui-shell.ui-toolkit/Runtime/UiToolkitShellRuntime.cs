@@ -44,13 +44,13 @@ namespace Lingkyn.XrUiShell.UiToolkit
             var result = State.Apply(intent);
             if (!result.Succeeded)
             {
-                var rejected = new ShellIntentOutcome(index, intent, false, result.Code, result.Message);
+                var rejected = new ShellIntentOutcome(index, intent, false, result.Code, result.Message, State.Revision);
                 _outcomes.Add(rejected);
                 return rejected;
             }
             State = result.Value;
             ApplyChangedOpenFlags(previous, State);
-            var accepted = new ShellIntentOutcome(index, intent, true, result.Code, result.Message);
+            var accepted = new ShellIntentOutcome(index, intent, true, result.Code, result.Message, State.Revision);
             _outcomes.Add(accepted);
             return accepted;
         }

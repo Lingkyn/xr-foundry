@@ -953,7 +953,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
-      "status": "open",
+      "status": "done",
       "depends_on": [
         "WI-021",
         "WI-023"
@@ -992,7 +992,47 @@
         ]
       },
       "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the lessons rule passes with a disposition for every family.",
-      "done_proof": null
+      "done_proof": "docs/standards/live-tuning/coverage-map.json"
+    },
+    {
+      "id": "WI-025",
+      "title": "Haptics source gate",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "done",
+      "depends_on": [],
+      "read_first": [
+        "AGENTS.md",
+        "docs/foundry/system-admission.md",
+        "docs/benchmarks/shipped-game-gap-matrix.md",
+        "docs/standards/audio/verification-contract.md",
+        "docs/standards/interaction/verification-contract.md",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "docs/standards/haptics/",
+        "docs/foundry/queue/next-batch.json"
+      ],
+      "steps": [
+        "Write the source manifest (official XR Interaction Toolkit haptic impulse and haptic-feedback documentation, OpenXR haptic output and the XR_FB_haptic_amplitude_envelope / PCM extensions, Meta, PICO, and Apple platform guidance on haptic feedback, and one maintained open-source haptics implementation, each with license, maintenance state, and a review ref a person must confirm), the verification contract (Core gate: named haptic events with a closed kind set of transient, continuous, and envelope; per-controller and per-hand profiles with amplitude, duration, and frequency guard rails; an immutable haptic state with play, stop, stop-all, and set-profile intents, deterministic replay, and stable failure codes; a binding from events to the interaction family's semantic intents and the audio family's events so one grab or one hit fires haptics, audio, and a feedback effect from one intent; Unity gate: a thin adapter over XRI haptic impulse channels and OpenXR haptic actions with explicit device resolution and LESSON-004 diagnostics, and an injectable output sink so tests assert what was sent without a device), README with lesson dispositions and the claim ceiling (felt intensity and comfort are Device Lab receipts), and admission draft.",
+        "Add a NEXT-HAPTICS candidate to the queue with state proposal and no package_ids."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "docs/standards/haptics/README.md",
+          "docs/standards/haptics/source-manifest.json",
+          "docs/standards/haptics/verification-contract.md",
+          "docs/standards/haptics/admission.draft.json"
+        ]
+      },
+      "evidence": "The four artifacts in the tree and a passing repository contract.",
+      "done_proof": "docs/standards/haptics/verification-contract.md"
     }
   ]
 }

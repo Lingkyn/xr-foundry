@@ -759,6 +759,192 @@ namespace Lingkyn.LiveTuning.Core.Editor.Tests
             Assert.That(typeof(BindingIndex).GetMethods(flags).Any(method => mutatorNames.Any(name => method.Name.StartsWith(name, StringComparison.Ordinal))), Is.False, "BindingIndex exposes no mutator.");
         }
 
+        // ----- one intent channel for people and agents: actor and expected revision (LTC-15) -----
+
+        [Test]
+        public void EveryIntentDefaultsToPlayerActorWithNoExpectedRevision()
+        {
+            TuningIntent[] intents =
+            {
+                new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f)),
+                new ResetIntent(PanelOpacity),
+                new ResetAllIntent(),
+                new SnapshotIntent(SnapshotId.Parse("s")),
+                new ApplySnapshotIntent(SnapshotId.Parse("s")),
+            };
+            foreach (var intent in intents)
+            {
+                Assert.That(intent.Actor, Is.EqualTo(IntentActor.Player), intent.Describe());
+                Assert.That(intent.ExpectedRevision, Is.Null, intent.Describe());
+            }
+        }
+
+        [Test]
+        public void EveryIntentAcceptsAnExplicitActorFromTheClosedSetAndAnExpectedRevision()
+        {
+            var agentSet = new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f), IntentActor.Agent, 0);
+            Assert.That(agentSet.Actor, Is.EqualTo(IntentActor.Agent));
+            Assert.That(agentSet.ExpectedRevision, Is.EqualTo(0));
+
+            var replayReset = new ResetIntent(PanelOpacity, IntentActor.Replay, 3);
+            Assert.That(replayReset.Actor, Is.EqualTo(IntentActor.Replay));
+            Assert.That(replayReset.ExpectedRevision, Is.EqualTo(3));
+
+            var importResetAll = new ResetAllIntent(IntentActor.Import, null);
+            Assert.That(importResetAll.Actor, Is.EqualTo(IntentActor.Import));
+            Assert.That(importResetAll.ExpectedRevision, Is.Null);
+        }
+
+        [Test]
+        public void StateRevisionStartsAtZeroAndIncreasesByExactlyOneOnEveryAcceptedIntentButNeverOnARejected()
+        {
+            var state = TuningState.Initial(SampleRegistry());
+            Assert.That(state.Revision, Is.EqualTo(0));
+
+            var afterAccepted = state.Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f)));
+            Assert.That(afterAccepted.Succeeded, Is.True, afterAccepted.Message);
+            Assert.That(afterAccepted.Value.Revision, Is.EqualTo(1));
+
+            var rejected = afterAccepted.Value.Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(9f)));
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(afterAccepted.Value.Revision, Is.EqualTo(1), "A rejected intent never bumps the revision of the state it found.");
+
+            var secondAccepted = afterAccepted.Value.Apply(new ResetIntent(PanelOpacity));
+            Assert.That(secondAccepted.Succeeded, Is.True, secondAccepted.Message);
+            Assert.That(secondAccepted.Value.Revision, Is.EqualTo(2));
+        }
+
+        // ----- a stale expected revision is rejected with state.stale (LTC-16) -----
+
+        [Test]
+        public void AStaleExpectedRevisionIsRejectedWithStateStaleAndChangesNothing()
+        {
+            var state = TuningState.Initial(SampleRegistry());
+            var moved = state.Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f))).Value;
+            Assert.That(moved.Revision, Is.EqualTo(1));
+
+            var stale = moved.Apply(new SetIntent(CornerRadius, TunableValue.OfInteger(4), IntentActor.Player, 0));
+            Assert.That(stale.Succeeded, Is.False);
+            Assert.That(stale.Code, Is.EqualTo(LiveTuningFailure.StateStale));
+            Assert.That(moved.HasOverride(CornerRadius), Is.False, "A rejected stale intent must leave the state it found untouched.");
+            Assert.That(moved.Revision, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void EveryIntentTypeRejectsAStaleExpectedRevisionWithStateStaleRegardlessOfActor()
+        {
+            var state = TuningState.Initial(SampleRegistry());
+            TuningIntent[] staleIntents =
+            {
+                new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f), IntentActor.Player, 5),
+                new ResetIntent(PanelOpacity, IntentActor.Agent, 5),
+                new ResetAllIntent(IntentActor.Agent, 5),
+                new SnapshotIntent(SnapshotId.Parse("s"), IntentActor.Replay, 5),
+                new ApplySnapshotIntent(SnapshotId.Parse("s"), IntentActor.Import, 5),
+            };
+            foreach (var intent in staleIntents)
+            {
+                var result = state.Apply(intent);
+                Assert.That(result.Succeeded, Is.False, intent.Describe());
+                Assert.That(result.Code, Is.EqualTo(LiveTuningFailure.StateStale), intent.Describe());
+            }
+            Assert.That(state.Revision, Is.EqualTo(0), "None of the stale attempts, from any actor, moved the state on.");
+        }
+
+        [Test]
+        public void AMatchingExpectedRevisionIsAcceptedExactlyLikeNoExpectedRevisionAtAll()
+        {
+            var state = TuningState.Initial(SampleRegistry());
+            var withCheck = state.Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f), IntentActor.Player, 0));
+            var withoutCheck = state.Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.5f)));
+            Assert.That(withCheck.Succeeded, Is.True, withCheck.Message);
+            Assert.That(withoutCheck.Succeeded, Is.True, withoutCheck.Message);
+            Assert.That(withCheck.Value.Fingerprint(), Is.EqualTo(withoutCheck.Value.Fingerprint()));
+        }
+
+        // ----- export is gated by actor and expected revision the same way (LTC-17) -----
+
+        [Test]
+        public void ExportWithNoExpectedRevisionAlwaysSucceedsRegardlessOfActor()
+        {
+            var state = TuningState.Initial(SampleRegistry()).Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.2f))).Value;
+            var asPlayer = state.Export(IntentActor.Player, null);
+            var asAgent = state.Export(IntentActor.Agent, null);
+            Assert.That(asPlayer.Succeeded, Is.True, asPlayer.Message);
+            Assert.That(asAgent.Succeeded, Is.True, asAgent.Message);
+            Assert.That(asPlayer.Value.ToJson(), Is.EqualTo(asAgent.Value.ToJson()));
+        }
+
+        [Test]
+        public void ExportWithAStaleExpectedRevisionIsRejectedWithStateStaleAndWritesNoDocument()
+        {
+            var state = TuningState.Initial(SampleRegistry()).Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.2f))).Value;
+            var stale = state.Export(IntentActor.Player, 0);
+            Assert.That(stale.Succeeded, Is.False);
+            Assert.That(stale.Code, Is.EqualTo(LiveTuningFailure.StateStale));
+        }
+
+        [Test]
+        public void ExportWithTheCorrectExpectedRevisionSucceedsAndMatchesTheUngatedExport()
+        {
+            var state = TuningState.Initial(SampleRegistry()).Apply(new SetIntent(PanelOpacity, TunableValue.OfFloat(0.2f))).Value;
+            var gated = state.Export(IntentActor.Agent, state.Revision);
+            Assert.That(gated.Succeeded, Is.True, gated.Message);
+            Assert.That(gated.Value.ToJson(), Is.EqualTo(state.Export().ToJson()));
+        }
+
+        // ----- the actor never changes validation (LTC-18) -----
+
+        [Test]
+        public void PlayerAndAgentIssuingTheSameAcceptedSetTakeTheSamePathAndProduceEqualResultingState()
+        {
+            var initial = TuningState.Initial(SampleRegistry());
+            var byPlayer = initial.Apply(new SetIntent(SurfacePanel, TunableValue.OfColour(0.4f, 0.4f, 0.4f, 1f), IntentActor.Player));
+            var byAgent = initial.Apply(new SetIntent(SurfacePanel, TunableValue.OfColour(0.4f, 0.4f, 0.4f, 1f), IntentActor.Agent));
+
+            Assert.That(byPlayer.Succeeded, Is.True, byPlayer.Message);
+            Assert.That(byAgent.Succeeded, Is.True, byAgent.Message);
+            Assert.That(byPlayer.Value.Fingerprint(), Is.EqualTo(byAgent.Value.Fingerprint()));
+            Assert.That(byPlayer.Value.Revision, Is.EqualTo(byAgent.Value.Revision));
+        }
+
+        [Test]
+        public void PlayerAndAgentIssuingTheSameRejectedSetGetTheSameFailureCode()
+        {
+            var initial = TuningState.Initial(SampleRegistry());
+            var outOfRange = TunableValue.OfFloat(9f);
+            var byPlayer = initial.Apply(new SetIntent(PanelOpacity, outOfRange, IntentActor.Player));
+            var byAgent = initial.Apply(new SetIntent(PanelOpacity, outOfRange, IntentActor.Agent));
+
+            Assert.That(byPlayer.Succeeded, Is.False);
+            Assert.That(byAgent.Succeeded, Is.False);
+            Assert.That(byPlayer.Code, Is.EqualTo(byAgent.Code));
+            Assert.That(byPlayer.Code, Is.EqualTo(LiveTuningFailure.TunableOutOfRange));
+        }
+
+        // ----- the replay log records actor and revision (LTC-19) -----
+
+        [Test]
+        public void ReplayLogRecordsTheIssuingActorAndTheRevisionAfterEveryOutcomeAcceptedOrRejected()
+        {
+            var intents = new List<TuningIntent>
+            {
+                new SetIntent(PanelOpacity, TunableValue.OfFloat(0.3f), IntentActor.Player),
+                new SetIntent(PanelOpacity, TunableValue.OfFloat(9f), IntentActor.Agent), // rejected: out of range
+                new ResetIntent(PanelOpacity, IntentActor.Replay),
+            };
+            var result = TuningState.Initial(SampleRegistry()).ApplyAll(intents);
+
+            Assert.That(result.Outcomes.Select(outcome => outcome.Actor), Is.EqualTo(new[] { IntentActor.Player, IntentActor.Agent, IntentActor.Replay }));
+            Assert.That(result.Outcomes[0].Accepted, Is.True);
+            Assert.That(result.Outcomes[0].RevisionAfter, Is.EqualTo(1));
+            Assert.That(result.Outcomes[1].Accepted, Is.False);
+            Assert.That(result.Outcomes[1].RevisionAfter, Is.EqualTo(1), "A rejected outcome's revision is the state it found, unchanged.");
+            Assert.That(result.Outcomes[2].Accepted, Is.True);
+            Assert.That(result.Outcomes[2].RevisionAfter, Is.EqualTo(2));
+            Assert.That(result.State.Revision, Is.EqualTo(2));
+        }
+
         // ----- helpers -----
 
         private sealed class SampleIndex

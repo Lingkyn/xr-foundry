@@ -425,6 +425,54 @@
           "rationale": "xr-baseline's own tooling is a one-shot Editor command (Tools > Apply Config), not a live-apply seam a runtime host holds a reference to (LESSON-009), so no dock/tool dependency-direction question arises here yet."
         }
       ]
+    },
+    {
+      "id": "LESSON-011",
+      "title": "One intent channel for people and agents: actor, expected revision, and no second path",
+      "origin_family": "inventory",
+      "observed": "The staged Live Tuning and XR UI shell families each already route every state change through one typed intent seam (TuningIntent/TuningState.Apply; ShellIntent/ShellState.Apply) with a structured, stably-coded result. Neither seam distinguished who issued an intent, so a future agent adapter (an automated tuning pass, a scripted shell verb) would have had to either share the person's own call path with no attribution or bypass the intent seam with a second, ad hoc write path of its own — and neither seam could tell an intent built against a state a concurrent actor had already changed from an ordinary one, so a stale write from a replay or an import could silently overwrite another actor's change instead of being refused.",
+      "rule": "A family's typed intent seam is the one channel through which a person's UI, an agent adapter, a replay, and an import all change state. Every intent carries an actor source (player, agent, replay, import) used for attribution and replay and never for a different validation rule: a player-issued and an agent-issued copy of the same intent take the same path and get the same result. An intent may carry an expected revision, and a stale one (naming a revision the state has since moved past) is rejected with a stable code (`state.stale`) rather than overwriting another actor's change. The structured result is the channel, and a refusal always names its reason. No adapter writes state by any other path: not a view field, not a Core mutator called directly, not a second constructor bypassing the intent. Public norms this generalises, cited as concepts (a person confirms the URLs; not fetched by this authoring pass): optimistic concurrency control (https://en.wikipedia.org/wiki/Optimistic_concurrency_control) for the expected-revision/stale-rejection shape, the command pattern (https://en.wikipedia.org/wiki/Command_pattern) for one typed request object as the whole write surface, and single source of truth (https://en.wikipedia.org/wiki/Single_source_of_truth) for the state's own revision being the one place staleness is judged from.",
+      "evidence": [
+        "staging/live-tuning/com.lingkyn.live-tuning.core/Runtime/TuningState.cs",
+        "staging/live-tuning/com.lingkyn.live-tuning.core/Runtime/LiveTuningResult.cs",
+        "staging/live-tuning/com.lingkyn.live-tuning.unity/Runtime/TuningRuntime.cs",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Runtime/ShellIntents.cs",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Runtime/ShellState.cs",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "https://en.wikipedia.org/wiki/Optimistic_concurrency_control",
+        "https://en.wikipedia.org/wiki/Command_pattern",
+        "https://en.wikipedia.org/wiki/Single_source_of_truth"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "deferred",
+          "rationale": "InventoryDomain's mutation API is already one typed intent seam with structured, stably-coded results (MutationFailure and friends, LESSON-005), but it has exactly one caller path today (the consuming scene's own code); no agent adapter, replay, or import writes Inventory state, so the mutation intents carry no actor field and the domain carries no revision to gate a stale write against.",
+          "follow_up": "When an agent adapter, a replay path, or an import writes Inventory state, extend its mutation intents with the same actor and optional expected-revision shape this lesson names, through the existing mutation seam, never a second write path."
+        },
+        {
+          "family": "persistence",
+          "status": "deferred",
+          "rationale": "Persistence's stage/integrity/flush pipeline is one typed write path with structured results, but it has one caller today; no agent adapter, replay, or import stages or flushes a save concurrently with a person's own save, so there is no second actor for the pipeline to attribute or race against yet.",
+          "follow_up": "Before an autosave-versus-manual-save race, a cloud-sync writer, or an agent-driven save path is added, gate its writes with the same actor and expected-revision shape this lesson names, through the existing stage/flush seam."
+        },
+        {
+          "family": "settings",
+          "status": "not_applicable",
+          "rationale": "No UI-bearing Settings package exists yet (LESSON-007), so there is no consumer-facing intent seam a person's UI, an agent, a replay, and an import could compete to write through."
+        },
+        {
+          "family": "interaction",
+          "status": "not_applicable",
+          "rationale": "Interaction resolves a semantic intent to a handler per call (LESSON-005's routing intents); it holds no persistent, revisioned state a concurrent actor could overwrite, so actor attribution and a stale-revision guard do not apply the way they do to Live Tuning's or the XR UI shell's state."
+        },
+        {
+          "family": "foundations",
+          "status": "not_applicable",
+          "rationale": "Project Initializer and xr-baseline are one-shot Editor scaffolding tools (LESSON-009); they hold no runtime state a person's UI, an agent adapter, a replay, or an import could concurrently write, so this lesson's one-channel and revision guard have nothing to attach to yet."
+        }
+      ]
     }
   ]
 }

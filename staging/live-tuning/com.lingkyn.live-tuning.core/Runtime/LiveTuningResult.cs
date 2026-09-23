@@ -23,6 +23,10 @@ namespace Lingkyn.LiveTuning.Core
         public const string BindingDuplicate = "binding.duplicate";
         public const string TokenUnsupported = "token.unsupported";
         public const string TokenRangeMissing = "token.range.missing";
+        /// <summary>An intent or export named an <c>ExpectedRevision</c> that does not match the
+        /// state's current <c>Revision</c> (LESSON-011): rejected rather than overwriting a change
+        /// another actor already made. Never depends on which actor issued the intent.</summary>
+        public const string StateStale = "state.stale";
     }
 
     /// <summary>Structured outcome: a value on success, a stable code and a human message on failure.</summary>

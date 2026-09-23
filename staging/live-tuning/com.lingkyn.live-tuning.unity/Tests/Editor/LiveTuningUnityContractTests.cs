@@ -719,6 +719,93 @@ namespace Lingkyn.LiveTuning.Unity.Editor.Tests
             }
         }
 
+        // ----- one intent channel: no Unity Runtime .cs writes state by any other path (CU-13) -----
+
+        [Test]
+        public void UnityRuntimeSourceIssuesOnlyCoreIntentsAndNeverCallsACoreMutatorDirectly()
+        {
+            // The panel host, the shell client (Runtime/Shell/ShellTuningClient.cs), the import
+            // path, and any future agent-facing entry all write state only by constructing a
+            // TuningIntent and passing it to TuningState.Apply or TuningRuntime.Apply
+            // (LESSON-011). The Core's own ApplySet/ApplyReset/ApplyResetAll/ApplySnapshot/
+            // ApplyApplySnapshot mutators are internal to that assembly and already uncallable
+            // from here without InternalsVisibleTo; this is the explicit, regression-proof
+            // record of that rule, scanned recursively so it also covers Runtime/Shell/.
+            var runtimeDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(TestSourceDirectory(), "..", "..", "Runtime"));
+            Assert.That(System.IO.Directory.Exists(runtimeDirectory), Is.True, runtimeDirectory);
+
+            var forbidden = new[] { ".ApplySet(", ".ApplyReset(", ".ApplyResetAll(", ".ApplySnapshot(", ".ApplyApplySnapshot(" };
+            var sourceFiles = System.IO.Directory.GetFiles(runtimeDirectory, "*.cs", System.IO.SearchOption.AllDirectories);
+            Assert.That(sourceFiles, Is.Not.Empty, runtimeDirectory);
+            foreach (var sourceFile in sourceFiles)
+            {
+                var text = System.IO.File.ReadAllText(sourceFile);
+                foreach (var token in forbidden)
+                {
+                    Assert.That(text, Does.Not.Contain(token),
+                        $"{System.IO.Path.GetFileName(sourceFile)} calls a Core mutator directly ('{token}'); state changes only through TuningState.Apply or TuningRuntime.Apply.");
+                }
+            }
+        }
+
+        // ----- actor and expected revision thread through the Unity adapter (CU-14) -----
+
+        [Test]
+        public void RuntimeApplyPreservesTheIntentsActorInTheResultingOutcome()
+        {
+            var primary = CreateDemoSkin();
+            var runtime = Runtime(primary, null, new FakeSkinApplyTarget());
+
+            var outcome = runtime.Apply(new SetIntent(CornerRadiusId, TunableValue.OfFloat(4f), IntentActor.Agent));
+
+            Assert.That(outcome.Accepted, Is.True, outcome.Message);
+            Assert.That(outcome.Actor, Is.EqualTo(IntentActor.Agent));
+            Assert.That(outcome.RevisionAfter, Is.EqualTo(runtime.State.Revision));
+        }
+
+        [Test]
+        public void RuntimeExportWithAStaleExpectedRevisionIsRejectedAndWritesNothingToTheSink()
+        {
+            var primary = CreateDemoSkin();
+            var registry = SampleRegistry();
+            var bindings = SkinBindingSet.Create(SampleRecords(), registry, AssetsByKey(primary, null), Binders());
+            var fileSystem = new FakeTuningFileSystem();
+            var runtime = new TuningRuntime(registry, TuningState.Initial(registry), bindings, new FakeSkinApplyTarget(), new DeviceTokenExportSink("out.json", fileSystem));
+            runtime.Apply(new SetIntent(CornerRadiusId, TunableValue.OfFloat(4f)));
+
+            var stale = runtime.Export(IntentActor.Agent, 0);
+            Assert.That(stale.Succeeded, Is.False);
+            Assert.That(stale.Code, Is.EqualTo(LiveTuningFailure.StateStale));
+            Assert.That(fileSystem.LastPath, Is.Null, "A stale export must write nothing to the sink.");
+
+            var fresh = runtime.Export(IntentActor.Agent, runtime.State.Revision);
+            Assert.That(fresh.Succeeded, Is.True, fresh.Message);
+            Assert.That(fileSystem.LastPath, Is.Not.Null);
+        }
+
+        // ----- a player set and an agent set take the same path (CU-15) -----
+
+        [Test]
+        public void APlayerEditThroughThePanelHostAndAnEquivalentAgentIssuedSetIntentTakeTheSamePathAndProduceEqualResultingState()
+        {
+            var primaryForPlayer = CreateDemoSkin();
+            var hostForPlayer = Host(primaryForPlayer, null, out var runtimeForPlayer);
+            hostForPlayer.AttachAll();
+            var cornerSlot = hostForPlayer.Slots.Single(slot => slot.Id.Equals(CornerRadiusId));
+            ((TuningEditorControlBase)cornerSlot.Editor).RaiseChange(TunableValue.OfFloat(4f));
+
+            var primaryForAgent = CreateDemoSkin();
+            var runtimeForAgent = Runtime(primaryForAgent, null, new FakeSkinApplyTarget());
+            runtimeForAgent.Apply(new SetIntent(CornerRadiusId, TunableValue.OfFloat(4f), IntentActor.Agent));
+
+            Assert.That(runtimeForPlayer.State.Fingerprint(), Is.EqualTo(runtimeForAgent.State.Fingerprint()),
+                "A person's edit through the panel host and an agent's identical SetIntent through the runtime settle on the same effective state.");
+            Assert.That(runtimeForPlayer.Outcomes.Single().Accepted, Is.EqualTo(runtimeForAgent.Outcomes.Single().Accepted));
+            Assert.That(runtimeForPlayer.Outcomes.Single().Actor, Is.EqualTo(IntentActor.Player), "The panel host issues its intents as the player by default.");
+            Assert.That(runtimeForAgent.Outcomes.Single().Actor, Is.EqualTo(IntentActor.Agent));
+            Assert.That(primaryForPlayer.CornerRadius, Is.EqualTo(primaryForAgent.CornerRadius));
+        }
+
         // ----- helpers -----
 
         private static string TestSourceDirectory([CallerFilePath] string sourceFilePath = "") => System.IO.Path.GetDirectoryName(sourceFilePath);

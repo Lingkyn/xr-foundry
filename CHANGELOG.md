@@ -5,6 +5,28 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Recorded LESSON-011 (a family's typed intent seam is the one channel through
+  which a person's UI, an agent adapter, a replay, and an import all change
+  state, with a closed `IntentActor` set for attribution/replay only and an
+  optional expected revision gated with a stable `state.stale` code) and gave
+  every live family an explicit disposition (WI-024). Applied it to the staged
+  Live Tuning and XR UI shell families: every `TuningIntent`/`ShellIntent`
+  (`set`/`reset`/`reset_all`/`snapshot`/`apply_snapshot`/`export` and
+  `open`/`close`/`focus`/`dock`/`follow`/`fold`/`unfold`) now carries an
+  `IntentActor` (`player`, `agent`, `replay`, `import`; `player` by default)
+  and an optional expected revision; `TuningState`/`ShellState` carry a
+  monotonically increasing `Revision`, excluded from `Fingerprint`, that a
+  stale expected revision is checked against before an intent's own rule ever
+  runs; `TuningImport` tags every applied override `IntentActor.Import`; and
+  `TuningIntentOutcome`/`ShellIntentOutcome` (the replay log) now carry the
+  issuing actor and the revision after each outcome. Added source-rule tests
+  proving the Live Tuning panel host/shell client/import path and both XR UI
+  shell renderer adapters write state only through the one Core intent entry
+  point, and tests proving a player-issued and an agent-issued copy of the
+  same intent (including a dock verb resolved through the same `FocusSubject`
+  and affordance) take the same path and settle on an equal state. Coverage
+  maps: live-tuning 34 clauses (32 covered, 2 partial unchanged; 108 tests
+  total), xr-ui-shell 33 of 33 clauses (112 tests total).
 - Extended the staged XR UI shell Core (WI-023) with six new clauses (XUC-10..
   XUC-15): the ornament (one shell-owned fixed surface, never folded); a closed
   verb registry partitioning registered ids into wired and unwired, with one

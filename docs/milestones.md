@@ -87,6 +87,7 @@ responds. Every number is read from the public record, not asserted.
 | Process-decided merge in effect: routine change on a mandated branch merges by auto-merge on a `ready` verdict (DLB-0002) | partial: rule written, objection window closes 2026-09-29; needs the 1b settings |
 | First routine change by a non-maintainer merged through the verdict alone | open |
 | First lazy-consensus resolution of a deliberation record recorded with `decided_by: process:<mandate>` | done: [DLB-0001](governance/deliberations/DLB-0001-operating-mandates.json) resolved 2026-09-22 with `decided_by: process:mandate.weekly-steward.v1` after its window closed with no objection delta |
+| Two public deliberations resolved (a `G1` threshold) | done: DLB-0001 (2026-09-22) and [DLB-0003](governance/deliberations/DLB-0003-routine-lane.json) (2026-09-23), both by lazy consensus after their windows closed with no objection delta; the `G1` count reads them from the record |
 
 ### Batch 2b: contribution types beyond code
 

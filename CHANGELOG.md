@@ -5,6 +5,11 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Resolved DLB-0003 (routine lane) by lazy consensus: the governance_policy
+  window closed on 2026-09-23T14:00Z with no risk or counterexample delta, so
+  the record carries OPT-ROUTINE-LANE with
+  `decided_by: process:mandate.weekly-steward.v1`; milestone batch 2a records
+  two resolved public deliberations.
 - Recorded LESSON-011 (a family's typed intent seam is the one channel through
   which a person's UI, an agent adapter, a replay, and an import all change
   state, with a closed `IntentActor` set for attribution/replay only and an

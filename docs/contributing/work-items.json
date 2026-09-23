@@ -1033,6 +1033,50 @@
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
       "done_proof": "docs/standards/haptics/verification-contract.md"
+    },
+    {
+      "id": "WI-026",
+      "title": "Haptics staged Core and Unity adapter",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-025"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/haptics/verification-contract.md",
+        "docs/standards/haptics/README.md",
+        "staging/live-tuning/README.md",
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/interaction/verification-contract.md",
+        "docs/standards/audio/verification-contract.md",
+        "staging/audio/README.md"
+      ],
+      "allowed_paths": [
+        "staging/haptics/",
+        "docs/standards/haptics/coverage-map.json",
+        "docs/standards/haptics/README.md"
+      ],
+      "steps": [
+        "Author staging/haptics/com.lingkyn.haptics.core (HapticEventId and HapticProfileId, the closed kind set transient / continuous / envelope with amplitude, duration, and frequency guard rails, an immutable registry by explicit registration, per-target profiles with the closed target set, an immutable HapticState with play, stop, stop_all, and set_profile intents returning the contract's stable codes, deterministic replay, the binding table from interaction intents and audio event ids to haptic events with a named no-op for an unbound intent, and every intent carrying IntentActor and expected revision per LESSON-011) and com.lingkyn.haptics.unity (a thin adapter over XRI haptic impulse channels and OpenXR haptic actions with explicit device resolution and LESSON-004 diagnostics, an injectable IHapticOutputSink so tests assert exactly what was sent without a device, profile ScriptableObjects constructed with explicit references, envelope degrading to transient with a diagnostic when the runtime lacks the extension), with package.staging.json, asmdefs, NUnit EditMode tests, and a domain-only sample, modelled on staging/live-tuning.",
+        "Write docs/standards/haptics/coverage-map.json mapping every contract clause to named tests; every listed test must exist and every test must be listed; a clause that needs a device is partial or unmapped with its missing entry named.",
+        "Write staging/haptics/README.md with the status line, the what-is-here table, the promotion steps, and the statement that the code is authored and unexecuted."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/haptics/README.md",
+          "docs/standards/haptics/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
+      "done_proof": null
     }
   ]
 }

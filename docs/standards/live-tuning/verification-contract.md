@@ -103,7 +103,15 @@ Deterministic tests must cover:
   tunable, a kind mismatch, an out-of-range value, an unknown snapshot, an
   unsupported kind, a binding kind mismatch, a duplicate binding, an unsupported
   token, and a missing token range, each carrying the offending id or token path,
-  plus a valid intent sequence passing clean with every outcome accepted.
+  plus a valid intent sequence passing clean with every outcome accepted;
+- a binding index for "point at it, tune it": a `BindingIndex` built from a
+  validated binding set answers, for one opaque target path, exactly the binding
+  records whose target path equals it or whose target path has it as a
+  segment-wise prefix, in registration order, and an empty list for a path no
+  record targets; the index is immutable, is built without reflection or any
+  engine type, and is the only lookup the adapter uses to go from a selected
+  thing back to its tunables, so selecting a thing changes which slots are shown
+  and never which editor a slot holds.
 
 The Core references no engine type, holds no `UnityEngine.Color`, reads no asset,
 writes no file, and renders nothing; the token document enters and leaves it as
@@ -198,6 +206,28 @@ EditMode tests must cover:
 - two independent runtimes constructed side by side over two skin instances and
   two sinks that share no state, so a `set` in one changes no value, override, or
   export of the other.
+- pick-to-tune through the shell's routing, never the family's own raycast: the
+  host accepts a selection from the XR UI shell's typed routing (a `SurfaceId` or
+  an explicit target path the consumer passes), maps it through the Core
+  `BindingIndex` to the bindings targeting that thing, and shows exactly those
+  slots as a scope named `selection`; a selection no record targets shows zero
+  slots and reports `selection.unbound` with the path, never an empty panel with no
+  diagnostic; clearing the selection restores the previous scope; the family
+  performs no raycast, reads no pose, and holds no reference to a camera, ray, or
+  input device, tested by a source rule that the adapter assembly references no
+  physics, input, or camera type; and a selection changes which slots are shown
+  and never which editor a slot holds, tested by asserting the same editor
+  instance kind for a `colour` slot before, during, and after a selection;
+- two view presets over one host, never two panels: a `designer` preset shows
+  each slot's label, editor, and per-slot reset, and an `engineer` preset shows the
+  same slots plus, per slot, the registered range and step, the binding's target
+  path, and the export destination the sink reports, and, per host, every
+  `TuningSlotDiagnostic` and binding rejection with its stable code; switching the
+  preset changes what a slot displays and never which editor it holds, raises no
+  intent, and adds no slot, tested by asserting the same slot list and editor kinds
+  under both presets; neither preset can change a registered range, step, or
+  value set, which stay declared in code and reach the tree only through a
+  reviewed change.
 
 No test claims that a control was visible or reachable, that a colour looked
 right, that a slider was usable with a controller, or that any input was read

@@ -797,6 +797,49 @@
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
       "done_proof": "docs/standards/xr-ui-shell/coverage-map.json"
+    },
+    {
+      "id": "WI-021",
+      "title": "Live tuning: pick-to-tune binding index and designer/engineer view presets",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "open",
+      "depends_on": [
+        "WI-019",
+        "WI-020"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/live-tuning/coverage-map.json",
+        "staging/live-tuning/README.md",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Runtime/ShellRouting.cs"
+      ],
+      "allowed_paths": [
+        "staging/live-tuning/",
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/live-tuning/README.md"
+      ],
+      "steps": [
+        "Implement the Core clause 'a binding index for point at it, tune it' (BindingIndex over a validated binding set: exact and segment-wise prefix lookup by opaque target path, immutable, engine-free) with NUnit tests in the Core test assembly.",
+        "Implement the Unity clauses 'pick-to-tune through the shell's routing' (the host accepts a SurfaceId or explicit target path, maps it through BindingIndex to a scope named selection, reports selection.unbound for an untargeted selection, clears back to the previous scope, performs no raycast and references no physics, input, or camera type) and 'two view presets over one host' (designer and engineer presets that change what a slot displays and never which editor it holds, raise no intent, and add no slot) with NUnit tests in the Unity test assembly.",
+        "Extend docs/standards/live-tuning/coverage-map.json with the three new clauses (LTC-14, CU-11, CU-12) mapped to the new tests; every listed test must exist and every test must be listed.",
+        "Update staging/live-tuning/README.md: the what-is-here table and a short 'point at it, tune it' and 'one host, two presets' section; keep the authored, unexecuted statement."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "docs/standards/live-tuning/coverage-map.json",
+          "staging/live-tuning/README.md"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the extended map with no allowlist entry and the three new clause ids covered.",
+      "done_proof": null
     }
   ]
 }

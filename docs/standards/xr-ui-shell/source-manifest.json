@@ -238,6 +238,57 @@
         "No Godot type, scene, or script is copied and the Core has no Godot implementation",
         "Godot is a roadmap direction only for this repository; this source proves recurrence, not support"
       ]
+    },
+    {
+      "id": "apple-responder-chain",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/documentation/uikit/using-responders-and-the-responder-chain-to-handle-events",
+      "license_or_terms": "Apple Developer documentation terms; facts only",
+      "maintenance_evidence": "Current UIKit documentation page on responders and the responder chain; page path, version, and current maintenance state to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Public evidence that a UI framework keeps exactly one active/first-responder target system-wide at a time and that assigning a new one always replaces the previous one, informing FocusSubject's single-valued current target and its replace-on-claim assignment rule",
+      "admitted_claims": [
+        "A UIKit app tracks exactly one first responder at a time, and making a different object the first responder replaces the previous one rather than adding to it",
+        "The responder chain resolves an action to whichever single object currently holds first-responder status, not to a precedence list evaluated per action"
+      ],
+      "excluded_uses": [
+        "No UIKit type (UIResponder, UIView, or the responder chain itself) is referenced by the Core; only the single-valued, replace-on-assign role informs FocusSubject",
+        "No claim about UIKit rendering, hit testing, or device behaviour"
+      ]
+    },
+    {
+      "id": "wai-aria-active-descendant",
+      "kind": "official_standards_document",
+      "authority": "W3C Web Accessibility Initiative (WAI)",
+      "url": "https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/",
+      "license_or_terms": "W3C document license; architecture facts only",
+      "maintenance_evidence": "Current WAI-ARIA Authoring Practices Guide page on the keyboard interface pattern, maintained by the W3C WAI working group; page path and version to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Public evidence that a single active/virtual-focus pointer is a distinct concept from a selected or checked state, informing FocusSubject's single current target apart from any panel's own selection state",
+      "admitted_claims": [
+        "aria-activedescendant names at most one element as a composite widget's current active (virtually focused) descendant, distinct from DOM focus itself",
+        "aria-selected marks a widget's chosen or checked items and can hold true for zero, one, or several elements independent of which one is currently active"
+      ],
+      "excluded_uses": [
+        "No ARIA attribute, DOM API, or browser behaviour is depended upon by the Core; only the single active-pointer-versus-selected-state role informs FocusSubject and the panel-item target it can name",
+        "No claim about screen reader or browser accessibility behaviour on any device"
+      ]
+    },
+    {
+      "id": "norman-mode-errors",
+      "kind": "peer_reviewed_literature",
+      "authority": "Nielsen Norman Group, restating Donald A. Norman's mode-error literature",
+      "url": "https://www.nngroup.com/articles/mode-error/",
+      "license_or_terms": "Nielsen Norman Group article terms; facts only, no text copied",
+      "maintenance_evidence": "Nielsen Norman Group article restating Norman's mode-error literature, part of NN/g's maintained UX research library; publication date and current URL to be confirmed by a person; not fetched from this environment",
+      "admitted_role": "Public evidence that a mode error occurs when a system's behaviour for the same input depends on hidden or ambiguous internal state, informing verb resolution's single-value, no-precedence-chain read rule",
+      "admitted_claims": [
+        "A mode error happens when a person acts correctly for the mode they believe the system is in, but the system is actually in a different mode, and no visible signal disambiguates them",
+        "A system that resolves an action through multiple competing internal states or an implicit precedence order is more prone to mode errors than one with a single explicit, visible mode indicator"
+      ],
+      "excluded_uses": [
+        "No mode-error mitigation technique or interface pattern is copied; only the general finding that ambiguous or multi-source state resolution invites mode errors informs verb resolution reading exactly one FocusSubject value",
+        "No claim that this shell's verb resolution eliminates mode errors without a Device Lab or usability evidence"
+      ]
     }
   ],
   "context_only_not_derivation_inputs": [

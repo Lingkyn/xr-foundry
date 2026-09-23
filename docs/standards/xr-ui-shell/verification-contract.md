@@ -24,9 +24,9 @@ Deterministic tests must cover:
 - a shell layout model: a panel declaration names one closed anchor kind (`world`,
   `head_locked`, `wrist`, `hand`) and the closed set of anchor kinds it admits; a
   wrist menu admits only `wrist` and a hand menu admits only `hand`; placement
-  intents are a closed set (`open`, `close`, `focus`, `dock`, `follow`) and each
-  intent names exactly one declared panel, plus a target panel for `dock` and a
-  target anchor kind for `follow`;
+  intents are a closed set (`open`, `close`, `focus`, `dock`, `follow`, `fold`,
+  `unfold`) and each intent names exactly one declared panel, plus a target panel
+  for `dock` and a target anchor kind for `follow`;
 - intent application to an immutable shell state with stable failure codes: an
   intent naming an undeclared panel is rejected with `panel.unknown`; a `dock` or
   `follow` intent whose target anchor kind the panel does not admit is rejected
@@ -63,12 +63,41 @@ Deterministic tests must cover:
   names a token outside the design-language set is rejected with `token.unknown`,
   a mapping that names a slot outside the closed set is rejected with
   `slot.unknown`, and a skin that leaves any slot without a mapping is rejected
-  with `slot.unmapped`; the canonical mapping resolves every slot; and
+  with `slot.unmapped`; the canonical mapping resolves every slot;
+- an ornament: one shell-owned fixed surface that is never folded. It is not
+  declared by a consumer, it never enters a built layout's declared-surface set or
+  surface count, and a `fold` or `unfold` intent naming it is always rejected with
+  a stable code, because it is the one surface the shell itself owns;
+- a verb registry: a closed, explicitly registered id set that any client family
+  registers into through the same entry point; an unregistered verb is rejected
+  with a stable code and never silently absorbed into another verb or dropped;
+  registered ids partition into wired (a resolver backs them) and unwired
+  (reserved only); and a verb has one constant id and one constant display word,
+  fixed at registration, because what varies from one press to the next is only
+  the resolved target, never the verb's own word;
+- a single-valued `FocusSubject` claimed only by an explicit focus intent: a
+  per-frame mirror or sync of its current value never claims it, an assignment
+  always replaces the whole value rather than merging with the prior one (so no
+  target is special-cased), and it names exactly one current target — a panel, a
+  panel item, or an external target path the consumer routes in — or none;
+- verb resolution that reads that one `FocusSubject` value and nothing else, with
+  no precedence chain and no branch order over any other source, and yields
+  exactly one resolved target or a named no-target result; two different verbs
+  resolved against the same `FocusSubject` value always agree on the target;
+- a queryable pre-press affordance for every registered verb: the resolved
+  target's name, whether it is available or unavailable, and a stable reason code,
+  so a verb is never shown available for a target it would in fact refuse;
+- fold retains state: a folded panel keeps its full open, docked-target, and
+  follow state, because `fold` and `unfold` are intents that change only
+  visibility, exactly like `open` and `close` change nothing else about a panel's
+  placement; and
 - structured results with stable failure codes for a malformed identity, an unknown
   or duplicate panel, an unsupported anchor kind, a focus conflict, an unknown
   source, an unsupported source kind, an ambiguous or empty route, an unknown token,
-  an unknown slot, and an unmapped slot, each carrying the offending field path,
-  plus a valid intent sequence passing clean with every outcome accepted.
+  an unknown slot, an unmapped slot, an ornament fold rejection, an unknown or
+  duplicate verb, an unwired verb, and a verb with no current target, each carrying
+  the offending field path, plus a valid intent sequence passing clean with every
+  outcome accepted.
 
 The Core references no engine type, reads no input device, computes no pose,
 raycast, or world-space transform, holds no colour or size value, and renders

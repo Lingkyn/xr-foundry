@@ -902,7 +902,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
-      "status": "open",
+      "status": "done",
       "depends_on": [
         "WI-020",
         "WI-021"
@@ -944,7 +944,7 @@
         ]
       },
       "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the source rule test proves the shell references no client family.",
-      "done_proof": null
+      "done_proof": "docs/standards/xr-ui-shell/coverage-map.json"
     },
     {
       "id": "WI-024",

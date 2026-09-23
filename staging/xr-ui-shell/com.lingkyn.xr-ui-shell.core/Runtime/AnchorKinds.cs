@@ -24,13 +24,16 @@ namespace Lingkyn.XrUiShell.Core
     }
 
     /// <summary>The closed set of declared surface kinds: a general panel, a wrist menu (admits
-    /// only <see cref="AnchorKind.Wrist"/>), or a hand menu (admits only
-    /// <see cref="AnchorKind.Hand"/>). Used only to key <see cref="SurfaceId"/>; it carries no
-    /// visual or engine meaning of its own.</summary>
+    /// only <see cref="AnchorKind.Wrist"/>), a hand menu (admits only
+    /// <see cref="AnchorKind.Hand"/>), or the ornament (see <see cref="ShellOrnament"/>): the one
+    /// shell-owned fixed surface, never consumer-declared and never part of a built
+    /// <see cref="ShellLayout"/>. Used only to key <see cref="SurfaceId"/>; it carries no visual
+    /// or engine meaning of its own.</summary>
     public enum SurfaceKind
     {
         Panel,
         WristMenu,
         HandMenu,
+        Ornament,
     }
 }

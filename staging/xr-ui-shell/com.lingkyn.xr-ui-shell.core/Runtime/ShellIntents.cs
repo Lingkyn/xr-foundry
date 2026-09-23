@@ -2,10 +2,13 @@ using System.Collections.Generic;
 
 namespace Lingkyn.XrUiShell.Core
 {
-    // The closed set of placement intents (open, close, focus, dock, follow) applied to an
-    // immutable ShellState, from any control, panel, or input that raises them. Each intent
-    // names exactly one declared surface, plus a target surface for dock and a target anchor
-    // kind for follow, exactly as the layout-model clause of the verification contract states.
+    // The closed set of placement intents (open, close, focus, dock, follow, fold, unfold)
+    // applied to an immutable ShellState, from any control, panel, or input that raises them.
+    // Each intent names exactly one declared surface, plus a target surface for dock and a
+    // target anchor kind for follow, exactly as the layout-model clause of the verification
+    // contract states. Fold and unfold change only SurfaceRuntimeState.IsFolded (visibility);
+    // they never touch the open flag, the docked target, or the follow flag, so a folded surface
+    // keeps its full state, and they always reject the shell ornament (ShellOrnament.cs).
 
     /// <summary>Closed set of placement intents applied to a <see cref="ShellState"/>.</summary>
     public abstract class ShellIntent
@@ -86,6 +89,34 @@ namespace Lingkyn.XrUiShell.Core
         public override string Describe() => $"follow {Surface} -> {TargetAnchorKind}";
 
         internal override ShellResult<ShellState> ApplyTo(ShellState state) => state.ApplyFollow(Surface, TargetAnchorKind);
+    }
+
+    /// <summary>Folds <see cref="Surface"/>: changes only its visibility (<see
+    /// cref="SurfaceRuntimeState.IsFolded"/>) and leaves every other field of its runtime state
+    /// intact, so a folded surface keeps its full open/docked/following state. Always rejected
+    /// for the shell ornament.</summary>
+    public sealed class FoldIntent : ShellIntent
+    {
+        public FoldIntent(SurfaceId surface) { Surface = surface; }
+
+        public SurfaceId Surface { get; }
+
+        public override string Describe() => $"fold {Surface}";
+
+        internal override ShellResult<ShellState> ApplyTo(ShellState state) => state.ApplyFold(Surface);
+    }
+
+    /// <summary>Unfolds <see cref="Surface"/>: the visibility-only inverse of
+    /// <see cref="FoldIntent"/>. Always rejected for the shell ornament.</summary>
+    public sealed class UnfoldIntent : ShellIntent
+    {
+        public UnfoldIntent(SurfaceId surface) { Surface = surface; }
+
+        public SurfaceId Surface { get; }
+
+        public override string Describe() => $"unfold {Surface}";
+
+        internal override ShellResult<ShellState> ApplyTo(ShellState state) => state.ApplyUnfold(Surface);
     }
 
     /// <summary>The outcome of one intent inside a sequence.</summary>

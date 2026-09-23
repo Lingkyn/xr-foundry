@@ -17,11 +17,12 @@ it has not compiled.
 
 | Path | Content |
 | --- | --- |
-| `com.lingkyn.xr-ui-shell.core/Runtime/*.cs` | Engine-light Core: `PanelId`, `WristMenuId`, `HandMenuId`, and `InputSourceId` with one canonical dotted-segment form and no cross-type equality; the closed `AnchorKind` set (world, head_locked, wrist, hand) and `InputSourceKind` set (ray, poke, gaze); the immutable `ShellLayout` and `ShellLayoutBuilder` built only by explicit panel/wrist-menu/hand-menu declaration and input-source registration; the closed placement-intent set (`OpenIntent`, `CloseIntent`, `FocusIntent`, `DockIntent`, `FollowIntent`) applied to the immutable `ShellState` with deterministic replay and a fingerprint; typed pointer and gaze routing (`HoverIntent`, `SelectIntent`, `ScrollIntent`) resolved by the stateless `ShellRouter`; and the skin contract (`DesignToken`, `ShellSlot`, `SkinMapping`, `SkinMappingBuilder`, `CanonicalSkinMapping`) mapping the shared design-language tokens to the closed shell-slot set |
-| `com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellCoreContractTests.cs` | 42 EditMode tests mapped in `docs/standards/xr-ui-shell/coverage-map.json` |
+| `com.lingkyn.xr-ui-shell.core/Runtime/*.cs` | Engine-light Core: `PanelId`, `WristMenuId`, `HandMenuId`, and `InputSourceId` with one canonical dotted-segment form and no cross-type equality; the closed `AnchorKind` set (world, head_locked, wrist, hand) and `InputSourceKind` set (ray, poke, gaze); the immutable `ShellLayout` and `ShellLayoutBuilder` built only by explicit panel/wrist-menu/hand-menu declaration and input-source registration; the closed placement-intent set (`OpenIntent`, `CloseIntent`, `FocusIntent`, `DockIntent`, `FollowIntent`, `FoldIntent`, `UnfoldIntent`) applied to the immutable `ShellState` with deterministic replay and a fingerprint (fold/unfold change only a surface's `IsFolded` visibility flag, never its open/docked/following state); typed pointer and gaze routing (`HoverIntent`, `SelectIntent`, `ScrollIntent`) resolved by the stateless `ShellRouter`; the skin contract (`DesignToken`, `ShellSlot`, `SkinMapping`, `SkinMappingBuilder`, `CanonicalSkinMapping`) mapping the shared design-language tokens to the closed shell-slot set; `ShellOrnament`, the one shell-owned fixed surface (`SurfaceId.TheOrnament`) that never enters a declared layout and that `FoldIntent`/`UnfoldIntent` always reject; the closed `VerbRegistry`/`VerbRegistryBuilder` (a verb's id and display word are fixed at registration, and registered ids partition into wired/unwired); the single-valued `FocusSubject`/`FocusTarget` claimed only by an explicit `Claim` (never a per-frame mirror); `VerbResolver` and `VerbAffordanceQuery`, which read only a registry and a `FocusSubject` to yield exactly one target, a named no-target result, or a pre-press affordance that is never available for a target a press would refuse; and `IShellPanelContent<TSlot>` (`ShellPanelContent.cs`), the one generic panel-content seam a client family adapts to, which the shell never implements or inspects |
+| `com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellCoreContractTests.cs` | 61 EditMode tests mapped in `docs/standards/xr-ui-shell/coverage-map.json` |
+| `com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellSourceRuleTests.cs` | 2 EditMode tests proving no asmdef under this family references any assembly outside `Lingkyn.XrUiShell.*` (plus the admitted engine/test assemblies) and no shell `Runtime` source mentions `LiveTuning`, `Inventory`, `Settings`, or another family namespace — the machine-checked half of the peer-client rule below |
 | `com.lingkyn.xr-ui-shell.core/Samples~/ShellWalkthrough/` | Domain-only sample: a layout built by explicit declaration, a placement intent sequence, typed pointer and gaze routing including a gaze select rejected and then resolved by a commit source, the canonical skin mapping, and a replayed sequence; no asset, scene, or UnityEngine API |
-| `com.lingkyn.xr-ui-shell.ugui/Runtime/*.cs` | UGUI sibling adapter: fail-closed binding of each declared panel to exactly one world-space `Canvas` subtree (`UguiPanelBindingEntry`, `UguiBindingValidation`, `UguiPanelBindingSet`) with stable codes for a missing Canvas, a non-world-space render mode, a duplicate Canvas, a missing event camera, a missing raycaster, a missing or non-unique active input module, and a missing wrist/hand anchor transform; the injectable `UguiShellSkin` `ScriptableObject` carrying the canonical token values; `UguiShellRuntime`, a plain runtime that applies accepted placement intents to the bound Canvas subtrees and forwards a resolved routed event to the bound Canvas only; and, under `Runtime/LiveTuning/`, `ShellTuningPanelSurfaceAdapter`, a small adapter satisfying the Live Tuning family's `ITuningPanelSurface` seam as one client of the shell |
-| `com.lingkyn.xr-ui-shell.ugui/Tests/Editor/*.cs` | 19 EditMode tests: 18 for the adapter gate driven through fakes for every seam (`IUguiPanelSkinTarget`, `IUguiRoutedEventTarget`), plus one integration test that attaches a real Live Tuning panel host to a shell panel through `ShellTuningPanelSurfaceAdapter` |
+| `com.lingkyn.xr-ui-shell.ugui/Runtime/*.cs` | UGUI sibling adapter: fail-closed binding of each declared panel to exactly one world-space `Canvas` subtree (`UguiPanelBindingEntry`, `UguiBindingValidation`, `UguiPanelBindingSet`) with stable codes for a missing Canvas, a non-world-space render mode, a duplicate Canvas, a missing event camera, a missing raycaster, a missing or non-unique active input module, and a missing wrist/hand anchor transform; the injectable `UguiShellSkin` `ScriptableObject` carrying the canonical token values; and `UguiShellRuntime`, a plain runtime that applies accepted placement intents to the bound Canvas subtrees and forwards a resolved routed event to the bound Canvas only. This package references only `Lingkyn.XrUiShell.Core`: it names no client family (see the peer-client rule below) |
+| `com.lingkyn.xr-ui-shell.ugui/Tests/Editor/*.cs` | 18 EditMode tests for the adapter gate, driven through fakes for every seam (`IUguiPanelSkinTarget`, `IUguiRoutedEventTarget`) |
 | `com.lingkyn.xr-ui-shell.ui-toolkit/Runtime/*.cs` | UI Toolkit sibling adapter: fail-closed binding of each declared panel to exactly one world-space `UIDocument` (`UiToolkitPanelBindingEntry`, `UiToolkitBindingValidation`, `UiToolkitPanelBindingSet`) with stable codes for a missing document, a non-world-space `PanelSettings` render mode, a duplicate document, a missing or unadmitted-mode collider, a missing or non-unique active XR UI Toolkit manager, a manager that bypasses UI Toolkit events, and a missing wrist/hand anchor transform; the injectable `UiToolkitShellSkin` `ScriptableObject` carrying the canonical token values as USS-facing values; and `UiToolkitShellRuntime`, the UI Toolkit sibling of `UguiShellRuntime` |
 | `com.lingkyn.xr-ui-shell.ui-toolkit/Tests/Editor/*.cs` | 19 EditMode tests for the adapter gate, driven through fakes for every seam (`IUiToolkitPanelSkinTarget`, `IUiToolkitRoutedEventTarget`, `IUiToolkitInputManager`) |
 | `docs/standards/xr-ui-shell/` | Standard README, source manifest, verification contract, coverage map, admission draft |
@@ -52,32 +53,37 @@ routing-intent shape against their own bound surfaces. This parallel structure i
 a design choice for legibility, not shared code: nothing in one package's assembly
 references a type in the other's.
 
-## How the Live Tuning panel host becomes a client without transferring evidence
+## The dock and its peer clients (LESSON-010)
 
-`ShellTuningPanelSurfaceAdapter` (in `com.lingkyn.xr-ui-shell.ugui/Runtime/LiveTuning/`)
-implements the Live Tuning family's `ITuningPanelSurface` seam
-(`staging/live-tuning/com.lingkyn.live-tuning.unity/Runtime/TuningPanelHost.cs`) by
-wrapping one bound `UguiPanelBindingEntry`. A real `TuningPanelHost` can attach its
-per-tunable editor slots to this adapter exactly as it would to the Live Tuning
-package's own `UguiFallbackPanelSurface`, proven by
-`AShellPanelAdapterAttachesOneSlotFromARealLiveTuningPanelHost`, which constructs a
-real `TuningRuntime` and calls `TuningPanelHost.AttachAll()` against it. Neither
-family's assembly references the other's concrete skin or panel type: the join
-happens only in this one adapter type, through the seam's own interface. This
-package references `Lingkyn.LiveTuning.Core` and `Lingkyn.LiveTuning.Unity` directly
-in its asmdef, because that reference is not circular (Live Tuning's own asmdefs
-never reference this shell) and is small; the heavier fallback the work item allows
-for — a small `ITuningPanelSurface`-compatible type built without referencing
-`Lingkyn.LiveTuning.Unity` at all, kept behind a compile define — was not needed,
-and the `Runtime/LiveTuning/` folder is kept separate so that fallback stays a
-one-file change if a future dependency shape ever makes the direct reference
-circular or heavy.
+The shell is the dock. Every system's panel — Inventory, Settings, the Live
+Tuning developer scaffold, or any future family — is a peer client of the dock,
+never the other way around. Concretely:
 
-No evidence transfers either way: this integration test proves that the seam's
-shape is satisfied in isolation from both families' own EditMode runs; it is not a
-Live Tuning coverage claim (Live Tuning's own coverage map and its `CU-09` partial
-clause are unaffected) and it is not a claim that a real Live Tuning panel is
-reachable, legible, or visible in this shell.
+- the shell exposes exactly one generic seam a client family adapts to:
+  `IShellPanelContent<TSlot>` (`ShellPanelContent.cs`) for panel content, plus the
+  verb-registration entry point on `VerbRegistryBuilder` (`VerbRegistry.cs`) for
+  a client's own verb (its constant id and display word, never a shell-side
+  special case);
+- a client receives the currently focused thing through the shell's
+  `FocusSubject`, resolves its own verb through `VerbResolver`/`VerbAffordanceQuery`,
+  and maps whatever it reads there through its own domain (for Live Tuning, the
+  Core `BindingIndex`); and
+- the dock never references a client: no asmdef under `staging/xr-ui-shell/`
+  names an assembly outside `Lingkyn.XrUiShell.*` (plus the admitted engine/test
+  assemblies), and no shell `Runtime` source mentions `LiveTuning`, `Inventory`,
+  `Settings`, or another family namespace, proven by
+  `XrUiShellSourceRuleTests.cs`.
+
+Live Tuning is the first concrete peer client. Its panel host, its `tune` verb
+registration, and its adapter of this shell's generic content seam
+(`ShellTuningClient`) live entirely in
+[`staging/live-tuning/com.lingkyn.live-tuning.unity/Runtime/Shell/ShellTuningClient.cs`](../live-tuning/com.lingkyn.live-tuning.unity/Runtime/Shell/ShellTuningClient.cs),
+not here: this package used to carry a `Runtime/LiveTuning/` folder and asmdef
+references onto `Lingkyn.LiveTuning.*` (the shell depending on one specific
+tooling client), which was the defect LESSON-010 records and this change fixes.
+No evidence transfers either way: the shell's own EditMode run proves only that
+its generic seams exist and validate; Live Tuning's own coverage map proves that
+a real `TuningPanelHost` attaches to them.
 
 ## How the Inventory presentation adapters become clients
 

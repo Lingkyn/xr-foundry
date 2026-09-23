@@ -26,6 +26,12 @@ namespace Lingkyn.XrUiShell.Core
         public static SurfaceId OfWristMenu(WristMenuId id) => new SurfaceId(SurfaceKind.WristMenu, id.Value);
         public static SurfaceId OfHandMenu(HandMenuId id) => new SurfaceId(SurfaceKind.HandMenu, id.Value);
 
+        /// <summary>The one shell-owned ornament identity (see <see cref="ShellOrnament"/>).
+        /// Fixed, not built from consumer text, and never equal to a <see cref="PanelId"/>,
+        /// <see cref="WristMenuId"/>, or <see cref="HandMenuId"/> surface built from the same
+        /// text.</summary>
+        public static SurfaceId TheOrnament { get; } = new SurfaceId(SurfaceKind.Ornament, ShellOrnament.CanonicalId);
+
         public bool Equals(SurfaceId other) => Kind == other.Kind && string.Equals(Value, other.Value, StringComparison.Ordinal);
         public override bool Equals(object obj) => obj is SurfaceId other && Equals(other);
         public override int GetHashCode() => ((int)Kind * 397) ^ (Value == null ? 0 : StringComparer.Ordinal.GetHashCode(Value));

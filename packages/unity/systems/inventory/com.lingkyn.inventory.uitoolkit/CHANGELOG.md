@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added `foundry.tunables.json` (WI-022): declares the `InventoryUiToolkitSkin`
+  seam (`ApplySkin`) and its nine surface/text/slot-state colour members as
+  data for the live-tuning developer scaffold, with defaults equal to the
+  canonical design-language token values and a `token` reference for each;
+  the package now lists `xr-foundry.tuning.surface` 1.0.0 in
+  `foundry.component.json` `provides`. See
+  `docs/standards/live-tuning/tunable-surface.md`.
 - Added the injectable design-language skin seam: `InventoryUiToolkitSkin`
   (ScriptableObject with the canonical shared tokens and a `CreateDefault()`
   factory) and `InventoryDocumentView.ApplySkin`, which writes the tokens as

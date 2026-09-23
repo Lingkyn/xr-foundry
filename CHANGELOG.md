@@ -5,6 +5,22 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Added the tunable surface protocol (WI-022): `docs/standards/live-tuning/tunable-surface.md`
+  and `tunable-surface.schema.json` (`xr-foundry.tunable_surface.v1`) let a package with
+  an explicit injectable seam — a skin/theme asset or any other design-time
+  configuration asset with a live-apply entry point — declare, as data beside its
+  `foundry.component.json`, exactly what a developer scaffold may tune: canonical
+  id, closed kind (`float`/`int`/`bool`/`enum`/`colour`/`vector2`/`vector3`), default,
+  guard rail (range/step or value set), seam-relative target, and an optional
+  design-language token reference, so the scaffold's binding index, editors, and panel
+  host stay package-agnostic. Added `validate_tunable_surfaces` (schema validity,
+  cross-manifest canonical id uniqueness, default-in-range/value-set, target/seam
+  membership, token resolution, and the two-way bind to the new
+  `xr-foundry.tuning.surface` 1.0.0 capability in `capability-registry.json`) with
+  14 tests in `tests/test_tunable_surfaces.py`. Shipped the first manifests for the
+  Inventory UGUI and UI Toolkit renderer adapters, mapping their nine surface/text/
+  slot-state colour skin members to the canonical design-language token values, and
+  recorded LESSON-009 in the lessons register.
 - Staged the XR UI shell family (`staging/xr-ui-shell`, WI-020):
   `com.lingkyn.xr-ui-shell.core` (panel, wrist-menu, and hand-menu identity; world,
   head-locked, wrist, and hand anchors; open, close, focus, dock, and follow

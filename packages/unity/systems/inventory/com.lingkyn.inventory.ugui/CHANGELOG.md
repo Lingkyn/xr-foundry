@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `foundry.tunables.json` (WI-022): declares the `InventorySkin` seam
+  (`ApplySkin`) and its nine surface/text/slot-state colour members as data for
+  the live-tuning developer scaffold, with defaults equal to the canonical
+  design-language token values and a `token` reference for each; the package
+  now lists `xr-foundry.tuning.surface` 1.0.0 in `foundry.component.json`
+  `provides`. See `docs/standards/live-tuning/tunable-surface.md`.
 - Added `InventorySkin`, the first injectable visual seam for the UGUI adapter:
   a ScriptableObject carrying surface/text/slot-state colors, an optional font,
   and optional rounded 9-slice sprites. The renderer-neutral presentation

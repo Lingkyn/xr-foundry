@@ -707,7 +707,102 @@ namespace Lingkyn.LiveTuning.Core.Editor.Tests
             Assert.That(referenced.Any(name => name.IndexOf("UnityEngine", StringComparison.OrdinalIgnoreCase) >= 0), Is.False, string.Join(",", referenced));
         }
 
+        // ----- binding index for "point at it, tune it" (LTC-14) -----
+
+        [Test]
+        public void BindingIndexLookupReturnsExactAndSegmentWisePrefixMatchesInRegistrationOrder()
+        {
+            var sample = BuildSampleIndex();
+
+            var atPanel = sample.Index.Lookup("panel");
+            Assert.That(atPanel.Select(record => record.Id), Is.EqualTo(new[] { sample.PanelSurface, sample.PanelSurfaceHover, sample.PanelText }),
+                "Every record under 'panel' comes back, none from 'other', in the validated set's own (canonical id) order.");
+
+            var atOther = sample.Index.Lookup("other");
+            Assert.That(atOther.Select(record => record.Id), Is.EqualTo(new[] { sample.OtherThing }));
+        }
+
+        [Test]
+        public void BindingIndexLookupComparesSegmentsNotRawText()
+        {
+            var sample = BuildSampleIndex();
+
+            var exact = sample.Index.Lookup("panel/surface");
+            Assert.That(exact.Select(record => record.Id), Is.EqualTo(new[] { sample.PanelSurface, sample.PanelSurfaceHover }),
+                "'panel/surface' equals one record's whole path and is a segment-wise prefix of another's.");
+
+            Assert.That(sample.Index.Lookup("panel/surfac"), Is.Empty,
+                "'panel/surfac' is a raw-string prefix of 'panel/surface' but not a segment-wise one: it must match nothing.");
+        }
+
+        [Test]
+        public void BindingIndexLookupReturnsEmptyListForAPathNoRecordTargets()
+        {
+            var sample = BuildSampleIndex();
+            Assert.That(sample.Index.Lookup("ghost/nowhere"), Is.Empty);
+            Assert.That(sample.Index.Lookup(""), Is.Empty);
+            Assert.That(sample.Index.Lookup(null), Is.Empty);
+        }
+
+        [Test]
+        public void BindingIndexIsImmutableAndExposesNoMutator()
+        {
+            var sample = BuildSampleIndex();
+            var first = sample.Index.Lookup("panel");
+            var second = sample.Index.Lookup("panel");
+
+            Assert.That(ReferenceEquals(first, second), Is.False, "Each lookup returns its own list; the index holds no list a caller could hand back and corrupt.");
+            Assert.That(first, Is.EqualTo(second));
+
+            const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static;
+            var mutatorNames = new[] { "Set", "Add", "Remove", "Clear", "Insert" };
+            Assert.That(typeof(BindingIndex).GetMethods(flags).Any(method => mutatorNames.Any(name => method.Name.StartsWith(name, StringComparison.Ordinal))), Is.False, "BindingIndex exposes no mutator.");
+        }
+
         // ----- helpers -----
+
+        private sealed class SampleIndex
+        {
+            public BindingIndex Index;
+            public TunableId PanelSurface;
+            public TunableId PanelSurfaceHover;
+            public TunableId PanelText;
+            public TunableId OtherThing;
+        }
+
+        private static SampleIndex BuildSampleIndex()
+        {
+            var panelSurface = TunableId.Parse("index.panel_surface");
+            var panelSurfaceHover = TunableId.Parse("index.panel_surface_hover");
+            var panelText = TunableId.Parse("index.panel_text");
+            var otherThing = TunableId.Parse("index.other_thing");
+
+            var builder = new TunableRegistryBuilder();
+            AssertOk(builder.Register(panelSurface, ColourDeclaration.Instance, TunableValue.OfColour(0f, 0f, 0f, 1f)));
+            AssertOk(builder.Register(panelSurfaceHover, ColourDeclaration.Instance, TunableValue.OfColour(0f, 0f, 0f, 1f)));
+            AssertOk(builder.Register(panelText, ColourDeclaration.Instance, TunableValue.OfColour(0f, 0f, 0f, 1f)));
+            AssertOk(builder.Register(otherThing, ColourDeclaration.Instance, TunableValue.OfColour(0f, 0f, 0f, 1f)));
+            var registry = builder.Build();
+
+            var records = new[]
+            {
+                new BindingRecord(panelSurface, TunableKind.Colour, "panel/surface"),
+                new BindingRecord(panelSurfaceHover, TunableKind.Colour, "panel/surface/hover"),
+                new BindingRecord(panelText, TunableKind.Colour, "panel/text"),
+                new BindingRecord(otherThing, TunableKind.Colour, "other/thing"),
+            };
+            var validated = BindingSet.Validate(records, registry);
+            Assert.That(validated.Succeeded, Is.True, validated.Message);
+
+            return new SampleIndex
+            {
+                Index = BindingIndex.Build(validated.Value),
+                PanelSurface = panelSurface,
+                PanelSurfaceHover = panelSurfaceHover,
+                PanelText = panelText,
+                OtherThing = otherThing,
+            };
+        }
 
         private static IReadOnlyDictionary<string, string> Scope(string key, string value) => new Dictionary<string, string> { [key] = value };
 

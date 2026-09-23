@@ -1,0 +1,120 @@
+{
+  "schema": "xr-foundry.tunable_surface.v1",
+  "package_id": "com.lingkyn.inventory.uitoolkit",
+  "family": "inventory",
+  "seams": [
+    {
+      "id": "skin",
+      "kind": "skin",
+      "type": "Lingkyn.Inventory.UIToolkit.InventoryUiToolkitSkin",
+      "entry_point": "ApplySkin",
+      "member_set": [
+        "Surface",
+        "Section",
+        "Accent",
+        "TextPrimary",
+        "TextMuted",
+        "SlotNormal",
+        "SlotHover",
+        "SlotSelected",
+        "SlotDisabled"
+      ]
+    }
+  ],
+  "export": {
+    "destination_kind": "asset",
+    "path": "Assets/XR Foundry/Inventory/InventoryUiToolkitSkin.asset"
+  },
+  "tunables": [
+    {
+      "id": "inventory.uitoolkit.skin.surface_panel",
+      "kind": "colour",
+      "default": [0.031, 0.094, 0.122, 0.96],
+      "target": { "seam": "skin", "member": "Surface" },
+      "label": "Panel background",
+      "group": "Surfaces",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "surface.panel"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.surface_section",
+      "kind": "colour",
+      "default": [0.055, 0.129, 0.153, 0.96],
+      "target": { "seam": "skin", "member": "Section" },
+      "label": "Section background",
+      "group": "Surfaces",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "surface.section"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.surface_accent",
+      "kind": "colour",
+      "default": [0.122, 0.592, 0.624, 1.0],
+      "target": { "seam": "skin", "member": "Accent" },
+      "label": "Accent",
+      "group": "Surfaces",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "surface.accent"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.text_primary",
+      "kind": "colour",
+      "default": [0.886, 0.988, 1.0, 1.0],
+      "target": { "seam": "skin", "member": "TextPrimary" },
+      "label": "Primary text",
+      "group": "Text",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "text.primary"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.text_muted",
+      "kind": "colour",
+      "default": [0.439, 0.616, 0.639, 1.0],
+      "target": { "seam": "skin", "member": "TextMuted" },
+      "label": "Muted text",
+      "group": "Text",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "text.muted"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.slot_normal",
+      "kind": "colour",
+      "default": [0.071, 0.212, 0.255, 1.0],
+      "target": { "seam": "skin", "member": "SlotNormal" },
+      "label": "Slot: normal",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "slot_states.normal"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.slot_hover",
+      "kind": "colour",
+      "default": [0.090, 0.345, 0.388, 1.0],
+      "target": { "seam": "skin", "member": "SlotHover" },
+      "label": "Slot: hover",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "slot_states.hover"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.slot_selected",
+      "kind": "colour",
+      "default": [0.094, 0.494, 0.525, 1.0],
+      "target": { "seam": "skin", "member": "SlotSelected" },
+      "label": "Slot: selected",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "slot_states.selected"
+    },
+    {
+      "id": "inventory.uitoolkit.skin.slot_disabled",
+      "kind": "colour",
+      "default": [0.071, 0.212, 0.255, 0.46],
+      "target": { "seam": "skin", "member": "SlotDisabled" },
+      "label": "Slot: disabled",
+      "group": "Slot states",
+      "scope": { "package": "com.lingkyn.inventory.uitoolkit", "skin": "InventoryUiToolkitSkin" },
+      "token": "slot_states.disabled"
+    }
+  ]
+}

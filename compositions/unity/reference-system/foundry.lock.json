@@ -10,7 +10,7 @@
   "input_digests": {
     "composition_sha256": "12e77dd1ee0e67f5d207634e8c585fe432ef00cf71058dacb1f85ff29879fe63",
     "component_catalog_sha256": "4741482c143f04cff49a4a97aac3e457ed40547602270b0681d32de3aad4bc85",
-    "capability_registry_sha256": "57a8e63abdc0039a8ddf4f29b2b563eb4322333f74bd1114f584fe45f263fd66"
+    "capability_registry_sha256": "1eaf1b0d7cbd376f2ef4c4b48ca3e8cad43408f69801e3485e1ebaa5d2c51906"
   },
   "resolution": {
     "components": [
@@ -42,7 +42,7 @@
         "id": "com.lingkyn.inventory.ugui",
         "version": "0.2.0",
         "manifest_path": "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/foundry.component.json",
-        "manifest_sha256": "e71986c9aee9cd4d6acd14c7e362bd76809f5a721dffb01ba70f3dcc58378982"
+        "manifest_sha256": "493483239f1bbab6b6e077d09c84d56967be915e6ad293f7b1158fd7294df4fa"
       },
       {
         "id": "com.lingkyn.inventory.unity",

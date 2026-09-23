@@ -17,11 +17,11 @@ it has not compiled.
 
 | Path | Content |
 | --- | --- |
-| `com.lingkyn.live-tuning.core/Runtime/*.cs` | Engine-light Core: `TunableId` and `SnapshotId` with one canonical dotted-segment form, the closed `TunableKind` set (float, integer, bool, enumerated, colour, vector2, vector3) with fail-closed kind declarations, the immutable `TunableRegistry` and `TunableRegistryBuilder` built only by explicit registration, the closed `EditorKind` set and `ResolveEditorKind`, tuning intents (`SetIntent`, `ResetIntent`, `ResetAllIntent`, `SnapshotIntent`, `ApplySnapshotIntent`) applied to the immutable, override-only `TuningState` with deterministic replay and a fingerprint, engine-free `BindingRecord` and `BindingSet` validation, a self-contained JSON reader/writer (`LiveTuningJson.cs`), and the two-way `TokenBridge` to and from a `TokenOverrideDocument` |
-| `com.lingkyn.live-tuning.core/Tests/Editor/LiveTuningCoreContractTests.cs` | 45 EditMode tests mapped in `docs/standards/live-tuning/coverage-map.json` |
+| `com.lingkyn.live-tuning.core/Runtime/*.cs` | Engine-light Core: `TunableId` and `SnapshotId` with one canonical dotted-segment form, the closed `TunableKind` set (float, integer, bool, enumerated, colour, vector2, vector3) with fail-closed kind declarations, the immutable `TunableRegistry` and `TunableRegistryBuilder` built only by explicit registration, the closed `EditorKind` set and `ResolveEditorKind`, tuning intents (`SetIntent`, `ResetIntent`, `ResetAllIntent`, `SnapshotIntent`, `ApplySnapshotIntent`) applied to the immutable, override-only `TuningState` with deterministic replay and a fingerprint, engine-free `BindingRecord` and `BindingSet` validation, the immutable `BindingIndex` (`BindingIndex.cs`) that answers "point at it, tune it", a self-contained JSON reader/writer (`LiveTuningJson.cs`), and the two-way `TokenBridge` to and from a `TokenOverrideDocument` |
+| `com.lingkyn.live-tuning.core/Tests/Editor/LiveTuningCoreContractTests.cs` | 49 EditMode tests mapped in `docs/standards/live-tuning/coverage-map.json` |
 | `com.lingkyn.live-tuning.core/Samples~/TuningWalkthrough/` | Domain-only sample: a registry built by explicit registration and by the token bridge, a full set/snapshot/reset/apply_snapshot/export intent sequence, and a replayed sequence; no asset, scene, or UnityEngine API |
-| `com.lingkyn.live-tuning.unity/Runtime/*.cs` | Unity adapter: `ISkinBinder` and the opaque `asset_key#member` target-path convention (`SkinTargetPath`), `SkinBindingValidation`/`SkinBindingSet`/`SkinBindingException` with stable codes and field paths, a self-contained reference skin asset and binder pair for testing (`DemoSkin.cs`), `TuningRuntime` (live application through the skin seam), the injectable `ITuningExportSink` with a device JSON writer (`DeviceTokenExportSink`) and an Editor-only asset writer (`EditorAssetExportSink`, guarded by `#if UNITY_EDITOR`), explicit device-override import (`TuningImport`), the closed set of editor controls and `TuningEditorFactory` (one per `EditorKind`), and `TuningPanelHost` with the `ITuningPanelSurface` seam and its `UguiFallbackPanelSurface` |
-| `com.lingkyn.live-tuning.unity/Tests/Editor/LiveTuningUnityContractTests.cs` | 29 EditMode tests for the adapter gate, driven through fakes for every seam (`ISkinApplyTarget`, `ITuningFileSystem`, `ITuningFileReader`, `ITuningPanelSurface`) |
+| `com.lingkyn.live-tuning.unity/Runtime/*.cs` | Unity adapter: `ISkinBinder` and the opaque `asset_key#member` target-path convention (`SkinTargetPath`), `SkinBindingValidation`/`SkinBindingSet`/`SkinBindingException` with stable codes and field paths, a self-contained reference skin asset and binder pair for testing (`DemoSkin.cs`), `TuningRuntime` (live application through the skin seam), the injectable `ITuningExportSink` (with `DescribeDestination()`, a read-only peek at where an export would land) with a device JSON writer (`DeviceTokenExportSink`) and an Editor-only asset writer (`EditorAssetExportSink`, guarded by `#if UNITY_EDITOR`), explicit device-override import (`TuningImport`), the closed set of editor controls and `TuningEditorFactory` (one per `EditorKind`), `TuningPanelHost` with the `ITuningPanelSurface` seam and its `UguiFallbackPanelSurface`, pick-to-tune selection (`TuningSelection.cs`: `TuningScope`, `SelectionDiagnostic`, and the host's `Select`/`ClearSelection`), and the two view presets (`TuningView.cs`: `TuningViewPreset`, `TuningSlotView`, `TuningHostView`, `TuningView.Describe`) |
+| `com.lingkyn.live-tuning.unity/Tests/Editor/LiveTuningUnityContractTests.cs` | 38 EditMode tests for the adapter gate, driven through fakes for every seam (`ISkinApplyTarget`, `ITuningFileSystem`, `ITuningFileReader`, `ITuningPanelSurface`) |
 | `docs/standards/live-tuning/` | Standard README, source manifest, verification contract, coverage map, admission draft |
 
 ## The five scaffold rules this package follows
@@ -45,6 +45,67 @@ and each a clause in the verification contract:
 5. **Scope is metadata.** A package, skin, or screen label on a binding record
    filters `TuningPanelHost.WhereScope` and `ChangedOnly` and never changes which
    editor a slot holds.
+
+## Point at it, tune it
+
+The scaffold's targets are the variable part; the scaffold itself (one editor per
+kind, one host, engine-free binding records) is fixed. "Point at it, tune it" is
+what lets a target be selected, not another special case bolted onto the scaffold:
+
+- The Core `BindingIndex` is built once, from a validated `BindingSet`. Given one
+  opaque target path, `Lookup` returns exactly the binding records whose target
+  path equals it or has it as a segment-wise prefix (segments split on `/`, so
+  `panel` matches `panel/surface` but never `panel/surfacex`), in the validated
+  set's own order. It never fails, holds no reflection or engine type, and is the
+  only lookup the Unity adapter uses to go from a selected thing back to its
+  tunables.
+- `TuningPanelHost.Select` accepts either a shell `SurfaceId` (the identity the XR
+  UI shell's own typed routing already resolves) or an explicit opaque target
+  path, maps it through the `BindingIndex`, and shows exactly the matched slots as
+  a scope named `selection`. A path nothing targets still switches to that
+  (empty) scope and sets `ActiveSelectionDiagnostic` to `selection.unbound` with
+  the path, never a silently empty panel. `ClearSelection` restores whichever
+  scope was active immediately before.
+- Selecting changes which slots are shown and never which editor a slot holds: a
+  `colour` slot resolves to `colour_editor` before, during, and after a selection,
+  because selection only ever narrows `TuningPanelHost`'s own already-attached
+  slots by target path. The family performs no raycast, reads no pose, and holds
+  no reference to a camera, ray, or input device; a source rule in the test
+  assembly reads the Unity Runtime folder's own source files and asmdef as text
+  and asserts none of them mention a physics, input, or camera type.
+- Reference decision: `Lingkyn.LiveTuning.Unity`'s asmdef now references
+  `Lingkyn.XrUiShell.Core` directly, so `Select` can accept a real `SurfaceId`.
+  This adds no cycle: the shell's UGUI adapter (`Lingkyn.XrUiShell.Ugui`) already
+  references `Lingkyn.LiveTuning.Unity`, and `Lingkyn.XrUiShell.Core` itself
+  references nothing, so the graph stays a DAG (`Ugui` → `{Core, LiveTuning.Core,
+  LiveTuning.Unity}`, `LiveTuning.Unity` → `{LiveTuning.Core, XrUiShell.Core}`).
+  Had that reference closed a cycle, the fallback named in this family's own
+  work item would have applied instead: accept the selection as an explicit
+  opaque target-path string plus a tiny `ISelectionSource` interface, with no
+  `SurfaceId` overload at all.
+
+## One host, two presets
+
+Two named `TuningViewPreset` values, `Designer` and `Engineer`, read the one
+host's own slots; there are never two panels and never a second copy of a slot's
+editor. `TuningView.Describe(host, preset)` is a pure function that builds a
+disposable display descriptor (`TuningHostView` of `TuningSlotView`s) with no
+rendering, no rendering surface, and no state of its own:
+
+- **Designer** shows a slot's label, its editor kind, and that it carries a
+  per-slot reset. Nothing else.
+- **Engineer** shows the same slots plus, per slot, the registered range and
+  step as text, the binding's own opaque target path, and the destination the
+  runtime's export sink reports (read through `ITuningExportSink.DescribeDestination()`,
+  which never writes anything); and, per host, every `TuningSlotDiagnostic` the
+  host recorded, each still carrying its stable code.
+- Switching presets changes only what a slot displays. It raises no Core intent,
+  adds no slot, and cannot change a registered range, step, or value set: no
+  method on `TuningViewPreset`, `TuningSlotView`, or `TuningHostView` writes back
+  to a registration, and a declaration's own range/step properties (for example
+  `FloatDeclaration.Min/Max/Step`) expose no setter at all. A range, step, or
+  value set stays exactly where it always was: declared in code, changed only
+  through a reviewed change.
 
 ## Why the Unity adapter has a skin-apply-target seam
 

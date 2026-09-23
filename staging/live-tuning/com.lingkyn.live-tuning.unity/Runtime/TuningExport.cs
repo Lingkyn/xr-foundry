@@ -46,6 +46,11 @@ namespace Lingkyn.LiveTuning.Unity
         /// <summary>Writes only the ids <paramref name="document"/> overrides. An override-free
         /// document still writes (an empty override list), rather than being skipped.</summary>
         TuningExportResult Write(TokenOverrideDocument document, string label);
+
+        /// <summary>The destination this sink would write to (a device path, or an Editor asset's
+        /// asset-database path), read without writing anything. The engineer view preset shows
+        /// this per host so "where would this export go" never requires actually exporting.</summary>
+        string DescribeDestination();
     }
 
     /// <summary>The file-write seam a device sink goes through, so an EditMode test can inject a
@@ -90,6 +95,10 @@ namespace Lingkyn.LiveTuning.Unity
             var ids = document.Overrides.Select(entry => entry.Id).ToList();
             return TuningExportResult.Ok(path, Application.platform.ToString(), System.Text.Encoding.UTF8.GetByteCount(json), ids);
         }
+
+        /// <summary>The device path this sink writes to, computed the same way <see cref="Write"/>
+        /// computes it, without touching the file system.</summary>
+        public string DescribeDestination() => System.IO.Path.Combine(Application.persistentDataPath, _relativeFileName);
     }
 
     /// <summary>A plain asset an Editor sink writes overrides into. Holds no product token value
@@ -131,6 +140,10 @@ namespace Lingkyn.LiveTuning.Unity
             var ids = document.Overrides.Select(entry => entry.Id).ToList();
             return TuningExportResult.Ok(path, "Editor", System.Text.Encoding.UTF8.GetByteCount(json), ids);
         }
+
+        /// <summary>The bound asset's own asset-database path, read (never written) the same way
+        /// <see cref="Write"/> reads it before writing; empty for an asset never saved to disk.</summary>
+        public string DescribeDestination() => UnityEditor.AssetDatabase.GetAssetPath(_asset);
     }
 #endif
 }

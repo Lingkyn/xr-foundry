@@ -340,6 +340,49 @@
           "rationale": "The five added Core tests are recorded under Unreleased at the catalogued package versions, and the version parity rules pass at the current revision."
         }
       ]
+    },
+    {
+      "id": "LESSON-009",
+      "title": "A UI-bearing family declares its tunable surface as data, so a developer scaffold attaches without per-family code",
+      "origin_family": "inventory",
+      "observed": "The Live tuning family (docs/standards/live-tuning/verification-contract.md) builds a package-agnostic scaffold: one binding index, one editor per kind, one panel host. Without a data contract, the only way to tell that scaffold which values on which asset are tunable would be per-family code inside the scaffold itself (a switch on package identity, or a hand-maintained list), exactly the coupling the Unity adapter gate rules out (\"the scaffold ... never references a binder, a skin type, or a package type\"). The maintainer's decoupling rule generalises the seam a package may declare tunables on beyond a skin: any explicit injectable configuration asset with a live-apply entry point (a skin/theme asset, a comfort or locomotion profile, an audio mix profile, an interaction profile, a layout or timing config) qualifies, provided the asset is bound and re-applied at runtime through its own entry point rather than read once at start-up or edited through a one-shot Editor tool.",
+      "rule": "A UI-bearing family that owns an explicit injectable seam (a skin/theme asset, in `docs/standards/live-tuning/tunable-surface.md` terms a `skin` seam, or any other injectable design-time configuration asset with a live-apply entry point, a `config` seam) ships a colocated `foundry.tunables.json` declaring, as data, every tunable's canonical id, closed kind, default, guard rail (range/step or value set), and seam-relative target member. It also lists `xr-foundry.tuning.surface` in its `foundry.component.json` `provides`, and vice versa. The scaffold reads only this file and the component/capability graph, never a per-family code path, so a new tunable target is a reviewed data change to the owning package, never a change to the scaffold.",
+      "evidence": [
+        "docs/standards/live-tuning/tunable-surface.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/foundry.tunables.json",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/foundry.tunables.json",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.ugui/Runtime/InventorySkin.cs",
+        "packages/unity/systems/inventory/com.lingkyn.inventory.uitoolkit/Runtime/InventoryUiToolkitSkin.cs"
+      ],
+      "dispositions": [
+        {
+          "family": "inventory",
+          "status": "adopted",
+          "rationale": "Both renderer adapters ship a colocated foundry.tunables.json declaring one `skin` seam each (InventorySkin.ApplySkin for UGUI, InventoryUiToolkitSkin.ApplySkin for UI Toolkit) with the nine surface/text/slot-state colour members the Unity adapter gate's binder closed set already names, defaults equal to the canonical design-language token values with a `token` reference for each, and `xr-foundry.tuning.surface` 1.0.0 added to each package's `foundry.component.json` provides. Neither adapter has a second injectable configuration asset with plain serialized layout members and a live-apply entry point today (the UGUI grid's cell size is a `GridLayoutGroup` component value baked into the prefab, not a bound, re-appliable seam), so only the `skin` seam ships; a future layout config seam follows the same shape. validate_tunable_surfaces passes on both manifests with no allowlist entry."
+        },
+        {
+          "family": "settings",
+          "status": "deferred",
+          "rationale": "No UI-bearing Settings package exists yet (LESSON-007); the family owns definitions, profiles, and applicators, none of which is an injectable skin or config seam a runtime host binds through.",
+          "follow_up": "A future Settings UI adapter ships its skin seam and its foundry.tunables.json together in the same change (DL-ADOPT-03 under #84, and this lesson), never the seam without the manifest."
+        },
+        {
+          "family": "foundations",
+          "status": "not_applicable",
+          "rationale": "xr-baseline's VrBaselineConfig is a ScriptableObject with plain serialized greybox, hover, lighting, and interaction-ray values, but it is read once and applied through the one-shot Tools > Apply Config Editor command, not re-invoked through a live-apply entry point a runtime host holds a reference to; it is not a seam under this protocol's definition, so the family ships no foundry.tunables.json."
+        },
+        {
+          "family": "interaction",
+          "status": "not_applicable",
+          "rationale": "InteractionIntentAsset, InteractionRouteAsset, and the other authoring assets in com.lingkyn.interaction.unity are static route/intent definitions the domain resolves once at composition time; none exposes a live-apply entry point a runtime host re-invokes after a tunable change, so none is a seam under this protocol."
+        },
+        {
+          "family": "persistence",
+          "status": "not_applicable",
+          "rationale": "PersistenceUnityConfig is read once during ValidateAuthoring/initialization and has no live-apply entry point a runtime host re-invokes; the family exposes no injectable seam this protocol attaches to."
+        }
+      ]
     }
   ]
 }

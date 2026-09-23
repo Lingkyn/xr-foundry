@@ -185,6 +185,16 @@
       "providers": ["com.lingkyn.settings.unity"],
       "contract_refs": ["packages/unity/systems/settings/com.lingkyn.settings.unity/Documentation~/index.md"],
       "description": "Converts Unity authoring assets into deterministic settings definitions and profiles."
+    },
+    {
+      "id": "xr-foundry.tuning.surface",
+      "version": "1.0.0",
+      "plane": "composition",
+      "scope": "presentation",
+      "multiplicity": "exactly_one_per_composition",
+      "providers": ["com.lingkyn.inventory.ugui", "com.lingkyn.inventory.uitoolkit"],
+      "contract_refs": ["docs/standards/live-tuning/tunable-surface.md"],
+      "description": "A package declares its tunable surface as data for the developer scaffold."
     }
   ]
 }

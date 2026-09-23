@@ -797,6 +797,202 @@
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
       "done_proof": "docs/standards/xr-ui-shell/coverage-map.json"
+    },
+    {
+      "id": "WI-021",
+      "title": "Live tuning: pick-to-tune binding index and designer/engineer view presets",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "done",
+      "depends_on": [
+        "WI-019",
+        "WI-020"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/live-tuning/coverage-map.json",
+        "staging/live-tuning/README.md",
+        "staging/xr-ui-shell/com.lingkyn.xr-ui-shell.core/Runtime/ShellRouting.cs"
+      ],
+      "allowed_paths": [
+        "staging/live-tuning/",
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/live-tuning/README.md"
+      ],
+      "steps": [
+        "Implement the Core clause 'a binding index for point at it, tune it' (BindingIndex over a validated binding set: exact and segment-wise prefix lookup by opaque target path, immutable, engine-free) with NUnit tests in the Core test assembly.",
+        "Implement the Unity clauses 'pick-to-tune through the shell's routing' (the host accepts a SurfaceId or explicit target path, maps it through BindingIndex to a scope named selection, reports selection.unbound for an untargeted selection, clears back to the previous scope, performs no raycast and references no physics, input, or camera type) and 'two view presets over one host' (designer and engineer presets that change what a slot displays and never which editor it holds, raise no intent, and add no slot) with NUnit tests in the Unity test assembly.",
+        "Extend docs/standards/live-tuning/coverage-map.json with the three new clauses (LTC-14, CU-11, CU-12) mapped to the new tests; every listed test must exist and every test must be listed.",
+        "Update staging/live-tuning/README.md: the what-is-here table and a short 'point at it, tune it' and 'one host, two presets' section; keep the authored, unexecuted statement."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "docs/standards/live-tuning/coverage-map.json",
+          "staging/live-tuning/README.md"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the extended map with no allowlist entry and the three new clause ids covered.",
+      "done_proof": "docs/standards/live-tuning/coverage-map.json"
+    },
+    {
+      "id": "WI-022",
+      "title": "Tunable surface protocol: every UI-bearing package declares what the developer scaffold may tune",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "done",
+      "depends_on": [
+        "WI-019"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/design-language/ui-design-language-standard.json",
+        "docs/standards/lessons/lessons-register.json",
+        "capability-registry.json",
+        "component-catalog.json",
+        "docs/validation/checked-claims.md",
+        "scripts/validate_repository.py"
+      ],
+      "allowed_paths": [
+        "docs/standards/live-tuning/tunable-surface.md",
+        "docs/standards/live-tuning/tunable-surface.schema.json",
+        "packages/",
+        "capability-registry.json",
+        "component-catalog.json",
+        "docs/standards/lessons/lessons-register.json",
+        "scripts/validate_repository.py",
+        "tests/test_tunable_surfaces.py",
+        "docs/validation/checked-claims.md",
+        "CHANGELOG.md"
+      ],
+      "steps": [
+        "Write docs/standards/live-tuning/tunable-surface.md and tunable-surface.schema.json (schema id xr-foundry.tunable_surface.v1): a package with a skin or theme seam ships foundry.tunables.json beside foundry.component.json, declaring its skin seam entry point, its binder asset type, its export destination, and every tunable as data (canonical id, closed kind, default, range and step or value set, target asset and member, label, group, scope labels, optional design-language token reference); the scaffold consumes only these files and no per-family code.",
+        "Add validate_tunable_surfaces to scripts/validate_repository.py with fix hints and tests/test_tunable_surfaces.py: schema, canonical ids unique across the tree, kind in the closed set, default inside the declared range or value set, token references that exist in ui-design-language-standard.json, target members drawn from the seam's declared member set, and a package that provides the tuning-surface capability must ship the file and vice versa.",
+        "Register capability xr-foundry.tuning.surface in capability-registry.json; every package that ships foundry.tunables.json provides it; update component-catalog.json accordingly.",
+        "Ship the first manifests for the packages that already expose a skin seam (the Inventory UGUI and UI Toolkit renderer adapters), mapping their skin members to design-language tokens, with an Unreleased changelog line in each package.",
+        "Record LESSON-009 in the lessons register (a UI-bearing family declares its tunable surface as data so a developer scaffold attaches without per-family code) with an explicit disposition for every family the register requires, and add the checked-claims row for the new rule."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_tunable_surfaces"
+        ],
+        "artifacts": [
+          "docs/standards/live-tuning/tunable-surface.md",
+          "docs/standards/live-tuning/tunable-surface.schema.json",
+          "tests/test_tunable_surfaces.py"
+        ]
+      },
+      "evidence": "The rule passes on every shipped manifest, the register row is machine-checked, and the capability graph composes with the new capability.",
+      "done_proof": "tests/test_tunable_surfaces.py"
+    },
+    {
+      "id": "WI-023",
+      "title": "XR UI shell ornament, focus context, and verb registry; the developer scaffold as a peer client",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-020",
+        "WI-021"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/xr-ui-shell/coverage-map.json",
+        "staging/xr-ui-shell/README.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "staging/live-tuning/README.md",
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/xr-ui-shell/source-manifest.json"
+      ],
+      "allowed_paths": [
+        "CHANGELOG.md",
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/live-tuning/coverage-map.json",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/xr-ui-shell/",
+        "staging/live-tuning/",
+        "staging/xr-ui-shell/"
+      ],
+      "steps": [
+        "Extend the XR UI shell contract (Core gate) with: an ornament, one shell-owned fixed surface that is never folded; a verb registry with a closed, registered id set where an unregistered verb is rejected with a stable code and never silently absorbed, registered ids partition into wired and unwired, and a verb has one constant id and display word (what varies is its target, never its word); a single-valued FocusSubject claimed only by an explicit focus intent (a per-frame mirror or sync never claims it; assignment replaces, so no surface is special) that names exactly one current target (a panel, a panel item, or an external target path the consumer routes in) or none; verb resolution that reads that one value and nothing else (no precedence chain, no branch order) and yields exactly one target or a named no-target result; a queryable pre-press affordance for every registered verb (resolved target name, available or unavailable, and a stable reason code) so a verb is never shown available for a target it would refuse; and fold retains state (a folded panel keeps its full state; fold and unfold are intents that change visibility only). Cite public norms in the source manifest (single active element and first responder, ARIA selected versus active descendant, mode-error literature). Implement in the staged Core with NUnit tests and extend the coverage map.",
+        "Invert the dependency: no XR UI shell assembly references any client family; the shell exposes one generic panel-content surface seam that any family adapts to; move the live-tuning surface adapter into the live-tuning Unity package, where the developer scaffold registers a Tune verb like any peer and receives the focus target through the shell's focus context, mapping it through BindingIndex; add a source rule test that the shell assemblies reference no family outside xr-ui-shell and design-language.",
+        "Record LESSON-010 in the lessons register: a tooling or developer system is a peer client of the shell and the capability graph, registers its verbs and panels like any family, and is never a dependency of the systems it operates on; with an explicit disposition for every family the register requires.",
+        "Update both staging READMEs and the root CHANGELOG."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "docs/standards/xr-ui-shell/coverage-map.json",
+          "docs/standards/live-tuning/coverage-map.json",
+          "docs/standards/lessons/lessons-register.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the source rule test proves the shell references no client family.",
+      "done_proof": null
+    },
+    {
+      "id": "WI-024",
+      "title": "One intent channel for people and agents: actor, expected revision, and no second path",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-021",
+        "WI-023"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/scene-flow/verification-contract.md",
+        "docs/architecture/version-adaptive-reference-model.md"
+      ],
+      "allowed_paths": [
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/live-tuning/",
+        "staging/live-tuning/",
+        "docs/standards/xr-ui-shell/",
+        "staging/xr-ui-shell/",
+        "CHANGELOG.md"
+      ],
+      "steps": [
+        "Record LESSON-011 in the lessons register: a family's typed intent seam is the one channel through which a person's UI, an agent adapter, a replay, and an import all change state; every intent carries an actor source (player, agent, replay, import) used for attribution and replay and never for a different validation rule; every intent may carry an expected revision and a stale one is rejected with a stable code rather than overwriting another actor's change; the structured result is the channel and a refusal always names its reason; and no adapter writes state by any other path. Cite public norms (optimistic concurrency control, command pattern, single source of truth). Give every family the register requires an explicit disposition.",
+        "Apply it to the Live tuning contract and staged code: actor and expected revision on set, reset, reset_all, apply_snapshot, and export; state.stale rejection; a source-rule test that the Unity adapter and the panel host issue only Core intents and write no state directly; tests that a player set and an agent set take the same path and the same validation.",
+        "Apply it to the XR UI shell contract and staged code: actor and expected revision on every shell and verb intent; a dock verb pressed by a person and the same verb issued by an agent adapter resolve through the same focus subject and the same affordance; extend both coverage maps.",
+        "Update both staging READMEs and the root CHANGELOG."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "docs/standards/lessons/lessons-register.json",
+          "docs/standards/live-tuning/coverage-map.json",
+          "docs/standards/xr-ui-shell/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the lessons rule passes with a disposition for every family.",
+      "done_proof": null
     }
   ]
 }

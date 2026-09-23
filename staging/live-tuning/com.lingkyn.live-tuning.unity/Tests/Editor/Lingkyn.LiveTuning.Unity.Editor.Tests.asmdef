@@ -3,7 +3,8 @@
   "rootNamespace": "Lingkyn.LiveTuning.Unity.Editor.Tests",
   "references": [
     "Lingkyn.LiveTuning.Core",
-    "Lingkyn.LiveTuning.Unity"
+    "Lingkyn.LiveTuning.Unity",
+    "Lingkyn.XrUiShell.Core"
   ],
   "includePlatforms": [
     "Editor"

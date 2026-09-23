@@ -88,6 +88,20 @@
       ],
       "package_ids": [],
       "exact_next_action": "A person confirms the URLs, page paths, and version pins in docs/standards/live-tuning/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether the tuning model, the binding and export seams, and the panel-as-shell-client rule are stable enough to admit a Core blueprint and one Unity adapter blueprint."
+    },
+    {
+      "id": "NEXT-HAPTICS",
+      "title": "Haptics: per-event, per-controller haptic feedback bound to interaction and audio intents",
+      "state": "proposal",
+      "objective": "Define engine-light haptic event and profile identity, a closed haptic-kind set (transient, continuous, envelope) with amplitude, duration, and optional frequency guard rails, per-controller and per-hand profiles over a closed target set, play, stop, stop-all, and set-profile intents on an immutable last-one-wins state with deterministic replay, and a binding table from the Interaction family's semantic intents and the Audio family's event ids to haptic events, with a thin Unity adapter over XR Interaction Toolkit haptic impulse channels and OpenXR haptic actions, so a grab or a hit fires haptics, audio, and a future feedback effect from one source intent without any of those families depending on this one; the family proves the plumbing, and whether a pattern is felt as intended stays a Device Lab receipt.",
+      "source_requirements": [
+        "Official XR Interaction Toolkit haptic impulse and haptic-feedback documentation, the OpenXR core specification's haptic output (xrApplyHapticFeedback, XrHapticVibration), and the XR_FB_haptic_amplitude_envelope and XR_FB_haptic_pcm vendor extensions, at the versions pinned by the compatibility profiles",
+        "First-party Meta Horizon OS and PICO haptics guidance, including Meta's Haptics SDK and Haptics Studio as evidence that authored haptic clips recur, plus Apple visionOS/iOS Human Interface Guidelines on playing haptics and semantic patterns",
+        "Unity Input System haptics (IDualMotorRumble, XRControllerWithRumble) and one or two maintained open-source haptics implementations with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Felt-intensity, comfort, fatigue, and pattern-legibility evidence boundaries that route every such claim to a Device Lab receipt, so no package claim says a controller vibrated"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/haptics/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether haptic identity, the kind and profile model, and the binding table to Interaction and Audio are stable enough to admit a Core blueprint and one Unity adapter blueprint."
     }
   ]
 }

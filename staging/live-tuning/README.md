@@ -18,11 +18,11 @@ it has not compiled.
 | Path | Content |
 | --- | --- |
 | `com.lingkyn.live-tuning.core/Runtime/*.cs` | Engine-light Core: `TunableId` and `SnapshotId` with one canonical dotted-segment form, the closed `TunableKind` set (float, integer, bool, enumerated, colour, vector2, vector3) with fail-closed kind declarations, the immutable `TunableRegistry` and `TunableRegistryBuilder` built only by explicit registration, the closed `EditorKind` set and `ResolveEditorKind`, tuning intents (`SetIntent`, `ResetIntent`, `ResetAllIntent`, `SnapshotIntent`, `ApplySnapshotIntent`) applied to the immutable, override-only `TuningState` with deterministic replay and a fingerprint, engine-free `BindingRecord` and `BindingSet` validation, the immutable `BindingIndex` (`BindingIndex.cs`) that answers "point at it, tune it", a self-contained JSON reader/writer (`LiveTuningJson.cs`), and the two-way `TokenBridge` to and from a `TokenOverrideDocument` |
-| `com.lingkyn.live-tuning.core/Tests/Editor/LiveTuningCoreContractTests.cs` | 49 EditMode tests mapped in `docs/standards/live-tuning/coverage-map.json` |
+| `com.lingkyn.live-tuning.core/Tests/Editor/LiveTuningCoreContractTests.cs` | 61 EditMode tests mapped in `docs/standards/live-tuning/coverage-map.json` |
 | `com.lingkyn.live-tuning.core/Samples~/TuningWalkthrough/` | Domain-only sample: a registry built by explicit registration and by the token bridge, a full set/snapshot/reset/apply_snapshot/export intent sequence, and a replayed sequence; no asset, scene, or UnityEngine API |
 | `com.lingkyn.live-tuning.unity/Runtime/*.cs` | Unity adapter: `ISkinBinder` and the opaque `asset_key#member` target-path convention (`SkinTargetPath`), `SkinBindingValidation`/`SkinBindingSet`/`SkinBindingException` with stable codes and field paths, a self-contained reference skin asset and binder pair for testing (`DemoSkin.cs`), `TuningRuntime` (live application through the skin seam), the injectable `ITuningExportSink` (with `DescribeDestination()`, a read-only peek at where an export would land) with a device JSON writer (`DeviceTokenExportSink`) and an Editor-only asset writer (`EditorAssetExportSink`, guarded by `#if UNITY_EDITOR`), explicit device-override import (`TuningImport`), the closed set of editor controls and `TuningEditorFactory` (one per `EditorKind`), `TuningPanelHost` with the `ITuningPanelSurface` seam and its `UguiFallbackPanelSurface`, pick-to-tune selection (`TuningSelection.cs`: `TuningScope`, `SelectionDiagnostic`, and the host's `Select`/`ClearSelection`), and the two view presets (`TuningView.cs`: `TuningViewPreset`, `TuningSlotView`, `TuningHostView`, `TuningView.Describe`) |
 | `com.lingkyn.live-tuning.unity/Runtime/Shell/ShellTuningClient.cs` | This family as a peer client of the XR UI shell (LESSON-010), never a shell dependency: `TuningVerb` registers the constant `tune` verb id and display word into a shell `VerbRegistryBuilder` exactly the entry point any other family would use; `ShellTuningClient` adapts the shell's generic `IShellPanelContent<TuningSlot>` seam to this package's own `ITuningPanelSurface`, keyed only by the panel's `SurfaceId`; and `ShellTuningClient.ApplyFocus` maps the shell's `FocusSubject` to a `TuningPanelHost` scope through `TuningPanelHost.Select`, and so through the Core `BindingIndex` |
-| `com.lingkyn.live-tuning.unity/Tests/Editor/LiveTuningUnityContractTests.cs` | 38 EditMode tests for the adapter gate, driven through fakes for every seam (`ISkinApplyTarget`, `ITuningFileSystem`, `ITuningFileReader`, `ITuningPanelSurface`) |
+| `com.lingkyn.live-tuning.unity/Tests/Editor/LiveTuningUnityContractTests.cs` | 42 EditMode tests for the adapter gate, driven through fakes for every seam (`ISkinApplyTarget`, `ITuningFileSystem`, `ITuningFileReader`, `ITuningPanelSurface`) |
 | `com.lingkyn.live-tuning.unity/Tests/Editor/ShellTuningClientTests.cs` | 5 EditMode tests (listed under the coverage map's `additional_tests_outside_clauses`) proving the verb registers like any peer, a real `TuningPanelHost` attaches through `ShellTuningClient`, and `ApplyFocus` maps a panel target through the `BindingIndex`, restores the previous scope on no target, and reports `selection.unbound` rather than a silent empty panel. Moved here from the shell's own (now deleted) UGUI-adapter integration test |
 | `docs/standards/live-tuning/` | Standard README, source manifest, verification contract, coverage map, admission draft |
 
@@ -97,6 +97,36 @@ dock never references a client. This family registers its own `tune` verb into
 the shell's verb registry and adapts the shell's generic panel-content seam
 (`Runtime/Shell/ShellTuningClient.cs`), exactly like any other peer would; it does
 not, and could not, make the shell aware that Live Tuning exists.
+
+## One channel for people and agents (LESSON-011)
+
+`TuningState.Apply` (and `TuningRuntime.Apply`, which calls it) is the one
+channel through which a person's edit in the panel host, an agent adapter, a
+replay of a recorded sequence, or an imported device override all change
+tuning state. Every `TuningIntent` carries an `IntentActor` — `player`
+(the default), `agent`, `replay`, or `import` — used only for attribution and
+replay, never for a different validation rule: a player-issued and an
+agent-issued copy of the same `SetIntent` take the exact same path through
+`TuningState.Apply` and settle on an equal resulting state. `TuningImport`
+tags every applied override with `IntentActor.Import`; the panel host issues
+its intents as the player by default.
+
+An intent may also carry an expected revision. `TuningState.Revision` starts
+at 0 and increases by exactly one on every accepted intent (never on a
+rejected one, and never counted in `Fingerprint`, so two states reached by
+different-length sequences of the same overrides still fingerprint equal). A
+`set`, `reset`, `reset_all`, `apply_snapshot`, or `export` naming a stale
+expected revision is rejected with `state.stale` and changes nothing, rather
+than silently overwriting a change another actor already made. The replay
+log — each sequence's `TuningIntentOutcome`s — records the issuing actor and
+the revision immediately after every outcome, accepted or rejected, so a
+recorded sequence names who did what and at which revision, in order.
+
+No adapter writes state by any other path: the panel host, `ShellTuningClient`,
+and `TuningImport` all construct a `TuningIntent` and pass it to
+`TuningState.Apply` or `TuningRuntime.Apply`; a source rule over every
+`Runtime/*.cs` file (including `Runtime/Shell/`) proves none of them calls a
+Core mutator directly or assigns a Core state field.
 
 ## One host, two presets
 

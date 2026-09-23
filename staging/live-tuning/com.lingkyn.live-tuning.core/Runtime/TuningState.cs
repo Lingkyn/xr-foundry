@@ -9,10 +9,40 @@ namespace Lingkyn.LiveTuning.Core
     // control, panel, or input that raises them. Export is a pure read of a state, not an
     // intent that can fail, and lives at the bottom of this file next to TuningState.
 
-    /// <summary>Closed set of intents applied to a <see cref="TuningState"/>.</summary>
+    /// <summary>The closed set of sources that may issue a tuning intent: a person through the
+    /// panel host UI, an agent adapter, a replay of a recorded sequence, or a device/Editor
+    /// override import. Carried on every intent for attribution and replay only; it never selects
+    /// a different validation rule, so a player-issued and an agent-issued copy of the same
+    /// intent take the same path through <see cref="TuningState.Apply"/> and get the same
+    /// result (LESSON-011).</summary>
+    public enum IntentActor
+    {
+        Player,
+        Agent,
+        Replay,
+        Import,
+    }
+
+    /// <summary>Closed set of intents applied to a <see cref="TuningState"/>. Every intent carries
+    /// an <see cref="Actor"/> (defaulting to <see cref="IntentActor.Player"/> when a caller uses
+    /// the short constructor) and an optional <see cref="ExpectedRevision"/>: a non-null value
+    /// that does not match the state's current revision is rejected with
+    /// <see cref="LiveTuningFailure.StateStale"/> by <see cref="TuningState.Apply"/> before this
+    /// intent's own <see cref="ApplyTo"/> ever runs, rather than overwriting another actor's
+    /// change. Neither field changes which path an intent takes or what it validates.</summary>
     public abstract class TuningIntent
     {
-        private protected TuningIntent() { }
+        private protected TuningIntent(IntentActor actor, long? expectedRevision)
+        {
+            Actor = actor;
+            ExpectedRevision = expectedRevision;
+        }
+
+        /// <summary>Who issued this intent. Attribution and replay only; see the type doc.</summary>
+        public IntentActor Actor { get; }
+
+        /// <summary>The revision this intent's issuer last observed, or null to skip the check.</summary>
+        public long? ExpectedRevision { get; }
 
         public abstract string Describe();
 
@@ -23,7 +53,14 @@ namespace Lingkyn.LiveTuning.Core
 
     public sealed class SetIntent : TuningIntent
     {
-        public SetIntent(TunableId id, TunableValue value) { Id = id; Value = value; }
+        public SetIntent(TunableId id, TunableValue value) : this(id, value, IntentActor.Player, null) { }
+
+        public SetIntent(TunableId id, TunableValue value, IntentActor actor, long? expectedRevision = null)
+            : base(actor, expectedRevision)
+        {
+            Id = id;
+            Value = value;
+        }
 
         public TunableId Id { get; }
         public TunableValue Value { get; }
@@ -35,7 +72,12 @@ namespace Lingkyn.LiveTuning.Core
 
     public sealed class ResetIntent : TuningIntent
     {
-        public ResetIntent(TunableId id) { Id = id; }
+        public ResetIntent(TunableId id) : this(id, IntentActor.Player, null) { }
+
+        public ResetIntent(TunableId id, IntentActor actor, long? expectedRevision = null) : base(actor, expectedRevision)
+        {
+            Id = id;
+        }
 
         public TunableId Id { get; }
 
@@ -46,6 +88,10 @@ namespace Lingkyn.LiveTuning.Core
 
     public sealed class ResetAllIntent : TuningIntent
     {
+        public ResetAllIntent() : this(IntentActor.Player, null) { }
+
+        public ResetAllIntent(IntentActor actor, long? expectedRevision = null) : base(actor, expectedRevision) { }
+
         public override string Describe() => "reset_all";
 
         internal override LiveTuningResult<TuningState> ApplyTo(TuningState state) => state.ApplyResetAll();
@@ -53,7 +99,12 @@ namespace Lingkyn.LiveTuning.Core
 
     public sealed class SnapshotIntent : TuningIntent
     {
-        public SnapshotIntent(SnapshotId id) { Id = id; }
+        public SnapshotIntent(SnapshotId id) : this(id, IntentActor.Player, null) { }
+
+        public SnapshotIntent(SnapshotId id, IntentActor actor, long? expectedRevision = null) : base(actor, expectedRevision)
+        {
+            Id = id;
+        }
 
         public SnapshotId Id { get; }
 
@@ -64,7 +115,12 @@ namespace Lingkyn.LiveTuning.Core
 
     public sealed class ApplySnapshotIntent : TuningIntent
     {
-        public ApplySnapshotIntent(SnapshotId id) { Id = id; }
+        public ApplySnapshotIntent(SnapshotId id) : this(id, IntentActor.Player, null) { }
+
+        public ApplySnapshotIntent(SnapshotId id, IntentActor actor, long? expectedRevision = null) : base(actor, expectedRevision)
+        {
+            Id = id;
+        }
 
         public SnapshotId Id { get; }
 
@@ -73,16 +129,21 @@ namespace Lingkyn.LiveTuning.Core
         internal override LiveTuningResult<TuningState> ApplyTo(TuningState state) => state.ApplyApplySnapshot(Id);
     }
 
-    /// <summary>The outcome of one intent inside a sequence.</summary>
+    /// <summary>The outcome of one intent inside a sequence. Together, the outcomes of a sequence
+    /// are the replay log: <see cref="Actor"/> (the issuer, from the intent) and
+    /// <see cref="RevisionAfter"/> (the state's revision immediately after this outcome — the new
+    /// state's revision when accepted, the unchanged state's revision when rejected) record who
+    /// did what and at which revision, for every intent, accepted or rejected, in order.</summary>
     public sealed class TuningIntentOutcome
     {
-        public TuningIntentOutcome(int index, TuningIntent intent, bool accepted, string code, string message)
+        public TuningIntentOutcome(int index, TuningIntent intent, bool accepted, string code, string message, long revisionAfter)
         {
             Index = index;
             Intent = intent;
             Accepted = accepted;
             Code = code ?? string.Empty;
             Message = message ?? string.Empty;
+            RevisionAfter = revisionAfter;
         }
 
         public int Index { get; }
@@ -90,6 +151,11 @@ namespace Lingkyn.LiveTuning.Core
         public bool Accepted { get; }
         public string Code { get; }
         public string Message { get; }
+        public long RevisionAfter { get; }
+
+        /// <summary>The actor that issued this outcome's intent. Forwarded from <see cref="Intent"/>
+        /// for convenience; attribution and replay only, per <see cref="IntentActor"/>.</summary>
+        public IntentActor Actor => Intent.Actor;
     }
 
     /// <summary>The state after a sequence and one outcome per intent. A rejected intent keeps the
@@ -148,14 +214,23 @@ namespace Lingkyn.LiveTuning.Core
         private TuningState(
             TunableRegistry registry,
             SortedDictionary<TunableId, TunableValue> overrides,
-            SortedDictionary<SnapshotId, SortedDictionary<TunableId, TunableValue>> snapshots)
+            SortedDictionary<SnapshotId, SortedDictionary<TunableId, TunableValue>> snapshots,
+            long revision)
         {
             Registry = registry;
             _overrides = overrides;
             _snapshots = snapshots;
+            Revision = revision;
         }
 
         public TunableRegistry Registry { get; }
+
+        /// <summary>Monotonically increasing: 0 for <see cref="Initial"/>, and one higher on every
+        /// accepted intent, whether the override set actually changed or not. Not part of
+        /// <see cref="Fingerprint"/>: two states with the same overrides reached by different
+        /// sequences still have equal fingerprints even when they reached different revisions.
+        /// Used only to gate a stale <see cref="TuningIntent.ExpectedRevision"/>.</summary>
+        public long Revision { get; }
 
         /// <summary>The current overrides, in canonical id order. This and the registry's
         /// defaults are the only two sources of an effective value.</summary>
@@ -166,7 +241,7 @@ namespace Lingkyn.LiveTuning.Core
         public static TuningState Initial(TunableRegistry registry)
         {
             if (registry == null) throw new ArgumentNullException(nameof(registry));
-            return new TuningState(registry, new SortedDictionary<TunableId, TunableValue>(), new SortedDictionary<SnapshotId, SortedDictionary<TunableId, TunableValue>>());
+            return new TuningState(registry, new SortedDictionary<TunableId, TunableValue>(), new SortedDictionary<SnapshotId, SortedDictionary<TunableId, TunableValue>>(), 0);
         }
 
         /// <summary>The effective value of a registered tunable: its override when present, its
@@ -195,14 +270,28 @@ namespace Lingkyn.LiveTuning.Core
             return true;
         }
 
+        /// <summary>Applies one intent. Checked in exactly two steps, in this order, for every
+        /// intent regardless of <see cref="TuningIntent.Actor"/> (LESSON-011: the actor is never a
+        /// second validation rule): first, a non-null <see cref="TuningIntent.ExpectedRevision"/>
+        /// that does not match <see cref="Revision"/> is rejected with
+        /// <see cref="LiveTuningFailure.StateStale"/> and changes nothing — the intent's own
+        /// <see cref="TuningIntent.ApplyTo"/> never runs; second, the intent's own rule
+        /// applies.</summary>
         public LiveTuningResult<TuningState> Apply(TuningIntent intent)
         {
             if (intent == null) throw new ArgumentNullException(nameof(intent));
+            if (intent.ExpectedRevision.HasValue && intent.ExpectedRevision.Value != Revision)
+            {
+                return LiveTuningResult<TuningState>.Fail(
+                    LiveTuningFailure.StateStale,
+                    $"Intent expected revision {intent.ExpectedRevision.Value} but the state is at revision {Revision}; nothing changed.");
+            }
             return intent.ApplyTo(this);
         }
 
         /// <summary>Applies every intent in order. A rejected intent is recorded and the state it
-        /// found is kept for the next intent in the sequence.</summary>
+        /// found is kept for the next intent in the sequence. The outcomes are the replay log: each
+        /// carries its intent's actor and the state's revision immediately after it settled.</summary>
         public TuningSequenceResult ApplyAll(IEnumerable<TuningIntent> intents)
         {
             if (intents == null) throw new ArgumentNullException(nameof(intents));
@@ -215,11 +304,11 @@ namespace Lingkyn.LiveTuning.Core
                 if (result.Succeeded)
                 {
                     state = result.Value;
-                    outcomes.Add(new TuningIntentOutcome(index, intent, true, result.Code, result.Message));
+                    outcomes.Add(new TuningIntentOutcome(index, intent, true, result.Code, result.Message, state.Revision));
                 }
                 else
                 {
-                    outcomes.Add(new TuningIntentOutcome(index, intent, false, result.Code, result.Message));
+                    outcomes.Add(new TuningIntentOutcome(index, intent, false, result.Code, result.Message, state.Revision));
                 }
                 index++;
             }
@@ -249,7 +338,7 @@ namespace Lingkyn.LiveTuning.Core
             {
                 overrides[id] = value;
             }
-            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, overrides, _snapshots));
+            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, overrides, _snapshots, Revision + 1));
         }
 
         internal LiveTuningResult<TuningState> ApplyReset(TunableId id)
@@ -260,11 +349,11 @@ namespace Lingkyn.LiveTuning.Core
             }
             var overrides = new SortedDictionary<TunableId, TunableValue>(_overrides);
             overrides.Remove(id);
-            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, overrides, _snapshots));
+            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, overrides, _snapshots, Revision + 1));
         }
 
         internal LiveTuningResult<TuningState> ApplyResetAll() =>
-            LiveTuningResult<TuningState>.Ok(new TuningState(Registry, new SortedDictionary<TunableId, TunableValue>(), _snapshots));
+            LiveTuningResult<TuningState>.Ok(new TuningState(Registry, new SortedDictionary<TunableId, TunableValue>(), _snapshots, Revision + 1));
 
         internal LiveTuningResult<TuningState> ApplySnapshot(SnapshotId id)
         {
@@ -272,7 +361,7 @@ namespace Lingkyn.LiveTuning.Core
             {
                 [id] = new SortedDictionary<TunableId, TunableValue>(_overrides)
             };
-            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, _overrides, snapshots));
+            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, _overrides, snapshots, Revision + 1));
         }
 
         internal LiveTuningResult<TuningState> ApplyApplySnapshot(SnapshotId id)
@@ -281,7 +370,7 @@ namespace Lingkyn.LiveTuning.Core
             {
                 return LiveTuningResult<TuningState>.Fail(LiveTuningFailure.SnapshotUnknown, $"Snapshot '{id}' is not held by this state.");
             }
-            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, new SortedDictionary<TunableId, TunableValue>(snapshot), _snapshots));
+            return LiveTuningResult<TuningState>.Ok(new TuningState(Registry, new SortedDictionary<TunableId, TunableValue>(snapshot), _snapshots, Revision + 1));
         }
 
         /// <summary>A canonical text of the whole state: the registry fingerprint, the overrides
@@ -315,6 +404,24 @@ namespace Lingkyn.LiveTuning.Core
         /// export has no failure code at the Core level, and an override-free state yields an
         /// empty override list rather than being skipped.</summary>
         public TokenOverrideDocument Export() => TokenOverrideDocument.FromState(this);
+
+        /// <summary>The actor- and revision-aware export: the same document as <see cref="Export"/>,
+        /// gated by an optional expected revision exactly like a mutating intent (LESSON-011). A
+        /// non-null <paramref name="expectedRevision"/> that does not match <see cref="Revision"/>
+        /// is rejected with <see cref="LiveTuningFailure.StateStale"/> and writes nothing, rather
+        /// than exporting a document another actor's change has already superseded.
+        /// <paramref name="actor"/> is carried for attribution only and never changes this
+        /// gate.</summary>
+        public LiveTuningResult<TokenOverrideDocument> Export(IntentActor actor, long? expectedRevision)
+        {
+            if (expectedRevision.HasValue && expectedRevision.Value != Revision)
+            {
+                return LiveTuningResult<TokenOverrideDocument>.Fail(
+                    LiveTuningFailure.StateStale,
+                    $"Export expected revision {expectedRevision.Value} but the state is at revision {Revision}; nothing was exported.");
+            }
+            return LiveTuningResult<TokenOverrideDocument>.Ok(Export());
+        }
 
         public bool Equals(TuningState other)
         {

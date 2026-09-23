@@ -43,15 +43,23 @@ namespace Lingkyn.XrUiShell.Core
     {
         private readonly SortedDictionary<SurfaceId, SurfaceRuntimeState> _surfaces;
 
-        private ShellState(ShellLayout layout, SortedDictionary<SurfaceId, SurfaceRuntimeState> surfaces, SurfaceId? focusedSurface)
+        private ShellState(ShellLayout layout, SortedDictionary<SurfaceId, SurfaceRuntimeState> surfaces, SurfaceId? focusedSurface, long revision)
         {
             Layout = layout;
             _surfaces = surfaces;
             FocusedSurface = focusedSurface;
+            Revision = revision;
         }
 
         public ShellLayout Layout { get; }
         public SurfaceId? FocusedSurface { get; }
+
+        /// <summary>Monotonically increasing: 0 for <see cref="Initial"/>, and one higher on every
+        /// accepted intent. Not part of <see cref="Fingerprint"/>: two states with the same
+        /// placements reached by different sequences still have equal fingerprints even when they
+        /// reached different revisions. Used only to gate a stale
+        /// <see cref="ShellIntent.ExpectedRevision"/>.</summary>
+        public long Revision { get; }
 
         /// <summary>Every declared surface's current runtime placement, in canonical (kind, id)
         /// order.</summary>
@@ -72,17 +80,33 @@ namespace Lingkyn.XrUiShell.Core
             {
                 surfaces[declaration.Id] = new SurfaceRuntimeState(declaration.Id, declaration.Home, false, null, false, false);
             }
-            return new ShellState(layout, surfaces, null);
+            return new ShellState(layout, surfaces, null, 0);
         }
 
+        /// <summary>Applies one intent. Checked in exactly two steps, in this order, for every
+        /// intent regardless of <see cref="ShellIntent.Actor"/> (LESSON-011: the actor is never a
+        /// second validation rule): first, a non-null <see cref="ShellIntent.ExpectedRevision"/>
+        /// that does not match <see cref="Revision"/> is rejected with
+        /// <see cref="ShellFailure.StateStale"/> and changes nothing — the intent's own
+        /// <see cref="ShellIntent.ApplyTo"/> never runs; second, the intent's own rule applies, and
+        /// an accepted result's revision is exactly one higher than this state's.</summary>
         public ShellResult<ShellState> Apply(ShellIntent intent)
         {
             if (intent == null) throw new ArgumentNullException(nameof(intent));
-            return intent.ApplyTo(this);
+            if (intent.ExpectedRevision.HasValue && intent.ExpectedRevision.Value != Revision)
+            {
+                return ShellResult<ShellState>.Fail(
+                    ShellFailure.StateStale,
+                    $"Intent expected revision {intent.ExpectedRevision.Value} but the state is at revision {Revision}; nothing changed.");
+            }
+            var result = intent.ApplyTo(this);
+            if (!result.Succeeded) return result;
+            return ShellResult<ShellState>.Ok(result.Value.WithRevision(Revision + 1));
         }
 
         /// <summary>Applies every intent in order. A rejected intent is recorded and the state it
-        /// found is kept for the next intent in the sequence.</summary>
+        /// found is kept for the next intent in the sequence. The outcomes are the replay log: each
+        /// carries its intent's actor and the state's revision immediately after it settled.</summary>
         public ShellSequenceResult ApplyAll(IEnumerable<ShellIntent> intents)
         {
             if (intents == null) throw new ArgumentNullException(nameof(intents));
@@ -95,16 +119,21 @@ namespace Lingkyn.XrUiShell.Core
                 if (result.Succeeded)
                 {
                     state = result.Value;
-                    outcomes.Add(new ShellIntentOutcome(index, intent, true, result.Code, result.Message));
+                    outcomes.Add(new ShellIntentOutcome(index, intent, true, result.Code, result.Message, state.Revision));
                 }
                 else
                 {
-                    outcomes.Add(new ShellIntentOutcome(index, intent, false, result.Code, result.Message));
+                    outcomes.Add(new ShellIntentOutcome(index, intent, false, result.Code, result.Message, state.Revision));
                 }
                 index++;
             }
             return new ShellSequenceResult(state, outcomes);
         }
+
+        /// <summary>Clones this state at a different revision, changing nothing else. Used only by
+        /// <see cref="Apply"/> to stamp the state an accepted intent produced with exactly one
+        /// revision higher than the state it was applied to.</summary>
+        private ShellState WithRevision(long revision) => new ShellState(Layout, _surfaces, FocusedSurface, revision);
 
         internal ShellResult<ShellState> ApplyOpen(SurfaceId surface)
         {
@@ -170,7 +199,7 @@ namespace Lingkyn.XrUiShell.Core
             {
                 return ShellResult<ShellState>.Fail(ShellFailure.FocusConflict, $"Surface '{FocusedSurface.Value}' already holds exclusive focus while open.", surface.ToString());
             }
-            return ShellResult<ShellState>.Ok(new ShellState(Layout, _surfaces, surface));
+            return ShellResult<ShellState>.Ok(new ShellState(Layout, _surfaces, surface, Revision));
         }
 
         internal ShellResult<ShellState> ApplyDock(SurfaceId surface, SurfaceId target)
@@ -206,7 +235,7 @@ namespace Lingkyn.XrUiShell.Core
         private ShellState WithSurface(SurfaceRuntimeState updated, SurfaceId? focusedSurface)
         {
             var copy = new SortedDictionary<SurfaceId, SurfaceRuntimeState>(_surfaces) { [updated.Id] = updated };
-            return new ShellState(Layout, copy, focusedSurface);
+            return new ShellState(Layout, copy, focusedSurface, Revision);
         }
 
         /// <summary>A canonical text of the whole state: the layout fingerprint, the focused

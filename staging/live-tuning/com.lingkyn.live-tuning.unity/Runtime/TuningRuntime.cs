@@ -38,6 +38,13 @@ namespace Lingkyn.LiveTuning.Unity
         /// <summary>Every intent this runtime saw, accepted or rejected, in the order it saw them.</summary>
         public IReadOnlyList<TuningIntentOutcome> Outcomes => _outcomes;
 
+        /// <summary>Applies one intent, from any actor, through the one Core entry point
+        /// (<see cref="TuningState.Apply"/>) and no other path (LESSON-011): a rejected intent
+        /// (including a stale <see cref="LiveTuningFailure.StateStale"/>) reaches no binder, and a
+        /// player-issued and an agent-issued copy of the same intent run this exact same method
+        /// and get the same outcome. This is the runtime's whole write path; every Unity-side
+        /// entry point (the panel host, the shell client, the import path) writes state only by
+        /// calling this.</summary>
         public TuningIntentOutcome Apply(TuningIntent intent)
         {
             if (intent == null) throw new ArgumentNullException(nameof(intent));
@@ -45,14 +52,14 @@ namespace Lingkyn.LiveTuning.Unity
             var result = State.Apply(intent);
             if (!result.Succeeded)
             {
-                var rejected = new TuningIntentOutcome(index, intent, false, result.Code, result.Message);
+                var rejected = new TuningIntentOutcome(index, intent, false, result.Code, result.Message, State.Revision);
                 _outcomes.Add(rejected);
                 return rejected;
             }
             var previous = State;
             State = result.Value;
             ApplyChangedBindings(previous, State);
-            var accepted = new TuningIntentOutcome(index, intent, true, result.Code, result.Message);
+            var accepted = new TuningIntentOutcome(index, intent, true, result.Code, result.Message, State.Revision);
             _outcomes.Add(accepted);
             return accepted;
         }
@@ -77,5 +84,16 @@ namespace Lingkyn.LiveTuning.Unity
         }
 
         public TuningExportResult Export(string label = "") => ExportSink.Write(State.Export(), label);
+
+        /// <summary>The actor- and revision-aware export (LESSON-011): gated by the same
+        /// <see cref="LiveTuningFailure.StateStale"/> check as a mutating intent, so an export
+        /// naming a revision another actor's change has already superseded writes nothing to the
+        /// sink. <paramref name="actor"/> is carried for attribution only.</summary>
+        public LiveTuningResult<TuningExportResult> Export(IntentActor actor, long? expectedRevision, string label = "")
+        {
+            var documentResult = State.Export(actor, expectedRevision);
+            if (!documentResult.Succeeded) return documentResult.As<TuningExportResult>();
+            return LiveTuningResult<TuningExportResult>.Ok(ExportSink.Write(documentResult.Value, label));
+        }
     }
 }

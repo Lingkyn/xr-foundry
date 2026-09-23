@@ -305,6 +305,52 @@ namespace Lingkyn.XrUiShell.Ugui.Editor.Tests
             Assert.That(runtimeB.State.TryGetSurfaceState(primary, out var stateB) && stateB.IsOpen, Is.False);
         }
 
+        // ----- one intent channel: actor/revision shape and no second write path (CUG-07) -----
+
+        [Test]
+        public void APlayerIssuedAndAnAgentIssuedCopyOfTheSameIntentTakeTheSamePathAndProduceEqualResultingState()
+        {
+            var layoutA = SampleLayout();
+            var layoutB = SampleLayout();
+            var runtimeA = new UguiShellRuntime(layoutA, ShellState.Initial(layoutA), UguiPanelBindingSet.Create(layoutA, FullEntries(layoutA), OneInputModule()));
+            var runtimeB = new UguiShellRuntime(layoutB, ShellState.Initial(layoutB), UguiPanelBindingSet.Create(layoutB, FullEntries(layoutB), OneInputModule()));
+            var primary = SurfaceId.OfPanel(PanelId.Parse("hud.primary"));
+
+            var byPlayer = runtimeA.Apply(new OpenIntent(primary, IntentActor.Player));
+            var byAgent = runtimeB.Apply(new OpenIntent(primary, IntentActor.Agent));
+
+            Assert.That(byPlayer.Accepted, Is.EqualTo(byAgent.Accepted));
+            Assert.That(byPlayer.Actor, Is.EqualTo(IntentActor.Player));
+            Assert.That(byAgent.Actor, Is.EqualTo(IntentActor.Agent));
+            Assert.That(runtimeA.State.Fingerprint(), Is.EqualTo(runtimeB.State.Fingerprint()));
+        }
+
+        [Test]
+        public void RuntimeSourceIssuesOnlyCoreIntentsAndNeverCallsAShellStateMutatorDirectly()
+        {
+            // This adapter writes state only by constructing a ShellIntent and passing it to
+            // ShellState.Apply (LESSON-011); the Core's own internal ApplyOpen/ApplyClose/…
+            // mutators are already uncallable from here without InternalsVisibleTo. This is the
+            // explicit, regression-proof record of that rule.
+            var runtimeDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(TestSourceDirectory(), "..", "..", "Runtime"));
+            Assert.That(System.IO.Directory.Exists(runtimeDirectory), Is.True, runtimeDirectory);
+
+            var forbidden = new[] { ".ApplyOpen(", ".ApplyClose(", ".ApplyFocus(", ".ApplyDock(", ".ApplyFollow(", ".ApplyFold(", ".ApplyUnfold(" };
+            var sourceFiles = System.IO.Directory.GetFiles(runtimeDirectory, "*.cs", System.IO.SearchOption.AllDirectories);
+            Assert.That(sourceFiles, Is.Not.Empty, runtimeDirectory);
+            foreach (var sourceFile in sourceFiles)
+            {
+                var text = System.IO.File.ReadAllText(sourceFile);
+                foreach (var token in forbidden)
+                {
+                    Assert.That(text, Does.Not.Contain(token),
+                        $"{System.IO.Path.GetFileName(sourceFile)} calls a Core mutator directly ('{token}'); state changes only through ShellState.Apply.");
+                }
+            }
+        }
+
+        private static string TestSourceDirectory([System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "") => System.IO.Path.GetDirectoryName(sourceFilePath);
+
         // ----- helpers -----
 
         private static readonly IComparer<Color> ColorComparer = Comparer<Color>.Create((a, b) =>

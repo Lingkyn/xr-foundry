@@ -64,7 +64,10 @@ namespace Lingkyn.LiveTuning.Unity
             var parsed = TokenOverrideDocument.Parse(text);
             if (!parsed.Succeeded) return parsed.As<TuningImportResult>();
 
-            var report = parsed.Value.ApplySkippingFailures(state);
+            // Every applied override is tagged IntentActor.Import (LESSON-011): the import path
+            // issues only Core SetIntents, through this one Core entry point, and never writes
+            // the state any other way.
+            var report = parsed.Value.ApplySkippingFailures(state, IntentActor.Import);
             return LiveTuningResult<TuningImportResult>.Ok(new TuningImportResult(report.State, report.Outcomes));
         }
     }

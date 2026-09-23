@@ -1,0 +1,62 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "haptics",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-23",
+  "source_manifest": "docs/standards/haptics/source-manifest.json",
+  "consumer_contexts": [
+    "rhythm-action and object-interaction XR games that confirm every hit, grab, and release with a short controller pulse addressed per hand, tuned by an event-and-profile pair rather than a hand-written per-controller call at every gameplay site",
+    "spatial-creation and training XR applications on several headset platforms (OpenXR runtimes, and platform-specific controller and hand hardware) that raise the same semantic grab or select intent already routed by the Interaction family and expect a haptic confirmation and an audio confirmation to fire from that one intent without either family depending on the other"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/haptics-overview.html",
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#haptics",
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_FB_haptic_amplitude_envelope",
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_FB_haptic_pcm",
+      "https://developers.meta.com/horizon/design/bp-haptics/",
+      "https://developers.meta.com/horizon/documentation/unity/unity-haptics-sdk/",
+      "https://developer.picoxr.com/document/unity/haptics/",
+      "https://developer.apple.com/design/human-interface-guidelines/playing-haptics",
+      "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.19/manual/Haptics.html"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/ValveSoftware/steamvr_unity_plugin",
+      "https://github.com/godotengine/godot"
+    ]
+  },
+  "common_kernel": [
+    "haptic event and profile identity as validated identities separate from the clip, asset, route, or device that plays them",
+    "a closed haptic-kind set (transient, continuous, envelope) with per-event amplitude, duration, and optional frequency guard rails, and an immutable registry built by explicit registration that rejects duplicates and invalid declarations",
+    "per-controller and per-hand profiles over a closed target set (left, right, both, named device) with a scale and an enable flag per target",
+    "play, stop, stop-all, and set-profile intents applied to an immutable state holding, per target, the active playback and the active profile, with stable failure codes and deterministic replay to an equal fingerprint",
+    "a binding table from another family's semantic identity (an interaction intent or an audio event) to a haptic event, so one source event can fire more than one feedback channel without those families depending on this one, and an unbound source reported explicitly rather than silently doing nothing",
+    "addressing haptic output by action or target identity rather than by a concrete device type, so the same intent shape reaches different runtimes' and platforms' controllers without device-specific call sites"
+  ],
+  "configurable_variation": [
+    "which haptic events a product registers, their guard rails, and which profiles it builds for which controllers or headsets",
+    "which Interaction intents or Audio events a product's binding table names as sources, and the default target each binding uses",
+    "adapter-side route selection (XR Interaction Toolkit haptic impulse channels, OpenXR haptic actions, or the Input System rumble fallback) and the device-id strings a named-device target resolves through",
+    "consumer-owned authored haptic clip content, profile asset values, and any device-specific tuning session"
+  ],
+  "excluded_project_specific": [
+    "one product's authored haptic clip content, profile asset values, and per-device intensity tuning",
+    "one project's choice of which events to expose, which controllers to support, and any judgement that a pattern is felt as intended on its device"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Haptic feedback per event and per controller is a recurring cross-project need every one of the shipped-game-gap-matrix's three product shapes needs from the first minute, and its kernel (validated event and profile identity, a closed kind set with explicit guard rails, per-target profiles, intents over an immutable last-one-wins state with deterministic replay, and a binding table from another family's semantic identity to a haptic event) is supported by the engine's own haptic impulse channel documentation, the OpenXR core specification and its amplitude-envelope and PCM vendor extensions, first-party Meta and PICO platform guidance including a first-party clip-authoring tool as evidence that authored haptic clips recur, Apple's semantic-pattern design guidance, the Unity Input System's device-agnostic rumble interface, and two independent open-source implementations (a long-maintained SteamVR Unity plugin and a second-engine open-source controller haptic pulse method) that address haptic output per resolved controller with an amplitude and a duration, while every product keeps its own clip content, profile values, and device tuning outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim that any haptic event is felt, is felt at a comfortable intensity, causes no fatigue, or reads as intended on any controller or headset, nor any named-runtime or named-device vibration behavior; the family guarantees the plumbing only and every such judgement is a human observation in a Device Lab receipt.",
+    "Admission does not make the family a haptic clip authoring tool, a waveform editor, or a claim that any named controller or headset supports the amplitude-envelope or PCM OpenXR extensions, and it transfers no Interaction, Audio, XR UI shell, or Live tuning evidence to this family; evidence for one controller, headset, or runtime tuple never transfers to another.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, section anchors, versions, licenses, and the maintenance state of each open-source implementation."
+  ]
+}

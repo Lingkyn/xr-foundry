@@ -281,35 +281,49 @@ namespace Lingkyn.LiveTuning.Core
             return LiveTuningResult<TokenOverrideDocument>.Ok(new TokenOverrideDocument(fingerprint.StringValue, overrides));
         }
 
-        /// <summary>Applies every override to <paramref name="state"/> over its registry. Fails on
-        /// the first entry that does not resolve; used by the Core round-trip guarantee, where
-        /// every entry is expected to resolve because the document was built from the same
-        /// registry.</summary>
-        public LiveTuningResult<TuningState> ApplyTo(TuningState state)
+        /// <summary>Applies every override to <paramref name="state"/> over its registry, as
+        /// <see cref="IntentActor.Player"/>. Fails on the first entry that does not resolve; used
+        /// by the Core round-trip guarantee, where every entry is expected to resolve because the
+        /// document was built from the same registry.</summary>
+        public LiveTuningResult<TuningState> ApplyTo(TuningState state) => ApplyTo(state, IntentActor.Player);
+
+        /// <summary>Applies every override to <paramref name="state"/> over its registry, each as a
+        /// <see cref="SetIntent"/> from <paramref name="actor"/> (LESSON-011: the actor is carried
+        /// for attribution and replay only and never changes this validation). Fails on the first
+        /// entry that does not resolve.</summary>
+        public LiveTuningResult<TuningState> ApplyTo(TuningState state, IntentActor actor)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             var current = state;
             foreach (var (id, text) in _overrides)
             {
-                var stepResult = ApplyOne(current, id, text);
+                var stepResult = ApplyOne(current, id, text, actor);
                 if (!stepResult.Succeeded) return stepResult;
                 current = stepResult.Value;
             }
             return LiveTuningResult<TuningState>.Ok(current);
         }
 
-        /// <summary>Applies every override to <paramref name="state"/>, skipping (rather than
-        /// failing on) any entry that names an unknown id, a mismatched kind, or an out-of-range
-        /// value; each skip is reported with the Core's code. Used for importing a device or
-        /// Editor override file, which may be stale against the current registry.</summary>
-        public TokenOverrideApplyReport ApplySkippingFailures(TuningState state)
+        /// <summary>Applies every override to <paramref name="state"/> as <see cref="IntentActor.Player"/>,
+        /// skipping (rather than failing on) any entry that names an unknown id, a mismatched
+        /// kind, or an out-of-range value; each skip is reported with the Core's code. Used for
+        /// importing a device or Editor override file, which may be stale against the current
+        /// registry.</summary>
+        public TokenOverrideApplyReport ApplySkippingFailures(TuningState state) => ApplySkippingFailures(state, IntentActor.Player);
+
+        /// <summary>The same skip-on-failure application as <see cref="ApplySkippingFailures(TuningState)"/>,
+        /// tagging every applied entry's <see cref="SetIntent"/> with <paramref name="actor"/> — the
+        /// Unity import path passes <see cref="IntentActor.Import"/> here (LESSON-011), so an
+        /// imported override is attributable as an import even though the Core's own validation
+        /// never varies by actor.</summary>
+        public TokenOverrideApplyReport ApplySkippingFailures(TuningState state, IntentActor actor)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             var current = state;
             var outcomes = new List<TokenOverrideOutcome>();
             foreach (var (id, text) in _overrides)
             {
-                var stepResult = ApplyOne(current, id, text);
+                var stepResult = ApplyOne(current, id, text, actor);
                 if (stepResult.Succeeded)
                 {
                     current = stepResult.Value;
@@ -323,7 +337,7 @@ namespace Lingkyn.LiveTuning.Core
             return new TokenOverrideApplyReport(current, outcomes);
         }
 
-        private static LiveTuningResult<TuningState> ApplyOne(TuningState state, TunableId id, string text)
+        private static LiveTuningResult<TuningState> ApplyOne(TuningState state, TunableId id, string text, IntentActor actor)
         {
             if (!state.Registry.TryGet(id, out var registration))
             {
@@ -333,7 +347,7 @@ namespace Lingkyn.LiveTuning.Core
             {
                 return LiveTuningResult<TuningState>.Fail(LiveTuningFailure.TunableKindMismatch, $"Override value '{text}' for '{id}' does not parse as {registration.Kind}.");
             }
-            return state.Apply(new SetIntent(id, value));
+            return state.Apply(new SetIntent(id, value, actor));
         }
     }
 }

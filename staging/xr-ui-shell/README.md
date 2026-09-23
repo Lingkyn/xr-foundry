@@ -18,13 +18,13 @@ it has not compiled.
 | Path | Content |
 | --- | --- |
 | `com.lingkyn.xr-ui-shell.core/Runtime/*.cs` | Engine-light Core: `PanelId`, `WristMenuId`, `HandMenuId`, and `InputSourceId` with one canonical dotted-segment form and no cross-type equality; the closed `AnchorKind` set (world, head_locked, wrist, hand) and `InputSourceKind` set (ray, poke, gaze); the immutable `ShellLayout` and `ShellLayoutBuilder` built only by explicit panel/wrist-menu/hand-menu declaration and input-source registration; the closed placement-intent set (`OpenIntent`, `CloseIntent`, `FocusIntent`, `DockIntent`, `FollowIntent`, `FoldIntent`, `UnfoldIntent`) applied to the immutable `ShellState` with deterministic replay and a fingerprint (fold/unfold change only a surface's `IsFolded` visibility flag, never its open/docked/following state); typed pointer and gaze routing (`HoverIntent`, `SelectIntent`, `ScrollIntent`) resolved by the stateless `ShellRouter`; the skin contract (`DesignToken`, `ShellSlot`, `SkinMapping`, `SkinMappingBuilder`, `CanonicalSkinMapping`) mapping the shared design-language tokens to the closed shell-slot set; `ShellOrnament`, the one shell-owned fixed surface (`SurfaceId.TheOrnament`) that never enters a declared layout and that `FoldIntent`/`UnfoldIntent` always reject; the closed `VerbRegistry`/`VerbRegistryBuilder` (a verb's id and display word are fixed at registration, and registered ids partition into wired/unwired); the single-valued `FocusSubject`/`FocusTarget` claimed only by an explicit `Claim` (never a per-frame mirror); `VerbResolver` and `VerbAffordanceQuery`, which read only a registry and a `FocusSubject` to yield exactly one target, a named no-target result, or a pre-press affordance that is never available for a target a press would refuse; and `IShellPanelContent<TSlot>` (`ShellPanelContent.cs`), the one generic panel-content seam a client family adapts to, which the shell never implements or inspects |
-| `com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellCoreContractTests.cs` | 61 EditMode tests mapped in `docs/standards/xr-ui-shell/coverage-map.json` |
+| `com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellCoreContractTests.cs` | 69 EditMode tests mapped in `docs/standards/xr-ui-shell/coverage-map.json` |
 | `com.lingkyn.xr-ui-shell.core/Tests/Editor/XrUiShellSourceRuleTests.cs` | 2 EditMode tests proving no asmdef under this family references any assembly outside `Lingkyn.XrUiShell.*` (plus the admitted engine/test assemblies) and no shell `Runtime` source mentions `LiveTuning`, `Inventory`, `Settings`, or another family namespace — the machine-checked half of the peer-client rule below |
 | `com.lingkyn.xr-ui-shell.core/Samples~/ShellWalkthrough/` | Domain-only sample: a layout built by explicit declaration, a placement intent sequence, typed pointer and gaze routing including a gaze select rejected and then resolved by a commit source, the canonical skin mapping, and a replayed sequence; no asset, scene, or UnityEngine API |
 | `com.lingkyn.xr-ui-shell.ugui/Runtime/*.cs` | UGUI sibling adapter: fail-closed binding of each declared panel to exactly one world-space `Canvas` subtree (`UguiPanelBindingEntry`, `UguiBindingValidation`, `UguiPanelBindingSet`) with stable codes for a missing Canvas, a non-world-space render mode, a duplicate Canvas, a missing event camera, a missing raycaster, a missing or non-unique active input module, and a missing wrist/hand anchor transform; the injectable `UguiShellSkin` `ScriptableObject` carrying the canonical token values; and `UguiShellRuntime`, a plain runtime that applies accepted placement intents to the bound Canvas subtrees and forwards a resolved routed event to the bound Canvas only. This package references only `Lingkyn.XrUiShell.Core`: it names no client family (see the peer-client rule below) |
-| `com.lingkyn.xr-ui-shell.ugui/Tests/Editor/*.cs` | 18 EditMode tests for the adapter gate, driven through fakes for every seam (`IUguiPanelSkinTarget`, `IUguiRoutedEventTarget`) |
+| `com.lingkyn.xr-ui-shell.ugui/Tests/Editor/*.cs` | 20 EditMode tests for the adapter gate, driven through fakes for every seam (`IUguiPanelSkinTarget`, `IUguiRoutedEventTarget`) |
 | `com.lingkyn.xr-ui-shell.ui-toolkit/Runtime/*.cs` | UI Toolkit sibling adapter: fail-closed binding of each declared panel to exactly one world-space `UIDocument` (`UiToolkitPanelBindingEntry`, `UiToolkitBindingValidation`, `UiToolkitPanelBindingSet`) with stable codes for a missing document, a non-world-space `PanelSettings` render mode, a duplicate document, a missing or unadmitted-mode collider, a missing or non-unique active XR UI Toolkit manager, a manager that bypasses UI Toolkit events, and a missing wrist/hand anchor transform; the injectable `UiToolkitShellSkin` `ScriptableObject` carrying the canonical token values as USS-facing values; and `UiToolkitShellRuntime`, the UI Toolkit sibling of `UguiShellRuntime` |
-| `com.lingkyn.xr-ui-shell.ui-toolkit/Tests/Editor/*.cs` | 19 EditMode tests for the adapter gate, driven through fakes for every seam (`IUiToolkitPanelSkinTarget`, `IUiToolkitRoutedEventTarget`, `IUiToolkitInputManager`) |
+| `com.lingkyn.xr-ui-shell.ui-toolkit/Tests/Editor/*.cs` | 21 EditMode tests for the adapter gate, driven through fakes for every seam (`IUiToolkitPanelSkinTarget`, `IUiToolkitRoutedEventTarget`, `IUiToolkitInputManager`) |
 | `docs/standards/xr-ui-shell/` | Standard README, source manifest, verification contract, coverage map, admission draft |
 
 ## The sibling adapter rule
@@ -84,6 +84,34 @@ tooling client), which was the defect LESSON-010 records and this change fixes.
 No evidence transfers either way: the shell's own EditMode run proves only that
 its generic seams exist and validate; Live Tuning's own coverage map proves that
 a real `TuningPanelHost` attaches to them.
+
+## One channel for people and agents (LESSON-011)
+
+`ShellState.Apply` (and each adapter runtime's `Apply`, which calls it) is the
+one channel through which a person's dock control, an agent adapter, a replay
+of a recorded sequence, or an import all change shell placement state. Every
+placement `ShellIntent` (`open`, `close`, `focus`, `dock`, `follow`, `fold`,
+`unfold`) carries an `IntentActor` — `player` (the default), `agent`,
+`replay`, or `import` — used only for attribution and replay, never for a
+different validation rule: a player-issued and an agent-issued copy of the
+same intent take the exact same path through `ShellState.Apply` and settle on
+an equal resulting state. A dock verb pressed by a person and the same verb
+issued by an agent adapter resolve through the same `FocusSubject` value and
+the same `VerbAffordanceQuery`/`VerbResolver` reads — neither takes an actor,
+so there is no second path for either to take.
+
+An intent may also carry an expected revision. `ShellState.Revision` starts
+at 0 and increases by exactly one on every accepted intent (never on a
+rejected one, and never counted in `Fingerprint`). A placement intent naming
+a stale expected revision is rejected with `state.stale` and changes nothing,
+rather than silently overwriting a change another actor already made. The
+replay log — each sequence's `ShellIntentOutcome`s — records the issuing
+actor and the revision immediately after every outcome, accepted or rejected.
+
+No adapter writes state by any other path: `UguiShellRuntime.Apply` and
+`UiToolkitShellRuntime.Apply` construct nothing beyond a `ShellIntent` passed
+to `ShellState.Apply`; a source rule over each adapter's own `Runtime/*.cs`
+files proves neither calls a Core mutator directly.
 
 ## How the Inventory presentation adapters become clients
 

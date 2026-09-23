@@ -29,6 +29,10 @@ namespace Lingkyn.XrUiShell.Core
         public const string VerbDuplicate = "verb.duplicate";
         public const string VerbUnwired = "verb.unwired";
         public const string VerbNoTarget = "verb.no_target";
+        /// <summary>A placement intent named an <c>ExpectedRevision</c> that does not match the
+        /// state's current <c>Revision</c> (LESSON-011): rejected rather than overwriting a change
+        /// another actor already made. Never depends on which actor issued the intent.</summary>
+        public const string StateStale = "state.stale";
     }
 
     /// <summary>Structured outcome: a value on success, a stable code and a human message, plus

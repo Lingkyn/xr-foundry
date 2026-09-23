@@ -1,0 +1,238 @@
+{
+  "schema": "xr-foundry.haptics_source_manifest.v1",
+  "scope": "Engine-light haptic feedback: a validated HapticEventId, a closed haptic-kind set (transient, continuous, envelope) with amplitude, duration, and an optional frequency guard rail, per-controller and per-hand haptic profiles with a closed target set (left, right, both, named-device) and a scale and enable flag, play, stop, stop-all, and set-profile intents applied to an immutable HapticState with deterministic replay and stable failure codes, and a binding table from the Interaction family's semantic intents and the Audio family's event ids to haptic events so one grab or one hit fires haptics, audio, and a future feedback effect from one source intent, with a thin Unity adapter planned separately over XR Interaction Toolkit haptic impulse channels and OpenXR haptic actions",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths, section anchors, version pins, licenses, and open-source maintenance state, before the admission record is signed. URL not fetched; a person must confirm.",
+  "sources": [
+    {
+      "id": "xri-haptics-overview",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/haptics-overview.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5.1 is the version pinned by this repository's compatibility profiles and its manual documents a haptics system maintained with the package; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Unity adapter boundary for issuing haptic impulses: a haptic impulse channel is the toolkit's own seam for sending an amplitude-and-duration pulse to a controller, and the adapter binds to that channel rather than to a specific interactor",
+      "admitted_claims": [
+        "The toolkit exposes a haptic impulse channel abstraction that a component (an interactor or a dedicated haptic player) can send an amplitude (0 to 1) and duration (seconds) impulse through, independent of which interactable raised it",
+        "A Haptic Impulse Player component and a Simple Haptic Feedback component are shipped authoring surfaces that translate interaction events (hover entered, select entered) into impulses sent through the channel abstraction",
+        "Haptic output is resolved per controller and depends on the active XR input device supporting haptics; a device without haptic capability receives no impulse and the toolkit does not synthesize one"
+      ],
+      "excluded_uses": [
+        "Core does not reference the toolkit's haptic impulse channel type, the Haptic Impulse Player, or any interactor type",
+        "No claim that an impulse is felt, is felt at a particular intensity, or is comfortable on any controller without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "openxr-haptic-output",
+      "kind": "official_standards_document",
+      "authority": "Khronos Group (OpenXR Working Group)",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#haptics",
+      "license_or_terms": "Khronos specification license; standard facts only, no specification text copied",
+      "maintenance_evidence": "Core OpenXR 1.1 specification, haptics section, maintained by the Khronos Group with versioned releases; exact section anchor and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Standards-body evidence for the shape of a haptic play and stop intent: xrApplyHapticFeedback applies a haptic event to an action-bound output, and xrStopHapticFeedback stops it, both addressed through the same action-and-subaction-path binding model as input",
+      "admitted_claims": [
+        "xrApplyHapticFeedback takes an action, an optional subaction path (for example left or right hand), and a haptic vibration event payload, and applies it to whatever output the active interaction profile bound that action to",
+        "The base haptic vibration event (XrHapticVibration) carries an amplitude, a duration, and a frequency, where a special duration value requests the runtime's minimum supported duration and a special frequency value requests the runtime's default frequency",
+        "xrStopHapticFeedback stops haptic output on an action and subaction path immediately, independent of how it was started",
+        "Haptic output is addressed by action identity and subaction path, never by a concrete device type, so the same call can reach different runtimes' controllers without device-specific code"
+      ],
+      "excluded_uses": [
+        "Core does not reference an XrAction, XrHapticVibration struct, or any OpenXR handle type",
+        "No claim that a runtime honours a specific amplitude, duration, or frequency value, or that a controller vibrated, without a Device Lab receipt naming the runtime and device"
+      ]
+    },
+    {
+      "id": "openxr-fb-haptic-amplitude-envelope",
+      "kind": "official_standards_document",
+      "authority": "Khronos Group (OpenXR Working Group), Meta Platforms as the extension author",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_FB_haptic_amplitude_envelope",
+      "license_or_terms": "Khronos specification license; standard facts only, no specification text copied",
+      "maintenance_evidence": "Published OpenXR vendor extension in the current OpenXR specification registry; exact section anchor, extension version, and current adoption on this repository's compatibility profiles to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Standards evidence for the envelope haptic kind: an extension that plays a sampled amplitude curve over an explicit duration rather than one fixed amplitude, which the closed haptic-kind set models as `envelope`",
+      "admitted_claims": [
+        "The extension adds a haptic vibration event type that carries an explicit duration and an array of amplitude samples taken at a fixed sample rate, played back over that duration",
+        "The envelope event is applied through the same xrApplyHapticFeedback entry point as the base vibration event, distinguished only by its event type, so envelope playback is an alternative payload rather than a separate API",
+        "Support for the envelope event type is runtime- and device-dependent and is not implied by core OpenXR conformance"
+      ],
+      "excluded_uses": [
+        "Core does not reference the extension's struct or enum names; it models `envelope` as one closed haptic kind with an amplitude sample list and a duration",
+        "No claim that any named runtime or controller supports the extension, or that an envelope was felt as authored, without a Device Lab receipt; the Unity adapter gate requires degrading to a transient with a diagnostic when the extension is unavailable"
+      ]
+    },
+    {
+      "id": "openxr-fb-haptic-pcm",
+      "kind": "official_standards_document",
+      "authority": "Khronos Group (OpenXR Working Group), Meta Platforms as the extension author",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_FB_haptic_pcm",
+      "license_or_terms": "Khronos specification license; standard facts only, no specification text copied",
+      "maintenance_evidence": "Published OpenXR vendor extension in the current OpenXR specification registry; exact section anchor, extension version, and current adoption on this repository's compatibility profiles to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Standards evidence that authored haptic playback is, at the extension level, a buffered sample stream (a PCM-like waveform) rather than only a parametric pulse, which motivates keeping the Core's amplitude-envelope kind distinct from any raw-waveform codec the adapter might later add",
+      "admitted_claims": [
+        "The extension streams a buffer of amplitude samples at a specified sample rate to the haptic actuator, with the runtime reporting the actuator's supported sample rate and buffer capacity",
+        "Buffered playback can be appended to while a prior buffer is still playing, distinguishing it from the fire-and-forget single envelope event",
+        "Support for the extension is runtime- and device-dependent and is not implied by core OpenXR or by the amplitude-envelope extension"
+      ],
+      "excluded_uses": [
+        "Core defines no PCM buffer, sample-rate, or streaming type; a PCM-style adapter route, if ever added, is a distinct Unity adapter capability behind its own guard rail, not part of this gate's Core or Unity clauses",
+        "No claim that any named runtime or controller supports the extension, or about audible or felt fidelity, without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-horizon-haptics-design",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/bp-haptics/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer design guidance that this repository already cites for interaction and visual references; page path to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary interaction-platform evidence that haptic feedback is expected on every controller-driven grab, hit, and UI interaction, and that intensity and duration should be kept short and purposeful rather than continuous",
+      "admitted_claims": [
+        "Haptic feedback should confirm a discrete event (a grab, a collision, a button press) with a short, purposeful pulse rather than run continuously as ambient texture",
+        "Haptic intensity and duration should be tuned per interaction type and are expected to differ between a light UI confirmation and a heavier physical collision",
+        "Haptics should be paired with, not substituted for, visual and audio feedback so the event is confirmed on more than one channel"
+      ],
+      "excluded_uses": [
+        "No specific amplitude, duration, or frequency figure is transferred as a rendered guarantee; the family records these as configuration guard rails on a profile, not as canonical values",
+        "No claim that a pulse is felt, is comfortable, or reads as intended without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-haptics-sdk-studio",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/documentation/unity/unity-haptics-sdk/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no SDK code, tool, or authored clip copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer documentation for Unity, describing a first-party Haptics SDK and its companion Haptics Studio authoring tool; page path and current SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "First-party platform evidence that authored haptic clips are a recurring unit of work distinct from a single parametric pulse: a haptic clip is authored once in a dedicated tool, referenced by a stable name or asset, and played back with runtime amplitude and frequency scaling",
+      "admitted_claims": [
+        "The platform ships a dedicated authoring tool (Haptics Studio) in which a designer builds a haptic clip, typically aligned to an audio waveform, independent of any single game object or script",
+        "The Haptics SDK plays an authored clip by reference and exposes runtime amplitude and frequency multipliers applied on top of the authored values, rather than requiring the clip to be re-authored per intensity",
+        "Clip playback targets a specific controller (left, right, or both) and the SDK reports whether playback started, distinct from whether the platform's own impulse API is used for a simple one-off pulse"
+      ],
+      "excluded_uses": [
+        "No SDK type, clip file format, or authoring-tool asset is copied; the Core's `envelope` kind and profile scale factor are modelled independently and hold no dependency on this SDK",
+        "No claim that this repository's family authors, imports, or plays a proprietary clip format; clip authoring is out of scope for the first gate and, if added later, is its own adapter capability with its own evidence"
+      ]
+    },
+    {
+      "id": "pico-haptics-guidance",
+      "kind": "official_platform_developer_documentation",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/unity/haptics/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO Unity Integration SDK developer documentation that this repository already cites for interaction and visual references; exact page path and SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Second-platform evidence that controller vibration is addressed per hand with an amplitude and a duration, so a per-hand profile and a per-controller target are not a Meta-specific shape",
+      "admitted_claims": [
+        "The platform's controller vibration API is addressed to a named controller (left or right) with an amplitude and a duration parameter, and a call can be stopped explicitly before the duration elapses",
+        "Vibration strength and duration are runtime parameters passed at call time rather than fixed platform constants, so the same intent shape (amplitude, duration, target) recurs across this platform and the OpenXR base specification",
+        "The SDK documents that vibration support and perceptible strength vary by controller hardware revision"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, method name, or sample is depended upon by the Core or the adapter",
+        "No claim about PICO controller hardware behaviour without a Device Lab receipt naming the exact controller revision"
+      ]
+    },
+    {
+      "id": "apple-hig-playing-haptics",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/playing-haptics",
+      "license_or_terms": "Apple Developer documentation terms; design facts only, no copied assets or implementation",
+      "maintenance_evidence": "Current Human Interface Guidelines page on playing haptics; page path and current visionOS-specific guidance to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary visual/interaction-platform reference for preferring a small set of semantic haptic patterns over arbitrary custom waveforms, and for treating haptics as one channel in a multi-sensory confirmation rather than the only signal",
+      "admitted_claims": [
+        "The guidance recommends using a system-provided semantic haptic pattern (for example success, warning, or selection-changed) where one fits, rather than authoring a bespoke waveform for every event",
+        "Haptic feedback is described as reinforcing a visual or audible event rather than replacing it, so an interaction's confirmation should not depend on haptics alone",
+        "Haptics should be used sparingly and consistently so a given pattern keeps a stable meaning across the application rather than being reused for unrelated events"
+      ],
+      "excluded_uses": [
+        "No Core Haptics API, semantic pattern identifier, or private framework type is depended upon",
+        "No claim about which headset, accessory, or controller in the visionOS ecosystem can play haptics, or how strongly, without a Device Lab receipt; the family models a closed semantic-adjacent kind set (transient, continuous, envelope), not this platform's specific named patterns"
+      ]
+    },
+    {
+      "id": "unity-input-system-haptics",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.19/manual/Haptics.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no Input System code copied",
+      "maintenance_evidence": "Unity Input System 1.19.0 is the version pinned by this repository's compatibility profiles and its manual documents haptics support maintained with the package; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Unity adapter fallback boundary distinct from the XR Interaction Toolkit and OpenXR routes: a non-XR-specific device path for rumble-capable devices, addressed through a shared interface rather than a per-device type",
+      "admitted_claims": [
+        "The Input System exposes an `IDualMotorRumble` interface with low-frequency and high-frequency motor speed setters that any rumble-capable device (a gamepad, or an XR controller device layout that implements it) can support",
+        "An `XRControllerWithRumble` device layout implements this interface for XR controllers exposed through the Input System's XR device support, addressed by device rather than by a haptic action binding",
+        "A device that does not implement the rumble interface throws or reports unsupported when the interface is requested, rather than silently accepting a call that has no effect"
+      ],
+      "excluded_uses": [
+        "Core does not reference `IDualMotorRumble`, `XRControllerWithRumble`, or `InputDevice`; the Unity adapter gate treats this as one of the resolution routes it must diagnose explicitly when unavailable (LESSON-004), not as the primary route",
+        "No claim that a specific Input System device layout is present on any platform or that rumble was felt without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "steamvr-unity-plugin-haptics",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Valve Corporation",
+      "url": "https://github.com/ValveSoftware/steamvr_unity_plugin",
+      "license_or_terms": "BSD-3-Clause; architecture facts only, no code copied; license and current maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Long-maintained open-source Unity plugin for SteamVR-tracked hardware with tagged releases and a documented controller haptic pulse call; adoption count, release cadence, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent professional evidence, outside the OpenXR and platform-vendor sources, that a haptic pulse call is addressed to one resolved controller device with a duration parameter and returns before the device confirms playback, informing the Core's fire-and-forget `play` intent shape",
+      "admitted_claims": [
+        "A haptic pulse is triggered on a specific resolved controller device object with a duration expressed in the device's own units, rather than through a global or scene-wide call",
+        "The call is fire-and-forget from the caller's perspective: it does not block on or report device-side confirmation that the motor ran",
+        "Repeated short pulses are the documented technique for approximating a longer or patterned vibration where the underlying API exposes only single pulses, which the closed `continuous` kind formalises as a distinct, explicitly time-bounded kind rather than a caller-side repetition loop"
+      ],
+      "excluded_uses": [
+        "No plugin type, script, or asset is copied and the Core has no dependency on it",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    },
+    {
+      "id": "godot-xr-controller-haptic-pulse",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Godot Engine contributors",
+      "url": "https://github.com/godotengine/godot",
+      "license_or_terms": "MIT; architecture facts only, no engine code copied; current version and maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Actively maintained open-source second engine with tagged releases and a documented XR controller haptic pulse method; exact version, class reference page, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent second-engine evidence that a haptic pulse call takes an action name, frequency, amplitude, and duration together on one tracked controller node, informing the Core's optional frequency guard rail alongside amplitude and duration",
+      "admitted_claims": [
+        "A second engine's tracked XR controller node exposes one method that triggers a haptic pulse given an action name, a frequency in hertz (zero meaning an unspecified or device-default frequency), an amplitude, and a duration",
+        "Frequency is an optional, best-effort parameter that a given runtime or controller may ignore, distinct from amplitude and duration which the same engine treats as always meaningful",
+        "The call is addressed to one resolved controller node instance rather than to a global bus, matching the per-controller addressing this family's Core models"
+      ],
+      "excluded_uses": [
+        "No engine type, node, or method is copied and the Core has no dependency on it",
+        "Godot is a roadmap direction only for this repository (see the current implementation boundary in AGENTS.md); this source proves recurrence of the intent shape, not Godot support",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "interaction-family-semantic-intents",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/interaction/verification-contract.md",
+      "reason": "The Interaction family's semantic intents (a grab started, a select performed) are the seam this family binds haptic events to through a binding table; the interaction routing model itself is not re-derived here and contributes no evidence for haptic identity, kind, or profile semantics"
+    },
+    {
+      "id": "audio-family-event-ids",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/audio/verification-contract.md",
+      "reason": "The Audio family's event identity is the second seam this family binds to, so one source intent can fire an audio event and a haptic event together; the audio event and mix model is not re-derived here and contributes no evidence for haptic semantics"
+    },
+    {
+      "id": "shipped-game-gap-matrix",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/benchmarks/shipped-game-gap-matrix.md",
+      "reason": "Ranks haptics twelfth and records that every one of the three benchmark product shapes needs it from the first minute; this is the motivating gap the queue candidate answers, not evidence for the common kernel"
+    },
+    {
+      "id": "version-adaptive-reference-model",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/version-adaptive-reference-model.md",
+      "reason": "States that a package manifest or one successful profile does not prove other Unity, XRI, OpenXR runtime, or device tuples; this family's Unity-adapter admitted role for every OpenXR extension source is bounded by that policy rather than by the extension's own text"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority",
+    "The first implementation is a HapticEventId, closed-kind, profile, and immutable-state substrate with a binding table and a thin Unity adapter; it is not a haptic clip authoring tool, not a waveform editor, and admits no claim that any named controller or headset supports amplitude-envelope or PCM haptics",
+    "The family guarantees the plumbing only: that an accepted play, stop, stop-all, or set-profile intent reached the injectable output sink with the exact target, amplitude, duration, and frequency it computed; whether a controller vibrated, and how it felt, is a human judgement recorded in a Device Lab receipt",
+    "Felt intensity, comfort, fatigue, and whether a pattern reads as intended are Device Lab receipts, never package claims, and no test in this family's gates claims a controller vibrated",
+    "Automated or device evidence recorded for one controller, headset, or OpenXR runtime tuple never transfers to another controller, headset, or runtime, and envelope or PCM support proven on one device is never assumed on another"
+  ]
+}

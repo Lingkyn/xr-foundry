@@ -90,7 +90,28 @@ Deterministic tests must cover:
 - fold retains state: a folded panel keeps its full open, docked-target, and
   follow state, because `fold` and `unfold` are intents that change only
   visibility, exactly like `open` and `close` change nothing else about a panel's
-  placement; and
+  placement;
+- one intent channel for people and agents (LESSON-011): every placement
+  `ShellIntent` (`open`, `close`, `focus`, `dock`, `follow`, `fold`, `unfold`)
+  carries an `IntentActor` from the closed set `player`, `agent`, `replay`,
+  `import`, defaulting to `player` when a caller does not name one, and an
+  optional expected revision; `ShellState` carries a monotonically increasing
+  `Revision` (0 for `Initial`, one higher on every accepted intent, excluded
+  from `Fingerprint`); `ShellState.Apply` checks a non-null expected revision
+  before the intent's own rule ever runs, and a mismatch is rejected with
+  `state.stale` and changes nothing, for every intent type and regardless of
+  actor; the actor never changes validation, so a player-issued and an
+  agent-issued copy of the same intent, accepted or rejected, take the same path
+  and produce an equal result and an equal resulting state; and the replay log
+  (`ShellIntentOutcome`, from `ApplyAll` and from each adapter runtime's
+  `Apply`) carries the issuing intent's actor and the state's revision
+  immediately after the outcome settled, accepted or rejected;
+- the same shape on a verb press: a dock verb pressed by a person and the same
+  verb issued by an agent adapter resolve through the same `FocusSubject` value
+  and the same `VerbAffordanceQuery`/`VerbResolver` reads (neither takes an
+  actor, so there is no second path for either to take), and applying the
+  resulting placement intent from each actor onto an equal initial state
+  produces equal outcomes and an equal resulting state; and
 - structured results with stable failure codes for a malformed identity, an unknown
   or duplicate panel, an unsupported anchor kind, a focus conflict, an unknown
   source, an unsupported source kind, an ambiguous or empty route, an unknown token,

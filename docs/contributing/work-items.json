@@ -894,6 +894,56 @@
       },
       "evidence": "The rule passes on every shipped manifest, the register row is machine-checked, and the capability graph composes with the new capability.",
       "done_proof": null
+    },
+    {
+      "id": "WI-023",
+      "title": "XR UI shell ornament, focus context, and verb registry; the developer scaffold as a peer client",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "open",
+      "depends_on": [
+        "WI-020",
+        "WI-021"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/xr-ui-shell/verification-contract.md",
+        "docs/standards/xr-ui-shell/coverage-map.json",
+        "staging/xr-ui-shell/README.md",
+        "docs/standards/live-tuning/verification-contract.md",
+        "staging/live-tuning/README.md",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "docs/standards/xr-ui-shell/",
+        "staging/xr-ui-shell/",
+        "docs/standards/live-tuning/verification-contract.md",
+        "docs/standards/live-tuning/coverage-map.json",
+        "staging/live-tuning/",
+        "docs/standards/lessons/lessons-register.json",
+        "CHANGELOG.md"
+      ],
+      "steps": [
+        "Extend the XR UI shell contract (Core gate) with an ornament: one shell-owned fixed surface that is never folded; a verb registry with a closed, registered id set where an unregistered verb is rejected with a stable code and never silently absorbed, and registered ids partition into wired and unwired; a focus context that names exactly one current target (a panel, a panel item, or an external target path the consumer routes in) or none; a verb intent resolves through the focus context to exactly one target or a named no-target result; and fold retains state (a folded panel keeps its full state and a fold or unfold is an intent that changes visibility only). Implement in the staged Core with NUnit tests and extend the coverage map.",
+        "Invert the dependency: no XR UI shell assembly references any client family; the shell exposes one generic panel-content surface seam that any family adapts to; move the live-tuning surface adapter into the live-tuning Unity package, where the developer scaffold registers a Tune verb like any peer and receives the focus target through the shell's focus context, mapping it through BindingIndex; add a source rule test that the shell assemblies reference no family outside xr-ui-shell and design-language.",
+        "Record LESSON-010 in the lessons register: a tooling or developer system is a peer client of the shell and the capability graph, registers its verbs and panels like any family, and is never a dependency of the systems it operates on; with an explicit disposition for every family the register requires.",
+        "Update both staging READMEs and the root CHANGELOG."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "docs/standards/xr-ui-shell/coverage-map.json",
+          "docs/standards/live-tuning/coverage-map.json",
+          "docs/standards/lessons/lessons-register.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on both extended maps with no allowlist entry; the source rule test proves the shell references no client family.",
+      "done_proof": null
     }
   ]
 }

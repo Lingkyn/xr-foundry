@@ -1,0 +1,17 @@
+{
+  "name": "Lingkyn.Haptics.Unity",
+  "rootNamespace": "Lingkyn.Haptics.Unity",
+  "references": [
+    "Lingkyn.Haptics.Core",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

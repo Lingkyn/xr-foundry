@@ -1,8 +1,11 @@
 # Haptics package-family standard
 
-Status: proposal in the source-gate queue (`NEXT-HAPTICS`); no Core or Unity
-adapter implementation is staged yet, and no package directory or package id
-exists.
+Status: the staged implementation exists under `staging/haptics/`
+(`com.lingkyn.haptics.core` and `com.lingkyn.haptics.unity`), authored and
+unexecuted against [`verification-contract.md`](verification-contract.md),
+with `coverage-map.json` mapping every clause to a named test. No Unity run
+has produced a compatibility profile yet, so no package directory, package
+id, catalog entry, maturity, release, or device status exists in the tree.
 
 This standard defines controller and hand haptic feedback as a validated
 event identity, a closed haptic-kind set, per-controller and per-hand
@@ -123,13 +126,18 @@ ceiling.
 2. The maintainer copies [`admission.draft.json`](admission.draft.json) into
    `docs/foundry/admissions/` as the durable record through the
    [system admission gate](../../foundry/system-admission.md).
-3. The staged implementation authors the Core and the Unity adapter under
-   `staging/haptics/` against
-   [`verification-contract.md`](verification-contract.md) and writes a
-   `coverage-map.json` mapping every clause to a named test; the code is
-   authored and unexecuted until a Unity run produces a compatibility
-   profile, and nothing enters `packages/` before admission and a green gate.
-4. The first Device Lab plan for this family records a haptic session as a
+3. Done: the staged implementation authors the Core and the Unity adapter
+   under `staging/haptics/` against
+   [`verification-contract.md`](verification-contract.md), with
+   `coverage-map.json` mapping every Core and Unity adapter clause to a named
+   test (no partial or unmapped clause). The code is authored and unexecuted
+   until a Unity run produces a compatibility profile, and nothing enters
+   `packages/` before admission and a green gate.
+4. A person or Agent with a Unity Editor runs
+   `python scripts/run_unity_gates.py --host com.lingkyn.haptics.core`,
+   records the resulting compatibility profile, and either confirms this
+   coverage map or turns it red.
+5. The first Device Lab plan for this family records a haptic session as a
    human judgement of felt intensity, comfort, and pattern legibility, bound
    to the profile and event-registry fingerprint, and never as a package
    claim.

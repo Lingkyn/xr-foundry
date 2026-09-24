@@ -1,0 +1,16 @@
+{
+  "name": "com.lingkyn.haptics.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Haptics Unity",
+  "description": "Thin Unity adapter for the Lingkyn Haptics Core: explicit target resolution from Core HapticTargets to XR Interaction Toolkit haptic impulse channels and OpenXR haptic actions through an explicit, injected route map, with an Input System rumble fallback route; an injectable IHapticOutputSink with a recording fake for tests so an accepted play/stop/stop_all outcome's exact target, amplitude, duration, and frequency can be asserted without a device; HapticProfileAsset ScriptableObjects constructed with explicit references and converted deterministically to the Core's immutable HapticProfile; envelope playback degrading to a transient with a diagnostic when the runtime lacks the amplitude-envelope extension; and explicit, LESSON-004 fail-closed diagnostics for every by-name or optional resolution.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.haptics.core": "0.1.0"
+  },
+  "samples": []
+}

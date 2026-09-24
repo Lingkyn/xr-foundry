@@ -1085,7 +1085,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -1118,7 +1118,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
-      "done_proof": null
+      "done_proof": "docs/standards/platform-services/verification-contract.md"
     },
     {
       "id": "WI-028",
@@ -1127,7 +1127,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -1160,7 +1160,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
-      "done_proof": null
+      "done_proof": "docs/standards/quality-tiers/verification-contract.md"
     }
   ]
 }

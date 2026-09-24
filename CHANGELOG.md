@@ -5,6 +5,15 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Passed the source gate for Platform services (`docs/standards/platform-services/`,
+  WI-027: 12 sources across Meta, PICO, Steamworks, Apple Game Center and StoreKit,
+  Unity Gaming Services, store policy, and two maintained open-source layers;
+  Core gate 13 clauses, Unity adapter gate 8) and Quality tiers
+  (`docs/standards/quality-tiers/`, WI-028: 11 sources across Unity XR display,
+  render scale and foveation, OpenXR foveation, Meta, PICO, and Apple performance
+  guidance, Unity Quality Settings and Adaptive Performance; Core gate 12,
+  Unity adapter gate 9); queue candidates `NEXT-PLATFORM-SERVICES` and
+  `NEXT-QUALITY-TIERS`. Every source URL is marked for a person to confirm.
 - Staged the Haptics family (`staging/haptics`, WI-026): `com.lingkyn.haptics.core`
   (event and profile identity, the closed kind set transient / continuous /
   envelope with guard rails, an explicit registry, per-target profiles, an

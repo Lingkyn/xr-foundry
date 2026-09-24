@@ -1,0 +1,237 @@
+{
+  "schema": "xr-foundry.quality_tiers_source_manifest.v1",
+  "scope": "Engine-light performance and quality-tier management: a validated TierId and DeviceProfileId, a closed tier declaration (refresh rate, render scale, foveation level, MSAA, shadow and post-processing budgets, each with a guard rail), an immutable TierRegistry built by explicit registration, per-device-profile capability descriptors and presets, select-tier, set-override, reset, and apply-preset intents applied to an immutable QualityState with deterministic replay and stable failure codes, and a frame-budget policy expressed as data, with a thin Unity adapter planned separately over the XR display subsystem, XR settings, and URP renderer-asset switching",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths, section anchors, version pins, licenses, and open-source maintenance state, before the admission record is signed. URL not fetched; a person must confirm.",
+  "sources": [
+    {
+      "id": "unity-xr-display-refresh-rate",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/XR.XRDisplaySubsystem.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity 6000.3 is the editor version pinned by this repository's compatibility profiles and its scripting reference documents the XR display subsystem's refresh-rate query and request methods maintained with the engine; exact page path, method names, and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for reading and requesting a target display refresh rate: the XR display subsystem exposes the set of refresh rates the active runtime reports as supported and a request to switch among them, rather than the family inventing its own refresh-rate negotiation",
+      "admitted_claims": [
+        "The XR display subsystem exposes the display's currently reported refresh rate and the set of refresh rates the active runtime supports, queried per subsystem instance rather than from a global engine setting",
+        "A request to change the display refresh rate is asynchronous and can fail or be ignored by the runtime, so the caller must read the resulting refresh rate back rather than assume the requested value took effect",
+        "Refresh-rate support and the supported-rate set vary by runtime and device and are not implied by the engine version alone"
+      ],
+      "excluded_uses": [
+        "Core does not reference XRDisplaySubsystem, any XR subsystem handle, or any UnityEngine type",
+        "No claim that a named device honours a specific refresh rate, or that a switch was perceptible, without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-xr-render-viewport-scale",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/XR.XRSettings-eyeTextureResolutionScale.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity 6000.3 scripting reference documents the eye texture resolution scale and render viewport scale settings maintained with the engine's XR module; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for render scale: a single scale factor applied to the eye texture's render target resolution, read back after being set because the engine may clamp it to a supported range",
+      "admitted_claims": [
+        "A render-scale factor multiplies the eye texture's render target resolution relative to the display's native resolution, and the effective value the engine applied can differ from the requested value",
+        "The scale factor is a plain floating-point multiplier with an engine-documented supported range; a value outside that range is clamped by the engine rather than rejected",
+        "Render scale is independent of the display refresh rate and of any renderer asset swap; the two are separate settings the family's Core models as separate guard rails on one tier declaration"
+      ],
+      "excluded_uses": [
+        "Core does not reference XRSettings or any UnityEngine type; render scale enters and leaves Core as a plain closed positive range",
+        "No claim that a given render scale is legible, comfortable, or looks correct on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-xr-foveation-api",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/XR.XRDisplaySubsystem-foveatedRenderingLevel.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity 6000.3 scripting reference documents the XR display subsystem's foveated-rendering level property maintained with the engine's XR module; exact page path, property name, and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for foveation level: a small closed level (for example off, low, medium, high) rather than a continuous parameter, set on the display subsystem and read back to confirm what the runtime actually applied",
+      "admitted_claims": [
+        "The XR display subsystem exposes a foveated-rendering level as one of a small closed set of levels, set through the subsystem rather than through a renderer-specific shader parameter",
+        "The property both sets a requested level and reports the level the runtime currently applies, which is not guaranteed to equal the requested level on a runtime or device that does not support foveation or does not support every level",
+        "Foveation support and the supported-level set are runtime- and device-dependent and are not implied by the engine version alone"
+      ],
+      "excluded_uses": [
+        "Core does not reference XRDisplaySubsystem or any UnityEngine type; the family models a closed FoveationLevel value, not the engine's own property",
+        "No claim that a named device supports a given foveation level, or that peripheral quality reduction was imperceptible, without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "openxr-fb-foveation",
+      "kind": "official_standards_document",
+      "authority": "Khronos Group (OpenXR Working Group), Meta Platforms as the extension author",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_FB_foveation",
+      "license_or_terms": "Khronos specification license; standard facts only, no specification text copied",
+      "maintenance_evidence": "Published OpenXR vendor extension in the current OpenXR specification registry; exact section anchor, extension version, and current adoption on this repository's compatibility profiles to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Standards-body evidence that foveated rendering is, at the extension level, a swapchain-attached configuration with a closed level and gaze-tracked or fixed-center variants, which grounds the family's closed FoveationLevel set as a standards-supported shape rather than an engine-specific convenience",
+      "admitted_claims": [
+        "The extension attaches a foveation profile to a swapchain, and the profile names a level from a small closed set together with a dynamic flag distinguishing fixed-center foveation from eye-tracked foveation",
+        "Foveation is queried for support before use, and a runtime that does not support the extension exposes no foveation profile type at all rather than accepting one silently",
+        "The level set and the eye-tracked variant are runtime- and device-dependent and are not implied by core OpenXR conformance"
+      ],
+      "excluded_uses": [
+        "Core does not reference the extension's struct, enum, or handle names; it models FoveationLevel as one closed value independent of any OpenXR type",
+        "No claim that any named runtime or device supports the extension, or that foveation was imperceptible, without a Device Lab receipt; the Unity adapter gate requires an explicit diagnostic when the extension or a requested level is unavailable"
+      ]
+    },
+    {
+      "id": "meta-foveated-rendering-guidance",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/documentation/unity/unity-fixed-foveated-rendering/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer documentation for Unity that this repository already cites for interaction, visual, and haptics references; exact page path and current SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "First-party platform evidence that a small closed foveation level and a per-device recommended default recur as a shipped performance setting, and that render scale and foveation are tuned together rather than independently",
+      "admitted_claims": [
+        "The platform documents a small closed set of fixed foveated-rendering levels and recommends a default level per device generation rather than a single constant across all hardware",
+        "Render resolution scale and foveation level are documented together as the two settings a title tunes first to hold a target frame rate, rather than as unrelated knobs",
+        "The platform's guidance states that foveation quality and perceptibility vary by device generation and by content, so a level that is imperceptible in one scene can be visible in another"
+      ],
+      "excluded_uses": [
+        "No specific level, resolution, or frame-rate figure is transferred as a rendered guarantee; the family records these as configuration guard rails on a device-profile preset, not as canonical values",
+        "No claim that a level is imperceptible, comfortable, or holds a target frame rate on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-store-quality-performance-standards",
+      "kind": "official_store_policy_document",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/resources/publish-quality-standards/",
+      "license_or_terms": "Meta developer documentation terms; policy facts only, no content copied",
+      "maintenance_evidence": "Part of the maintained store submission and content-quality requirements Meta publishes for the Horizon storefront; exact page path and current revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Store-policy evidence that a stated frame-rate target and a bounded dropped-frame rate are a submission requirement, not an optional quality goal, which grounds the family's frame-budget policy as data a title must be able to name and check against, never a package guarantee that a build meets it",
+      "admitted_claims": [
+        "Store submission requirements name a target frame rate the application must sustain and bound how often a frame may be dropped, evaluated on reference hardware as part of certification",
+        "A submission that does not hold the stated frame-rate and dropped-frame bounds on the reference hardware can be rejected regardless of how the application behaves on other hardware",
+        "The requirement is expressed as a measurable frame-time and drop-rate target rather than as a qualitative comfort standard"
+      ],
+      "excluded_uses": [
+        "No specific frame-rate or drop-rate figure is copied as a rendered constant; the family models a frame-budget policy as consumer-configured data (target frame time, drop threshold), never a hard-coded certification number",
+        "No claim that any build passes, has passed, or will pass certification; certification outcome is a receipt from a real store submission, never a package claim"
+      ]
+    },
+    {
+      "id": "pico-performance-and-foveation-guidance",
+      "kind": "official_platform_developer_documentation",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/unity/fixed-foveated-rendering/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO Unity Integration SDK developer documentation that this repository already cites for interaction, visual, and haptics references; exact page path and SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Second-platform evidence that a closed foveation level, a render-scale setting, and a certification-style performance requirement recur across platforms, so the family's shape is not a Meta-specific convenience",
+      "admitted_claims": [
+        "The platform's SDK documents a small closed set of foveation levels set per frame or per camera, and a separate render-scale setting, matching the two-setting shape the Meta guidance also documents",
+        "The platform's device and content submission guidance names a target frame rate and a bounded frequency of dropped or delayed frames as a certification criterion, evaluated on reference hardware",
+        "Foveation level support and perceptibility, and the achievable frame rate at a given render scale, vary by device generation and are documented as such rather than as fixed constants"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, method name, or sample is depended upon by the Core or the adapter",
+        "No claim about PICO device performance, foveation perceptibility, or certification outcome without a Device Lab receipt or a real store submission record"
+      ]
+    },
+    {
+      "id": "apple-visionos-performance-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/documentation/visionos/optimizing-your-app-s-appearance-and-performance-for-visionos",
+      "license_or_terms": "Apple Developer documentation terms; design and performance facts only, no copied assets or implementation",
+      "maintenance_evidence": "Current visionOS developer performance guidance; page path and current visionOS-specific figures to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary visual/interaction-platform reference that a sustained frame rate is treated as a correctness requirement for comfort rather than a purely visual-quality concern, and that a title should offer a way to reduce rendering cost rather than assume one fixed quality level suits every scene",
+      "admitted_claims": [
+        "The guidance treats holding a sustained frame rate as a requirement tied to comfort and platform behaviour, not merely to visual smoothness, and recommends reducing rendering cost (resolution, effects, geometry) when a scene cannot hold it",
+        "The guidance recommends measuring frame timing during development rather than assuming a fixed quality level performs the same across every scene or device generation",
+        "The guidance frames quality reduction as a designed fallback path a title should build in, rather than an emergency patch applied after shipping"
+      ],
+      "excluded_uses": [
+        "No visionOS-specific API, framework type, or numeric frame-rate target is depended upon by the Core or the adapter",
+        "No claim about which headset can hold which frame rate, or whether a reduction reads as comfortable, without a Device Lab receipt; the family models a closed, platform-neutral tier and capability shape, not this platform's specific guidance numbers"
+      ]
+    },
+    {
+      "id": "unity-quality-settings-urp",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/6000.3/Documentation/Manual/class-QualitySettings.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Unity 6000.3 manual documents Quality Settings and the Universal Render Pipeline asset-switching mechanism maintained with the engine and the URP package pinned by this repository's compatibility profiles; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Unity adapter boundary for MSAA, shadow, and post-processing budgets: the engine's own seam for switching a bundle of rendering settings is a named quality level bound to a render-pipeline asset, so the adapter swaps an explicit asset reference rather than setting many scattered fields",
+      "admitted_claims": [
+        "Quality Settings organises MSAA sample count, shadow distance and cascade settings, and other rendering budgets into named quality levels, and switching the active level is a single engine call rather than a per-field write",
+        "The Universal Render Pipeline reads its renderer and post-processing budget from a bound render-pipeline asset, and swapping the active asset changes every setting the asset carries in one step",
+        "A quality level or render-pipeline asset swap takes effect on subsequent frames and does not retroactively change frames already rendered"
+      ],
+      "excluded_uses": [
+        "Core does not reference QualitySettings, UniversalRenderPipelineAsset, or any UnityEngine type; MSAA, shadow, and post-processing budgets enter and leave Core as plain closed guard rails",
+        "No claim that a given MSAA sample count, shadow setting, or post-processing budget looks correct or holds a frame rate on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-adaptive-performance",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.adaptiveperformance@5.1/manual/index.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no package code copied",
+      "maintenance_evidence": "Unity's Adaptive Performance package, a maintained first-party package with its own version line and provider architecture; exact version pin and current adoption on this repository's compatibility profiles to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine-side evidence, distinct from OpenXR and platform-vendor sources, that thermal and power feedback driving an automatic quality reduction is a recurring first-party pattern, informing the family's decision to keep automatic device-feedback-driven tier switching as an optional, explicitly-wired capability rather than a mandatory Core behaviour",
+      "admitted_claims": [
+        "The package reports device thermal and power state through a provider abstraction and exposes bottleneck and warning events a title can subscribe to, rather than changing rendering settings on its own by default",
+        "Provider support is device- and platform-specific, and the package documents a fallback (a stub provider) when no provider is available for the active device",
+        "The package's own scaling recommendations are advisory signals a title's own logic acts on, not a rendering setting the package applies directly, matching this family's separation of a capability signal from the tier-selection intent that actually changes state"
+      ],
+      "excluded_uses": [
+        "Core defines no thermal, power, or bottleneck type and holds no dependency on this package; an adapter that wires device feedback to a set_override or select_tier intent is a distinct, explicitly-wired capability, not part of this gate's Core or mandatory Unity clauses",
+        "No claim that any named device's thermal or power behaviour is captured, or that an automatic reduction was appropriate, without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "godot-xr-render-settings",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Godot Engine contributors",
+      "url": "https://github.com/godotengine/godot",
+      "license_or_terms": "MIT; architecture facts only, no engine code copied; current version and maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Actively maintained open-source second engine with tagged releases and documented XR render-target-size and viewport-scaling settings; exact version, class reference page, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent second-engine evidence that a render-target scale factor applied to an XR viewport, separate from the window or display resolution, and a per-project default quality preset, recur as an engine-agnostic performance shape rather than a Unity-specific convenience",
+      "admitted_claims": [
+        "A second engine's XR interface exposes a render-target-size multiplier applied to the XR viewport independent of the display's native resolution, matching the render-scale shape this family's Core models as a plain guard-railed factor",
+        "The same engine organises broader rendering budgets (shadow quality, anti-aliasing, post-processing) into project-level quality presets that a project switches between, matching the tier shape this family's Core models as a closed, named set",
+        "Foveation and refresh-rate control are runtime- and platform-plugin-dependent in this engine, not guaranteed by the engine version alone, matching the capability-descriptor gating this family's Core requires before a tier is selected"
+      ],
+      "excluded_uses": [
+        "No engine type, node, or method is copied and the Core has no dependency on it",
+        "Godot is a roadmap direction only for this repository (see the current implementation boundary in AGENTS.md); this source proves recurrence of the tier and render-scale shape, not Godot support",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "settings-family-quality-option-hook",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/settings/verification-contract.md",
+      "reason": "The Settings family owns the user-facing option definition, profile, and applicator model a quality option would live in; this family's Unity gate exposes a hook a Settings applicator may call to map a selected option value to a select_tier intent, but the Settings option, screen, and applicator model itself is not re-derived here and contributes no evidence for tier, capability, or frame-budget semantics"
+    },
+    {
+      "id": "persistence-family-saved-selection",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/persistence/verification-contract.md",
+      "reason": "A consumer that persists a player's selected tier or override would save it through the Persistence family's own save/load and migration model; that model is context only and contributes no evidence for tier, capability, or frame-budget semantics"
+    },
+    {
+      "id": "shipped-game-gap-matrix",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/benchmarks/shipped-game-gap-matrix.md",
+      "reason": "Ranks quality tiers fourteenth and records that every one of the three benchmark product shapes needs it because store certification requires a stable frame rate on every headset; this is the motivating gap the queue candidate answers, not evidence for the common kernel"
+    },
+    {
+      "id": "version-adaptive-reference-model",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/version-adaptive-reference-model.md",
+      "reason": "States that a package manifest or one successful profile does not prove other Unity, render-pipeline, OpenXR runtime, or device tuples; this family's device-profile identity and capability descriptors are bounded by that policy rather than by any one device's own documentation, and this family's own DeviceProfileId is a distinct identity from this repository's build/verification compatibility-profile ids recorded in compatibility-profiles.json at the repository root, which name a Unity/editor/build tuple for evidence and are not consulted for tier or capability semantics"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority",
+    "The first implementation is a TierId, DeviceProfileId, closed-declaration, registry, capability-descriptor, and immutable-state substrate with a frame-budget policy and a thin Unity adapter; it is not a benchmarking suite, not a frame-rate optimizer, and admits no claim that any named device achieves a stated refresh rate, render scale, or foveation level",
+    "The family guarantees the plumbing only: that an accepted select_tier, set_override, reset, or apply_preset intent reached the injectable device probe and renderer sink with the exact tier, override, and computed values it resolved; whether a headset actually holds that frame rate, and how a render scale or foveation level looks, is a human judgement recorded in a Device Lab receipt",
+    "Measured frame time, dropped-frame counts, comfort, and store certification outcome are Device Lab receipts or real store submission records, never package claims, and no test in this family's gates claims a measured frame rate or a passed certification",
+    "Automated or device evidence recorded for one device profile, Unity, render-pipeline, or OpenXR runtime tuple never transfers to another, and a refresh rate, render scale, or foveation level proven supported on one device is never assumed on another"
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "schema": "xr-foundry.platform_services_source_manifest.v1",
+  "scope": "Engine-light platform services: a closed capability set (entitlement, achievement, leaderboard, cloud_save, identity), a provider descriptor built by explicit registration that declares which capabilities a given vendor provider supports so a composition fails closed at compose time when a required capability is missing, typed intents (check_entitlement, unlock, report_score, read_leaderboard, cloud_write, cloud_read) applied to an immutable state with deterministic replay and stable failure codes for not_entitled, offline, rate_limited, capability.unsupported, and identity.missing, and an offline pending-write queue keyed by idempotency keys that replays in order, with a thin Unity adapter planned separately behind one provider interface over the Meta Horizon Platform SDK, the PICO platform SDK, Steamworks, Apple Game Center and StoreKit, and Unity Gaming Services Cloud Save, with an entitlement gate at boot that fails closed",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths, section anchors, version pins, licenses, and open-source maintenance state, before the admission record is signed. URL not fetched; a person must confirm.",
+  "sources": [
+    {
+      "id": "meta-platform-sdk-entitlement-check",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/documentation/unity/ps-entitlement-check/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no SDK code copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon Platform SDK for Unity documentation this repository already cites for haptics and interaction references; exact page path and current SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary platform evidence that a store-issued entitlement check is a boot-time, request/response call against the signed-in account, returning a definite entitled/not-entitled result rather than a locally cached assumption",
+      "admitted_claims": [
+        "The platform SDK exposes an entitlement check call that queries the store on behalf of the signed-in account and returns whether the running build is legitimately entitled, intended to run once near application start",
+        "A failed or errored entitlement check is the documented signal to stop the experience rather than continue with degraded trust, and the check is asynchronous and can fail for reasons distinct from being not entitled, for example no network",
+        "The entitlement check is addressed to the platform's own signed-in session; it carries no consumer-supplied identity token, so the calling application never fabricates or overrides the identity the check reports on"
+      ],
+      "excluded_uses": [
+        "Core does not reference the platform SDK's entitlement type, callback, or session object",
+        "No claim that a specific build, account, or device passed or failed an entitlement check without a store or Device Lab receipt naming the account and build"
+      ]
+    },
+    {
+      "id": "meta-platform-sdk-achievements-leaderboards",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/documentation/unity/ps-achievements/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no SDK code copied",
+      "maintenance_evidence": "Part of the same maintained Meta Horizon Platform SDK documentation set, covering achievements and the sibling leaderboards page; exact page paths and current SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary platform evidence that an achievement unlock and a leaderboard score submission are separate, idempotent, per-account write calls distinct from the entitlement check",
+      "admitted_claims": [
+        "Unlocking an achievement is a call addressed to one server-defined achievement identifier for the signed-in account, and the platform documents it as safe to call repeatedly for an already-unlocked achievement without producing a different account state",
+        "Submitting a leaderboard score is a call addressed to one server-defined leaderboard identifier carrying a numeric score and optional extra data for the signed-in account, and reading a leaderboard is a separate, paginated query rather than part of the write call",
+        "Both calls are asynchronous and report success or a structured failure distinct from an entitlement failure, so a consumer can tell a not-entitled account apart from a rejected leaderboard write"
+      ],
+      "excluded_uses": [
+        "Core does not reference the platform SDK's achievement or leaderboard types, identifiers, or callback shapes",
+        "No claim that a specific achievement, leaderboard, or score value is visible on any named account without a store or Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-platform-sdk-cloud-storage",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/documentation/unity/ps-cloud-storage/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no SDK code copied",
+      "maintenance_evidence": "Part of the same maintained Meta Horizon Platform SDK documentation set, covering cloud storage; exact page path and current SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary platform evidence that cloud save is a small, per-account, key/bucket document read and write distinct from achievements and leaderboards, and that a write can be rejected for being stale or too large",
+      "admitted_claims": [
+        "The platform's cloud storage exposes a save and a load call addressed to a named bucket for the signed-in account, storing an opaque byte payload up to a documented size limit rather than an arbitrary file tree",
+        "A cloud save write is documented as eventually consistent and can fail for reasons including no network, quota, or a conflicting concurrent write, distinct from an entitlement or achievement failure",
+        "Loading cloud data returns either the stored payload or an explicit no-data result, never a silently empty payload indistinguishable from never having saved"
+      ],
+      "excluded_uses": [
+        "Core does not reference the platform SDK's cloud storage bucket type or payload wrapper",
+        "No claim that a specific account's cloud data round-tripped through any named store without a Device Lab or store sandbox receipt"
+      ]
+    },
+    {
+      "id": "pico-platform-services",
+      "kind": "official_platform_developer_documentation",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/unity/platform-sdk-overview/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO Unity Integration SDK developer documentation that this repository already cites for haptics and interaction references; exact page path and SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Second-platform evidence that entitlement, achievement/leaderboard-style progression, and cloud-style user data are addressed per signed-in platform account through a platform SDK distinct from the OpenXR runtime layer, so the capability set is not a Meta-specific shape",
+      "admitted_claims": [
+        "The platform SDK provides a platform-account entitlement or ownership check callable near application start, following the same asynchronous request/response shape as other platform SDKs",
+        "The platform SDK exposes user and account services, including sign-in identity and store-adjacent services, that a title queries per account rather than assuming a locally cached identity",
+        "Platform service calls are documented as requiring an active network session and can fail independently of whether the headset itself is functioning, distinct from a local input or rendering failure"
+      ],
+      "excluded_uses": [
+        "Core does not reference the PICO platform SDK's types, callback shapes, or account object",
+        "No claim about a specific PICO account, build, or device's entitlement or service behaviour without a store or Device Lab receipt"
+      ]
+    },
+    {
+      "id": "steamworks-achievements-stats-leaderboards",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Valve Corporation",
+      "url": "https://partner.steamgames.com/doc/features/achievements",
+      "license_or_terms": "Steamworks documentation terms; architecture facts only, no code copied",
+      "maintenance_evidence": "Part of the maintained Steamworks documentation covering achievements, stats, and the sibling leaderboards page; exact page paths and current API version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary vendor evidence, independent of Meta and PICO, that achievement unlock, persistent numeric stats, and leaderboard score submission are three distinct per-account calls behind one platform API, with leaderboards read back by a separate ranked query",
+      "admitted_claims": [
+        "Achievement state and numeric stats are stored server-side per account and are set through explicit set-achievement and set-stat calls that must be followed by an explicit store call to persist them, distinct from a fire-and-forget write",
+        "A leaderboard score upload names one server-defined leaderboard by string identifier and an integer score, with an explicit upload-method choice documented as changing whether a lower or a later score overwrites an earlier one",
+        "Reading a leaderboard is a separate, asynchronous, paginated ranked-entries request distinct from the score-upload call, and both calls report success or a structured failure independently of whether the account is entitled to the title"
+      ],
+      "excluded_uses": [
+        "Core does not reference a Steamworks type, achievement API, stat handle, or leaderboard handle",
+        "No claim that a specific account's achievement, stat, or leaderboard entry is visible on the store without a store or Device Lab receipt"
+      ]
+    },
+    {
+      "id": "steamworks-cloud",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Valve Corporation",
+      "url": "https://partner.steamgames.com/doc/features/cloud",
+      "license_or_terms": "Steamworks documentation terms; architecture facts only, no code copied",
+      "maintenance_evidence": "Part of the maintained Steamworks documentation covering cloud storage; exact page path and current API version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary vendor evidence that cloud save is a per-account virtual file store distinct from achievements and leaderboards, with an explicit quota and an explicit conflict-resolution step exposed to the application rather than hidden inside the platform",
+      "admitted_claims": [
+        "The store's cloud feature exposes file write, read, and delete calls addressed to a per-account virtual filesystem with a documented per-application quota, distinct from a single fixed-size key/value bucket",
+        "A cloud file conflict between two devices is surfaced to the running application through an explicit resolution step rather than silently picking one side, and the application can be built to handle that conflict itself",
+        "Cloud calls are documented as requiring the storefront client to be running and signed in, and fail explicitly, not silently, when the client is offline or the feature is disabled by the account holder"
+      ],
+      "excluded_uses": [
+        "Core does not reference the store's cloud file handle or conflict-resolution callback type",
+        "No claim that a specific file round-tripped through the store's cloud feature on any named account without a Device Lab or store sandbox receipt"
+      ]
+    },
+    {
+      "id": "apple-game-center",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/documentation/gamekit",
+      "license_or_terms": "Apple Developer documentation terms; facts only, no copied assets or implementation",
+      "maintenance_evidence": "Current GameKit developer documentation covering Game Center achievements and leaderboards; exact page path and current visionOS-specific guidance to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary platform evidence that achievements and leaderboards are addressed per signed-in Game Center player identity through report/submit calls distinct from any local high-score cache, and that a device may have no signed-in player",
+      "admitted_claims": [
+        "Reporting an achievement takes a string achievement identifier and a percent-complete value for the local player, and the platform documents batching multiple reports in one call rather than requiring one network round trip per achievement",
+        "Submitting a leaderboard score takes a leaderboard identifier and a numeric value for the local player, and reading a leaderboard is a separate, paginated query for a scope, for example a time range or a friends-only filter, distinct from the write call",
+        "A device or account can have no Game Center player signed in, which the platform documents as a distinct state a title must check for before calling achievement or leaderboard APIs, rather than assuming a player identity always exists"
+      ],
+      "excluded_uses": [
+        "Core does not reference a GameKit type, player object, or identifier string format",
+        "No claim that a specific player, device, or account's Game Center state is visible without a Device Lab receipt naming the account"
+      ]
+    },
+    {
+      "id": "apple-storekit-entitlement-visionos",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/documentation/storekit/verifying-purchases-and-managing-subscriptions-in-your-app",
+      "license_or_terms": "Apple Developer documentation terms; facts only, no copied assets or implementation",
+      "maintenance_evidence": "Current StoreKit developer documentation on verifying purchases, applicable across Apple's platforms including visionOS; exact page path and current version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary platform evidence for visionOS and the wider Apple ecosystem that an entitlement is a cryptographically verifiable transaction the app checks itself, rather than a value the store hands over unverified, and that current entitlements are re-checked rather than cached indefinitely",
+      "admitted_claims": [
+        "StoreKit exposes a current-entitlements query that returns the set of transactions the signed-in Apple Account currently holds for the app, each independently verifiable rather than trusted as received",
+        "The platform documents verifying a transaction's signature before treating an entitlement as valid, and treating an unverified or revoked transaction as not entitled rather than as an error to ignore",
+        "Entitlements can change outside the app's own code path, for example a refund or a family-sharing change, and the platform provides an update listener so the app learns of a revoked entitlement rather than only checking once at launch"
+      ],
+      "excluded_uses": [
+        "Core does not reference a StoreKit transaction type, verification result type, or listener API",
+        "No claim that a specific Apple Account's entitlement state is valid, current, or verified on any device without a Device Lab or store sandbox receipt"
+      ]
+    },
+    {
+      "id": "unity-gaming-services-cloud-save",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity.com/ugs/en-us/manual/cloud-save/manual/overview",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no service code copied",
+      "maintenance_evidence": "Current Unity Gaming Services Cloud Save manual, maintained alongside the engine this repository targets; exact page path and current service version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine-side evidence, independent of any store vendor, that cloud save can be modelled as named-key document reads and writes against a signed-in player identity, behind the same engine that hosts this repository's other Core families",
+      "admitted_claims": [
+        "Unity Gaming Services Cloud Save documents a per-player, per-key document store: a save call writes one or more named keys with JSON-serializable values, and a load call reads back named keys, distinct from a single opaque blob",
+        "The service is documented as requiring the consumer to authenticate through Unity's own player identity service before a save or load call is accepted, so identity resolution is a precondition the calling code must satisfy explicitly",
+        "Save and load calls are asynchronous, network-dependent, and report a structured error, for example rate limiting or an unauthenticated caller, distinct from a successful empty result"
+      ],
+      "excluded_uses": [
+        "Core does not reference a Unity Gaming Services SDK type, its authentication service, or its request/response DTOs",
+        "No claim that this repository's family uses, requires, or bundles Unity Gaming Services; it is one engine-side provider option among the adapters this family's Unity gate can implement, never a mandatory dependency"
+      ]
+    },
+    {
+      "id": "apple-app-store-review-entitlement",
+      "kind": "official_store_policy",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/app-store/review/guidelines/",
+      "license_or_terms": "Apple Developer documentation terms; policy facts only, no guideline text copied verbatim",
+      "maintenance_evidence": "Current App Store Review Guidelines, maintained by Apple and applied across its supported platforms including visionOS; exact section reference and current revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Store-policy evidence, independent of any single vendor SDK, that a functioning entitlement or restore-purchases check at launch is a certification requirement rather than an optional integration detail, motivating the Core's not_entitled failure code and the Unity gate's fail-closed boot behaviour",
+      "admitted_claims": [
+        "The guidelines require that apps offering purchases or subscriptions provide a working restore mechanism and that previously purchased content or functionality remains available to the entitled account across reinstalls and devices",
+        "The guidelines document rejection for apps whose purchase or unlock mechanism does not function as described, which the family treats as evidence that an entitlement check must fail closed and report a stable reason rather than silently granting or denying access",
+        "The guidelines apply the same certification expectation across the store's supported platforms, including visionOS, so an entitlement check is a recurring review requirement rather than a platform-specific courtesy"
+      ],
+      "excluded_uses": [
+        "Core does not reference any App Store review process, category, or guideline number as a runtime type",
+        "No claim that any named build passed or will pass App Store review; a review outcome is a human or process record, never a package claim"
+      ]
+    },
+    {
+      "id": "steamworks-net-oss",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Riley Labrecque and contributors",
+      "url": "https://github.com/rlabrecque/Steamworks.NET",
+      "license_or_terms": "MIT; architecture facts only, no code copied; license and current maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Long-maintained, widely adopted open-source C# wrapper over the Steamworks native SDK with tagged releases and documented achievement, stat, leaderboard, and cloud-file call shapes; adoption count, release cadence, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent professional evidence, outside Valve's own documentation, that a store's achievement, stat, leaderboard, and cloud-file calls are exposed as plain typed methods on a resolved client object with an asynchronous, callback-based result rather than a hidden or globally scoped call, informing the Core's typed-intent-over-injectable-provider-port shape",
+      "admitted_claims": [
+        "The wrapper exposes achievement, stat, leaderboard, and cloud-file operations as methods on explicitly initialized interface objects, each returning a call handle whose result arrives through a documented callback rather than blocking the caller",
+        "The wrapper's own samples document checking whether the underlying API initialized successfully before calling any achievement, leaderboard, or cloud method, treating an uninitialized client as a distinct, checked failure rather than an assumption",
+        "Leaderboard find, upload, and download operations are documented as separate asynchronous calls in that order, matching the recurring find-then-write-or-read shape this family's Core models as one closed capability rather than a single combined call"
+      ],
+      "excluded_uses": [
+        "No wrapper type, interface, or callback signature is copied and the Core has no dependency on it",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    },
+    {
+      "id": "godotsteam-oss",
+      "kind": "maintained_open_source_implementation",
+      "authority": "GodotSteam contributors",
+      "url": "https://github.com/GodotSteam/GodotSteam",
+      "license_or_terms": "MIT; architecture facts only, no code copied; license and current maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Actively maintained open-source second-engine integration exposing achievement, stat, leaderboard, and cloud-file calls to a different engine's scripting layer, with tagged releases tracking current Godot versions; exact version, integration form, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent second-engine evidence that the same achievement, stat, leaderboard, and cloud-file capability set recurs when exposed to a different engine's scripting layer, rather than being an artifact of Unity's or C#'s own API shapes",
+      "admitted_claims": [
+        "A second engine's community integration exposes achievement set and store, stat set and store, leaderboard find, upload, and download, and cloud file read and write as separate script-callable functions, mirroring the same four-capability shape independently of the engine",
+        "The integration documents that most of these calls are asynchronous and require checking a callback or signal for the result rather than returning a final value synchronously, matching the request/response shape this family's Core models as an intent applied to state rather than an immediate return value",
+        "The integration is a community layer over the vendor's native SDK, not a first-party engine feature, which the family treats as evidence that the capability shape is vendor-defined and portable across engines rather than tied to any one engine's platform integration"
+      ],
+      "excluded_uses": [
+        "No engine type, node, class, or method is copied and the Core has no dependency on it",
+        "Godot is a roadmap direction only for this repository (see the current implementation boundary in AGENTS.md); this source proves recurrence of the intent shape, not Godot support",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "persistence-family-verification-contract",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/persistence/verification-contract.md",
+      "reason": "The Persistence family's stage/integrity/flush pipeline over local documents is the seam a consumer may mirror into this family's cloud_save capability, for example writing the same document locally and to the cloud; the Persistence pipeline itself is not re-derived here and contributes no evidence for this family's capability, intent, or provider semantics"
+    },
+    {
+      "id": "settings-family-verification-contract",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/settings/verification-contract.md",
+      "reason": "Account identity and sign-in status are a Settings-adjacent display concern, for example a signed-in-as row on a settings screen reading this family's identity capability; the Settings definition/profile/applicator model itself is not re-derived here and contributes no evidence for this family's semantics"
+    },
+    {
+      "id": "shipped-game-gap-matrix",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/benchmarks/shipped-game-gap-matrix.md",
+      "reason": "Ranks platform services thirteenth and records that every shipped shape needs entitlement, and most need achievements, leaderboards, or cloud save; this is the motivating gap the queue candidate answers, not evidence for the common kernel"
+    },
+    {
+      "id": "version-adaptive-reference-model",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/version-adaptive-reference-model.md",
+      "reason": "States that a package manifest or one successful profile does not prove other Unity, provider SDK, store, or account tuples; this family's Unity-adapter admitted role for every vendor SDK source is bounded by that policy rather than by the vendor's own text"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, store approval, platform review outcome, or device authority",
+    "The first implementation is a capability, provider-descriptor, intent, immutable-state, and offline-queue substrate; it is not a store integration, a storefront, or a purchasing flow, and admits no claim that any named store, platform, or SDK version is installed, configured, or certified",
+    "The family guarantees the plumbing only: that an accepted check_entitlement, unlock, report_score, read_leaderboard, cloud_write, or cloud_read intent reached the injectable provider port with the exact capability, payload, and idempotency key it computed; whether a real store granted entitlement, unlocked an achievement, accepted a score, or accepted a cloud write is a human or process observation recorded outside package claims",
+    "Store approval, real entitlement, and real leaderboard behaviour are receipts from a real store build on a device, never package claims, and no test in this family's gates claims a store granted entitlement, unlocked an achievement, accepted a score, or persisted a cloud file",
+    "Automated or device evidence recorded for one provider, store, or account tuple never transfers to another provider, store, platform, or account, and a capability proven available on one provider is never assumed on another"
+  ]
+}

@@ -34,12 +34,10 @@ carries an `IntentActor` (`player`, the default, `agent`, `replay`, or
 revision that a stale value rejects with `state.stale` before the intent's own
 rule ever runs — never a second write path, and never a different validation
 rule for a different actor. `HapticUnityRuntime.Apply` calls this one entry
-point and no other. This shape (and the `state.stale` code itself) is not in
-`docs/standards/haptics/verification-contract.md`'s literal Core-gate text,
-which predates LESSON-011; it is the identical one-intent-channel shape
-`staging/live-tuning` already carries, added here because every live family
-answers LESSON-011 (see `docs/standards/haptics/coverage-map.json`'s summary
-note and `HapticFailure.StateStale`'s doc comment for the full accounting).
+point and no other. This is the one-intent-channel Core-gate clause of
+`docs/standards/haptics/verification-contract.md` (LESSON-011), the identical
+shape `staging/live-tuning` carries; `docs/standards/haptics/coverage-map.json`
+rows HC-13 to HC-16 map it to its tests.
 `docs/standards/lessons/lessons-register.json` has no Haptics row yet for
 LESSON-011 (or for the other ten lessons); that disposition is a maintainer
 record outside this package's own paths, made when the family is admitted.

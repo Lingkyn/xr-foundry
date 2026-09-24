@@ -1,0 +1,64 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "platform-services",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-24",
+  "source_manifest": "docs/standards/platform-services/source-manifest.json",
+  "consumer_contexts": [
+    "rhythm-action and object-interaction XR games distributed on a headset store (Meta Horizon Store, PICO store) that must pass an entitlement check at launch and report achievements and leaderboard scores per signed-in account without hand-writing a vendor SDK call at every gameplay site",
+    "spatial-creation and training XR applications distributed through Steam or a visionOS App Store build that save small per-account cloud documents and read them back on a second device, behind the same typed intent seam regardless of which store's SDK is wired in"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://developers.meta.com/horizon/documentation/unity/ps-entitlement-check/",
+      "https://developers.meta.com/horizon/documentation/unity/ps-achievements/",
+      "https://developers.meta.com/horizon/documentation/unity/ps-cloud-storage/",
+      "https://developer.picoxr.com/document/unity/platform-sdk-overview/",
+      "https://partner.steamgames.com/doc/features/achievements",
+      "https://partner.steamgames.com/doc/features/cloud",
+      "https://developer.apple.com/documentation/gamekit",
+      "https://developer.apple.com/documentation/storekit/verifying-purchases-and-managing-subscriptions-in-your-app",
+      "https://docs.unity.com/ugs/en-us/manual/cloud-save/manual/overview",
+      "https://developer.apple.com/app-store/review/guidelines/"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/rlabrecque/Steamworks.NET",
+      "https://github.com/GodotSteam/GodotSteam"
+    ]
+  },
+  "common_kernel": [
+    "account and provider identity as validated identities separate from any vendor SDK session, token, or account object",
+    "a closed platform-service capability set (entitlement, achievement, leaderboard, cloud_save, identity), with a provider descriptor built by explicit registration declaring which capabilities a given provider supports so a composition fails closed at compose time when a required capability is missing",
+    "typed check_entitlement, unlock, report_score, read_leaderboard, cloud_write, and cloud_read intents applied to an immutable state with stable failure codes and deterministic replay to an equal fingerprint",
+    "an entitlement check as a distinct, boot-time, asynchronous request/response call that can fail for reasons other than being not entitled, and that a store's own certification requirements expect a title to perform and to fail closed on",
+    "achievement unlock and leaderboard score submission as idempotent, per-account write calls addressed to a server-defined identifier, with leaderboard reads as a separate paginated query",
+    "cloud save as a small per-account document or key/value store distinct from achievements and leaderboards, with an explicit conflict or staleness signal rather than a silent overwrite",
+    "an offline pending-write queue keyed by an idempotency key so a write issued without connectivity replays in order exactly once when connectivity returns, rather than being lost or duplicated"
+  ],
+  "configurable_variation": [
+    "which providers a product registers, which capabilities each provider supports, and the cloud payload guard rail per provider",
+    "which achievements, leaderboards, and cloud keys a product defines and their content",
+    "adapter-side provider selection (Meta Horizon Platform SDK, PICO platform SDK, Steamworks, Apple Game Center and StoreKit, Unity Gaming Services Cloud Save) and the consumer-owned fallback intent behind the entitlement gate",
+    "consumer-owned store listing, purchase flow, and account-management UI"
+  ],
+  "excluded_project_specific": [
+    "one product's store listing, purchase flow, pricing, and account-management screen content",
+    "one project's choice of which achievements, leaderboards, or cloud keys to expose and any judgement that a store's review outcome is acceptable"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Platform services (entitlement, achievements, leaderboards, cloud save, and identity behind a signed-in account) is a recurring cross-project need the shipped-game-gap-matrix records for every benchmark shape, and its kernel (validated account and provider identity, a closed capability set with an explicit provider descriptor that fails composition closed when a capability is missing, typed intents over an immutable state with deterministic replay, and an idempotency-keyed offline pending-write queue) is supported by Meta's and PICO's first-party platform SDK documentation for entitlement, achievements, leaderboards, and cloud storage, Valve's Steamworks documentation for achievements, stats, leaderboards, and cloud files, Apple's Game Center and StoreKit documentation including visionOS-applicable entitlement verification, Unity Gaming Services' engine-side Cloud Save as a document-shaped alternative, Apple's App Store Review Guidelines as store-policy evidence that a working entitlement or restore check is a certification requirement, and two independent open-source implementations (the long-maintained Steamworks.NET wrapper and the second-engine GodotSteam integration) that expose the same four-capability shape as plain typed calls with asynchronous, checkable results, while every product keeps its own store listing, purchase flow, and account-management UI outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim that any store granted entitlement, unlocked an achievement, accepted a leaderboard score, or persisted a cloud file, nor any named-provider, named-store, or named-account behavior; the family guarantees the plumbing only and every such judgement is a human or process observation in a store sandbox log or a Device Lab receipt.",
+    "Admission does not make the family a storefront, a purchasing flow, or an account-management screen, and it transfers no Persistence, Settings, Interaction, Audio, or Haptics evidence to this family; evidence for one provider, store, or account tuple never transfers to another.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, section anchors, versions, licenses, and the maintenance state of each open-source implementation."
+  ]
+}

@@ -102,6 +102,36 @@
       ],
       "package_ids": [],
       "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/haptics/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether haptic identity, the kind and profile model, and the binding table to Interaction and Audio are stable enough to admit a Core blueprint and one Unity adapter blueprint."
+    },
+    {
+      "id": "NEXT-PLATFORM-SERVICES",
+      "title": "Platform services: entitlement, achievements, leaderboards, cloud save, and identity behind one provider-descriptor seam",
+      "state": "proposal",
+      "objective": "Define engine-light account and provider identity, a closed platform-service capability set (entitlement, achievement, leaderboard, cloud_save, identity), a provider descriptor built by explicit registration that fails composition closed when a required capability is missing, check_entitlement, unlock, report_score, read_leaderboard, cloud_write, and cloud_read intents on an immutable state with deterministic replay, and an idempotency-keyed offline pending-write queue, with a thin Unity adapter behind one provider interface over the Meta Horizon Platform SDK, the PICO platform SDK, Steamworks, Apple Game Center and StoreKit, and Unity Gaming Services Cloud Save, so a title checks entitlement, reports progress, and saves to the cloud without hand-writing a vendor SDK call at every gameplay site; the family proves the plumbing, and whether a store granted entitlement or accepted a write stays a store sandbox or Device Lab receipt.",
+      "source_requirements": [
+        "First-party Meta Horizon Platform SDK and PICO platform SDK documentation for entitlement checks, achievements, leaderboards, and cloud storage, at the versions this repository can confirm and pin",
+        "Official Steamworks documentation for achievements, stats, leaderboards, and cloud files, and Apple Game Center and StoreKit documentation for achievements, leaderboards, and verifiable entitlement on visionOS and the wider Apple ecosystem",
+        "Unity Gaming Services Cloud Save documentation as one engine-side provider option, and Apple's App Store Review Guidelines as store-policy evidence that a working entitlement or restore check is a certification requirement",
+        "One or two maintained open-source implementations exposing the same achievement/leaderboard/cloud-save call shape (Steamworks.NET, GodotSteam) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Felt store-approval, real-entitlement, and real-leaderboard evidence boundaries that route every such claim to a store sandbox log or a Device Lab receipt, so no package claim says a store granted entitlement or accepted a write"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/platform-services/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether the capability set, the provider-descriptor fail-closed rule, and the offline pending-write queue are stable enough to admit a Core blueprint and one Unity adapter blueprint."
+    },
+    {
+      "id": "NEXT-QUALITY-TIERS",
+      "title": "Quality tiers: per-device performance presets bound to a capability-gated tier registry",
+      "state": "proposal",
+      "objective": "Define engine-light tier and device-profile identity, a closed per-tier declaration (refresh rate, render scale, foveation level, MSAA, shadow and post-processing budgets) with guard rails, per-device-profile capability descriptors that fail a tier selection closed at select time rather than letting a runtime silently clamp it, select-tier, set-override, reset, and apply-preset intents on an immutable per-device state with deterministic replay, and a frame-budget policy expressed as data, with a thin Unity adapter over the XR display subsystem, XR settings, and URP renderer-asset switching plus a hook the Settings family may consume, so a title holds a store-certifiable frame rate on more than one headset generation without hard-coding one fixed quality setting.",
+      "source_requirements": [
+        "Official Unity XR display-subsystem refresh-rate and foveation-level APIs, XR render-scale/eye-texture-resolution settings, and Quality Settings/URP renderer-asset switching, at the versions pinned by the compatibility profiles",
+        "The OpenXR core specification's XR_FB_foveation vendor extension as standards-body evidence for a closed foveation-level shape",
+        "First-party Meta Horizon OS and PICO foveated-rendering guidance paired with each platform's published store performance and quality-content requirements (frame rate, dropped-frame limits), plus Apple visionOS performance guidance treating a sustained frame rate as a comfort requirement",
+        "Unity Adaptive Performance as an engine-side thermal/power feedback signal and one maintained open-source second-engine implementation (Godot) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Held-frame-rate, comfort, render-scale/foveation legibility, and store-certification evidence boundaries that route every such claim to a Device Lab receipt or a real store-submission record, so no package claim says a device held a frame rate or passed certification"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/quality-tiers/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether tier identity, the capability-descriptor gating model, and the frame-budget policy are stable enough to admit a Core blueprint and one Unity adapter blueprint."
     }
   ]
 }

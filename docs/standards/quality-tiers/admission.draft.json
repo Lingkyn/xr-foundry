@@ -1,0 +1,62 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "quality-tiers",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-24",
+  "source_manifest": "docs/standards/quality-tiers/source-manifest.json",
+  "consumer_contexts": [
+    "rhythm-action and object-interaction XR games that must hold a store-certified frame rate on more than one headset generation by lowering render scale and foveation level per device instead of shipping one fixed quality setting that only holds on the newest hardware",
+    "spatial-creation and training XR applications on several headset platforms (OpenXR runtimes, and platform-specific rendering budgets) that expose a user-facing quality option through the Settings family and expect that option to map to a device-appropriate tier without either family depending on the other"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/XR.XRDisplaySubsystem.html",
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/XR.XRSettings-eyeTextureResolutionScale.html",
+      "https://docs.unity3d.com/6000.3/Documentation/ScriptReference/XR.XRDisplaySubsystem-foveatedRenderingLevel.html",
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_FB_foveation",
+      "https://developers.meta.com/horizon/documentation/unity/unity-fixed-foveated-rendering/",
+      "https://developers.meta.com/horizon/resources/publish-quality-standards/",
+      "https://developer.picoxr.com/document/unity/fixed-foveated-rendering/",
+      "https://developer.apple.com/documentation/visionos/optimizing-your-app-s-appearance-and-performance-for-visionos",
+      "https://docs.unity3d.com/6000.3/Documentation/Manual/class-QualitySettings.html",
+      "https://docs.unity3d.com/Packages/com.unity.adaptiveperformance@5.1/manual/index.html"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/godotengine/godot"
+    ]
+  },
+  "common_kernel": [
+    "tier and device-profile identity as validated identities separate from the renderer, subsystem, or device that applies them",
+    "a closed per-tier declaration (refresh rate, render scale, foveation level, MSAA, shadow and post-processing budgets) with guard rails, and an immutable registry built by explicit registration that rejects duplicates and invalid declarations",
+    "a per-device-profile capability descriptor that fails a tier selection closed at select time when the device does not support what the tier asks for, rather than letting the runtime silently clamp or ignore an unsupported request",
+    "select-tier, set-override, reset, and apply-preset intents applied to an immutable state holding, per device profile, the selected tier and its overrides, with stable failure codes and deterministic replay to an equal fingerprint",
+    "a frame-budget policy (a target frame time and a bounded drop threshold) expressed as plain data rather than a hard-coded certification number, so a title can name and check its own budget without the family claiming certification",
+    "addressing render scale and foveation as a small closed, guard-railed shape rather than a continuous per-title constant, so the same tier and capability shape recurs across engines and platforms without device-specific call sites"
+  ],
+  "configurable_variation": [
+    "which tiers a product registers, their guard rails, and which capability descriptors it builds for which device profiles",
+    "which Settings-owned option value a product's hook maps to which tier or override, and whether a selection is persisted through the Persistence family",
+    "adapter-side route selection (the XR display subsystem, the URP renderer-asset map, and an optional Adaptive Performance feedback route) and the device-profile ids a consumer defines",
+    "consumer-owned frame-rate targets, device support lists, per-device renderer-asset content, and any device-specific tuning or certification submission"
+  ],
+  "excluded_project_specific": [
+    "one product's frame-rate target, device support list, and per-device renderer-asset content",
+    "one project's choice of which tiers to expose, which device profiles to support, and any judgement that a tier holds a stable frame rate or passes certification on its device"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Performance and quality-tier management is a recurring cross-project need every one of the shipped-game-gap-matrix's three product shapes needs, because store certification requires a stable frame rate on every headset a title ships on and no single fixed quality setting holds that bar across device generations. Its kernel (validated tier and device-profile identity, a closed per-tier declaration with explicit guard rails, per-device capability descriptors that fail a selection closed rather than silently clamping it, intents over an immutable per-device state with deterministic replay, and a frame-budget policy expressed as data) is supported by the engine's own XR display-subsystem refresh-rate and foveation-level APIs and its render-scale and Quality Settings/URP renderer-asset-swap documentation, the OpenXR core specification's XR_FB_foveation vendor extension, first-party Meta and PICO developer guidance on foveated rendering paired with each platform's published store performance and quality-content requirements, Apple's visionOS performance guidance treating a sustained frame rate as a comfort requirement, Unity's Adaptive Performance package as evidence that device thermal/power feedback is a distinct, optional signal rather than a Core behaviour, and an independent second-engine open-source implementation (Godot) that exposes the same render-scale-and-quality-preset shape behind runtime- and platform-dependent capability gating, while every product keeps its own frame-rate target, device support list, and renderer-asset content outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim that any device holds a stated refresh rate, render scale, or foveation level, that a tier is comfortable or legible on any headset, or that any build passes or has passed store certification; the family guarantees the plumbing only and every such judgement is a human observation or a real store-submission record, never a package claim.",
+    "Admission does not make the family a benchmarking tool, a frame-rate optimizer, or an automatic quality controller, and it transfers no Settings, Persistence, Interaction, Audio, Haptics, XR UI shell, or Live tuning evidence to this family; evidence for one device profile, Unity, render-pipeline, or OpenXR runtime tuple never transfers to another.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, section anchors, versions, licenses, and the maintenance state of the open-source implementation."
+  ]
+}

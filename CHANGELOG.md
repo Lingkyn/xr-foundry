@@ -5,6 +5,16 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged the Haptics family (`staging/haptics`, WI-026): `com.lingkyn.haptics.core`
+  (event and profile identity, the closed kind set transient / continuous /
+  envelope with guard rails, an explicit registry, per-target profiles, an
+  immutable state with play, stop, stop_all, and set_profile intents, last-one-wins
+  per target, deterministic replay, the binding table from interaction intents
+  and audio events, and the one intent channel with actor and revision) and
+  `com.lingkyn.haptics.unity` (XRI impulse and OpenXR action routes behind an
+  injectable output sink with a recording test double, profile assets with
+  explicit references, envelope degrading to transient with a diagnostic). 86
+  tests; coverage map 24 of 24 clauses. Authored, unexecuted.
 - Resolved DLB-0003 (routine lane) by lazy consensus: the governance_policy
   window closed on 2026-09-23T14:00Z with no risk or counterexample delta, so
   the record carries OPT-ROUTINE-LANE with

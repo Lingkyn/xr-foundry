@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.haptics.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Haptics Core",
+  "description": "Engine-light haptics substrate: immutable HapticEventId and HapticProfileId identity with a canonical dotted-segment form, a closed HapticKind set (transient, continuous, envelope) with fail-closed amplitude/duration/frequency guard-rail validation, an immutable HapticEventRegistry built by explicit registration, per-target HapticProfiles over the closed HapticTarget set (left, right, both, named_device) with a scale and an enable flag, play/stop/stop_all/set_profile intents applied to an immutable last-one-wins HapticState with deterministic replay and a fingerprint, a binding table from the Interaction family's semantic intent ids and the Audio family's event ids to haptic events with a named binding.unbound result for an unbound source, the one-intent-channel actor/expected-revision/state.stale shape (LESSON-011), and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "HapticsWalkthrough",
+      "description": "Domain-only walkthrough: a registry built by explicit registration, a profile set, a full play/stop/stop_all/set_profile intent sequence, a binding table resolving a source intent to a haptic play intent and reporting binding.unbound for an unbound one, and a replayed sequence proving deterministic state; needs no asset, scene, or UnityEngine API.",
+      "path": "Samples~/HapticsWalkthrough"
+    }
+  ]
+}

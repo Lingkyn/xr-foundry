@@ -1041,7 +1041,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
-      "status": "open",
+      "status": "done",
       "depends_on": [
         "WI-025"
       ],
@@ -1076,6 +1076,90 @@
         ]
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
+      "done_proof": "docs/standards/haptics/coverage-map.json"
+    },
+    {
+      "id": "WI-027",
+      "title": "Platform services source gate",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "open",
+      "depends_on": [],
+      "read_first": [
+        "AGENTS.md",
+        "docs/foundry/system-admission.md",
+        "docs/benchmarks/shipped-game-gap-matrix.md",
+        "docs/standards/haptics/verification-contract.md",
+        "docs/standards/haptics/source-manifest.json",
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/settings/verification-contract.md",
+        "docs/standards/persistence/verification-contract.md"
+      ],
+      "allowed_paths": [
+        "docs/standards/platform-services/",
+        "docs/foundry/queue/next-batch.json"
+      ],
+      "steps": [
+        "Write the source manifest (Meta Platform SDK entitlement check, achievements, leaderboards, and cloud storage documentation; PICO platform services; Steamworks (Unity) achievements, stats, leaderboards, and cloud; Apple Game Center and StoreKit entitlement guidance for visionOS; Unity Gaming Services / Cloud Save as one engine-side option; store review and certification requirements that mandate an entitlement check at launch; one or two maintained open-source multi-store abstraction layers with license and maintenance state), the verification contract (Core gate: a closed capability set entitlement, achievement, leaderboard, cloud_save, identity; typed intents check_entitlement, unlock, report_score, read_leaderboard, cloud_write, cloud_read on an immutable state with deterministic replay, actor and expected revision per LESSON-011, and stable codes for not_entitled, offline, rate_limited, capability.unsupported, identity.missing; a provider descriptor that declares which capabilities a provider supports so a composition fails closed at compose time when a required capability is missing; a queue of pending writes that survives offline and replays in order with idempotency keys; no vendor type in Core; Unity gate: thin provider adapters per vendor SDK behind one interface constructed with explicit references, an injectable fake provider for tests, an entitlement-gate at boot that fails closed with a diagnostic and a consumer-owned fallback intent, and no vendor SDK call outside the adapter assembly), README with lesson dispositions and the claim ceiling (store approval, real entitlement, and real leaderboard behaviour are receipts from a real store build on a device, never package claims), and admission draft.",
+        "Add a NEXT-PLATFORM-SERVICES candidate to the queue with state proposal and no package_ids."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "docs/standards/platform-services/README.md",
+          "docs/standards/platform-services/source-manifest.json",
+          "docs/standards/platform-services/verification-contract.md",
+          "docs/standards/platform-services/admission.draft.json"
+        ]
+      },
+      "evidence": "The four artifacts in the tree and a passing repository contract.",
+      "done_proof": null
+    },
+    {
+      "id": "WI-028",
+      "title": "Quality tiers source gate",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "open",
+      "depends_on": [],
+      "read_first": [
+        "AGENTS.md",
+        "docs/foundry/system-admission.md",
+        "docs/benchmarks/shipped-game-gap-matrix.md",
+        "docs/standards/haptics/verification-contract.md",
+        "docs/standards/haptics/source-manifest.json",
+        "docs/standards/lessons/lessons-register.json",
+        "docs/standards/settings/verification-contract.md",
+        "docs/standards/persistence/verification-contract.md"
+      ],
+      "allowed_paths": [
+        "docs/standards/quality-tiers/",
+        "docs/foundry/queue/next-batch.json"
+      ],
+      "steps": [
+        "Write the source manifest (Unity XR performance settings and XR display subsystem refresh-rate APIs, render scale / eye texture resolution, foveated rendering (Unity XR foveation API, OpenXR foveation extensions, Meta and PICO foveation guidance), Unity Quality Settings and URP renderer asset switching, Meta and PICO store performance requirements (frame rate, dropped-frame limits) and Apple visionOS performance guidance, Unity Adaptive Performance as one engine-side option, and one maintained open-source XR performance toolkit with license and maintenance state), the verification contract (Core gate: a closed tier set with named tiers and per-device presets keyed by a device profile id; a tier declares refresh rate, render scale, foveation level, MSAA, shadow and post-processing budgets with guard rails; typed intents select_tier, set_override, reset, apply_preset on an immutable state with deterministic replay, actor and expected revision per LESSON-011, and stable codes tier.unknown, device.unknown, value.out_of_range, capability.unsupported; a capability descriptor per device profile so a tier that asks for an unsupported refresh rate or foveation level fails closed at select time; a frame-budget policy that names the target frame time and the drop threshold as data; no engine type in Core; Unity gate: an adapter that applies a tier through XR display subsystem, XR settings, and URP asset switching with explicit references and LESSON-004 diagnostics on every by-name resolution, an injectable fake device probe and fake renderer for tests, a frame-time sampler that reports measured frame time as data with no claim of comfort, and a hook the Settings family may consume so a user-facing quality option maps to a tier), README with lesson dispositions and the claim ceiling (a stable frame rate, comfort, and store certification are receipts from a device build, never package claims), and admission draft.",
+        "Add a NEXT-QUALITY-TIERS candidate to the queue with state proposal and no package_ids."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "docs/standards/quality-tiers/README.md",
+          "docs/standards/quality-tiers/source-manifest.json",
+          "docs/standards/quality-tiers/verification-contract.md",
+          "docs/standards/quality-tiers/admission.draft.json"
+        ]
+      },
+      "evidence": "The four artifacts in the tree and a passing repository contract.",
       "done_proof": null
     }
   ]

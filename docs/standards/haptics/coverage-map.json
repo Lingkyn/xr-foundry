@@ -1,0 +1,320 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "haptics",
+  "contract": "docs/standards/haptics/verification-contract.md",
+  "audited_at_commit": "staging",
+  "policy": {
+    "mapping_basis": "test method names and bodies in staging/haptics, matched against contract clause text; the code has not compiled or executed",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.haptics.core",
+      "test_assembly": "Lingkyn.Haptics.Core.Editor.Tests",
+      "clauses": [
+        {
+          "id": "HC-01",
+          "clause": "haptic identity: HapticEventId with a canonical form (lower-case segments joined by '.'), rejection of empty, whitespace, and malformed identifiers with a stable identity.malformed failure, and value equality between two identities with the same text; HapticProfileId shares the same rules and has no equality with a HapticEventId of the same text",
+          "coverage": "covered",
+          "tests": [
+            "HapticEventIdCanonicalizesLowerCaseDottedSegments",
+            "HapticEventIdRejectsMalformedTextWithIdentityMalformed",
+            "HapticEventIdentitiesWithSameCanonicalTextAreEqualValues",
+            "HapticProfileIdSharesCanonicalFormButNeverEqualsAHapticEventIdOfTheSameText",
+            "HapticIdentityParseThrowsWithTheFailureMessageForMalformedIdentity"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-02",
+          "clause": "a closed haptic-kind set with guard rails: transient, continuous, and envelope; a HapticEventDefinition declares (id, kind, an amplitude guard rail as a closed sub-range of [0, 1], a duration guard rail as a closed, positive range in milliseconds, and, only for a kind that uses it, an optional frequency guard rail as a closed positive range in hertz, plus a default amplitude/duration/frequency within each rail); a declaration with an inverted range, a non-positive duration bound, an amplitude bound outside [0, 1], a frequency range on a kind that does not use frequency, or a default outside its own guard rail is rejected with kind.declaration.invalid",
+          "coverage": "covered",
+          "tests": [
+            "EveryHapticKindAcceptsAWellFormedDeclarationWithADefaultInsideEachGuardRail",
+            "KindDeclarationRejectsInvertedAmplitudeRangeWithKindDeclarationInvalid",
+            "KindDeclarationRejectsAnAmplitudeBoundOutsideZeroOneWithKindDeclarationInvalid",
+            "KindDeclarationRejectsANonPositiveOrInvertedDurationBoundWithKindDeclarationInvalid",
+            "KindDeclarationRejectsAFrequencyRangeOnAKindThatDoesNotUseFrequencyWithKindDeclarationInvalid",
+            "KindDeclarationRejectsADefaultOutsideItsOwnGuardRailWithKindDeclarationInvalid"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-03",
+          "clause": "an immutable HapticEventRegistry built by explicit registration of (id, kind, amplitude guard rail, duration guard rail, optional frequency guard rail, label): registering an id twice is rejected with event.duplicate, a rejected registration leaves the registry unchanged, and a built registry enumerates its events in canonical id order and cannot be mutated afterwards",
+          "coverage": "covered",
+          "tests": [
+            "RegistrationRejectsDuplicateIdWithEventDuplicateLeavingBuilderUnchanged",
+            "RegistrationRejectsAnInvalidDeclarationBeforeCheckingDuplicates",
+            "BuiltRegistryEnumeratesInCanonicalIdOrderAndCannotBeMutatedAfterwards"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-04",
+          "clause": "per-controller and per-hand HapticProfiles built the same explicit way: a closed HapticTarget set (left, right, both, and named_device with an opaque device-id string), and, per target present in the profile, a scale factor and an enable flag; a scale outside a documented positive closed range or a duplicate target within one profile is rejected with profile.declaration.invalid, and an unlisted target defaults to enabled with a scale of 1.0",
+          "coverage": "covered",
+          "tests": [
+            "ProfileBuilderRejectsAScaleOutsideTheDocumentedPositiveRangeWithProfileDeclarationInvalid",
+            "ProfileBuilderRejectsADuplicateTargetWithinOneProfileWithProfileDeclarationInvalid",
+            "AnUnlistedTargetDefaultsToEnabledWithScaleOfOne",
+            "HapticProfileSetCreateThrowsOnANullProfileOrADuplicateProfileId"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-05",
+          "clause": "tuning intents applied to an immutable HapticState: play (event id, target, and optional amplitude, duration, and frequency overrides), stop (target), stop_all, and set_profile (profile id); play naming an unregistered event is rejected with event.unknown, naming an unregistered target (not in the closed set, or a named_device id no active profile declares) with target.unknown, supplying a frequency override on a kind that does not use frequency with kind.mismatch, an amplitude override (or, absent an override, the definition's default) outside the event's amplitude guard rail with amplitude.out_of_range, and a duration override (or default) outside the event's duration guard rail with duration.out_of_range; set_profile naming an unregistered profile id is rejected with profile.unknown",
+          "coverage": "covered",
+          "tests": [
+            "PlayRejectsAnUnregisteredEventWithEventUnknown",
+            "PlayRejectsAnUnregisteredTargetWithTargetUnknown",
+            "PlayRejectsAFrequencyOverrideOnAKindThatDoesNotUseFrequencyWithKindMismatch",
+            "PlayRejectsAnAmplitudeOverrideOrDefaultOutsideTheGuardRailWithAmplitudeOutOfRange",
+            "PlayRejectsADurationOverrideOrDefaultOutsideTheGuardRailWithDurationOutOfRange",
+            "SetProfileRejectsAnUnregisteredProfileIdWithProfileUnknown",
+            "PlayAcceptsTheDefaultAmplitudeAndDurationWhenNoOverrideIsSupplied",
+            "PlayOnANamedDeviceTargetTheActiveProfileDeclaresIsAccepted"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-06",
+          "clause": "last-one-wins per target as the only state: a state holds, per target, at most one active playback (its event id and the effective amplitude, duration, and frequency the profile's scale was applied to) and the active profile id; a play accepted for a target that already holds an active playback replaces it; stop clears exactly the named target's active playback and is a no-op returning success when that target holds none; stop_all clears every target's active playback and never touches the active profile",
+          "coverage": "covered",
+          "tests": [
+            "PlayAcceptedForATargetThatAlreadyHoldsAnActivePlaybackReplacesIt",
+            "StopClearsExactlyTheNamedTargetsActivePlaybackAndIsANoOpSuccessWhenItHoldsNone",
+            "StopAllClearsEveryTargetsActivePlaybackAndNeverTouchesTheActiveProfile",
+            "SetProfileNeverTouchesAlreadyActivePlaybacks"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-07",
+          "clause": "state immutability: a state is immutable, an accepted intent produces a new state and leaves the prior state intact, and a rejected intent leaves the prior state intact and returns it unchanged with the failure code",
+          "coverage": "covered",
+          "tests": [
+            "AcceptedIntentProducesNewStateWhilePriorStateStaysReadableAndEqualToItself",
+            "RejectedIntentLeavesPriorStateIntactWithTheFailureCode"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-08",
+          "clause": "deterministic replay: the same intent sequence over the same registry, profile set, and initial state produces an equal final state and an equal fingerprint; the fingerprint covers the event-registry fingerprint, the profile-set fingerprint, the active profile id, and the active-playback entries in canonical target order; two states reached by different intent sequences with the same net active playbacks and the same active profile have equal fingerprints",
+          "coverage": "covered",
+          "tests": [
+            "SameIntentSequenceOverTheSameRegistryProfileSetAndInitialStateProducesEqualStateAndFingerprint",
+            "TwoStatesWithTheSameNetActivePlaybacksReachedByDifferentSequencesHaveEqualFingerprints"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-09",
+          "clause": "a binding table from other families' semantic identities to haptic events: a HapticBinding names one source kind (interaction_intent or audio_event), one source id (an opaque string this family never interprets, reusing the Interaction family's IntentId text or the Audio family's event identity text), one HapticEventId, and a default target; a binding whose haptic event id is not registered is rejected with event.unknown, and a second binding for the same source kind and source id is rejected with binding.duplicate; a validated binding table enumerates in canonical source-kind-then-source-id order and resolves one source kind and id to at most one binding",
+          "coverage": "covered",
+          "tests": [
+            "BindingValidationRejectsAnUnregisteredHapticEventWithEventUnknown",
+            "BindingValidationRejectsASecondBindingForTheSameSourceKindAndIdWithBindingDuplicate",
+            "ValidatedBindingTableEnumeratesInCanonicalSourceKindThenSourceIdOrder",
+            "ATableResolvesOneSourceKindAndIdToAtMostOneBinding"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-10",
+          "clause": "composed dispatch from one source intent: given a source kind and id, the binding table resolves independently to a haptic play intent (if bound), and the same source kind and id is separately resolvable by the Audio family's own binding and, once it exists, a future feedback-effect family's binding, so one grab or one hit dispatches haptics, audio, and a feedback effect from one source intent without any of the three blocking the others; a source kind and id with no haptic binding produces a structured binding.unbound result naming the source kind and id rather than silently doing nothing, and this result never prevents the audio or feedback dispatch for the same source intent",
+          "coverage": "covered",
+          "tests": [
+            "DispatchResolvesABoundSourceToAHapticPlayIntentIndependentlyOfAnyOtherFamily",
+            "DispatchOnAnUnboundSourceProducesANamedBindingUnboundResultRatherThanSilence",
+            "DispatchOnTwoIndependentlyConstructedTablesForTheSameBoundSourceDoesNotInterfere"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-11",
+          "clause": "structured results with stable failure codes for a malformed identity, an invalid kind declaration, an invalid profile declaration, a duplicate event, a duplicate binding, an unknown event, an unknown target, a kind mismatch, an out-of-range amplitude, an out-of-range duration, an unknown profile, and an unbound source intent, each carrying the offending id, target, or source kind and id, plus a valid intent sequence passing clean with every outcome accepted",
+          "coverage": "covered",
+          "tests": [
+            "EveryRejectionAboveCarriesAStableNonEmptyCodeAndTheOffendingIdOrTargetInItsMessage",
+            "AValidIntentSequencePassesCleanWithEveryOutcomeAccepted"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-12",
+          "clause": "the Core references no engine type, holds no UnityEngine type, reads no asset, plays no sound, and drives no actuator; amplitude, duration, and frequency are plain numeric values, and a named_device target's device id enters and leaves the Core as an opaque string",
+          "coverage": "covered",
+          "tests": [
+            "CoreAssemblyReferencesNoUnityEngineAssembly",
+            "NoCoreRuntimeSourceFileMentionsUnityEngineOrAnAssetOrActuatorType",
+            "ANamedDeviceTargetsDeviceIdEntersAndLeavesTheCoreAsAnOpaqueString"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-13",
+          "clause": "one intent channel for people and agents (LESSON-011): every HapticIntent (play, stop, stop_all, set_profile) carries an IntentActor from the closed set player/agent/replay/import, defaulting to player when a caller does not name one, and an optional expected revision; HapticState carries a monotonically increasing Revision, 0 for Initial and one higher on every accepted intent, excluded from Fingerprint",
+          "coverage": "covered",
+          "tests": [
+            "EveryIntentDefaultsToPlayerActorWithNoExpectedRevisionWhenUsingTheShortConstructor",
+            "EveryIntentAcceptsAnExplicitActorFromTheClosedSetAndAnExpectedRevision",
+            "StateRevisionStartsAtZeroAndIncreasesByExactlyOneOnEveryAcceptedIntentButNeverOnARejected"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-14",
+          "clause": "one intent channel for people and agents (LESSON-011): a stale expected revision is rejected with state.stale and changes nothing: HapticState.Apply checks a non-null expected revision before the intent's own rule ever runs, for every intent type and regardless of actor, and a matching expected revision is accepted exactly like no expected revision at all",
+          "coverage": "covered",
+          "tests": [
+            "AStaleExpectedRevisionIsRejectedWithStateStaleAndChangesNothing",
+            "EveryIntentTypeRejectsAStaleExpectedRevisionWithStateStaleRegardlessOfActor",
+            "AMatchingExpectedRevisionIsAcceptedExactlyLikeNoExpectedRevisionAtAll"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-15",
+          "clause": "one intent channel for people and agents (LESSON-011): the actor never changes validation: a player-issued and an agent-issued copy of the same intent, accepted or rejected, take the same path through HapticState.Apply and produce an equal result (same accepted flag and code) and, when accepted, an equal resulting state",
+          "coverage": "covered",
+          "tests": [
+            "PlayerAndAgentIssuingTheSameAcceptedIntentTakeTheSamePathAndProduceEqualResultingState",
+            "PlayerAndAgentIssuingTheSameRejectedIntentGetTheSameFailureCode"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HC-16",
+          "clause": "one intent channel for people and agents (LESSON-011): the replay log: HapticIntentOutcome (from ApplyAll) carries the issuing intent's actor and the state's revision immediately after the outcome settled, accepted or rejected, so a recorded sequence names who did what and at which revision, in order",
+          "coverage": "covered",
+          "tests": [
+            "ReplayLogRecordsTheIssuingActorAndTheRevisionAfterEveryOutcomeAcceptedOrRejected"
+          ],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "unity",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.haptics.unity",
+      "test_assembly": "Lingkyn.Haptics.Unity.Editor.Tests",
+      "clauses": [
+        {
+          "id": "HU-01",
+          "clause": "a thin adapter over two haptic-output routes, XR Interaction Toolkit haptic impulse channels and OpenXR haptic actions, with explicit target resolution: the adapter resolves each Core HapticTarget to one concrete route handle (an XRI haptic impulse channel or an OpenXR action-and-subaction-path pair) through an explicit, injected mapping rather than a scene search or a name-matching scan of active input devices; a target the mapping does not resolve reports target.unknown with the target and the route name, and construction throws with the same report, carrying a negative test for the missing target (LESSON-004)",
+          "coverage": "covered",
+          "tests": [
+            "RouteMapResolvesEachClosedSetTargetToItsExplicitlyMappedRouteHandle",
+            "RouteMapValidateReportsTargetUnknownWithTheTargetAndRouteNameForAMissingClosedSetEntry",
+            "RouteMapCreateThrowsWithTheSameReportForAMissingClosedSetEntry",
+            "RouteMapTryResolveReturnsFalseForAnUnmappedNamedDeviceTargetWithoutThrowing"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-02",
+          "clause": "an injectable IHapticOutputSink with an in-memory test double so tests assert exactly what was sent for every accepted intent — the resolved target, the effective amplitude, the effective duration, and the effective frequency (or its absence) — without a device or a route dependency; the runtime never calls a route directly, only through the sink, and a rejected intent reaches no sink",
+          "coverage": "covered",
+          "tests": [
+            "RecordingSinkCapturesExactlyTheResolvedTargetAmplitudeDurationAndFrequencyForAnAcceptedPlay",
+            "RecordingSinkCapturesTheAbsenceOfFrequencyForAKindThatDoesNotUseIt",
+            "ARejectedIntentReachesNoSinkCall",
+            "StopAndStopAllForwardToTheSinkForAnAcceptedIntent"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-03",
+          "clause": "HapticProfileAsset as a ScriptableObject constructed with explicit references, converted deterministically to the Core's immutable HapticProfile without mutating the authored asset; an asset with a scale outside its documented range, a duplicate target, or a malformed profile id reports the Core's profile.declaration.invalid (or identity.malformed) with the field path and the source asset, and construction throws with the same report",
+          "coverage": "covered",
+          "tests": [
+            "ProfileAssetConvertsDeterministicallyToTheCoresImmutableProfileWithoutMutatingTheAsset",
+            "ProfileAssetValidationReportsAnInvalidScaleWithProfileDeclarationInvalidAndTheFieldPath",
+            "ProfileAssetValidationReportsADuplicateNamedDeviceIdWithProfileDeclarationInvalid",
+            "ProfileAssetConversionThrowsWithTheSameReportOnAnInvalidAsset",
+            "ProfileAssetValidationReportsAMalformedProfileIdWithIdentityMalformed"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-04",
+          "clause": "envelope playback degrading to a transient with a diagnostic: when the active runtime does not report the amplitude-envelope (or the PCM) OpenXR extension, the adapter plays an envelope event as a transient impulse using the envelope's declared peak amplitude and total duration and reports an explicit envelope.unsupported.degraded diagnostic naming the runtime and the substitution; it never reports that the requested envelope kind played when it did not",
+          "coverage": "covered",
+          "tests": [
+            "EnvelopeDegradeToTransientUsesThePeakAmplitudeAndTotalDurationWithANamedDiagnostic",
+            "EnvelopeDegradeNeverReportsThatTheRequestedEnvelopeKindPlayedWhenItDidNot",
+            "EnvelopePlaysUnchangedAndProducesNoDiagnosticWhenTheRuntimeSupportsIt",
+            "ATransientOrContinuousKindIsNeverDegradedRegardlessOfSupport"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-05",
+          "clause": "an explicit diagnostic for every by-name or optional resolution: a route handle, an InputActionReference, an IDualMotorRumble-capable device on the Input System fallback route, or an OpenXR extension capability query that the adapter resolves by name, by serialized field, or by an optional lookup must report an explicit failure with a stable code (channel.missing, device.missing, or action.missing) when the target is missing or unsupported, carrying a negative test for the missing target; silence or a reported success is a defect (LESSON-004)",
+          "coverage": "covered",
+          "tests": [
+            "XriSinkReportsChannelMissingForAChannelTheProbeDoesNotConfirmExists",
+            "XriSinkSucceedsWhenTheProbeConfirmsTheChannelExists",
+            "OpenXrSinkReportsDeviceMissingForAnActionTheProbeDoesNotConfirmExists",
+            "InputSystemRumbleFallbackReportsActionMissingForAnUnmappedTarget",
+            "InputSystemRumbleFallbackReportsDeviceMissingWhenNoRumbleCapableDeviceResolves",
+            "NoSinkReportsSuccessWhenItsOwnResolutionFailed"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-06",
+          "clause": "no polling: the runtime is driven only by explicit play, stop, stop_all, and set_profile calls it receives; it holds no per-frame update loop that resends an impulse, and a continuous kind's duration is the caller's explicit bound rather than a loop the adapter maintains on its own",
+          "coverage": "covered",
+          "tests": [
+            "NoUnityRuntimeSourceFileDeclaresAPerFrameUpdateLoopOrCoroutine",
+            "AContinuousKindsDurationIsTheCallersExplicitBoundNotAResentLoop"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-07",
+          "clause": "construction with explicit references only: a runtime is built from an explicit initial state, an explicit sink, and explicit envelope-support information; no scene singleton, static instance, scene search, or reflection discovery resolves any of them; two independently constructed runtimes over two sinks that share no state are tested side by side, so a play in one changes no target, active playback, or sink call of the other",
+          "coverage": "covered",
+          "tests": [
+            "RuntimeConstructionRequiresExplicitReferences",
+            "TwoRuntimesConstructedSideBySideShareNoState",
+            "NoUnityRuntimeSourceFileUsesResourcesLoadASceneSearchOrASingleton"
+          ],
+          "missing": []
+        },
+        {
+          "id": "HU-08",
+          "clause": "explicit route selection as configuration, never platform detection inside the family: the XRI route, the OpenXR route, and the Input System rumble fallback route are separate IHapticOutputSink implementations behind the one seam, and which one (or which ordered set, with the degrade path as a named fallback) a runtime uses is the consumer's explicit wiring at construction time, never a runtime check of the active platform or build target inside the adapter",
+          "coverage": "covered",
+          "tests": [
+            "OrderedFallbackTriesEachSinkInTheExplicitOrderUntilOneSucceeds",
+            "OrderedFallbackReturnsTheLastFailureWhenEverySinkFails",
+            "NoUnityRuntimeSourceFileChecksTheRuntimePlatformOrABuildTargetDefine"
+          ],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 24,
+    "covered": 24,
+    "partial": 0,
+    "unmapped": 0,
+    "open_gap_tests": 0,
+    "open_evidence_gaps": 0,
+    "execution_note": "All 86 tests (55 Core, 31 Unity adapter) are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. Every clause is proven with a fake for every seam that would otherwise need a device (IXriChannelProbe, IOpenXrDeviceProbe, IInputSystemRumbleProbe, IHapticEnvelopeSupport, RecordingHapticSink) or an asset (HapticProfileAsset via ScriptableObject.CreateInstance). No clause in this family's two gates is marked partial or unmapped: unlike Live Tuning's rendered-widget clauses, haptics has no panel or Editor GUI to inspect, so every Core and Unity adapter clause is fully provable in EditMode with the plumbing this claim ceiling names. HC-13..HC-16 map the contract's one-intent-channel Core-gate clause (LESSON-011: actor, expected revision, state.stale), the identical shape staging/live-tuning carries. Felt intensity, comfort, and whether a haptic event reads as intended are Device Lab receipts and are named nowhere in this map, per the contract's claim ceiling."
+  }
+}

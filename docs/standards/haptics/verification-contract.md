@@ -105,6 +105,15 @@ The Core references no engine type, holds no `UnityEngine` type, reads no
 asset, plays no sound, and drives no actuator; amplitude, duration, and
 frequency are plain numeric values, and a `named_device` target's device id
 enters and leaves the Core as an opaque string.
+- one intent channel for people and agents (LESSON-011): every `HapticIntent`
+  (`play`, `stop`, `stop_all`, `set_profile`) carries an `IntentActor` from the
+  closed set `player`, `agent`, `replay`, `import`, and an optional expected
+  revision; `HapticState` carries a monotonically increasing revision; a stale
+  expected revision is rejected with `state.stale` before the intent's own rule
+  runs and changes nothing; the actor never changes validation, so a
+  player-issued and an agent-issued copy of the same intent take the same path
+  and yield the same outcome and the same resulting state; and every outcome in
+  the replay log carries the issuing actor and the revision after it.
 
 ## Unity adapter gate
 

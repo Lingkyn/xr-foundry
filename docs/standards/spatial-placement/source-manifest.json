@@ -1,0 +1,260 @@
+{
+  "schema": "xr-foundry.spatial_placement_source_manifest.v1",
+  "scope": "Engine-light spatial placement: a placement session with a closed phase set (idle, aiming, previewing, committed, cancelled), a ghost preview expressed as data (pose, validity, snap target) never a rendered claim, typed begin, aim, adjust_distance, snap, commit, and cancel intents applied to an immutable placement state with deterministic replay and stable failure codes, a sticky aiming-hand rule, a distance-adjustment intent a consumer routes from a secondary control while aiming, an input-ownership declaration naming the shared control a session claims while aiming and its arbitration kind so a locomotion provider can be suppressed until the session ends, and a validity policy expressed as data (surface kinds, reach range, overlap rule), with a thin Unity adapter planned separately over XR Interaction Toolkit ray interactors and attach transforms, an injectable fake ray source and fake validity probe for tests, a ghost-renderer seam that only receives pose and validity, and a fold-or-yield seam the XR UI shell may implement",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths, section anchors, version pins, licenses, and open-source maintenance state, before the admission record is signed. URL not fetched; a person must confirm.",
+  "sources": [
+    {
+      "id": "xri-ray-interactor",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ray-interactor.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5.1 is the version pinned by this repository's compatibility profiles and its manual documents the ray interactor maintained with the package; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Unity adapter boundary for the aiming channel: a ray interactor casts against interactables and surfaces and reports a hit pose the adapter can read every frame, rather than the family inventing its own raycast source",
+      "admitted_claims": [
+        "A ray interactor casts a configurable curve or straight line from a controller or hand pose and reports the closest valid hit, its pose, and the interactable (if any) it struck, recomputed every frame the interactor is active",
+        "The ray interactor's line type, cast origin, and valid-target filtering are configuration on the interactor, so a session can read a hit pose without owning the raycast itself",
+        "An interactor's ray can be enabled and disabled explicitly by a consumer, distinct from the interactable selection it may also perform, so aiming and committing are separable states"
+      ],
+      "excluded_uses": [
+        "Core does not reference the ray interactor type, a raycast hit type, or any UnityEngine or XR Interaction Toolkit type",
+        "No claim that a ray hit is accurate, comfortable to aim, or legible on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-near-far-interactor",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/near-far-interactor.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5.1 is the version pinned by this repository's compatibility profiles and its manual documents the near-far interactor maintained with the package; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for a distance-adjustable aiming channel: one interactor blends a near (direct) range and a far (ray) range and exposes an explicit control to push or pull the far-range interaction point, which grounds the Core's adjust_distance intent as a named, first-party interaction shape rather than a bespoke control",
+      "admitted_claims": [
+        "The near-far interactor selects between a near interaction sphere and a far interaction ray based on target proximity, and exposes a far-attach-point control that moves the far interaction point closer to or farther from the user along the cast",
+        "The far-attach-point movement is driven by an explicit input value (for example a thumbstick or trackpad axis) the consumer wires in, rather than a fixed engine default, so the same distance-adjustment shape can be bound to different physical controls",
+        "Enabling the near or far behaviour, and the distance the far point may travel, are documented configuration values on the interactor rather than implicit engine constants"
+      ],
+      "excluded_uses": [
+        "Core does not reference the near-far interactor type or any UnityEngine input type; a distance-adjustment intent enters and leaves Core as a plain numeric delta",
+        "No claim that a specific distance range is comfortable or reachable on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "xri-interactable-attach-transform",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/interactable-components.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no XR Interaction Toolkit code copied",
+      "maintenance_evidence": "XR Interaction Toolkit 3.5.1 is the version pinned by this repository's compatibility profiles and its manual documents interactable attach-transform configuration maintained with the package; exact page path and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Unity adapter boundary for pose manipulation while aiming: an attach transform is the toolkit's own seam for the offset and orientation a held or aimed object follows, so the adapter reads and writes an attach transform rather than reparenting or directly writing an object's world transform",
+      "admitted_claims": [
+        "An interactable's attach transform defines the position and rotation offset the object follows relative to the interactor that is manipulating it, and the interactor's own attach transform defines the corresponding point on the controller or hand",
+        "Attach transforms are ordinary transforms a consumer can reference and move at runtime, which the toolkit itself uses to implement offset grabbing and distance manipulation without special-casing the object type",
+        "Moving an attach transform changes where the manipulated pose follows on the next frame; it does not by itself validate whether the resulting pose is a legal placement"
+      ],
+      "excluded_uses": [
+        "Core does not reference an attach transform type, a Transform, or any UnityEngine type; a placement pose enters and leaves Core as a plain position-and-rotation value",
+        "No claim that an attach-transform-driven pose is comfortable, precise, or correctly tracked on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "arfoundation-plane-detection",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.xr.arfoundation@6.0/manual/features/planes/plane-detection.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no AR Foundation code copied",
+      "maintenance_evidence": "AR Foundation is a maintained first-party package with its own version line and documented plane-detection subsystem; this repository's compatibility profiles do not yet pin an AR Foundation version, so the exact page path and version pin must be confirmed and recorded by a person before the admission record is signed. URL not fetched; a person must confirm.",
+      "admitted_role": "Public model of surface snapping: a detected plane carries a classification (for example floor, wall, table, ceiling, or unknown), a boundary, and a pose the runtime updates as tracking refines it, which grounds the Core's closed surface-kind set and its pose-plus-boundary shape for a snap target without the family depending on AR Foundation itself",
+      "admitted_claims": [
+        "A plane-detection subsystem reports each detected plane as an identity, a classification drawn from a small closed set, a center pose, and a boundary polygon, updated in place as the runtime's understanding of the surface improves",
+        "Plane classification is a runtime-reported, best-effort value that can be unknown or absent even when a plane's pose and boundary are available, so a consumer that requires a specific surface kind must handle an unclassified plane explicitly",
+        "A raycast against tracked planes returns the hit pose and the specific plane struck, distinct from a raycast against arbitrary scene geometry, so surface-aware hit testing is a documented, separate query"
+      ],
+      "excluded_uses": [
+        "Core does not reference ARPlane, ARPlaneManager, ARRaycastManager, or any AR Foundation or UnityEngine type; a surface kind enters and leaves Core as a plain closed value and a snap target as a plain pose",
+        "No claim that plane detection, classification, or tracking is accurate, stable, or available on any device or platform without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "meta-horizon-interaction-placement-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/design/bp-interaction-overview/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon developer design guidance that this repository already cites for interaction, visual, and haptics references; exact page path to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary interaction-platform evidence that placing an object in space is bounded by a comfortable reach envelope and by a visible preview of where the object will land before the action is committed",
+      "admitted_claims": [
+        "The platform recommends keeping manipulable and placeable content within a comfortable arm's-reach zone and avoiding placement targets that require the person to lean, overextend, or turn beyond a natural range",
+        "A preview of the pending result (where an object will be placed, what a drag will do) before the person commits is recommended so the action is predictable rather than a surprise once released",
+        "Hand-tracking input is documented as less precise and more prone to jitter than a tracked controller, so an interaction that depends on fine aiming should tolerate that imprecision or offer a controller-driven alternative"
+      ],
+      "excluded_uses": [
+        "No specific reach distance, angle, or jitter figure is transferred as a rendered guarantee; the family records these as configuration guard rails on a validity policy, not as canonical values",
+        "No claim that a reach distance is comfortable or that hand-tracking aiming is usable on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "pico-interaction-design-guidance",
+      "kind": "official_platform_design_guidance",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/design-guidelines/interaction/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO developer design guidance that this repository already cites for interaction and visual references; exact page path to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Second-platform evidence that reach-bounded placement and a visible pending-state preview recur across headset platforms, so the shape is not a Meta-specific convenience",
+      "admitted_claims": [
+        "The platform's guidance places interactive and placeable targets within a documented comfortable reach range relative to the person's seated or standing position, rather than allowing arbitrary placement distance",
+        "The guidance recommends a persistent visual indicator of the current interaction state (aiming, valid target, invalid target) so a person can tell before release whether an action will succeed",
+        "Controller-ray and hand-tracking interaction are documented as distinct input sources with different achievable precision, so a design that depends on precise aiming should be validated per input source rather than assumed to transfer"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, method name, or sample is depended upon by the Core or the adapter",
+        "No claim about PICO device reach comfort or hand-tracking precision without a Device Lab receipt naming the exact device and input source"
+      ]
+    },
+    {
+      "id": "apple-hig-spatial-layout",
+      "kind": "official_platform_design_guidance",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/spatial-layout",
+      "license_or_terms": "Apple Developer documentation terms; design facts only, no copied assets or implementation",
+      "maintenance_evidence": "Current Human Interface Guidelines page on spatial layout with visionOS guidance; page path and current maintenance state to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Primary visual/interaction-platform reference that placed content should sit within a bounded comfortable distance and field of view, and that hand-tracking-driven placement should account for the hand's own reach and visibility limits",
+      "admitted_claims": [
+        "The guidance recommends placing interactive content within a bounded comfortable distance and within the person's natural field of view, rather than requiring content to be placed far away or at the periphery",
+        "The guidance treats direct hand interaction as bounded by the arm's physical reach and by the hand remaining visible to the system, distinct from a ray-based interaction that can target farther content",
+        "The guidance recommends giving feedback that reflects the current interaction state before an action completes, so a person understands what will happen before committing to it"
+      ],
+      "excluded_uses": [
+        "No visionOS-specific API, framework type, or numeric distance figure is depended upon by the Core or the adapter",
+        "No claim about which headset can hold which reach distance, or whether a placement reads as comfortable, without a Device Lab receipt; the family models a closed, platform-neutral reach-range and surface-kind shape, not this platform's specific guidance numbers"
+      ]
+    },
+    {
+      "id": "raskin-quasimodes",
+      "kind": "public_reference_literature",
+      "authority": "Wikipedia, restating Jef Raskin's quasimode concept from The Humane Interface",
+      "url": "https://en.wikipedia.org/wiki/Mode_(computer_interface)",
+      "license_or_terms": "Creative Commons Attribution-ShareAlike; facts only, no text copied",
+      "maintenance_evidence": "Actively maintained encyclopedia article on interface modes that restates and attributes the quasimode concept to Jef Raskin's The Humane Interface; current revision and citation to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Public basis for the aiming quasimode: a quasimode is a mode that exists only while a person actively holds a control down (a shift key, a trigger, a button), and reverts automatically the instant the control is released, which grounds the family's aiming phase as a state that exists only while a session is live and the aiming hand is holding it, rather than a persistent toggled mode",
+      "admitted_claims": [
+        "A quasimode is defined as a mode a system remains in only as long as a person continuously holds a designated control, distinct from a mode that is switched on and stays on until switched off again",
+        "The quasimode concept is presented as a way to avoid the mode-confusion cost of a persistent mode switch, because releasing the held control always and unambiguously returns the system to its base state",
+        "The quasimode's held control is a single physical input the person cannot mistake for being active or inactive, which the article ties to reducing the class of error where a person forgets which mode a system is in"
+      ],
+      "excluded_uses": [
+        "No specific device, key binding, or product example is depended upon; only the held-control-defines-the-mode's-lifetime concept informs the aiming phase and the sticky aiming-hand rule",
+        "No claim that this family's aiming phase eliminates mode confusion or reads as intended without a Device Lab or usability receipt"
+      ]
+    },
+    {
+      "id": "nngroup-mode-error-literature",
+      "kind": "peer_reviewed_literature",
+      "authority": "Nielsen Norman Group, restating Donald A. Norman's mode-error literature",
+      "url": "https://www.nngroup.com/articles/mode-error/",
+      "license_or_terms": "Nielsen Norman Group article terms; facts only, no text copied",
+      "maintenance_evidence": "Nielsen Norman Group article restating Norman's mode-error literature, part of NN/g's maintained UX research library; publication date and current URL to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Public basis for the mode-error literature the aiming quasimode answers: a mode error occurs when a person's action is correct for the mode they believe is active but the system is actually in a different mode, which grounds the family's decision to make the aiming phase visible only through the ghost preview and to end it deterministically on commit or cancel rather than leaving an ambiguous residual state",
+      "admitted_claims": [
+        "A mode error happens when a system's response to the same input differs depending on hidden or ambiguous internal state, and no visible signal disambiguates which state the system is in at the time of the action",
+        "A system that resolves an action through a single, visibly indicated state is documented as less prone to mode errors than one whose state is implicit or inferred from history",
+        "The literature recommends making an active mode continuously visible for as long as it is active, and ending it through an explicit, unambiguous action rather than a timeout or an incidental side effect"
+      ],
+      "excluded_uses": [
+        "No mode-error mitigation technique or interface pattern is copied; only the general finding that hidden or ambiguous state invites mode errors informs the closed placement-phase set and its deterministic transitions",
+        "No claim that this family's phase model eliminates mode errors without a Device Lab or usability receipt"
+      ]
+    },
+    {
+      "id": "openxr-action-set-priority",
+      "kind": "official_standards_document",
+      "authority": "Khronos Group (OpenXR Working Group)",
+      "url": "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#action-sets-multiple-active",
+      "license_or_terms": "Khronos specification license; standard facts only, no specification text copied",
+      "maintenance_evidence": "Core OpenXR 1.1 specification, multiple-active-action-sets section, maintained by the Khronos Group with versioned releases; exact section anchor and version pin to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Standards-body evidence for the shape of an input-ownership declaration: when more than one action set is active at once, the specification defines an explicit priority so that one action set's binding for a given input source takes precedence over another's for the same physical control, rather than both receiving the input silently",
+      "admitted_claims": [
+        "The specification allows more than one action set to be active at the same time and defines an explicit priority value that resolves which action set's binding wins when two active action sets are both bound to the same physical input source",
+        "A lower-priority action set's action for a contested input source is documented as suppressed while a higher-priority action set claims that source, rather than both actions firing together",
+        "Priority and activation are explicit, application-driven configuration rather than an implicit runtime decision, so which action set currently owns a given control is always determinable from the application's own state"
+      ],
+      "excluded_uses": [
+        "Core does not reference an XrActionSet, XrSession, or any OpenXR handle type; an input-ownership declaration enters and leaves Core as a plain named control and a plain arbitration-kind value",
+        "No claim that a named runtime honours the requested priority, or that a suppressed control reads as intended, without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "mrtk3-surface-magnetism-object-manipulator",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Mixed Reality Toolkit Organization",
+      "url": "https://github.com/MixedRealityToolkit/MixedRealityToolkit-Unity",
+      "license_or_terms": "BSD-3-Clause; architecture facts only, no code copied; license and current maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Widely adopted open-source XR toolkit for Unity with tagged releases and a documented surface-magnetism solver and object manipulator; adoption count, release cadence, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent implementation evidence that surface-snapped placement is a distinct, composable behaviour layered on manipulation: a surface-magnetism solver snaps a held object's pose to the nearest valid surface hit while it is being aimed, separate from the manipulation logic that computes the aimed pose itself",
+      "admitted_claims": [
+        "A surface-magnetism solver raycasts against a configured set of surface layers while an object is being manipulated and, on a valid hit, snaps the object's position and orientation to that surface rather than leaving it at the raw aimed pose",
+        "The solver exposes a closed set of surface-normal alignment behaviours (align to surface, keep object upright, blend) as explicit configuration, so how a snapped pose orients is a declared policy rather than an implicit computation",
+        "Surface-magnetism and general object manipulation are separate, independently attachable components, so a placement session can validate and preview a snap target without owning the manipulation input itself"
+      ],
+      "excluded_uses": [
+        "No toolkit type, solver, or component is copied and the Core has no dependency on it",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    },
+    {
+      "id": "godot-xr-tools-pickup-placement",
+      "kind": "maintained_open_source_implementation",
+      "authority": "GodotVR community",
+      "url": "https://github.com/GodotVR/godot-xr-tools",
+      "license_or_terms": "MIT; architecture facts only, no code copied; current version and maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Widely adopted second-engine XR helper library with tagged releases and a documented pickup and placement component; adoption count, release cadence, and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent second-engine evidence that a held or aimed object's candidate pose is validated against a target before it is allowed to settle there, and that a rejected target leaves the object in its prior, unplaced state rather than partially applying the placement",
+      "admitted_claims": [
+        "A second engine's pickup/placement component tracks a candidate drop pose while an object is held and validates it against collision and surface conditions before allowing the object to be released there",
+        "An invalid candidate pose is documented as rejected outright, leaving the object under the person's continued control rather than settling it at an invalid location",
+        "Placement validation is a distinct step from the pose-following logic that tracks the controller or hand, matching the separation between a validity policy and pose tracking this family's Core models"
+      ],
+      "excluded_uses": [
+        "No engine type, node, or method is copied and the Core has no dependency on it",
+        "Godot is a roadmap direction only for this repository (see the current implementation boundary in AGENTS.md); this source proves recurrence of the validate-before-settle shape, not Godot support",
+        "Maintenance and license must be confirmed; if the project is unmaintained at review time it moves to context-only"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "interaction-family-semantic-intents",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/interaction/verification-contract.md",
+      "reason": "The Interaction family's ray-sourced multi-modal intents and its inactive-context, priority, and phase-transition rules are the seam a placement session's begin/aim/adjust_distance/snap/commit/cancel intents compose on; the Interaction routing and binding model itself is not re-derived here and contributes no evidence for placement identity, phase, or validity semantics"
+    },
+    {
+      "id": "locomotion-family-comfort-policy",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/locomotion/verification-contract.md",
+      "reason": "The Locomotion family's mode identity and its comfort-policy-gated intents over an immutable state are the provider a placement session's input-ownership declaration is expressed against, so an aiming session can be arbitrated to suppress that provider's turn or move intents until the session ends; the Locomotion mode and comfort-policy model itself is not re-derived here and contributes no evidence for placement semantics"
+    },
+    {
+      "id": "xr-ui-shell-fold-intent",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/xr-ui-shell/verification-contract.md",
+      "reason": "The XR UI shell's fold-retains-state placement intent (fold keeps a panel's full open, docked-target, and follow state and changes only visibility) is the seam a placement session's yield behaviour maps panel visibility onto by alpha while a session is live; the shell's layout, routing, and skin-contract model itself is not re-derived here and contributes no evidence for placement semantics"
+    },
+    {
+      "id": "shipped-game-gap-matrix",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/benchmarks/shipped-game-gap-matrix.md",
+      "reason": "Ranks spatial placement sixteenth from the creation-tool shape and records that ray placement with a ghost preview, snapping, commit, and cancel is core to that shape and present at least partially in the other two; this is the motivating gap the queue candidate answers, not evidence for the common kernel"
+    },
+    {
+      "id": "version-adaptive-reference-model",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/version-adaptive-reference-model.md",
+      "reason": "States that a package manifest or one successful profile does not prove other Unity, XRI, AR Foundation, provider, or device tuples; this family's Unity-adapter admitted role for every engine and platform source is bounded by that policy rather than by the source's own text"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority",
+    "The first implementation is a placement-session identity, closed-phase, ghost-preview-as-data, intent, validity-policy, and immutable-state substrate with an input-ownership declaration and a thin Unity adapter; it is not a placement rendering engine, not a surface-reconstruction system, and admits no claim that any named surface, controller, or hand-tracking pipeline supports snapping or reach as documented",
+    "The family guarantees the plumbing only: that an accepted begin, aim, adjust_distance, snap, commit, or cancel intent reached the injectable fake ray source and fake validity probe with the exact pose, validity, and snap target it computed; whether placement feels right, and whether reach or hand-tracking comfort holds on a headset, is a human judgement recorded in a Device Lab receipt",
+    "Placement feel, reach comfort, snapping correctness on a real surface, and hand-tracking behavior are Device Lab receipts, never package claims, and no test in this family's gates claims a surface was detected, a hand was tracked, or a placement felt comfortable",
+    "Automated or device evidence recorded for one ray interactor, near-far interactor, surface-detection pipeline, or headset/hand-tracking tuple never transfers to another, and a validity policy proven to work on one surface type is never assumed on another"
+  ]
+}

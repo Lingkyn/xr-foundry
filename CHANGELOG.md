@@ -5,6 +5,18 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Staged Platform services (`staging/platform-services`, WI-029: closed
+  capability set, provider descriptors that fail composition closed, the six
+  typed intents with actor and revision, an offline write queue with idempotency
+  keys, thin vendor adapter shells behind compile-time defines, a recording fake
+  provider, and a boot entitlement gate that fails closed) and Quality tiers
+  (`staging/quality-tiers`, WI-030: tier and device-profile identity, per-device
+  presets with guard rails, capability-gated selection, the frame-budget policy
+  as data, display, foveation, and renderer-asset seams with diagnostics, a
+  frame-time sampler, and the Settings hook). Passed the source gate for Content
+  packs (`docs/standards/content-packs/`, WI-031) and Spatial placement
+  (`docs/standards/spatial-placement/`, WI-032) with queue candidates
+  `NEXT-CONTENT-PACKS` and `NEXT-SPATIAL-PLACEMENT`. All authored, unexecuted.
 - Passed the source gate for Platform services (`docs/standards/platform-services/`,
   WI-027: 12 sources across Meta, PICO, Steamworks, Apple Game Center and StoreKit,
   Unity Gaming Services, store policy, and two maintained open-source layers;

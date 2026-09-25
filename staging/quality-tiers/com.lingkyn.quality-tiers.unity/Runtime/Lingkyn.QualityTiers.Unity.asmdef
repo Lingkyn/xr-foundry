@@ -1,0 +1,17 @@
+{
+  "name": "Lingkyn.QualityTiers.Unity",
+  "rootNamespace": "Lingkyn.QualityTiers.Unity",
+  "references": [
+    "Lingkyn.QualityTiers.Core",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

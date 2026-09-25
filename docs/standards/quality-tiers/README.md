@@ -1,6 +1,14 @@
 # Quality tiers package-family standard
 
-Status: incubating reference, source gate only
+Status: the staged implementation exists under `staging/quality-tiers/`
+(`com.lingkyn.quality-tiers.core` and `com.lingkyn.quality-tiers.unity`),
+authored and unexecuted against
+[`verification-contract.md`](verification-contract.md), with
+`coverage-map.json` mapping every clause to a named test (two Unity adapter
+clauses, QU-01 and QU-05, are `partial` with a named Device Lab receipt gap;
+every other clause is `covered`). No Unity run has produced a compatibility
+profile yet, so no package directory, package id, catalog entry, maturity,
+release, or device status exists in the tree.
 
 This standard defines performance and quality-tier management as a validated
 tier identity, a closed per-tier declaration (refresh rate, render scale,
@@ -130,10 +138,12 @@ ceiling.
 2. The maintainer copies [`admission.draft.json`](admission.draft.json) into
    `docs/foundry/admissions/` as the durable record through the
    [system admission gate](../../foundry/system-admission.md).
-3. A staged Core and Unity adapter, modelled on `staging/haptics/`, is
-   authored against [`verification-contract.md`](verification-contract.md)
-   with `coverage-map.json` mapping every Core and Unity adapter clause to a
-   named test (no partial or unmapped clause). The code stays authored and
+3. Done: the staged implementation authors the Core and the Unity adapter
+   under `staging/quality-tiers/`, modelled on `staging/haptics/`, against
+   [`verification-contract.md`](verification-contract.md), with
+   `coverage-map.json` mapping every Core and Unity adapter clause to a named
+   test (QU-01 and QU-05 are `partial`, each with a named Device Lab receipt
+   gap; every other clause is `covered`). The code stays authored and
    unexecuted until a Unity run produces a compatibility profile, and nothing
    enters `packages/` before admission and a green gate.
 4. A person or Agent with a Unity Editor runs

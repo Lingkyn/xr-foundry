@@ -1161,6 +1161,170 @@
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
       "done_proof": "docs/standards/quality-tiers/verification-contract.md"
+    },
+    {
+      "id": "WI-029",
+      "title": "Platform services staged Core and Unity adapter",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "done",
+      "depends_on": [
+        "WI-027"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/platform-services/verification-contract.md",
+        "docs/standards/platform-services/README.md",
+        "staging/haptics/README.md",
+        "docs/standards/haptics/coverage-map.json",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "staging/platform-services/",
+        "docs/standards/platform-services/coverage-map.json",
+        "docs/standards/platform-services/README.md"
+      ],
+      "steps": [
+        "Author staging/platform-services/com.lingkyn.platform-services.core (the closed capability set, the provider descriptor, typed intents check_entitlement, unlock, report_score, read_leaderboard, cloud_write, cloud_read on an immutable state with deterministic replay, actor and expected revision, the offline write queue with idempotency keys and in-order replay, and the contract's stable codes, with no vendor type) and com.lingkyn.platform-services.unity (one provider interface with thin adapter shells per vendor route behind explicit references, an injectable fake provider with a recording sink for tests, the boot entitlement gate that fails closed with a diagnostic and a consumer-owned fallback intent, and no vendor SDK call outside the adapter assembly; vendor SDK calls are behind compile-time defines so the assembly compiles without the SDKs), with package.staging.json, asmdefs, NUnit EditMode tests, and a domain-only sample, modelled on staging/haptics.",
+        "Write docs/standards/platform-services/coverage-map.json mapping every contract clause to named tests; every listed test must exist and every test must be listed; a clause that needs a store build, a device, or a vendor SDK at run time is partial or unmapped with its missing entry named.",
+        "Write staging/platform-services/README.md with the status line, the what-is-here table, the promotion steps, and the statement that the code is authored and unexecuted."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/platform-services/README.md",
+          "docs/standards/platform-services/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
+      "done_proof": "docs/standards/platform-services/coverage-map.json"
+    },
+    {
+      "id": "WI-030",
+      "title": "Quality tiers staged Core and Unity adapter",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "large",
+      "status": "done",
+      "depends_on": [
+        "WI-028"
+      ],
+      "read_first": [
+        "AGENTS.md",
+        "docs/standards/quality-tiers/verification-contract.md",
+        "docs/standards/quality-tiers/README.md",
+        "staging/haptics/README.md",
+        "docs/standards/haptics/coverage-map.json",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "staging/quality-tiers/",
+        "docs/standards/quality-tiers/coverage-map.json",
+        "docs/standards/quality-tiers/README.md"
+      ],
+      "steps": [
+        "Author staging/quality-tiers/com.lingkyn.quality-tiers.core (tier and device-profile identity, the closed tier set with per-device presets and guard rails, the capability descriptor per device profile, typed intents select_tier, set_override, reset, apply_preset on an immutable state with deterministic replay, actor and expected revision, capability-gated selection that fails closed, the frame-budget policy as data, and the contract's stable codes, with no engine type) and com.lingkyn.quality-tiers.unity (an adapter applying a tier through the XR display subsystem, XR settings, and URP renderer asset switching behind explicit references with LESSON-004 diagnostics on every by-name resolution, injectable fake device probe and fake renderer for tests, a frame-time sampler reporting measured frame time as data with no comfort claim, and the Settings hook so a user-facing quality option maps to a tier), with package.staging.json, asmdefs, NUnit EditMode tests, and a domain-only sample, modelled on staging/haptics.",
+        "Write docs/standards/quality-tiers/coverage-map.json mapping every contract clause to named tests; every listed test must exist and every test must be listed; a clause that needs a store build, a device, or a vendor SDK at run time is partial or unmapped with its missing entry named.",
+        "Write staging/quality-tiers/README.md with the status line, the what-is-here table, the promotion steps, and the statement that the code is authored and unexecuted."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest tests.test_coverage_claims"
+        ],
+        "artifacts": [
+          "staging/quality-tiers/README.md",
+          "docs/standards/quality-tiers/coverage-map.json"
+        ]
+      },
+      "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
+      "done_proof": "docs/standards/quality-tiers/coverage-map.json"
+    },
+    {
+      "id": "WI-031",
+      "title": "Content packs source gate",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "done",
+      "depends_on": [],
+      "read_first": [
+        "AGENTS.md",
+        "docs/foundry/system-admission.md",
+        "docs/benchmarks/shipped-game-gap-matrix.md",
+        "docs/standards/haptics/verification-contract.md",
+        "docs/standards/haptics/source-manifest.json",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "docs/standards/content-packs/",
+        "docs/foundry/queue/next-batch.json"
+      ],
+      "steps": [
+        "Write the source manifest (Unity Addressables: groups, labels, catalogs, remote content and content update workflow, and AssetBundle fundamentals; Unity Cloud Content Delivery as one hosting option; Meta, PICO, and Apple platform guidance on downloadable content, app size limits, and expansion files; user-generated-content policies of the major XR stores; one or two maintained open-source content-pipeline or mod-loading layers with license and maintenance state), the verification contract (Core gate: a pack manifest with a canonical PackId, semantic version, declared dependencies, a content digest, and a closed entry kind set (scene, prefab, audio, text table, data); a catalog that resolves a pack id and version to a manifest; typed intents register_pack, resolve, load, unload, verify on an immutable state with deterministic replay, actor and expected revision, and stable codes pack.unknown, version.unsatisfied, digest.mismatch, dependency.missing, kind.unsupported; a trust policy that names which sources are allowed (bundled, first-party remote, user) and fails closed on an untrusted source; no engine type in Core; Unity gate: an adapter over Addressables with explicit catalog references and LESSON-004 diagnostics, an injectable fake loader for tests, digest verification before any load, a memory and handle budget with release on unload, and no Resources.Load or scene search), README with lesson dispositions and the claim ceiling (download size, load time, and memory on a device are receipts, never package claims), and admission draft.",
+        "Add a NEXT-CONTENT-PACKS candidate to the queue with state proposal and no package_ids."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "docs/standards/content-packs/README.md",
+          "docs/standards/content-packs/source-manifest.json",
+          "docs/standards/content-packs/verification-contract.md",
+          "docs/standards/content-packs/admission.draft.json"
+        ]
+      },
+      "evidence": "The four artifacts in the tree and a passing repository contract.",
+      "done_proof": "docs/standards/content-packs/verification-contract.md"
+    },
+    {
+      "id": "WI-032",
+      "title": "Spatial placement source gate",
+      "milestone_batch": "2c",
+      "needs": "none",
+      "decision_class": "routine",
+      "size": "medium",
+      "status": "done",
+      "depends_on": [],
+      "read_first": [
+        "AGENTS.md",
+        "docs/foundry/system-admission.md",
+        "docs/benchmarks/shipped-game-gap-matrix.md",
+        "docs/standards/haptics/verification-contract.md",
+        "docs/standards/haptics/source-manifest.json",
+        "docs/standards/lessons/lessons-register.json"
+      ],
+      "allowed_paths": [
+        "docs/standards/spatial-placement/",
+        "docs/foundry/queue/next-batch.json"
+      ],
+      "steps": [
+        "Write the source manifest (XR Interaction Toolkit ray interactor, attach transform manipulation, and near-far interactor documentation; Unity AR Foundation placement and plane concepts as a public model of surface snapping; Meta, PICO, and Apple platform guidance on placing objects in space, reach, and hand-tracking comfort; Raskin's quasimodes and the mode-error literature as the public basis for the aiming quasimode; one or two maintained open-source XR placement or building toolkits with license and maintenance state), the verification contract (Core gate: a placement session with a closed phase set idle, aiming, previewing, committed, cancelled; a ghost preview as data (pose, validity, snap target) never a rendered claim; typed intents begin, aim, adjust_distance, snap, commit, cancel on an immutable state with deterministic replay, actor and expected revision, and stable codes placement.invalid_surface, placement.out_of_reach, placement.occupied, phase.invalid; the aiming hand is sticky to the hand that began the session; a distance adjustment intent that the consumer routes from the thumbstick while aiming; an input-ownership declaration that names the shared control the session claims while aiming and the arbitration kind, so a locomotion provider can be suppressed until the session ends; a validity policy as data (surface kinds, reach range, overlap rule); no engine type in Core; Unity gate: an adapter over XRI ray interactor and attach transforms with explicit references and LESSON-004 diagnostics, an injectable fake ray source and fake validity probe for tests, a ghost renderer seam that receives pose and validity and never decides them, and a fold or yield seam the XR UI shell may implement so panels yield by alpha while a session is live), README with lesson dispositions and the claim ceiling (whether placement feels right, reach comfort, and hand-tracking behaviour are Device Lab receipts), and admission draft.",
+        "Add a NEXT-SPATIAL-PLACEMENT candidate to the queue with state proposal and no package_ids."
+      ],
+      "acceptance": {
+        "commands": [
+          "python scripts/validate_repository.py --json",
+          "python -m unittest discover -s tests -p \"test_*.py\""
+        ],
+        "artifacts": [
+          "docs/standards/spatial-placement/README.md",
+          "docs/standards/spatial-placement/source-manifest.json",
+          "docs/standards/spatial-placement/verification-contract.md",
+          "docs/standards/spatial-placement/admission.draft.json"
+        ]
+      },
+      "evidence": "The four artifacts in the tree and a passing repository contract.",
+      "done_proof": "docs/standards/spatial-placement/verification-contract.md"
     }
   ]
 }

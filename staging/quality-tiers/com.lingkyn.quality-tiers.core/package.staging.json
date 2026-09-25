@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.quality-tiers.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Quality Tiers Core",
+  "description": "Engine-light performance-configuration substrate: immutable TierId and DeviceProfileId identity with a canonical dotted-segment form, a closed per-tier declaration (refresh-rate, render-scale, shadow-budget, and post-processing-budget guard rails plus a single closed foveation level and a single closed MSAA sample count) validated fail-closed, an immutable TierRegistry built by explicit registration, a DeviceCapabilityDescriptor per device profile that gates a tier or an override closed at select time, select_tier/set_override/reset/apply_preset intents applied to an immutable per-device QualityState with deterministic replay and a fingerprint, a frame-budget policy as plain data, the one-intent-channel actor/expected-revision/state.stale shape (LESSON-011), and structured results with stable failure codes.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "QualityTiersWalkthrough",
+      "description": "Domain-only walkthrough: a tier registry and a device capability set built by explicit registration, a full select_tier/set_override/reset/apply_preset intent sequence, a replayed sequence proving deterministic state, and a capability-gated select_tier failing closed; needs no asset, scene, or engine API.",
+      "path": "Samples~/QualityTiersWalkthrough"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "com.lingkyn.quality-tiers.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Quality Tiers Unity",
+  "description": "Thin Unity adapter for the Lingkyn Quality Tiers Core: an accepted tier applied through three explicit seams (IXrDisplayControl for refresh rate and render scale, IFoveationControl for foveation level, IRendererAssetSwitch for a bound UniversalRenderPipelineAsset and Unity quality level), each with LESSON-004 fail-closed diagnostics on every by-name or optional resolution (display.unresolved, capability.unsupported.degraded, renderer.asset.unbound, settings.unresolved, adaptive_performance.unresolved); an injectable device-capability probe and fakes for the display, foveation, and renderer seams so tests assert exactly what was requested and what was reported applied; a frame-time sampler reporting measured frame time as plain data with no comfort or certification claim; and the Settings hook (IQualityOptionSource) mapping a user-facing quality option's raw value to a select_tier intent, with no reference to any Settings type.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.quality-tiers.core": "0.1.0",
+    "com.unity.render-pipelines.universal": "17.0.0"
+  },
+  "samples": []
+}

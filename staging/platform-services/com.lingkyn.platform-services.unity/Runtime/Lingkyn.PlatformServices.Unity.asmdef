@@ -1,0 +1,16 @@
+{
+  "name": "Lingkyn.PlatformServices.Unity",
+  "rootNamespace": "Lingkyn.PlatformServices.Unity",
+  "references": [
+    "Lingkyn.PlatformServices.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

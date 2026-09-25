@@ -1,0 +1,16 @@
+{
+  "name": "com.lingkyn.platform-services.unity",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Platform Services Unity",
+  "description": "Thin Unity adapter for the Lingkyn Platform Services Core: one IPlatformServicesProvider interface with thin per-vendor shells (Meta Horizon Platform, PICO, Steamworks, Apple Game Center and StoreKit, Unity Gaming Services Cloud Save) each behind its own compile-time define so the assembly compiles with no vendor SDK present; a RecordingPlatformProvider fake with an in-memory account, achievement set, leaderboard, and cloud store; the boot entitlement gate that fails closed with a diagnostic and only opens on an accepted check_entitlement or a consumer-owned fallback, never a scene load or quit on its own; explicit idempotency-key mapping to a client-side dedupe record; an explicit connectivity signal; PlatformServicesProviderConfigAsset ScriptableObjects constructed with explicit references and converted deterministically to the Core's immutable ProviderDescriptor; and a small IPersistedDocumentSource seam so a cloud_write can mirror the same bytes a local save's document holds, without depending on the Persistence package.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {
+    "com.lingkyn.platform-services.core": "0.1.0"
+  },
+  "samples": []
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "content-packs",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-24",
+  "source_manifest": "docs/standards/content-packs/source-manifest.json",
+  "consumer_contexts": [
+    "object-interaction and spatial-creation XR applications that add downloadable levels, tools, or asset packs after launch and must resolve a pack id and version to a manifest, verify its content digest, and reject an untrusted source before any scene, prefab, or data entry is loaded",
+    "rhythm-action and object-interaction XR games that ship custom levels or user-authored packs on more than one headset platform and need one closed, non-executable entry-kind set and dependency-declaration model that works the same whether content is bundled, hosted by a first-party remote catalog, or supplied by a player, without hand-writing a separate loader for each source"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/AddressableAssetsOverview.html",
+      "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/LoadContentCatalogAsync.html",
+      "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/ContentUpdateWorkflow.html",
+      "https://docs.unity3d.com/Manual/AssetBundlesIntro.html",
+      "https://docs.unity.com/ccd/en-us/manual/UnityCCDOverview.html",
+      "https://developers.meta.com/horizon/resources/publish-tech-requirements/",
+      "https://developers.meta.com/horizon/resources/publish-content-guidelines/",
+      "https://developer.picoxr.com/document/unity/pico-store-submission-guidelines/",
+      "https://developer.picoxr.com/document/pico-store/content-review-guidelines/",
+      "https://developer.apple.com/app-store/review/guidelines/#software-requirements"
+    ],
+    "independent_professional_sources": [
+      "https://docs.godotengine.org/en/stable/tutorials/export/exporting_pcks.html",
+      "https://github.com/BepInEx/BepInEx"
+    ]
+  },
+  "common_kernel": [
+    "pack and version identity as validated identities separate from any file, asset, or hosting mechanism that delivers them",
+    "a closed, non-executable entry-kind set (scene, prefab, audio, text table, data) so a downloaded pack can never carry a script, an assembly, or a reflection-discovered type",
+    "a pack manifest declaring dependencies on other packs by id and version range, and an immutable catalog built by explicit registration that resolves a pack id and version to a manifest and fails closed on a missing or unsatisfied dependency",
+    "a closed trust-policy source set (bundled, first-party remote, user) that fails closed on an untrusted source rather than loading anything registered by default",
+    "content digest verification performed before any load, so a pack's declared entries are confirmed against its actual content rather than trusted on the strength of its manifest alone",
+    "register_pack, resolve, load, unload, and verify intents applied to an immutable per-pack-version state with stable failure codes and deterministic replay to an equal fingerprint"
+  ],
+  "configurable_variation": [
+    "which packs a product registers, their declared dependencies, and which trust-policy sources it allows for load",
+    "adapter-side route selection (a bundled-local route, a first-party-remote catalog route such as a CDN hosting service, and a user-content route) and the Addressables bindings a consumer wires for each entry",
+    "how a loaded scene entry is handed to the Scene flow family's own loader, and how a loaded data or text-table entry is handed to the Persistence family's own deserializer",
+    "consumer-owned pack content, authored levels, user-generated content moderation, and any device-specific hosting, caching, or content-update tuning"
+  ],
+  "excluded_project_specific": [
+    "one product's authored pack content, level data, and user-generated content moderation workflow",
+    "one project's choice of which packs to expose, which hosting provider to use, and any judgement that a pack's download size or load time is acceptable on its device"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Data-driven loading of levels, packs, and user content is a recurring cross-project need the shipped-game-gap-matrix records for every one of its three product shapes in some form (custom levels, packs, or user scenes), and its kernel (validated pack and version identity, a closed non-executable entry-kind set, a manifest with declared dependencies and a content digest, an immutable catalog that resolves a pack id and version, a fail-closed trust policy over the pack's source, and intents over an immutable per-pack-version state with deterministic replay) is supported by the engine's own Addressables group, label, catalog, and content-update-workflow documentation, the underlying AssetBundle packaging and dependency model, Unity's own first-party Cloud Content Delivery hosting service as one hosting option, first-party Meta and PICO platform guidance on downloadable content and package size paired with each platform's user-generated-content review policy, Apple's App Store Review Guidelines restricting downloaded executable code (grounding the closed, non-executable entry-kind set as a real store-wide constraint), and two independent open-source implementations: a second engine's resource-pack export-and-mount shape and a widely adopted plugin-loading framework's declared-dependency and trust-boundary model, while every product keeps its own pack content, hosting choice, and moderation workflow outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim that any pack downloads within a stated size or time, that a load is free of hitching, or that any build passes or has passed store certification; the family guarantees the plumbing only and every such judgement is a human observation or a real store-submission record, never a package claim.",
+    "Admission does not make the family a package manager, a mod-loading framework, an asset importer, or a content-authoring tool, and it transfers no Scene flow or Persistence evidence to this family; evidence for one device profile, Unity, Addressables, or content-hosting tuple never transfers to another.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, section anchors, versions, licenses, and the maintenance state of each open-source implementation."
+  ]
+}

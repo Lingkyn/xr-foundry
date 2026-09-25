@@ -1,0 +1,25 @@
+{
+  "name": "Lingkyn.QualityTiers.Unity.Editor.Tests",
+  "rootNamespace": "Lingkyn.QualityTiers.Unity.Editor.Tests",
+  "references": [
+    "Lingkyn.QualityTiers.Core",
+    "Lingkyn.QualityTiers.Unity",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "schema": "xr-foundry.content_packs_source_manifest.v1",
+  "scope": "Engine-light content-pack identity and loading: a validated PackId and semantic PackVersion, a closed non-executable entry-kind set (scene, prefab, audio, text table, data), a PackManifest declaring dependencies and a content digest, an immutable PackCatalog built by explicit registration that resolves a pack id and version to a manifest, a closed trust policy over the pack's source (bundled, first-party remote, user) that fails closed on an untrusted source, and register_pack, resolve, load, unload, and verify intents applied to an immutable state with deterministic replay, with a thin Unity adapter planned separately over Addressables and no engine type in Core",
+  "derivation_policy": "positive_external_public_sources_only",
+  "consumer_material_allowed": false,
+  "review_note": "The URLs below were not fetched from the authoring environment because its network egress policy blocks them; the admitted claims come from the author's prior reading of these documents and must be confirmed by a person, together with the exact page paths, section anchors, version pins, licenses, and open-source maintenance state, before the admission record is signed. URL not fetched; a person must confirm.",
+  "sources": [
+    {
+      "id": "unity-addressables-groups-and-labels",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/AddressableAssetsOverview.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no package code copied",
+      "maintenance_evidence": "Maintained Addressables package manual, pinned at the same 2.6 version this repository's scene-flow source manifest already cites for its optional sibling scene-loading adapter; exact page path and current package version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for the addressable-asset shape: content is organized into groups whose members carry one or more labels, and is addressed by a stable key independent of file path, grounding the family's opaque entry-path and closed entry-kind shape as answering a real engine-supported organization rather than an invented one",
+      "admitted_claims": [
+        "Addressable assets are organized into groups, and a group's assets can carry one or more labels that a runtime query can filter by, independent of the assets' file paths",
+        "An addressable key (an address or a label) is a stable, developer-assigned string that the Addressables system resolves to a location at load time, rather than a build-time file path",
+        "Group and label organization is a build-time authoring concern; the runtime API resolves keys through a loaded catalog rather than by re-reading group definitions at runtime"
+      ],
+      "excluded_uses": [
+        "Core does not reference AddressableAssetGroup, AssetLabelReference, or any UnityEngine/Addressables type; group and label organization inform the shape of a pack's entry list, not a Core dependency",
+        "No claim that a named group or label layout is optimal or ships in any product without a coverage-mapped test"
+      ]
+    },
+    {
+      "id": "unity-addressables-content-catalogs",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/LoadContentCatalogAsync.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no package code copied",
+      "maintenance_evidence": "Maintained Addressables package manual documenting content catalog loading, pinned at the version this repository already cites; exact page path and current package version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for a catalog that resolves an addressable key to a location: the Addressables system loads one or more content catalogs, each mapping a key to the location data needed to retrieve it, grounding the family's PackCatalog resolving a pack id and version to a manifest as an engine-supported shape",
+      "admitted_claims": [
+        "A content catalog is a distinct, loadable artifact that maps an addressable key to the location data needed to retrieve it, separate from the assets or bundles it describes",
+        "More than one catalog can be loaded at runtime, including a remotely hosted catalog loaded in addition to the build-time default, so new content can be added without rebuilding the application",
+        "A catalog load is asynchronous and reports success or failure explicitly; a missing or unreachable remote catalog does not silently fall back to stale content without the caller observing the failure"
+      ],
+      "excluded_uses": [
+        "Core does not reference IResourceLocator, ContentCatalogData, or any Addressables type; PackCatalog is a plain, engine-independent identity-to-manifest mapping this family defines itself",
+        "No claim that a named remote catalog is reachable, current, or performant on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-addressables-content-update-workflow",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Packages/com.unity.addressables@2.6/manual/ContentUpdateWorkflow.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no package code copied",
+      "maintenance_evidence": "Maintained Addressables package manual documenting the content-update workflow and remote content, pinned at the version this repository already cites; exact page path and current package version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for remote content and versioned content updates, distinct from a full application rebuild, grounding the family's PackVersion and content digest as resolving independent of any application build",
+      "admitted_claims": [
+        "The engine distinguishes a full player rebuild from a content-only update that publishes a new remote catalog and remote bundles without rebuilding the application binary",
+        "A content update workflow is versioned: a build records a content-state hash so a later content update can be built against a specific prior content state rather than an arbitrary one",
+        "Remote content is fetched and cached locally, and the engine documents caching and cache-clearing as a distinct concern from the catalog and bundle format themselves"
+      ],
+      "excluded_uses": [
+        "Core does not reference a content-state hash, a remote build path, or any Addressables build-pipeline type; PackVersion and the content digest are this family's own plain identities, not the engine's build artifacts",
+        "No claim that a content update completed within a stated time or size, or that a device applied it correctly, without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-assetbundle-fundamentals",
+      "kind": "official_engine_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity3d.com/Manual/AssetBundlesIntro.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no engine code copied",
+      "maintenance_evidence": "Maintained engine manual documenting AssetBundle fundamentals beneath Addressables; exact page path and current manual version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Engine boundary for the packaging format beneath Addressables: an AssetBundle is a versioned, platform-specific archive with its own dependency graph and content hash, grounding the family's closed entry-kind set and content digest as sitting above a real per-platform packaging format rather than an invented one",
+      "admitted_claims": [
+        "An AssetBundle is built for one target platform and one engine-version range, and loading a bundle built for an incompatible platform or engine version is documented as unsupported rather than silently degraded",
+        "An AssetBundle can declare dependencies on other bundles, and the engine's own tooling computes that dependency graph, which must be resolved before the dependent bundle's assets can be used",
+        "Bundle content is versioned by a hash the engine computes from its contents, and the engine's caching API compares that hash to decide whether a previously downloaded bundle is stale, matching the shape of a content digest a pack manifest declares independent of the engine's own hash"
+      ],
+      "excluded_uses": [
+        "Core does not reference AssetBundle, AssetBundleManifest, or any UnityEngine type; a pack's content digest and dependency declarations are this family's own plain values, not the engine's bundle hash or dependency graph",
+        "No claim that a named bundle's size, load time, or platform compatibility holds on any device without a Device Lab receipt"
+      ]
+    },
+    {
+      "id": "unity-cloud-content-delivery",
+      "kind": "official_platform_service_documentation",
+      "authority": "Unity Technologies",
+      "url": "https://docs.unity.com/ccd/en-us/manual/UnityCCDOverview.html",
+      "license_or_terms": "Unity documentation terms; architecture facts only, no service code copied",
+      "maintenance_evidence": "Unity's own first-party content-hosting service with maintained documentation; exact page path and current service revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "First-party evidence that the remote catalog and remote bundle content the Addressables content-update workflow documents has a first-party hosting option, naming this service as one hosting option among others rather than the only trust source a pack's remote entries can come from",
+      "admitted_claims": [
+        "The service hosts versioned content buckets and releases that a build's remote catalog can point at, distinct from the catalog and bundle format Addressables itself defines",
+        "The service supports promoting a specific release to a named badge so a runtime can request content by badge rather than by a specific release id, separating a release's identity from which release is currently live",
+        "The service is documented as one first-party hosting option among others (a generic HTTP host, or a title's own CDN); the Addressables remote-catalog seam does not require this specific service"
+      ],
+      "excluded_uses": [
+        "Core defines no hosting-provider type; a pack's remote source is a closed trust-policy value (first_party_remote), not a dependency on this or any specific hosting vendor",
+        "No claim that this service, or any hosting provider, is used by, contracted for, or performs adequately for any named product"
+      ]
+    },
+    {
+      "id": "meta-downloadable-content-and-package-size",
+      "kind": "official_platform_developer_documentation",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/resources/publish-tech-requirements/",
+      "license_or_terms": "Meta developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained Meta Horizon store technical requirements this repository already cites for interaction, visual, and performance references; exact page path and current revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "First-party platform evidence that a package size limit and a documented after-install content-delivery mechanism are a real store constraint, grounding the family's PackManifest, dependency declaration, and remote-loading shape as answering that constraint rather than an invented convenience",
+      "admitted_claims": [
+        "The platform documents a maximum application package size for store submission and a separate mechanism for delivering additional content after install, so a title is not limited to what fits inside the initial package",
+        "The platform's technical requirements distinguish content bundled in the initial install package from content fetched afterward, and measure the two as different quantities for submission purposes",
+        "Exceeding the platform's stated size or content-delivery requirements is documented as a submission-blocking condition, not merely a performance recommendation"
+      ],
+      "excluded_uses": [
+        "No specific size figure is copied as a rendered constant; the family models download size only as a Device Lab or store-submission receipt, never a package-declared guarantee",
+        "No claim that any named title's package size or downloadable content passed or will pass this platform's submission review"
+      ]
+    },
+    {
+      "id": "meta-user-generated-content-policy",
+      "kind": "official_store_policy_document",
+      "authority": "Meta Platforms",
+      "url": "https://developers.meta.com/horizon/resources/publish-content-guidelines/",
+      "license_or_terms": "Meta developer documentation terms; policy facts only, no content copied",
+      "maintenance_evidence": "Part of the maintained store content and submission guidelines Meta publishes for the Horizon storefront; exact page path and current revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Store-policy evidence that content a player creates or uploads at runtime is a distinct review and trust category from developer-shipped content, grounding the family's closed trust-policy source set (bundled, first_party_remote, user) as answering a real store distinction rather than an invented one",
+      "admitted_claims": [
+        "The store's guidelines treat content a player creates or uploads at runtime as a distinct category from content the developer ships in the package or through the developer's own remote hosting, with its own review and moderation expectations",
+        "The guidelines require a title to be able to identify or remove user-generated content on request, which implies a runtime must be able to distinguish a user-sourced content item from a bundled or first-party-remote one at load time",
+        "The requirement is stated as a store submission and ongoing-compliance condition, not an optional content-quality suggestion"
+      ],
+      "excluded_uses": [
+        "No specific moderation workflow, reporting flow, or takedown mechanism is copied; the family models only a closed 'user' trust-policy value a consumer's own moderation logic gates before registration, not a moderation system of its own",
+        "No claim that any named product's user-generated content passed review or complies with this or any other store's policy"
+      ]
+    },
+    {
+      "id": "pico-downloadable-content-and-package-size",
+      "kind": "official_platform_developer_documentation",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/unity/pico-store-submission-guidelines/",
+      "license_or_terms": "PICO developer documentation terms; facts only, no code or content copied",
+      "maintenance_evidence": "Part of the maintained PICO Unity Integration SDK developer documentation that this repository already cites for interaction, visual, and performance references; exact page path and current SDK version to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Second-platform evidence that a package size limit and a documented downloadable-content mechanism recur across platforms, so the family's dependency-declaration and remote-loading shape is not a Meta-specific convenience",
+      "admitted_claims": [
+        "The platform's store submission guidance names a maximum application package size and documents downloadable or expansion content as a separate, measured concern from the initial package",
+        "The platform's submission process reviews downloadable content the same way it reviews the initial package, rather than treating post-install content as outside review scope",
+        "Package size and downloadable-content limits are documented as certification-relevant figures, matching the shape of the Meta guidance this manifest also cites"
+      ],
+      "excluded_uses": [
+        "No PICO SDK type, method name, or sample is depended upon by the Core or the adapter",
+        "No claim about PICO device package size, downloadable-content behavior, or certification outcome without a Device Lab receipt or a real store submission record"
+      ]
+    },
+    {
+      "id": "pico-content-review-and-user-generated-content",
+      "kind": "official_store_policy_document",
+      "authority": "PICO",
+      "url": "https://developer.picoxr.com/document/pico-store/content-review-guidelines/",
+      "license_or_terms": "PICO developer documentation terms; policy facts only, no content copied",
+      "maintenance_evidence": "Part of the maintained PICO store content review guidelines; exact page path and current revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Second-platform evidence that user-generated or user-installed content is reviewed and trusted differently from developer-shipped content, reinforcing the family's closed trust-policy source set as a recurring, platform-independent store distinction",
+      "admitted_claims": [
+        "The platform's content review guidelines apply a distinct review path to content a user generates, uploads, or installs at runtime, separate from the developer's own submitted package and remote content",
+        "The guidelines require the title or the platform to be able to identify and act on user-sourced content independent of the developer's own bundled or remotely hosted content",
+        "This distinction recurs across the two platforms this manifest cites, indicating a store-independent pattern rather than a single vendor's policy quirk"
+      ],
+      "excluded_uses": [
+        "No PICO-specific review workflow or moderation tooling is copied or depended upon by the Core or the adapter",
+        "No claim that any named product's user-generated content passed PICO's review or any store's review without a real store submission record"
+      ]
+    },
+    {
+      "id": "apple-app-store-review-downloaded-code-restriction",
+      "kind": "official_store_policy_document",
+      "authority": "Apple",
+      "url": "https://developer.apple.com/app-store/review/guidelines/#software-requirements",
+      "license_or_terms": "Apple Developer documentation terms; policy facts only, no guideline text copied",
+      "maintenance_evidence": "Current App Store Review Guidelines, software-requirements section, addressing downloaded executable code versus downloaded configuration and resource data; exact section anchor and current revision to be confirmed by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Store-policy evidence, store-wide rather than headset-specific, that a downloaded content pack's entries must stay non-executable data (a scene reference, an asset, audio, text, or configuration data) rather than executable code, directly grounding the family's closed, non-executable entry-kind set and its exclusion of any downloaded script, assembly, or reflection-discovered type",
+      "admitted_claims": [
+        "The guidelines restrict an app from downloading or installing separate executable code except in narrowly scoped, explicitly permitted cases, distinguishing 'executable code' from configuration and resource data an app's own built-in renderer or interpreter consumes",
+        "Downloaded configuration and resource data is treated differently from downloaded executable code specifically because the former does not change the app's own code paths, only the content those code paths already know how to render or interpret",
+        "Violating the downloaded-executable-code restriction is documented as a rejection-worthy submission issue, independent of platform or content genre"
+      ],
+      "excluded_uses": [
+        "No specific rejected app or review case is cited; the family models the boundary as 'no entry kind in the closed set names a script, assembly, or reflection-discovered type', not a copy of the guideline text",
+        "No claim that any named product's content-pack usage was reviewed or approved under this guideline"
+      ]
+    },
+    {
+      "id": "godot-resource-pack-export-and-mount",
+      "kind": "maintained_open_source_implementation",
+      "authority": "Godot Engine contributors",
+      "url": "https://docs.godotengine.org/en/stable/tutorials/export/exporting_pcks.html",
+      "license_or_terms": "MIT; architecture facts only, no engine code copied; current version and maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Actively maintained open-source second-engine manual documenting resource-pack export and runtime mounting, with tagged releases; exact version and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent second-engine evidence that a content-pack shape (a self-contained, versioned resource archive mountable at runtime, separate from the base executable, with later-mounted packs able to override earlier ones) recurs as an engine-agnostic pattern rather than a Unity-specific convenience",
+      "admitted_claims": [
+        "A second engine exports a project's resources into a separate pack file distinct from the base executable, loaded or mounted at runtime through an explicit API call rather than being merged into the executable at build time",
+        "The same engine documents loading more than one pack at runtime, with a later-loaded pack able to override resources an earlier one declared, matching this family's registry-of-declared-manifests shape rather than a single monolithic bundle",
+        "Pack loading in this engine is an explicit call the host code issues, not a scene search or an automatic discovery of pack files on disk"
+      ],
+      "excluded_uses": [
+        "No engine type, node, or method name from this engine is copied and the Core has no dependency on it",
+        "Godot is a roadmap direction only for this repository (see the current implementation boundary in AGENTS.md); this source proves recurrence of the content-pack shape, not Godot support",
+        "Maintenance and license must be confirmed; if the documented feature or its maintenance state has changed at review time it moves to context-only"
+      ]
+    },
+    {
+      "id": "bepinex-plugin-dependency-and-trust-model",
+      "kind": "maintained_open_source_implementation",
+      "authority": "BepInEx contributors",
+      "url": "https://github.com/BepInEx/BepInEx",
+      "license_or_terms": "LGPL-2.1; architecture facts only, no code copied; current version, license file, and maintenance state to be confirmed by a person at an immutable review ref",
+      "maintenance_evidence": "Actively maintained open-source plugin-loading framework for games with tagged releases and a documented plugin identity, version, and dependency-declaration model; exact version and an immutable review ref to be recorded by a person. URL not fetched; a person must confirm.",
+      "admitted_role": "Independent open-source evidence that a loadable-content trust boundary (declared identity, version, and dependencies checked before untrusted content runs alongside a base application) recurs as a previously solved problem, grounding this family's declared-dependency list and closed trust-policy source set as answering a real, recurring problem rather than an invented one",
+      "admitted_claims": [
+        "A widely adopted plugin-loading framework requires each loadable unit to declare its own identity, version, and dependencies on other loadable units, and refuses to load a unit whose declared dependency is absent or unsatisfied rather than loading it partially",
+        "The framework separates dependency resolution and version validation, which happen before any content the unit provides is used, from the content format the unit itself carries",
+        "The framework's own documentation distinguishes a trusted base-application loading path from user-installed third-party content, mirroring a closed trust-source distinction rather than treating all loaded content as equally trusted"
+      ],
+      "excluded_uses": [
+        "No type, attribute, or API from this framework is copied and the Core has no dependency on it",
+        "This source is evidence for the dependency-declaration and trust-boundary shape only; it is not evidence that this family is a general-purpose modding or plugin-injection framework, which it explicitly is not",
+        "Maintenance, license, and an immutable review ref must be confirmed by a person before this claim is relied on in the admission record"
+      ]
+    }
+  ],
+  "context_only_not_derivation_inputs": [
+    {
+      "id": "scene-flow-family-scene-delivery",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/scene-flow/verification-contract.md",
+      "reason": "The Scene flow family owns scene-set identity, the transition state machine, and scene loading itself. A content pack's 'scene' entry kind names a scene this family's catalog and trust policy resolve and verify, but the loaded scene is handed to Scene flow's own SceneId binding and loader; Scene flow's transition, fade, and recovery model is context only and contributes no evidence for pack, catalog, or trust-policy semantics"
+    },
+    {
+      "id": "persistence-family-document-delivery",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/standards/persistence/verification-contract.md",
+      "reason": "The Persistence family owns save orchestration, schema versioning, and migration. A content pack's 'text_table' or 'data' entry delivers bytes a consumer may deserialize through Persistence's own model, but this family owns no save format and reads no save file; Persistence's model is context only and contributes no evidence for pack, catalog, or trust-policy semantics"
+    },
+    {
+      "id": "shipped-game-gap-matrix",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/benchmarks/shipped-game-gap-matrix.md",
+      "reason": "Ranks content packs fifteenth and records that a data-driven content pipeline for levels, packs, and user content is a gap every one of the three benchmark product shapes needs in some form; this is the motivating gap the queue candidate answers, not evidence for the common kernel"
+    },
+    {
+      "id": "version-adaptive-reference-model",
+      "url": "https://github.com/Lingkyn/xr-foundry/blob/main/docs/architecture/version-adaptive-reference-model.md",
+      "reason": "States that a package manifest or one successful profile does not prove other Unity, Addressables, dependency, or device tuples; this family's compatibility with a given Addressables and hosting configuration is bounded by that policy rather than by any one consumer's own documentation"
+    }
+  ],
+  "source_gate_non_claims": [
+    "No source grants package maturity, release, certification, platform review outcome, or device authority.",
+    "The first implementation is a PackId, PackVersion, closed entry-kind, manifest, catalog, trust-policy, and immutable-state substrate with typed intents and a content digest; it is not a package manager, a mod-loading framework, an asset importer, or a content-authoring tool, and it admits no claim that any named pack downloads within a stated size or time on any device.",
+    "The family guarantees the plumbing only: that an accepted register_pack, resolve, load, unload, or verify intent reached the injectable loader and digest verifier with the exact pack id, version, dependency set, entry list, and computed digests it resolved; whether a download completed within a time or size bound, held a correct file on disk, or ran without a hitch is a human judgement recorded in a Device Lab receipt.",
+    "Download size, download time, memory footprint on a device, hitching during a load, and store certification outcome are Device Lab receipts or real store-submission records, never package claims, and no test in this family's gates claims a measured download size, a measured load time, or a passed certification.",
+    "Automated or device evidence recorded for one device profile, Unity, Addressables, or content-hosting tuple never transfers to another, and a pack proven to load on one device or runtime is never assumed to load on another."
+  ]
+}

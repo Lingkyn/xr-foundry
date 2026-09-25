@@ -1,0 +1,14 @@
+{
+  "name": "Lingkyn.QualityTiers.Core",
+  "rootNamespace": "Lingkyn.QualityTiers.Core",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

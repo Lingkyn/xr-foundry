@@ -1169,7 +1169,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
-      "status": "open",
+      "status": "done",
       "depends_on": [
         "WI-027"
       ],
@@ -1202,7 +1202,7 @@
         ]
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
-      "done_proof": null
+      "done_proof": "docs/standards/platform-services/coverage-map.json"
     },
     {
       "id": "WI-030",
@@ -1211,7 +1211,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "large",
-      "status": "open",
+      "status": "done",
       "depends_on": [
         "WI-028"
       ],
@@ -1244,7 +1244,7 @@
         ]
       },
       "evidence": "validate_coverage_map_claims passes on the new map with no allowlist entry.",
-      "done_proof": null
+      "done_proof": "docs/standards/quality-tiers/coverage-map.json"
     },
     {
       "id": "WI-031",
@@ -1253,7 +1253,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -1284,7 +1284,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
-      "done_proof": null
+      "done_proof": "docs/standards/content-packs/verification-contract.md"
     },
     {
       "id": "WI-032",
@@ -1293,7 +1293,7 @@
       "needs": "none",
       "decision_class": "routine",
       "size": "medium",
-      "status": "open",
+      "status": "done",
       "depends_on": [],
       "read_first": [
         "AGENTS.md",
@@ -1324,7 +1324,7 @@
         ]
       },
       "evidence": "The four artifacts in the tree and a passing repository contract.",
-      "done_proof": null
+      "done_proof": "docs/standards/spatial-placement/verification-contract.md"
     }
   ]
 }

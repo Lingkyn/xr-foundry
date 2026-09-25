@@ -1,0 +1,23 @@
+{
+  "name": "Lingkyn.PlatformServices.Core.Editor.Tests",
+  "rootNamespace": "Lingkyn.PlatformServices.Core.Editor.Tests",
+  "references": [
+    "Lingkyn.PlatformServices.Core"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": true,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

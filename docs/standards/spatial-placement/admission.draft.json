@@ -1,0 +1,63 @@
+{
+  "schema": "xr-foundry.system_admission.v1",
+  "family": "spatial-placement",
+  "decision": "admitted_cross_project_standard_candidate",
+  "classification": "common_system",
+  "reviewed_on": "2026-09-24",
+  "source_manifest": "docs/standards/spatial-placement/source-manifest.json",
+  "consumer_contexts": [
+    "object-interaction XR games (a job-simulation or hand-puzzle shape) that let a person aim a held or virtual object at a surface, preview where it will land, and commit or cancel the placement without the object ending up embedded, floating, or overlapping another object",
+    "spatial-creation and room-scale editing XR applications (the closest shape to this library's own consumer) on several headset platforms and input sources (ray, hand tracking) that place many objects per session and need placement to be interruptible, cancellable, and comfortable to aim across a bounded reach range without hand-writing a raycast-and-snap loop at every placement site"
+  ],
+  "evidence_basis": {
+    "authoritative_sources": [
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/ray-interactor.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/near-far-interactor.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.5/manual/interactable-components.html",
+      "https://docs.unity3d.com/Packages/com.unity.xr.arfoundation@6.0/manual/features/planes/plane-detection.html",
+      "https://developers.meta.com/horizon/design/bp-interaction-overview/",
+      "https://developer.picoxr.com/document/design-guidelines/interaction/",
+      "https://developer.apple.com/design/human-interface-guidelines/spatial-layout",
+      "https://en.wikipedia.org/wiki/Mode_(computer_interface)",
+      "https://www.nngroup.com/articles/mode-error/",
+      "https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#action-sets-multiple-active"
+    ],
+    "independent_professional_sources": [
+      "https://github.com/MixedRealityToolkit/MixedRealityToolkit-Unity",
+      "https://github.com/GodotVR/godot-xr-tools"
+    ]
+  },
+  "common_kernel": [
+    "placement and hand identity as validated identities separate from the interactor, controller, or hand-tracking device that raises intents against them",
+    "a closed placement-phase set (idle, aiming, previewing, committed, cancelled) with fixed legal transitions, so a placement session's current state is always one of a small enumerable set rather than an implicit combination of flags",
+    "a validity policy (closed surface-kind set, reach range, overlap rule) declared as plain data that gates a candidate closed before it can be previewed or committed, rather than letting a runtime silently accept an invalid placement",
+    "begin, aim, adjust_distance, snap, commit, and cancel intents applied to an immutable state with a sticky aiming-hand rule, deterministic replay to an equal fingerprint, and stable failure codes",
+    "a ghost preview (pose, validity, snap target) expressed as plain data rather than a rendered claim, so a placement session's current candidate is inspectable and testable independent of any renderer",
+    "an input-ownership declaration (a named shared control and an arbitration kind) expressed as plain data the family emits and never enforces, so a consumer can suppress a competing locomotion input for a session's lifetime without either family depending on the other"
+  ],
+  "configurable_variation": [
+    "which validity policies a product declares, their surface-kind sets, reach ranges, and overlap rules for different placement contexts",
+    "which shared control and arbitration kind a product's input-ownership declaration names, and how a consumer's own composition wiring turns that declaration into a Locomotion comfort-policy change",
+    "adapter-side route selection (the ray-interactor route or the near-far-interactor route) and which secondary control a product binds to the distance-adjustment intent",
+    "consumer-owned ghost-preview rendering, placement content, surface-detection pipeline, and any device-specific reach or hand-tracking tuning"
+  ],
+  "excluded_project_specific": [
+    "one product's placement content, ghost-preview visual treatment, and surface-detection pipeline choice",
+    "one project's choice of which validity policies to expose, which controls to bind to distance adjustment, and any judgement that a placement feels right or reads as comfortable on its device"
+  ],
+  "checks": {
+    "recurring_cross_project_problem": true,
+    "common_kernel_from_multiple_positive_sources": true,
+    "no_consumer_project_raw_material": true,
+    "no_product_taxonomy_in_core": true,
+    "configuration_or_extension_seams": true,
+    "clean_consumer_validation_planned": true,
+    "licensing_and_provenance_reviewed": true
+  },
+  "rationale": "Spatial placement is a recurring cross-project need the shipped-game-gap-matrix's spatial-creation shape treats as core and its object-interaction shape needs partially: ray placement with a ghost preview, snapping, commit, and cancel recurs whenever a person places an object in space rather than merely holding or throwing it. Its kernel (validated placement and hand identity, a closed phase set with fixed transitions, a validity policy declared as data that gates a candidate closed, intents over an immutable state with a sticky aiming hand and deterministic replay, a ghost preview as plain data, and an input-ownership declaration a consumer wires to suppress a competing locomotion control) is supported by the engine's own ray and near-far interactor documentation and its attach-transform and AR Foundation plane-detection documentation as a public model of surface snapping, first-party Meta, PICO, and Apple platform guidance on reach-bounded placement and hand-tracking precision, the OpenXR core specification's action-set priority mechanism as standards evidence for an explicit input-ownership arbitration shape, Raskin's quasimode concept and the mode-error literature as the public basis for treating aiming as a held-control mode that ends deterministically, and two independent open-source XR implementations (a widely adopted mixed-reality toolkit's surface-magnetism and object-manipulator components, and a second-engine XR helper library's validate-before-settle pickup and placement component) that both separate placement validation from pose tracking, while every product keeps its own placement content, rendering treatment, and device tuning outside the shared Core.",
+  "non_claims": [
+    "Admission does not claim that any surface was detected, that any hand was tracked, that a placement felt comfortable, or that any reach distance is comfortable on any headset; the family guarantees the plumbing only and every such judgement is a human observation in a Device Lab receipt.",
+    "Admission does not make the family a placement rendering engine or a surface-reconstruction system, and it transfers no Interaction, Locomotion, or XR UI shell evidence to this family; evidence for one ray interactor, near-far interactor, surface-detection pipeline, or headset/hand-tracking tuple never transfers to another.",
+    "This draft becomes a decision only when a maintainer copies it into docs/foundry/admissions/ after a person confirms the sources, page paths, section anchors, versions, licenses, and the maintenance state of each open-source implementation, and pins an AR Foundation version in this repository's compatibility profiles."
+  ]
+}

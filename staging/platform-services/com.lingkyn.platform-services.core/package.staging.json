@@ -1,0 +1,20 @@
+{
+  "name": "com.lingkyn.platform-services.core",
+  "version": "0.1.0",
+  "displayName": "Lingkyn Platform Services Core",
+  "description": "Engine-light platform-services substrate: validated AccountId/ProviderId identity, a closed capability set (entitlement, achievement, leaderboard, cloud_save, identity), an immutable ProviderRegistry built by explicit registration with a positive cloud_save payload-size guard rail, six typed intents (check_entitlement, unlock, report_score, read_leaderboard, cloud_write, cloud_read) applied to an immutable PlatformServicesState with deterministic replay and a fingerprint, an offline pending-write queue keyed by idempotency keys that replays in order and drops duplicates, the one-intent-channel actor/expected-revision/state.stale shape (LESSON-011), and structured results with the contract's eleven stable failure codes and no others.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "XR Foundry Contributors",
+    "url": "https://github.com/Lingkyn/xr-foundry"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "PlatformServicesWalkthrough",
+      "description": "Domain-only walkthrough: a provider registry built by explicit registration, a composed initial state, a full check_entitlement/unlock/report_score/read_leaderboard/cloud_write/cloud_read intent sequence including an offline queue-and-resolve pass, and a replayed sequence proving deterministic state; needs no vendor SDK, asset, or scene.",
+      "path": "Samples~/PlatformServicesWalkthrough"
+    }
+  ]
+}

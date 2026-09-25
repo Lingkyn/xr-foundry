@@ -1,0 +1,362 @@
+{
+  "schema": "xr-foundry.verification_coverage_map.v1",
+  "version": "0.1.0",
+  "family": "platform-services",
+  "contract": "docs/standards/platform-services/verification-contract.md",
+  "audited_at_commit": "staging",
+  "policy": {
+    "mapping_basis": "test method names and bodies in staging/platform-services, matched against contract clause text; the code has not compiled or executed",
+    "unmapped_clause_is_open_gap": true,
+    "partial_coverage_cannot_satisfy_gate": true,
+    "map_is_not_execution_evidence": true
+  },
+  "gates": [
+    {
+      "id": "core",
+      "section": "Core gate",
+      "package_id": "com.lingkyn.platform-services.core",
+      "test_assembly": "Lingkyn.PlatformServices.Core.Editor.Tests",
+      "clauses": [
+        {
+          "id": "PC-01",
+          "clause": "identity: AccountId and ProviderId as validated identities with a canonical form, rejection of empty, whitespace, and malformed identifiers with a stable identity.malformed failure, and value equality between two identities with the same text; the two identity kinds share no cross-type equality",
+          "coverage": "covered",
+          "tests": [
+            "AccountIdCanonicalizesLowerCaseDottedSegments",
+            "AccountIdRejectsMalformedTextWithIdentityMalformed",
+            "IdentitiesWithSameCanonicalTextAreEqualValues",
+            "ProviderIdSharesCanonicalFormButNeverEqualsAnAccountIdOfTheSameText",
+            "IdentityParseThrowsWithTheFailureMessageForMalformedIdentity"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-02",
+          "clause": "a closed platform-service capability set: entitlement, achievement, leaderboard, cloud_save, and identity; nothing outside this set is a capability, and a capability name outside the set is rejected with capability.unknown",
+          "coverage": "covered",
+          "tests": [
+            "TryParseAcceptsExactlyTheFiveCanonicalCapabilityNames",
+            "TryParseRejectsANameOutsideTheClosedSetWithCapabilityUnknown"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-03",
+          "clause": "a ProviderDescriptor declared by explicit registration: a ProviderId, the closed subset of capabilities that provider supports, and, only for cloud_save, a positive payload-size guard rail in bytes; an empty capability subset or a cloud_save guard rail that is zero, negative, missing while cloud_save is declared, or present while cloud_save is not declared is rejected with provider.declaration.invalid",
+          "coverage": "covered",
+          "tests": [
+            "TryCreateRejectsAnEmptyCapabilitySubsetWithProviderDeclarationInvalid",
+            "TryCreateRejectsACloudSaveGuardRailThatIsZeroOrNegativeWithProviderDeclarationInvalid",
+            "TryCreateRejectsCloudSaveDeclaredWithNoGuardRailWithProviderDeclarationInvalid",
+            "TryCreateRejectsAGuardRailSuppliedWithoutCloudSaveDeclaredWithProviderDeclarationInvalid",
+            "TryCreateAcceptsAWellFormedDeclaration"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-04",
+          "clause": "an immutable ProviderRegistry built from registered descriptors, enumerating providers in canonical id order and unmodifiable after construction; a duplicate provider id is rejected with provider.duplicate, checked after an invalid declaration, and a rejected registration leaves the registry unchanged",
+          "coverage": "covered",
+          "tests": [
+            "RegistrationRejectsADuplicateProviderIdWithProviderDuplicateLeavingBuilderUnchanged",
+            "RegistrationRejectsAnInvalidDeclarationBeforeCheckingDuplicates",
+            "BuiltRegistryEnumeratesInCanonicalIdOrderAndCannotBeMutatedAfterwards"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-05",
+          "clause": "composing a runtime that selects a provider for a required capability the selected provider's descriptor does not declare is rejected at composition time with capability.unsupported, naming the capability and the provider, before any intent can be issued against that composition",
+          "coverage": "covered",
+          "tests": [
+            "ComposingWithAnUnregisteredProviderIsRejectedWithCapabilityUnsupported",
+            "ComposingWithAnUndeclaredRequiredCapabilityIsRejectedNamingTheCapabilityAndProvider",
+            "ComposingWithEveryRequiredCapabilityDeclaredSucceeds"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-06",
+          "clause": "typed intents applied to an immutable PlatformServicesState: check_entitlement, unlock, report_score, read_leaderboard, cloud_write, and cloud_read; every intent names the capability it exercises, and an intent naming a capability the active provider's descriptor does not declare is rejected with capability.unsupported rather than attempted",
+          "coverage": "covered",
+          "tests": [
+            "EveryIntentNamesExactlyOneClosedSetCapability",
+            "AnIntentNamingACapabilityTheActiveProviderDoesNotDeclareIsRejectedWithCapabilityUnsupported"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-07",
+          "clause": "an identity precondition: every intent other than check_entitlement issued before an AccountId has been resolved for the active provider is rejected with identity.missing, and no achievement, score, leaderboard read, or cloud operation is recorded against an unresolved identity",
+          "coverage": "covered",
+          "tests": [
+            "EveryIntentOtherThanCheckEntitlementIssuedBeforeIdentityIsResolvedIsRejectedWithIdentityMissing",
+            "CheckEntitlementItselfNeedsNoPriorIdentity"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-08",
+          "clause": "the three intents with no outcome fold: check_entitlement resolves the AccountId for the active provider when the caller-supplied entitlement check is entitled, and is rejected with not_entitled (resolving no identity) otherwise; read_leaderboard and cloud_read are accepted once identity and capability hold, with no projection change",
+          "coverage": "covered",
+          "tests": [
+            "CheckEntitlementAcceptedResolvesTheAccountIdForTheActiveProvider",
+            "CheckEntitlementNotEntitledIsRejectedWithNotEntitledAndResolvesNoIdentity",
+            "CheckEntitlementOnAProviderThatDoesNotDeclareEntitlementIsRejectedWithCapabilityUnsupported",
+            "ReadLeaderboardAndCloudReadSucceedOnceIdentityAndCapabilityHoldWithNoProjectionChange"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-09",
+          "clause": "explicit outcome folding: unlock, report_score, and cloud_write carry an optional caller-supplied outcome (accepted, not_entitled, rate_limited) reflecting what the provider actually reported; an accepted outcome updates the corresponding projection (the unlocked-achievement set, the leaderboard's last accepted score under its upload policy, or the cloud key's stored payload), and any other outcome updates no projection and is returned as the intent's structured result",
+          "coverage": "covered",
+          "tests": [
+            "UnlockWithAnAcceptedOutcomeUpdatesTheUnlockedAchievementSet",
+            "UnlockWithANotEntitledOrRateLimitedOutcomeUpdatesNoProjectionButReturnsTheCode",
+            "ReportScoreKeepBestOnlyOverwritesTheLastAcceptedScoreWhenTheNewScoreIsBetter",
+            "ReportScoreAlwaysOverwritesUnconditionallyRegardlessOfWhetherTheNewScoreIsBetter",
+            "CloudWriteWithAnAcceptedOutcomeStoresThePayloadExactly"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-10",
+          "clause": "the offline pending-write queue: unlock, report_score, and cloud_write issued with no outcome enqueue into an ordered, immutable pending-write queue keyed by the intent's idempotency key rather than updating any projection, returning offline as the intent's structured result together with the assigned idempotency key; the same intent type resubmitted with the same idempotency key and now an outcome resolves and removes exactly that queued entry, in FIFO order relative to other resolutions, and folds the outcome exactly as an immediate write would have",
+          "coverage": "covered",
+          "tests": [
+            "AWriteIssuedWithNoOutcomeEnqueuesAndReturnsOfflineWithTheIdempotencyKey",
+            "ResubmittingTheSameIntentTypeAndKeyWithAnOutcomeResolvesAndRemovesExactlyThatQueuedEntry",
+            "TwoQueuedWritesResolveInFifoOrderRelativeToEachOther"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-11",
+          "clause": "idempotency: resubmitting an intent whose idempotency key has already been resolved returns the originally recorded result without reapplying it, and resubmitting the same key with a different outcome than the one already recorded is rejected with dispatch.mismatch rather than silently overwriting the prior result",
+          "coverage": "covered",
+          "tests": [
+            "ResubmittingAResolvedKeyWithTheSameOutcomeReturnsTheOriginalResultWithoutReapplying",
+            "ResubmittingAResolvedKeyWithADifferentOutcomeIsRejectedWithDispatchMismatch"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-12",
+          "clause": "state immutability: an accepted intent (queued, resolved, or immediately applied) produces a new state and leaves the prior state intact; a rejected intent leaves the prior state intact and returns it unchanged together with the failure code",
+          "coverage": "covered",
+          "tests": [
+            "AcceptedIntentProducesNewStateWhilePriorStateStaysReadableAndUnchanged",
+            "RejectedIntentLeavesPriorStateIntactWithTheFailureCode"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-13",
+          "clause": "deterministic replay: the same intent sequence over the same provider registry and initial state produces an equal final state and an equal fingerprint; the fingerprint covers the provider-registry fingerprint, the resolved account id per provider, the unlocked-achievement set, the last accepted score per leaderboard, the cloud key/payload map, and the pending-write queue's contents in canonical idempotency-key order",
+          "coverage": "covered",
+          "tests": [
+            "SameIntentSequenceOverTheSameRegistryAndInitialStateProducesEqualStateAndFingerprint",
+            "TwoStatesWithTheSameNetProjectionsReachedByDifferentSequencesHaveEqualFingerprintsButMayDifferInRevision",
+            "FingerprintOfTheOfflineQueueIsIndependentOfEnqueueOrder"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-14",
+          "clause": "structured results with stable failure codes for a malformed identity, an unknown capability, a duplicate or invalid provider declaration, an unsupported capability at composition or intent time, a missing identity, a dispatch mismatch, a stale revision, not_entitled, offline, and rate_limited, and no other code, each carrying the offending id, capability, or idempotency key, plus a valid intent sequence passing clean with every outcome accepted",
+          "coverage": "covered",
+          "tests": [
+            "PlatformServicesFailureDeclaresExactlyTheElevenContractCodesAndNoOthers",
+            "AValidIntentSequencePassesCleanWithEveryOutcomeAccepted"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-15",
+          "clause": "the Core references no vendor SDK type, holds no network socket, HTTP client, or platform SDK type, and calls no store; an account id, achievement id, leaderboard id, and cloud key enter and leave the Core as opaque strings, and an outcome is a plain closed-set value the caller supplies, never a value the Core infers from a network call it never makes",
+          "coverage": "covered",
+          "tests": [
+            "CoreAssemblyReferencesNoUnityEngineAssembly",
+            "NoCoreRuntimeSourceFileMentionsUnityEngineOrAVendorSdkType",
+            "AnAchievementIdLeaderboardIdAndCloudKeyEnterAndLeaveTheCoreAsOpaqueUninterpretedStrings"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-16",
+          "clause": "one intent channel for people and agents (LESSON-011): every intent carries an IntentActor from the closed set player, agent, replay, import, and an optional expected revision; PlatformServicesState carries a monotonically increasing revision",
+          "coverage": "covered",
+          "tests": [
+            "EveryIntentDefaultsToPlayerActorWithNoExpectedRevisionWhenUsingTheShortConstructor",
+            "EveryIntentAcceptsAnExplicitActorFromTheClosedSetAndAnExpectedRevision",
+            "StateRevisionStartsAtZeroAndIncreasesByExactlyOneOnAnAcceptedIntentButNeverOnARejected"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-17",
+          "clause": "one intent channel for people and agents (LESSON-011): a stale expected revision is rejected with state.stale before the intent's own rule runs and changes nothing, for every intent type; a matching expected revision is accepted exactly like no expected revision at all",
+          "coverage": "covered",
+          "tests": [
+            "AStaleExpectedRevisionIsRejectedWithStateStaleAndChangesNothing",
+            "EveryIntentTypeRejectsAStaleExpectedRevisionWithStateStaleRegardlessOfActor",
+            "AMatchingExpectedRevisionIsAcceptedExactlyLikeNoExpectedRevisionAtAll"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-18",
+          "clause": "one intent channel for people and agents (LESSON-011): the actor never changes validation, so a player-issued and an agent-issued copy of the same intent take the same path and yield the same outcome and the same resulting state",
+          "coverage": "covered",
+          "tests": [
+            "PlayerAndAgentIssuingTheSameAcceptedIntentTakeTheSamePathAndProduceEqualResultingState",
+            "PlayerAndAgentIssuingTheSameRejectedIntentGetTheSameFailureCode"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PC-19",
+          "clause": "one intent channel for people and agents (LESSON-011): every outcome in the replay log carries the issuing actor and the revision after it",
+          "coverage": "covered",
+          "tests": [
+            "ReplayLogRecordsTheIssuingActorAndTheRevisionAfterEveryOutcomeAcceptedOrRejected"
+          ],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    },
+    {
+      "id": "unity",
+      "section": "Unity adapter gate",
+      "package_id": "com.lingkyn.platform-services.unity",
+      "test_assembly": "Lingkyn.PlatformServices.Unity.Editor.Tests",
+      "clauses": [
+        {
+          "id": "PU-01",
+          "clause": "thin provider adapters per vendor SDK behind one IPlatformServicesProvider interface (the Meta Horizon Platform SDK, the PICO platform SDK, Steamworks, Apple Game Center and StoreKit, and Unity Gaming Services Cloud Save), each constructed with explicit references and pinned to the validated SDK versions recorded in the compatibility profile",
+          "coverage": "partial",
+          "tests": [
+            "EveryVendorShellReportsProviderSdkMissingForEveryCapabilityCallWithoutItsDefine",
+            "EveryVendorShellNamesItsOwnVendorInTheDiagnosticMessage",
+            "AVendorShellDiagnosticReachesTheRuntimeCallerWithoutTouchingTheCoreOrQueueingItOffline"
+          ],
+          "missing": [
+            "a Unity Editor run with each vendor SDK package actually installed and its compile-time define enabled, producing a validated compatibility profile that confirms the pinned SDK version and exercises the real call path behind the #if block; no vendor SDK is present in this repository, so only the no-define provider.sdk_missing path is exercised here"
+          ]
+        },
+        {
+          "id": "PU-02",
+          "clause": "no vendor SDK call exists outside its own adapter assembly; a source rule test over the Core and every other adapter assembly proves zero reference to a vendor SDK namespace it does not own",
+          "coverage": "covered",
+          "tests": [
+            "NoVendorSdkNamespaceTokenAppearsOutsideItsOwningShellFile"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-03",
+          "clause": "an explicit diagnostic for every by-name or optional resolution: a vendor SDK singleton accessor, an optional callback or delegate registration, and an SDK-initialized check the adapter performs before its first call must report an explicit failure with a stable code when the target is missing, uninitialized, or unsupported, carrying a negative test for that case; silence or a reported success is a defect (LESSON-004)",
+          "coverage": "covered",
+          "tests": [
+            "VendorReadinessGateReturnsSingletonMissingWhenTheSingletonProbeFails",
+            "VendorReadinessGateReturnsUninitializedWhenTheInitializedProbeFailsAfterTheSingletonResolves",
+            "VendorReadinessGateReturnsCallbackUnregisteredWhenOnlyTheCallbackProbeFails",
+            "VendorReadinessGateReturnsNullWhenEveryProbePasses",
+            "VendorReadinessGateConstructionRequiresExplicitProbes"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-04",
+          "clause": "an injectable IPlatformServicesProvider fake with an in-memory account, achievement set, leaderboard, and cloud store, so Core-facing and adapter tests assert exactly which capability was exercised, which outcome was supplied, and which idempotency key was used, without a network or a vendor SDK dependency",
+          "coverage": "covered",
+          "tests": [
+            "RecordingProviderRecordsExactlyWhichCapabilityTargetAndIdempotencyKeyItReceived",
+            "RecordingProviderMaintainsItsOwnInMemoryAchievementLeaderboardAndCloudStore"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-05",
+          "clause": "an entitlement gate at boot: the runtime issues check_entitlement before any other capability's intents are accepted, and while entitlement is unresolved or reports not_entitled, every other intent is rejected with an explicit diagnostic naming the provider and the reported code; the gate fails closed (no default-entitled fallback), and the only way past it is a consumer-owned fallback intent the consumer explicitly defines and wires, never a silent bypass, a scene load, or a quit inside the adapter",
+          "coverage": "covered",
+          "tests": [
+            "EveryOtherCapabilityCallIsBlockedWithEntitlementGateBlockedBeforeCheckEntitlementSucceeds",
+            "ANotEntitledCheckEntitlementLeavesTheGateClosed",
+            "AnAcceptedCheckEntitlementOpensTheGate",
+            "ApplyConsumerOwnedFallbackOpensTheGateWithoutCheckEntitlement",
+            "NoRuntimeSourceFileCallsSceneManagerOrApplicationQuit"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-06",
+          "clause": "explicit idempotency-key mapping: the adapter maps the Core's opaque idempotency key to the vendor SDK's own request-deduplication mechanism when the vendor exposes one, and synthesizes a client-side dedupe record when it does not, so a retried call is never sent to the vendor twice for the same key; this mapping is explicit adapter logic, never a Core assumption about any vendor's deduplication behavior",
+          "coverage": "covered",
+          "tests": [
+            "ARetriedCallForTheSameIdempotencyKeyIsNeverSentToTheProviderTwice",
+            "ADifferentIdempotencyKeyIsSentAsANewCall"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-07",
+          "clause": "an explicit connectivity signal: the adapter observes connectivity as an explicit input it passes to the intent, never a value the runtime polls or infers internally on a per-frame loop; a per-frame retry loop inside the adapter is a defect, and pending-queue draining runs only from an explicit reconnection event or an explicit consumer-issued drain call",
+          "coverage": "covered",
+          "tests": [
+            "AWriteIssuedWhileOfflineNeverCallsTheProviderAndQueuesInTheCore",
+            "DrainPendingWritesResolvesQueuedEntriesOnlyWhenExplicitlyCalled",
+            "NoRuntimeSourceFileDeclaresAPerFrameUpdateLoopOrPolling"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-08",
+          "clause": "explicit ScriptableObject construction for any Unity-authored provider configuration (a provider's capability subset, its cloud payload guard rail), converted deterministically to the Core's immutable ProviderDescriptor without mutating the authored asset; an asset with an invalid guard rail or an empty capability subset reports the Core's provider.declaration.invalid with the field path and the source asset, and construction throws with the same report",
+          "coverage": "covered",
+          "tests": [
+            "ProviderConfigConvertsDeterministicallyToTheCoresImmutableDescriptorWithoutMutatingTheAsset",
+            "ProviderConfigValidationReportsAnInvalidGuardRailWithProviderDeclarationInvalidAndTheFieldPath",
+            "ProviderConfigValidationReportsAnEmptyCapabilitySubsetWithProviderDeclarationInvalid",
+            "ProviderConfigValidationReportsAMalformedProviderIdWithIdentityMalformed",
+            "ProviderConfigConversionThrowsWithTheSameReportOnAnInvalidAsset"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-09",
+          "clause": "construction with explicit references only: a runtime is built from an explicit provider registry (via the Core state), an explicit active-provider selection, and an explicit IPlatformServicesProvider; no scene singleton, static instance, scene search, or reflection discovery resolves any of them, and two independently constructed runtimes over two fake providers that share no state are tested side by side so an intent accepted on one changes no projection, queue entry, or provider call of the other",
+          "coverage": "covered",
+          "tests": [
+            "RuntimeConstructionRequiresExplicitReferences",
+            "TwoRuntimesConstructedSideBySideShareNoState",
+            "NoRuntimeSourceFileUsesResourcesLoadASceneSearchOrASingleton"
+          ],
+          "missing": []
+        },
+        {
+          "id": "PU-10",
+          "clause": "cloud save composes on Persistence documents by reference, never by dependency: a small IPersistedDocumentSource seam in the Unity adapter builds a cloud_write from the same bytes a local save's document holds, without this adapter depending on the Persistence package or its stage/integrity/flush pipeline",
+          "coverage": "covered",
+          "tests": [
+            "PersistenceMirroredCloudWriteBuildsACloudWriteIntentFromTheSameBytesTheDocumentSourceHolds",
+            "PersistenceMirroredCloudWriteReturnsFalseWithoutADocumentRatherThanBuildingAnEmptyWrite"
+          ],
+          "missing": []
+        }
+      ],
+      "additional_tests_outside_clauses": []
+    }
+  ],
+  "summary": {
+    "clauses": 29,
+    "covered": 28,
+    "partial": 1,
+    "unmapped": 0,
+    "open_gap_tests": 0,
+    "open_evidence_gaps": 1,
+    "execution_note": "All 86 tests (55 Core, 31 Unity adapter) are authored in staging and have never compiled or run; the first Unity run either confirms them or turns this map red. Every clause is proven with a fake for every seam that would otherwise need a network or a vendor SDK (RecordingPlatformProvider, FixedVendorSingletonProbe, FixedVendorInitializedProbe, FixedVendorCallbackProbe, FixedConnectivitySignal, FixedPersistedDocumentSource) or an asset (PlatformServicesProviderConfigAsset via ScriptableObject.CreateInstance). PU-01 is the only partial clause: no vendor SDK is present in this repository, so every vendor shell exercises only its no-define provider.sdk_missing path; the pinned-version, real-call-path portion of PU-01 needs a Unity Editor run with each vendor SDK package installed and its compile-time define enabled, producing a validated compatibility profile, which is an evidence gap rather than a missing test. No test in this family's two gates claims that a store granted entitlement, unlocked an achievement, accepted a score, or persisted a cloud file, per the contract's claim ceiling."
+  }
+}

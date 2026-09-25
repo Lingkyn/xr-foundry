@@ -1,7 +1,11 @@
 # Platform services package-family standard
 
-Status: proposal in the source-gate queue (`NEXT-PLATFORM-SERVICES`); this is
-the source gate only. No staged Core or Unity adapter implementation, package
+Status: the staged implementation exists under `staging/platform-services/`
+(`com.lingkyn.platform-services.core` and `com.lingkyn.platform-services.unity`),
+authored and unexecuted against
+[`verification-contract.md`](verification-contract.md), with
+`coverage-map.json` mapping every Core and Unity adapter clause to a named
+test. No Unity run has produced a compatibility profile yet, so no package
 directory, package id, catalog entry, maturity, release, or device status
 exists in the tree.
 
@@ -128,13 +132,15 @@ ceiling.
 2. The maintainer copies [`admission.draft.json`](admission.draft.json) into
    `docs/foundry/admissions/` as the durable record through the
    [system admission gate](../../foundry/system-admission.md).
-3. Once admitted, the staged implementation authors the Core and the Unity
-   adapter under `staging/platform-services/` against
+3. Done: the staged implementation authors the Core and the Unity adapter
+   under `staging/platform-services/` against
    [`verification-contract.md`](verification-contract.md), with
-   `coverage-map.json` mapping every Core and Unity adapter clause to a
-   named test (no partial or unmapped clause). The code is authored and
-   unexecuted until a Unity run produces a compatibility profile, and
-   nothing enters `packages/` before admission and a green gate.
+   `coverage-map.json` mapping every Core and Unity adapter clause to a named
+   test; the one clause needing a real vendor SDK (the pinned-version,
+   real-call-path portion of the thin per-vendor adapter shells) is `partial`
+   with a named missing entry rather than a false `covered` claim. The code
+   is authored and unexecuted until a Unity run produces a compatibility
+   profile, and nothing enters `packages/` before admission and a green gate.
 4. A person or Agent with a Unity Editor runs
    `python scripts/run_unity_gates.py --host com.lingkyn.platform-services.core`,
    records the resulting compatibility profile, and either confirms the

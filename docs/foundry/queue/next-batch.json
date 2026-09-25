@@ -132,6 +132,36 @@
       ],
       "package_ids": [],
       "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/quality-tiers/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether tier identity, the capability-descriptor gating model, and the frame-budget policy are stable enough to admit a Core blueprint and one Unity adapter blueprint."
+    },
+    {
+      "id": "NEXT-CONTENT-PACKS",
+      "title": "Content packs: pack identity, catalog resolution, and a closed trust policy over bundled, remote, and user content",
+      "state": "proposal",
+      "objective": "Define engine-light pack and version identity, a closed non-executable entry-kind set (scene, prefab, audio, text table, data), a pack manifest with declared dependencies and a content digest, an immutable catalog built by explicit registration that resolves a pack id and version to a manifest, a closed trust policy over the pack's source (bundled, first-party remote, user) that fails closed on an untrusted source, and register-pack, resolve, load, unload, and verify intents on an immutable per-pack-version state with deterministic replay, with a thin Unity adapter over Addressables that verifies each entry's digest before load and tracks handles and memory with release on unload, so a title adds downloadable levels, packs, or user content without hand writing a separate loader and trust check for each source.",
+      "source_requirements": [
+        "Official Unity Addressables documentation for groups and labels, content catalogs, and the remote-content update workflow, plus AssetBundle fundamentals and Unity Cloud Content Delivery as one first-party hosting option, at the versions this repository can confirm and pin",
+        "First-party Meta and PICO platform guidance on downloadable content and application package size limits, paired with each platform's user-generated-content review policy, as evidence that a closed trust-policy source set answers a real store distinction",
+        "Apple's App Store Review Guidelines restricting downloaded executable code as store-wide evidence that a content pack's entries must stay closed, non-executable data",
+        "One or two maintained open-source content-pipeline or mod-loading implementations (a second engine's resource-pack export-and-mount shape and a widely adopted plugin-loading framework's dependency-declaration and trust-boundary model) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Download-size, load-time, memory-footprint, and store-certification evidence boundaries that route every such claim to a Device Lab receipt or a real store-submission record, so no package claim says a pack downloaded within a stated size or time"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/content-packs/source-manifest.json and admission.draft.json; then run the cross-project admission gate on the draft and decide whether pack identity, the closed entry-kind and trust-policy model, and the catalog and dependency-resolution shape are stable enough to admit a Core blueprint and one Unity adapter blueprint."
+    },
+    {
+      "id": "NEXT-SPATIAL-PLACEMENT",
+      "title": "Spatial placement: ray placement with a ghost preview, snapping, sticky-hand aiming, and an input-ownership seam",
+      "state": "proposal",
+      "objective": "Define engine-light placement and hand identity, a closed placement-phase set (idle, aiming, previewing, committed, cancelled), a validity policy expressed as data (surface kinds, reach range, overlap rule), begin, aim, adjust_distance, snap, commit, and cancel intents on an immutable state with a sticky aiming-hand rule and deterministic replay, a ghost preview expressed as plain data (pose, validity, snap target) rather than a rendered claim, and an input-ownership declaration naming the shared control a live session claims and its arbitration kind so a Locomotion provider can be suppressed for the session's lifetime, with a thin Unity adapter over XR Interaction Toolkit ray/near-far interactors and attach transforms plus a fold-or-yield notification the XR UI shell may consume as a peer client, so a placement session composes on Interaction, Locomotion, and the XR UI shell without any of those families depending on this one; the family proves the plumbing, and whether a placement feels right, is reachable, or holds up under hand tracking stays a Device Lab receipt.",
+      "source_requirements": [
+        "Official XR Interaction Toolkit ray-interactor, near-far-interactor, and interactable attach-transform documentation, and AR Foundation plane-detection documentation as a public model of surface snapping, at the versions pinned by the compatibility profiles (AR Foundation is not yet pinned there and needs a person to pin it)",
+        "First-party Meta Horizon, PICO, and Apple visionOS platform guidance on reach-bounded placement, preview-before-commit feedback, and hand-tracking precision limits",
+        "Raskin's quasimode concept and the mode-error literature (Norman, restated by Nielsen Norman Group) as the public basis for treating aiming as a held-control mode that ends deterministically on commit or cancel, and the OpenXR core specification's action-set-priority mechanism as standards evidence for an explicit input-ownership arbitration shape",
+        "One or two maintained open-source XR placement or building toolkits (a mixed-reality toolkit's surface-magnetism/object-manipulator components and a second-engine XR helper library's validate-before-settle pickup/placement component) with license, maintenance state, and an immutable review ref confirmed by a person",
+        "Placement-feel, reach-comfort, and hand-tracking evidence boundaries that route every such claim to a Device Lab receipt, so no package claim says a surface was detected, a hand was tracked, or a placement felt comfortable"
+      ],
+      "package_ids": [],
+      "exact_next_action": "A person confirms the URLs, page paths, section anchors, version pins, and open-source maintenance state in docs/standards/spatial-placement/source-manifest.json and admission.draft.json, and pins an AR Foundation version in this repository's compatibility profiles; then run the cross-project admission gate on the draft and decide whether placement identity, the phase/validity model, and the input-ownership seam are stable enough to admit a Core blueprint and one Unity adapter blueprint."
     }
   ]
 }

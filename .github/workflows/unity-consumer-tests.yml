@@ -109,7 +109,7 @@ jobs:
       - name: Materialize the reference consumer outside the repository
         run: python xr-foundry/scripts/materialize_reference_consumer.py --output "${GITHUB_WORKSPACE}/consumer"
       - name: Restore the Unity Library cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: consumer/Library
           key: unity-library-6000.3.19f1-${{ hashFiles('xr-foundry/packages/unity/**/package.json', 'xr-foundry/compositions/unity/reference-system/consumer/Packages/manifest.json') }}

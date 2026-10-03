@@ -5,6 +5,28 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Expanded the spatial-drawing source review (WI-034) with independent annotation
+  and collaborative-ink implementations, dated standards and original research.
+  Corrected Open Brush seed serialization from its actual writer, narrowed the
+  first experiment and mapped remaining admission steps. Canonical replay and
+  networking remain deferred; no implementation or runtime evidence is claimed.
+
+- Audited Blender Grease Pencil for WI-033 at an immutable 4.3 source revision,
+  documenting actual attributes, edit/undo/storage paths, file licenses and test
+  assertions. Stable identity, transaction/replay and strict history-memory
+  guarantees remain explicit source gaps; no Blender or Unity tests were run.
+
+- Added open research item WI-033 for independent Blender Grease Pencil
+  document/edit/undo evidence, with a bounded documentation-only audit and
+  explicit negative outcomes. The spatial-drawing source gate remains open.
+
+- Proposed spatial drawing and annotation (`NEXT-SPATIAL-DRAWING`) with a bounded
+  stroke-document design, source retrieval and lineage records, an unadopted
+  admission worksheet, and planned verification/lesson dispositions. Open Brush
+  source and an independent Three.js adapter example are pinned; incomplete
+  source and consumer evidence remains explicit. No package IDs, implementation,
+  authoritative admission, compatibility or device claims are added.
+
 - Passed the source gate for Platform services (`docs/standards/platform-services/`,
   WI-027: 12 sources across Meta, PICO, Steamworks, Apple Game Center and StoreKit,
   Unity Gaming Services, store policy, and two maintained open-source layers;

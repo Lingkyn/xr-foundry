@@ -243,7 +243,7 @@ class OpenWorkBoardTests(unittest.TestCase):
         self.assertLess(text.index("## Routine lane"), text.index("## Non-routine lane"))
         self.assertIn("### Blocked on: nothing (2)", text)
         self.assertIn("### Blocked on: review_window (1)", text)
-        self.assertIn("| test_gap | demo |", text)
+        self.assertIn("| test_gap | not specified | demo |", text)
         self.assertIn("## Summary", text)
 
     def test_malformed_json_lands_in_warnings(self) -> None:
@@ -278,6 +278,141 @@ class OpenWorkBoardTests(unittest.TestCase):
             code = MODULE.main(["--root", str(self.repo), "--json"])
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(stdout.getvalue())["summary"]["total"], 9)
+
+
+class WorkItemRoutingTests(unittest.TestCase):
+    def board(self, items):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            write_json(repo, "docs/contributing/work-items.json", {"items": items})
+            return MODULE.build_board(repo, now=NOW)
+
+    def item(self, identity="WI-001"):
+        return dict(id=identity, title="A bounded task", needs="none",
+                    decision_class="routine", status="open", depends_on=[],
+                    steps=["Perform the bounded task."])
+
+    def test_explicit_decision_class_is_not_inferred_from_capability(self):
+        for needs in MODULE.NEEDS_TO_BLOCKER:
+            for decision in MODULE.LANES:
+                with self.subTest(needs=needs, decision=decision):
+                    item = self.item()
+                    item.update(needs=needs, decision_class=decision)
+                    board = self.board([item])
+                    self.assertEqual(board["items"][0]["lane"], decision)
+
+    def test_pending_dependencies_stay_visible_but_are_not_dispatchable(self):
+        prerequisite = self.item()
+        dependent = self.item("WI-002")
+        dependent["depends_on"] = ["WI-001"]
+        for status in ("open", "in_progress", "blocked"):
+            with self.subTest(status=status):
+                prerequisite["status"] = status
+                board = self.board([prerequisite, dependent])
+                child = next(i for i in board["items"] if i["id"].endswith("#WI-002"))
+                self.assertEqual(child["pending_dependencies"], ["WI-001"])
+                self.assertIn("Waits on WI-001", child["next_action"])
+                narrowed = MODULE.filter_board_by_capability(board, {
+                    "id": "all", "title": "All capabilities",
+                    "satisfies_blockers": list(MODULE.BLOCKERS)})
+                self.assertNotIn(child, narrowed["items"])
+                self.assertEqual(narrowed["capability"]["items_waiting_on_dependencies"], 1)
+                self.assertIn("1 item(s) wait on dependencies", MODULE.render_markdown(narrowed))
+        prerequisite["status"] = "done"
+        board = self.board([prerequisite, dependent])
+        narrowed = MODULE.filter_board_by_capability(board, {"satisfies_blockers": ["nothing"]})
+        self.assertEqual(len(narrowed["items"]), 1)
+        self.assertEqual(narrowed["items"][0]["pending_dependencies"], [])
+
+    def test_mixed_dependencies_and_hidden_counts_do_not_double_count(self):
+        done = self.item("WI-001")
+        done["status"] = "done"
+        pending = self.item("WI-002")
+        child = self.item("WI-003")
+        child.update(needs="headset", depends_on=["WI-001", "WI-002"])
+        board = self.board([done, pending, child])
+        original = json.dumps(board, sort_keys=True)
+        self.assertEqual(board["items"][1]["pending_dependencies"], ["WI-002"])
+        narrowed = MODULE.filter_board_by_capability(board, {"satisfies_blockers": ["nothing"]})
+        self.assertEqual(narrowed["capability"]["items_hidden"], 1)
+        self.assertEqual(narrowed["capability"]["items_needing_capability"], 1)
+        self.assertEqual(narrowed["capability"]["items_waiting_on_dependencies"], 0)
+        self.assertEqual(json.dumps(board, sort_keys=True), original)
+
+    def test_in_progress_is_visible_but_not_offered_for_new_work(self):
+        item = self.item()
+        item["status"] = "in_progress"
+        board = self.board([item])
+        self.assertEqual(len(board["items"]), 1)
+        narrowed = MODULE.filter_board_by_capability(board, {"satisfies_blockers": ["nothing"]})
+        self.assertEqual(narrowed["items"], [])
+        self.assertEqual(narrowed["capability"]["items_not_actionable_by_status"], 1)
+
+    def test_every_schema_status_has_consistent_discovery_and_dispatch(self):
+        schema = json.loads((ROOT / "docs/contributing/work-items.schema.json").read_text())
+        for status in schema["$defs"]["item"]["properties"]["status"]["enum"]:
+            with self.subTest(status=status):
+                item = self.item()
+                item["status"] = status
+                board = self.board([item])
+                self.assertEqual(board["warnings"], [])
+                self.assertEqual(len(board["items"]), 0 if status == "done" else 1)
+                if board["items"]:
+                    self.assertEqual(board["items"][0]["source_status"], status)
+                narrowed = MODULE.filter_board_by_capability(board, {"satisfies_blockers": ["nothing"]})
+                self.assertEqual(len(narrowed["items"]), 1 if status == "open" else 0)
+                self.assertEqual(narrowed["capability"]["items_not_actionable_by_status"],
+                                 1 if status not in ("open", "done") else 0)
+
+    def test_deferred_lesson_is_visible_without_becoming_a_task(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_json(root, "docs/standards/lessons/lessons-register.json", {"lessons": [{
+                "id": "LESSON-001", "title": "Future adapter", "dispositions": [
+                    {"family": "example", "status": "deferred", "follow_up": "When an adapter exists, add its seam."},
+                    {"family": "current", "status": "gap", "follow_up": "Document the existing seam."}]}]})
+            board = MODULE.build_board(root, now=NOW)
+            narrowed = MODULE.filter_board_by_capability(board, {"satisfies_blockers": ["nothing"]})
+            self.assertEqual(len(board["items"]), 2)
+            self.assertEqual([i["family"] for i in narrowed["items"]], ["current"])
+            self.assertEqual(narrowed["capability"]["items_not_actionable_by_status"], 1)
+
+    def test_status_and_dependency_waits_are_counted_without_overlap(self):
+        active = self.item("WI-001")
+        active["status"] = "in_progress"
+        waiting = self.item("WI-002")
+        waiting.update(status="in_progress", depends_on=["WI-001"])
+        unavailable = self.item("WI-003")
+        unavailable.update(status="in_progress", needs="headset")
+        board = self.board([active, waiting, unavailable, self.item("WI-004")])
+        original = json.dumps(board, sort_keys=True)
+        narrowed = MODULE.filter_board_by_capability(board, {"satisfies_blockers": ["nothing"]})
+        self.assertEqual([i["id"].split("#")[-1] for i in narrowed["items"]], ["WI-004"])
+        counters = narrowed["capability"]
+        self.assertEqual(counters["items_hidden"], 3)
+        self.assertEqual(counters["items_needing_capability"], 1)
+        self.assertEqual(counters["items_waiting_on_dependencies"], 1)
+        self.assertEqual(counters["items_not_actionable_by_status"], 1)
+        self.assertEqual(json.dumps(board, sort_keys=True), original)
+
+    def test_missing_dependency_is_not_treated_as_done(self):
+        item = self.item()
+        item["depends_on"] = ["WI-999"]
+        board = self.board([item])
+        self.assertEqual(board["items"][0]["pending_dependencies"], ["WI-999"])
+        self.assertTrue(any("unknown dependency WI-999" in w for w in board["warnings"]))
+
+    def test_malformed_dispatch_fields_are_warned_and_skipped(self):
+        for field, value in (("status", None), ("status", []), ("status", "unknown"),
+                             ("decision_class", "unknown"), ("decision_class", None),
+                             ("depends_on", None), ("depends_on", "WI-001"),
+                             ("depends_on", [None])):
+            with self.subTest(field=field, value=value):
+                item = self.item()
+                item[field] = value
+                board = self.board([item])
+                self.assertEqual(board["items"], [])
+                self.assertTrue(board["warnings"])
 
 
 class RealRepositoryTests(unittest.TestCase):

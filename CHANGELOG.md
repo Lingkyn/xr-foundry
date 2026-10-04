@@ -5,6 +5,22 @@ live in each package's `CHANGELOG.md`.
 
 ## Unreleased
 
+- Preserve work-item and lesson source statuses on the open-work board; capability
+  views exclude in-progress work and deferred lessons, with separate wait counts.
+  Full discovery and canonical task/permission records remain unchanged.
+
+- Added opt-in complete item briefs (`open_work.py --item WI-nnn`) for human
+  and Agent contributors, with canonical validation, explicit capability and
+  prerequisite readiness, source digests, all acceptance instructions, and no
+  authority grant. The existing board format stays unchanged. Clarified the
+  fork/commit/readiness route and truthful cold-start receipt lifecycle.
+
+- Corrected open-work dispatch to preserve curated `decision_class` values and
+  withhold dependency-blocked items from capability-filtered views. The complete
+  board retains pending prerequisite ids; missing dependencies fail closed and
+  malformed dispatch fields emit warnings. Regression tests cover the current
+  WI-010/WI-016 lane mismatch and WI-012/WI-013/WI-014 prerequisite boundary.
+
 - Passed the source gate for Platform services (`docs/standards/platform-services/`,
   WI-027: 12 sources across Meta, PICO, Steamworks, Apple Game Center and StoreKit,
   Unity Gaming Services, store policy, and two maintained open-source layers;

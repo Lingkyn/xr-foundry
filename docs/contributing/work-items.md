@@ -26,6 +26,12 @@ unknown batch, a circular dependency, or a private script.
    item; the merge-readiness verdict decides between the results, and the second
    one rebases. Only a non-routine item needs a Task Hall claim
    ([`task-hall.md`](task-hall.md)).
+   To hand the complete item to another tool without session context, run
+   `python scripts/open_work.py --item WI-nnn --capability <id> --markdown`
+   (or `--json`), replacing the IDs with the selected item and your declaration.
+   The [packet](open-work.md#export-one-complete-item-brief) includes all steps,
+   acceptance commands, artifacts, prerequisites, and evidence. It neither runs
+   those commands nor reserves work.
 3. **Stay inside `allowed_paths`.** Items with disjoint paths run in parallel,
    in one session or across many tools. A change outside the paths is a separate
    item or a separate pull request.
@@ -33,8 +39,10 @@ unknown batch, a circular dependency, or a private script.
    environment. Every command is a script in `scripts/` or `python -m unittest`;
    nothing depends on the tool that produced the change.
 5. **Push and open the five-line pull request** as [`start-here.md`](start-here.md)
-   describes. The verdict, not a person, says whether a routine item merges. A
-   non-routine item waits for the maintainer, who reads the same verdict.
+   describes. The verdict reports the technical and review gates. A routine
+   branch covered by an active operating mandate follows that mandate's merge
+   route; other contributions wait for maintainer review as `start-here.md`
+   describes. A passing technical check is not a human approval or merge right.
 6. **Mark the item.** In the same pull request, set `status` to `done` and
    `done_proof` to the path that proves it (the artifact, the receipt, the record).
    Validation refuses `done` without an existing proof path. If you stop early,

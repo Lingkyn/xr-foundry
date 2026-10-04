@@ -12,6 +12,7 @@ and the fix is to correct the source file and regenerate.
 
 | Kind | Source | One item per |
 | --- | --- | --- |
+| `work_item` | `docs/contributing/work-items.json` | unfinished curated item, preserving its `needs`, `decision_class`, and unfinished dependency ids |
 | `test_gap` | `docs/standards/*/coverage-map*.json` | partial clause whose missing text names a test or validator rule |
 | `evidence_gap` | `docs/standards/*/coverage-map*.json` | partial clause whose missing text names a receipt, consumer run, player build, device, or Editor execution |
 | `lesson_gap` | `docs/standards/lessons/lessons-register.json` | disposition with status `gap` or `deferred`, carrying its `follow_up` |
@@ -24,7 +25,33 @@ Every item carries a stable `id` (source path plus clause, lesson, candidate, or
 record id), a `family` (or `repository`), a `blocked_on` value, a `lane`, one
 `next_action` sentence, and an `evidence_note` where one applies.
 
-`blocked_on` is read from the item's own text: `unity_editor` when it needs an
+`work_item` entries read `blocked_on` from their explicit `needs` and `lane`
+from `decision_class`. A capability requirement does not change the declared
+decision class. `pending_dependencies` lists dependencies not marked `done`; an
+unknown dependency stays pending and produces a warning. The full board keeps
+these items visible, with their wait in `next_action`; the `--capability` view
+excludes them until their prerequisites finish. Its header counts items needing
+a different capability separately from otherwise reachable items waiting on
+dependencies, without counting the same item twice. Invalid statuses, decision classes, or
+dependency lists are warned and skipped. This projects the existing
+[work-item protocol](work-items.md), without granting or changing authority.
+
+The board also preserves `source_status` for curated work items and lesson
+dispositions. Only `open` work items and non-deferred lesson gaps enter a
+capability work lane; `in_progress` items and `deferred` lessons remain visible
+on the full board. A deferred lesson names a future trigger, not an instruction
+to create that trigger. See the [lesson status definitions](../standards/lessons/README.md).
+The header separately counts `items_not_actionable_by_status` after capability
+and dependency filtering, so each hidden item has one count. This is a discovery
+filter, not an ownership/lease decision, and it never changes source status.
+
+If the narrowed board only offers the post-merge cold-start receipt, it has no
+ready curated implementation task for that declaration. Do not start an unrelated
+feature merely to manufacture a receipt. Inspect existing public Issues for a
+bounded routine contribution or report the missing starter task; retain the
+Task Hall's claim/review boundaries for coordinated work.
+
+For inferred entries, `blocked_on` is read from the item's own text: `unity_editor` when it needs an
 Editor run, compilation, a player build, or a consumer exercise; `headset` when
 it needs a device or a Device Lab receipt; `maintainer` when it waits on an
 admission, a signature, a recorded decision, or an owner-only repository
@@ -32,7 +59,7 @@ setting; `review_window` for a deliberation whose window is still open;
 `nothing` otherwise. The classification is a reading of the text, not a
 decision; if it is wrong, the item's source file is where the wording lives.
 
-`lane` is `routine` only when `blocked_on` is `nothing` and the kind is a
+For those inferred entries, `lane` is `routine` only when `blocked_on` is `nothing` and the kind is a
 `test_gap`, `lesson_gap`, or `roadmap_step`. Everything else is `non_routine`.
 
 ## How a worker uses it
@@ -47,7 +74,8 @@ python scripts/open_work.py --output board.json # write the JSON
    lane and then by what they are blocked on; the JSON view adds a `summary`
    with counts by kind, blocker, and lane, the commit it was generated at, and a
    `warnings` list for any source file the generator could not interpret.
-2. Pick an item from the **routine lane**. Nothing is reserved for you and
+2. Pick an item from the **routine lane** whose capabilities you satisfy and
+   whose `pending_dependencies` is empty (or use `--capability <id>`). Nothing is reserved for you and
    nothing needs to be: a routine item follows
    [`start-here.md`](start-here.md) (branch, change, one verdict command, push,
    five-line pull request). No claim, lease, anchor, or governance window.
@@ -79,3 +107,48 @@ python scripts/open_work.py --output board.json # write the JSON
 The generator exits non-zero only when a source file cannot be read from disk. A
 file with an unexpected shape is skipped and named in `warnings`, so a partial
 board is always visible and never silently complete.
+
+## Export one complete item brief
+
+After selecting a curated `WI-nnn` item, give your coding Agent the complete
+packet rather than just the board's first-step summary:
+
+```text
+python scripts/open_work.py --item WI-012 --capability ai_tokens_only --markdown
+python scripts/open_work.py --item WI-012 --capability ai_tokens_only --json
+python scripts/open_work.py --item WI-012 --output packet.json
+```
+
+These examples inspect WI-012, not recommend it: it requires a Unity Editor and
+may still have unfinished prerequisites. Choose an actual open item your current
+declaration can finish. Read every `read_first` file, stay inside `allowed_paths`,
+and review the commands before running them yourself. Packet generation does not
+execute acceptance commands or contact another Agent.
+
+The packet copies the complete source item, including status, decision class,
+all steps, exact acceptance commands and artifacts, evidence, and `done_proof`.
+Prerequisites include their current statuses and proof paths. `readiness.ready`
+is true only for an `open` item whose prerequisites are all `done` and whose
+`needs` are satisfied by the explicitly supplied current capability profile.
+`blocked`, `in_progress`, and `done` items can be inspected but are never offered
+as ready to start. Without `--capability`, readiness remains unconfirmed, even
+for `needs: none`. Readiness grants no authority and does not replace the
+non-routine route, review, or evidence gates.
+
+JSON packets use `xr-foundry.item_brief.v1`, separate from the unchanged
+`xr-foundry.open_work.v1` board format. The envelope contains `item`,
+`prerequisites`, `capability` (the current profile or null), `readiness`, and the
+no-authority `disclaimer`. `generated_at` and `commit` identify the generation
+context; `source_path` and `source_sha256` identify the actual work-item snapshot.
+The optional profile has its own `capability_source_path` and
+`capability_source_sha256`. HEAD alone does not identify uncommitted source edits;
+retain the digests and regenerate after updating your checkout. This is a derived
+view, never a second registry or a reservation.
+
+Packet mode validates the full canonical work-item registry (including duplicate
+IDs, dependency cycles, paths, and done proofs) and, when declared, the current
+capability profiles using the existing validators. It fails closed with a nonzero
+exit and a diagnostic for invalid sources, unknown IDs, or an unwritable output.
+`--item` cannot combine with `--list-capabilities` or both `--json` and
+`--markdown`. As with board mode, `--output` writes JSON; Markdown can also be
+printed alongside that file. Existing board CLI combinations remain unchanged.
